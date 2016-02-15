@@ -58,14 +58,6 @@
 
 #define BCM2835_BSC1_BASE		(IOBASE + 0x804000)
 
-
-
-
-
-
-
-
-
 // Defines for I2C
 // GPIO register offsets from BCM2835_BSC*_BASE.
 // Offsets into the BSC Peripheral block in bytes per 3.1 BSC Register Map

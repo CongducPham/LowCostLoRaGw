@@ -50,11 +50,13 @@ The end-device has address 6 and run in LoRa mode 4. It will send data to the ga
 
 The default configuration uses an application key set to [5, 6, 7, 8] and the 0xFF0xEE app key prefix is inserted.
 
-Use a temperature sensor (e.g. LM35DZ) and plugged in pin 8 (analog 8). Depending on the sensor type, the computation to get the real temperature may be changed accordingly. Here is the instruction for the LM35DZ: http://www.instructables.com/id/ARDUINO-TEMPERATURE-SENSOR-LM35/
+Use a temperature sensor (e.g. LM35DZ) and plugged in pin A0 (analog 0). You can use a power pin to power your temperature sensor if you are not concerned about power saving. Otherwise, you can use digital 8 (the sketch set this pin HIGH when reading value, then sets it back to LOW) and activate low power mode (uncomment #define LOW_POWER). You will need the LowPower library from RocketScream (https://github.com/rocketscream/Low-Power). The radio module plugged in the 3V3 pin will still be powered but should drain small amount of current in stand-by mode. Of course, the low power configuration is still very simple but it already can save lot's of energy for battery-operating mode.
+
+Depending on the sensor type, the computation to get the real temperature may be changed accordingly. Here is the instruction for the LM35DZ: http://www.instructables.com/id/ARDUINO-TEMPERATURE-SENSOR-LM35/
 
 The default configuration also use the EEPROM to store the last packet sequence number in order to get it back when the sensor is restarted/rebooted. If you want to restart with a packet sequence number of 0, just comment le line "#define WITH_EEPROM"
 
-Once flashed, the Arduino temperature sensor will send to the gateway the following message \!#1#20.4 (20.4 is the measured temperature so you may not have the same value) prefixed by the application key every 10 minutes (with some randomization interval). This will trigger at the processing stage of the gateway the logging on the default ThinkSpeak channel (the test channel we provide) in field 1. At the gateway, 20.4 will be recorded on the provided ThingSpeak test channel in field 1 of the channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value. 
+Once flashed, the Arduino temperature sensor will send to the gateway the following message \!#3#20.4 (20.4 is the measured temperature so you may not have the same value) prefixed by the application key every 10 minutes (with some randomization interval). This will trigger at the processing stage of the gateway the logging on the default ThinkSpeak channel (the test channel we provide) in field 3. At the gateway, 20.4 will be recorded on the provided ThingSpeak test channel in field 3 of the channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value. 
 
 The program has been tested on Arduino Mega and Due with the Libelium Multi-Protocol radio shield to connect the LoRa radio module. We also tested on the Pro Mini in which case we do not use the radio shield but simply connect the SPI pins of the radio module to the ones of the Pro Mini. The SX1272 lib has been modified to change the SPI_SS pin from 2 to 10 when you compile for the Pro Mini. Check on the web page our Pro Mini version of the LoRa temperature sensor.
 
@@ -78,7 +80,7 @@ When testing with the interactive end-device, you should not use the --wappkey o
 Use an Arduino as a LoRa gateway
 --------------------------------
 
-The gateway can also be based on an Arduino board, as described in the web page. With the Arduino IDE, open the Arduino_LoRa_Gateway sketch set the compilation #define as follows:
+The gateway can also be based on an Arduino board, as described in the web page. With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and set the compilation #define as follows:
 
 #define IS_RCV_GATEWAY
 //#define IS_SEND_GATEWAY

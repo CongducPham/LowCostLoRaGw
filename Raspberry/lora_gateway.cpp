@@ -176,6 +176,11 @@
 // Include the SX1272 
 #include "SX1272.h"
 
+// uncomment if your radio is an HopeRF RFM92W or RFM95W
+//#define RADIO_RFM92_95
+// uncomment if your radio is a Modtronix inAirB (the one with +20dBm features), if inAir9, leave commented
+//#define RADIO_INAIR9B
+
 #ifdef RASPBERRY
 #include <stdio.h>
 #include <getopt.h>
@@ -183,6 +188,9 @@
 #include <unistd.h>
 #include <termios.h> 
 #include  <signal.h>
+#include <sys/time.h>
+#include <time.h>
+#include <math.h>
 #endif
 
 #ifdef ARDUINO
@@ -297,7 +305,15 @@ bool RSSIonSend=true;
 uint8_t loraMode=LORAMODE;
 uint8_t loraChannelIndex=0;
 uint32_t loraChannel=loraChannelArray[loraChannelIndex];
+#if defined RADIO_RFM92_95 || defined RADIO_INAIR9B
+// HopeRF 92W/95W and inAir9B need the PA_BOOST
+// so 'x' set the PA_BOOST but then limit the power to +14dBm 
+char loraPower='x';
+#else
+// other radio board such as Libelium LoRa or inAir9 do not need the PA_BOOST
+// so 'M' set the output power to 15 to get +14dBm
 char loraPower='M';
+#endif
 uint8_t loraAddr=LORA_ADDR;
 
 unsigned int inter_pkt_time=0;
@@ -439,7 +455,12 @@ void startConfig() {
   
   // Select output power (Max, High or Low)
   e = sx1272.setPower(loraPower);
-  PRINT_CSTSTR("%s","^$Power M: state ");
+
+  PRINT_CSTSTR("%s","^$Set LoRa Power to ");
+  PRINT_VALUE("%c",loraPower);  
+  PRINTLN;
+                
+  PRINT_CSTSTR("%s","^$Power: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
  
@@ -945,6 +966,33 @@ void loop(void)
                    sx1272._spreadingFactor);
                    
          PRINT_STR("%s",sprintf_buf);  
+
+// for Linux-based gateway only
+///////////////////////////////
+#ifndef ARDUINO
+         char buffer[30];
+         int millisec;
+         struct tm* tm_info;
+         struct timeval tv;
+        
+         gettimeofday(&tv, NULL);
+        
+         millisec = lrint(tv.tv_usec/1000.0); // Round to nearest millisec
+         
+         if (millisec>=1000) { // Allow for rounding up to nearest second
+            millisec -=1000;
+            tv.tv_sec++;
+         }
+        
+         tm_info = localtime(&tv.tv_sec);
+        
+         strftime(buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);
+
+         sprintf(sprintf_buf, "^t%s.%03d\n", buffer, millisec);
+
+         PRINT_STR("%s",sprintf_buf);
+#endif
+         
                             
 #ifdef LORA_LAS        
          if (loraLAS.isLASMsg(sx1272.packet_received.data)) {
@@ -1316,11 +1364,11 @@ void loop(void)
 
             case 'P': 
 
-              if (cmd[i+1]=='H' || cmd[i+1]=='L' || cmd[i+1]=='M') {
+              if (cmd[i+1]=='L' || cmd[i+1]=='H' || cmd[i+1]=='M' || cmd[i+1]=='x' || cmd[i+1]=='X' ) {
                 loraPower=cmd[i+1];
 
                 PRINT_CSTSTR("%s","^$Set LoRa Power to ");
-                PRINT_VALUE("%d",loraPower);  
+                PRINT_VALUE("%c",loraPower);  
                 PRINTLN;                
                  
                 // Select frequency channel
@@ -1330,7 +1378,7 @@ void loop(void)
                 PRINTLN; 
               }
               else
-                PRINT_CSTSTR("%s","Invalid Power. L, H, M accepted.\n");          
+                PRINT_CSTSTR("%s","Invalid Power. L, H, M, x or X accepted.\n");          
             break;
             
             case 'A': 
@@ -1515,6 +1563,8 @@ void loop(void)
 
       // to test with appkey + encrypted
       //sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_WAPPKEY | PKT_FLAG_DATA_ENCRYPTED);
+      
+      sx1272.setPacketType(PKT_TYPE_DATA); 
         
       if (forTmpDestAddr>=0) {
         if (withAck)
@@ -1535,8 +1585,18 @@ void loop(void)
 
       endSend=millis();  
       
-      if (withAck || withTmpAck)
+      if (withAck || withTmpAck) {
+        sx1272.getSNR();
+        sx1272.getRSSIpacket();
+         
+        sprintf(sprintf_buf,"--- rxlora ACK. SNR=%d RSSIpkt=%d\n", 
+                   sx1272._SNR,
+                   sx1272._RSSIpacket);
+                   
+        PRINT_STR("%s",sprintf_buf);
+        
         PRINT_CSTSTR("%s","LoRa (ACK) Sent in ");  
+      }
       else      
         PRINT_CSTSTR("%s","LoRa Sent in ");
       

@@ -19,14 +19,22 @@
  *****************************************************************************
  */
  
-// Include the SX1272 and SPI library: 
+// Include the SX1272
 #include "SX1272.h"
-#include <SPI.h>
 #include <EEPROM.h>
 
-#define WITH_APPKEY
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// uncomment if your radio is an HopeRF RFM92W or RFM95W
+//#define RADIO_RFM92_95
+// uncomment if your radio is a Modtronix inAirB (the one with +20dBm features), if inAir9, leave commented
+//#define RADIO_INAIR9B
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
 #define WITH_EEPROM
+#define WITH_APPKEY
 #define FLOAT_TEMP
+//#define LOW_POWER
 //#define CUSTOM_CS
 //#define LORA_LAS
 //#define WITH_AES
@@ -37,15 +45,28 @@
 #define field_index 3
 //#define node_addr 10
 //#define field_index 2
+//#define node_addr 3
+//#define field_index 1
 
-#ifdef ARDUINO_AVR_PRO
 #define TEMP_PIN_READ  A0
+// use digital 8 to power the temperature sensor
 #define TEMP_PIN_POWER 8
-#define SX1272_POWER 9
-#define TEMP_SCALE  3300.0
-#else
-#define TEMP_PIN_READ  8
-#define TEMP_SCALE  5000.0
+  
+#if defined ARDUINO_AVR_PRO 
+  #define SX1272_POWER 9
+  // the Pro Mini works in 3.3V
+  #define TEMP_SCALE  3300.0
+#else // ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MEGA2560
+  // the SX1272 will be powered by the 3.3V pin
+  #define TEMP_SCALE  5000.0
+#endif
+
+#ifdef LOW_POWER
+// you need the LowPower library from RocketScream
+// https://github.com/rocketscream/Low-Power
+#include "LowPower.h"
+int idlePeriodInMin = 1;
+int nCycle = idlePeriodInMin*60/8;
 #endif
 
 #ifdef WITH_AES
@@ -56,7 +77,6 @@ AES aes;
 #define AES_KEY_LENGTH  128
 byte *aes_key = (unsigned char*)"0123456789010123";
 unsigned long long int aes_iv = 36753562;
-//unsigned long long int aes_iv = 0L;
 #endif
 
 #ifdef LORA_LAS
@@ -70,7 +90,6 @@ unsigned long lastTransmissionTime=0;
 unsigned long delayBeforeTransmit=0;
 char float_str[20];
 uint8_t message[100];
-int e;
 // receive window
 uint16_t w_timer=1000;
 
@@ -106,6 +125,7 @@ sx1272config my_sx1272config;
 void CarrierSense() {
   
   bool carrierSenseRetry=false;
+  int e;
   
   if (send_cad_number) {
     do { 
@@ -218,16 +238,23 @@ void CarrierSense() {
 
 void setup()
 {
+  int e;
+  
 #ifdef ARDUINO_AVR_PRO
   // on the Pro Mini, we use digital 9 to power the SX1272
   pinMode(SX1272_POWER,OUTPUT);
-  digitalWrite(SX1272_POWER,HIGH);
-  
-  // and digital 8 to power the temperature sensor
-  pinMode(TEMP_PIN_POWER,OUTPUT);
-  digitalWrite(TEMP_PIN_POWER,HIGH);  
+  digitalWrite(SX1272_POWER,HIGH); 
 #endif
 
+  // for the temperature sensor
+  pinMode(TEMP_PIN_READ, INPUT);
+  // and to power the temperature sensor
+  pinMode(TEMP_PIN_POWER,OUTPUT);
+
+#ifndef LOW_POWER
+  digitalWrite(TEMP_PIN_POWER,HIGH);
+#endif
+  
   delay(3000);
 #ifdef _VARIANT_ARDUINO_DUE_X_
   Serial.begin(115200);  
@@ -240,6 +267,10 @@ void setup()
 
 #ifdef ARDUINO_AVR_PRO
   Serial.println(F("Arduino Pro Mini detected"));
+#endif
+
+#ifdef ARDUINO_AVR_NANO
+  Serial.println(F("Arduino Nano detected"));
 #endif
 
   // Power ON the module
@@ -298,7 +329,12 @@ void setup()
   Serial.println(e, DEC);
   
   // Select output power (Max, High or Low)
+#if defined RADIO_RFM92_95 || defined RADIO_INAIR9B
+  e = sx1272.setPower('x');
+#else
   e = sx1272.setPower('M');
+#endif  
+
   Serial.print(F("Setting Power: state "));
   Serial.println(e);
   
@@ -313,9 +349,6 @@ void setup()
 #ifdef LORA_LAS
   loraLAS.ON(LAS_ON_WRESET);
 #endif
-  
-  // for the temperature sensor
-  pinMode(TEMP_PIN_READ, INPUT);
 
   //printf_begin();
   delay(500);
@@ -343,6 +376,7 @@ void loop(void)
   long startSend;
   long endSend;
   uint8_t app_key_offset=0;
+  int e;
     
 #ifdef LORA_LAS  
   // call periodically to be able to detect the start of a new cycle
@@ -351,11 +385,20 @@ void loop(void)
   //if (loraLAS._has_init && (millis()-lastTransmissionTime > 120000)) {
 #endif
 
+#ifndef LOW_POWER
   // 600000+random(15,60)*1000
   if (millis()-lastTransmissionTime > delayBeforeTransmit) {
-    
+#endif
+
+#ifdef LOW_POWER
+      digitalWrite(TEMP_PIN_POWER,HIGH);
+      delay(100);    
       int value = analogRead(TEMP_PIN_READ);
-    
+      digitalWrite(TEMP_PIN_POWER,LOW);
+#else
+      int value = analogRead(TEMP_PIN_READ);
+#endif
+      
       // change here how the temperature should be computed depending on your sensor type
       //  
       temp = value*TEMP_SCALE/1024.0;
@@ -411,7 +454,7 @@ void loop(void)
       aes.set_IV(aes_iv);
       aes.get_IV(iv);
 
-      // if we encrypt the format is as follow
+      // if we encrypt the format is as follows
       // appkey(4B) size(1B) payload
       
       // get back to the real app_key_offset
@@ -430,10 +473,11 @@ void loop(void)
       // we encrypt the framing bytes, the appkey, the size and the payload (plus the padding)
       aes.do_aes_encrypt(message, app_key_offset+1+r_size+1, cipher, aes_key, AES_KEY_LENGTH,iv);
 
+      uint8_t enc_s = aes.get_size();
       Serial.print(F("Encrypted data size is "));
-      Serial.println(aes.get_size());
+      Serial.println(enc_s);
 
-      for (int i=0; i<aes.get_size();i++) {
+      for (int i=0; i<enc_s; i++) {
         Serial.print(message[i], HEX);
         Serial.print(" ");
       }
@@ -515,7 +559,38 @@ void loop(void)
 #endif  
       Serial.print(F("Packet sent, state "));
       Serial.println(e);
-    
+
+#ifdef LOW_POWER
+      Serial.print(F("Switch to power saving mode"));
+      Serial.flush();
+      delay(50);
+      
+      nCycle = idlePeriodInMin*60/8 + random(2,8);
+          
+      for (int i=0; i<nCycle; i++) {  
+
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || ARDUINO_AVR_UNO        
+          // ATmega328P, ATmega168
+          //LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+          
+          LowPower.idle(SLEEP_8S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
+                        SPI_OFF, USART0_OFF, TWI_OFF);
+#elif defined ARDUINO_AVR_MEGA2560
+          // ATmega2560
+          LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
+                TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
+                USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
+#else
+          // use the delay function
+          delay(8000);
+#endif                        
+          Serial.print(".");
+          Serial.flush(); 
+          delay(10);                        
+      }
+      
+      delay(50);
+#else
       // use a random part also to avoid colliding on the same ThingSpeak channel update
       // 10 minutes
       //delay(120000);
@@ -523,6 +598,7 @@ void loop(void)
       lastTransmissionTime=millis();
       delayBeforeTransmit=600000+random(15,60)*1000;
   }
+#endif
 
 #ifdef LORA_LAS
   // open a receive window

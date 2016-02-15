@@ -2668,6 +2668,8 @@ int8_t SX1272::setPower(char p)
     int8_t state = 2;
     byte value = 0x00;
 
+    byte RegPaDacReg=(_board==SX1272Chip)?0x5A:0x4D;
+
 #if (SX1272_debug_mode > 1)
     printf("\n");
     printf("Starting 'setPower'\n");
@@ -2685,43 +2687,72 @@ int8_t SX1272::setPower(char p)
 
     switch (p)
     {
-    // L = low
-    // H = high
-    // M = max
-    // X = eXtreme (for SX1276); added by C. Pham
+    // L = low. On SX1272: PA0 on RFO setting
+    // H = high. On SX1272: PA0 on RFO setting
+    // M = MAX. On SX1272: PA0 on RFO setting
+
+    // x = extreme; added by C. Pham. On SX1272: PA1&PA2 PA_BOOST setting
+    // X = eXtreme; added by C. Pham. On SX1272: PA1&PA2 PA_BOOST setting + 20dBm settings
 
     // added by C. Pham
     //
+    case 'x':
     case 'X':
     case 'M':  _power = 0x0F;
+        // SX1272: 14dBm
+        // SX1276:
         break;
 
-    case 'L':  _power = 0x00;
+    // modified by C. Pham, set to 0x02 instead of 0x00
+    case 'L':  _power = 0x02;
+        // SX1272: 1dBm
+        // SX1276:
         break;
 
     case 'H':  _power = 0x07;
+        // SX1272: 6dBm
+        // SX1276:
         break;
 
     default:   state = -1;
         break;
     }
 
-    // added by C. Pham
-    if (_board==SX1272Chip) {
-        writeRegister(REG_PA_CONFIG, _power);	// Setting output power value
+    value = _power;
+
+    if (p=='x') {
+        // we set only the PA_BOOST pin
+        // limit to 14dBm
+        value = 0x0C;
+        value = value | 0B10000000;
+        // TODO: Have to set RegOcp for OcpOn and OcpTrim
+    }
+
+    if (p=='X') {
+        // we set the PA_BOOST pin
+        value = value | 0B10000000;
+        // and then set the high output power config with register REG_PA_DAC
+        writeRegister(RegPaDacReg, 0x87);
+        // TODO: Have to set RegOcp for OcpOn and OcpTrim
     }
     else {
-        if (p=='X')
-            // set MaxPower to 7 -> Pmax=10.8+0.6*MaxPower [dBm] = 15
-            value = _power | 01110000;
-        else
-            // set MaxPower to 4 -> Pmax=10.8+0.6*MaxPower [dBm] = 13.2
-            value = _power | 01000000;
-
-        // then Pout = Pmax-(15-_power[3:0]) since we use PaSelect=0 (RFO pin for +13dBm)
-        writeRegister(REG_PA_CONFIG, value);
-        _power=value;
+        // disable high power output in all other cases
+        writeRegister(RegPaDacReg, 0x84);
     }
+
+    // added by C. Pham
+    if (_board==SX1272Chip) {
+        writeRegister(REG_PA_CONFIG, value);	// Setting output power value
+    }
+    else {
+        // set MaxPower to 7 -> Pmax=10.8+0.6*MaxPower [dBm] = 15
+        value = value | 0B01110000;
+        // then Pout = Pmax-(15-_power[3:0]) if  PaSelect=0 (RFO pin for +13dBm)
+
+        writeRegister(REG_PA_CONFIG, value);
+    }
+
+    _power=value;
 
     value = readRegister(REG_PA_CONFIG);
 
