@@ -3708,10 +3708,14 @@ uint8_t SX1272::setACK()
     {
         // Setting ACK
         ACK.dst = packet_received.src; // ACK destination is packet source
+        ACK.type = PKT_TYPE_ACK;
         ACK.src = packet_received.dst; // ACK source is packet destination
         ACK.packnum = packet_received.packnum; // packet number that has been correctly received
-        ACK.length = 0;		  // length = 0 to show that's an ACK
+        ACK.length = 2;
         ACK.data[0] = _reception;	// CRC of the received packet
+        // added by C. Pham
+        // store the SNR
+        ACK.data[1]= readRegister(REG_PKT_SNR_VALUE);
 
         // Setting address pointer in FIFO data buffer
         writeRegister(REG_FIFO_ADDR_PTR, 0x80);
@@ -3720,10 +3724,12 @@ uint8_t SX1272::setACK()
 
         // Writing ACK to send in FIFO
         writeRegister(REG_FIFO, ACK.dst); 		// Writing the destination in FIFO
+        writeRegister(REG_FIFO, ACK.type);
         writeRegister(REG_FIFO, ACK.src);		// Writing the source in FIFO
         writeRegister(REG_FIFO, ACK.packnum);	// Writing the packet number in FIFO
         writeRegister(REG_FIFO, ACK.length); 	// Writing the packet length in FIFO
         writeRegister(REG_FIFO, ACK.data[0]);	// Writing the ACK in FIFO
+        writeRegister(REG_FIFO, ACK.data[1]);	// Writing the ACK in FIFO
 
         //#if (SX1272_debug_mode > 0)
         printf("## ACK set and written in FIFO ##\n");
@@ -3739,6 +3745,8 @@ uint8_t SX1272::setACK()
         printf("%d\n", ACK.length);				// Printing ACK length
         printf("ACK payload: ");
         printf("%d\n", ACK.data[0]);			// Printing ACK payload
+        printf("ACK SNR last rcv pkt: ");
+        printf("%d\n", _SNR);
         printf(" ##\n");
         printf("\n");
         //#endif
@@ -3899,10 +3907,14 @@ uint8_t SX1272::receivePacketTimeout(uint16_t wait)
         else
         {
             state_f = 0;  // The packet has been correctly received
+            // added by C. Pham
+            // we get the SNR and RSSI of the received packet for future usage
+            getSNR();
+            getRSSIpacket();
         }
 
         // need to send an ACK
-        if ( state == 5 ) {
+        if ( state == 5 && state_f == 0) {
 
             state = setACK();
 
@@ -5855,74 +5867,96 @@ uint8_t SX1272::getACK(uint16_t wait)
     {
         // Storing the received ACK
         ACK.dst = _destination;
+        ACK.type = readRegister(REG_FIFO);
         ACK.src = readRegister(REG_FIFO);
         ACK.packnum = readRegister(REG_FIFO);
         ACK.length = readRegister(REG_FIFO);
         ACK.data[0] = readRegister(REG_FIFO);
+        ACK.data[1] = readRegister(REG_FIFO);
 
-        // Checking the received ACK
-        if( ACK.dst == packet_sent.src )
-        {
-            if( ACK.src == packet_sent.dst )
+        if (ACK.type == PKT_TYPE_ACK) {
+
+            // Checking the received ACK
+            if( ACK.dst == packet_sent.src )
             {
-                if( ACK.packnum == packet_sent.packnum )
+                if( ACK.src == packet_sent.dst )
                 {
-                    if( ACK.length == 0 )
+                    if( ACK.packnum == packet_sent.packnum )
                     {
-                        if( ACK.data[0] == CORRECT_PACKET )
+                        if( ACK.length == 2 )
                         {
-                            state = 0;
-                            //#if (SX1272_debug_mode > 0)
-                            // Printing the received ACK
-                            printf("## ACK received:\n");
-                            printf("Destination: ");
-                            printf("%d\n", ACK.dst);			 	// Printing destination
-                            printf("Source: ");
-                            printf("%d\n", ACK.src);			 	// Printing source
-                            printf("ACK number: ");
-                            printf("%d\n", ACK.packnum);			// Printing ACK number
-                            printf("ACK length: ");
-                            printf("%d\n", ACK.length);				// Printing ACK length
-                            printf("ACK payload: ");
-                            printf("%d\n", ACK.data[0]);			// Printing ACK payload
-                            printf(" ##\n");
-                            printf("\n");
-                            //#endif
+                            if( ACK.data[0] == CORRECT_PACKET )
+                            {
+                                state = 0;
+                                //#if (SX1272_debug_mode > 0)
+                                // Printing the received ACK
+                                printf("## ACK received:\n");
+                                printf("Destination: ");
+                                printf("%d\n", ACK.dst);			 	// Printing destination
+                                printf("Source: ");
+                                printf("%d\n", ACK.src);			 	// Printing source
+                                printf("ACK number: ");
+                                printf("%d\n", ACK.packnum);			// Printing ACK number
+                                printf("ACK length: ");
+                                printf("%d\n", ACK.length);				// Printing ACK length
+                                printf("ACK payload: ");
+                                printf("%d\n", ACK.data[0]);			// Printing ACK payload
+                                printf("ACK SNR of rcv pkt at gw: ");
+
+                                value = ACK.data[1];
+
+                                if( value & 0x80 ) // The SNR sign bit is 1
+                                {
+                                    // Invert and divide by 4
+                                    value = ( ( ~value + 1 ) & 0xFF ) >> 2;
+                                    _rcv_snr_in_ack = -value;
+                                }
+                                else
+                                {
+                                    // Divide by 4
+                                    _rcv_snr_in_ack = ( value & 0xFF ) >> 2;
+                                }
+
+                                printf("%d\n", _rcv_snr_in_ack);
+                                printf(" ##\n");
+                                printf("\n");
+                                //#endif
+                            }
+                            else
+                            {
+                                state = 1;
+    #if (SX1272_debug_mode > 0)
+                                printf("** N-ACK received **\n");
+                                printf("\n");
+    #endif
+                            }
                         }
                         else
                         {
                             state = 1;
-#if (SX1272_debug_mode > 0)
-                            printf("** N-ACK received **\n");
+    #if (SX1272_debug_mode > 0)
+                            printf("** ACK length incorrectly received **\n");
                             printf("\n");
-#endif
+    #endif
                         }
                     }
                     else
                     {
                         state = 1;
-#if (SX1272_debug_mode > 0)
-                        printf("** ACK length incorrectly received **\n");
+    #if (SX1272_debug_mode > 0)
+                        printf("** ACK number incorrectly received **\n");
                         printf("\n");
-#endif
+    #endif
                     }
                 }
                 else
                 {
                     state = 1;
-#if (SX1272_debug_mode > 0)
-                    printf("** ACK number incorrectly received **\n");
+    #if (SX1272_debug_mode > 0)
+                    printf("** ACK source incorrectly received **\n");
                     printf("\n");
-#endif
+    #endif
                 }
-            }
-            else
-            {
-                state = 1;
-#if (SX1272_debug_mode > 0)
-                printf("** ACK source incorrectly received **\n");
-                printf("\n");
-#endif
             }
         }
         else

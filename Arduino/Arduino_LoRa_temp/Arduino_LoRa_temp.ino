@@ -25,10 +25,14 @@
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// please uncomment only 1 choice
+//
 // uncomment if your radio is an HopeRF RFM92W or RFM95W
 //#define RADIO_RFM92_95
 // uncomment if your radio is a Modtronix inAirB (the one with +20dBm features), if inAir9, leave commented
 //#define RADIO_INAIR9B
+// uncomment if you only know that it has 20dBm feature
+//#define RADIO_20DBM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 #define WITH_EEPROM
@@ -65,7 +69,7 @@
 // you need the LowPower library from RocketScream
 // https://github.com/rocketscream/Low-Power
 #include "LowPower.h"
-int idlePeriodInMin = 1;
+int idlePeriodInMin = 10;
 int nCycle = idlePeriodInMin*60/8;
 #endif
 
@@ -392,7 +396,8 @@ void loop(void)
 
 #ifdef LOW_POWER
       digitalWrite(TEMP_PIN_POWER,HIGH);
-      delay(100);    
+      // security?
+      delay(200);    
       int value = analogRead(TEMP_PIN_READ);
       digitalWrite(TEMP_PIN_POWER,LOW);
 #else
@@ -522,15 +527,15 @@ void loop(void)
               LAS_FIRST_DATAPKT+LAS_LAST_DATAPKT, LAS_NOACK);
       
       if (e==TOA_OVERUSE) {
-          Serial.println("Not sent, TOA_OVERUSE");  
+          Serial.println(F("Not sent, TOA_OVERUSE"));  
       }
       
       if (e==LAS_LBT_ERROR) {
-          Serial.println("LBT error");  
+          Serial.println(F("LBT error"));  
       }      
       
       if (e==LAS_SEND_ERROR || e==LAS_ERROR) {
-          Serial.println("Send error");  
+          Serial.println(F("Send error"));  
       }      
 #else 
       // Send message to the gateway and print the result

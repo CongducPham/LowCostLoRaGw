@@ -1,3 +1,5 @@
+include radio.makefile
+
 lora_gateway: lora_gateway.o arduPi.o SX1272.o
 	g++ -lrt -lpthread lora_gateway.o arduPi.o SX1272.o -o lora_gateway	
 
@@ -17,16 +19,16 @@ lora_gateway_pi2_winput: lora_gateway_pi2_winput.o arduPi_pi2.o SX1272_pi2.o
 	g++ -lrt -lpthread lora_gateway_pi2_winput.o arduPi_pi2.o SX1272_pi2.o -o lora_gateway_pi2_winput
 
 lora_gateway.o: lora_gateway.cpp
-	g++ -DRASPBERRY -DIS_RCV_GATEWAY -c lora_gateway.cpp -o lora_gateway.o
+	g++ $(CFLAGS) -DRASPBERRY -DIS_RCV_GATEWAY -c lora_gateway.cpp -o lora_gateway.o
 
 lora_gateway_pi2.o: lora_gateway.cpp
-	g++ -DRASPBERRY -DRASPBERRY2 -DIS_RCV_GATEWAY -c lora_gateway.cpp -o lora_gateway_pi2.o
+	g++ $(CFLAGS) -DRASPBERRY -DRASPBERRY2 -DIS_RCV_GATEWAY -c lora_gateway.cpp -o lora_gateway_pi2.o
 
 lora_gateway_winput.o: lora_gateway.cpp
-	g++ -DRASPBERRY -DIS_RCV_GATEWAY -DWINPUT -c lora_gateway.cpp -o lora_gateway_winput.o
+	g++ $(CFLAGS) -DRASPBERRY -DIS_RCV_GATEWAY -DWINPUT -c lora_gateway.cpp -o lora_gateway_winput.o
 
 lora_gateway_pi2_winput.o: lora_gateway.cpp
-	g++ -DRASPBERRY -DRASPBERRY2 -DIS_RCV_GATEWAY -DWINPUT -c lora_gateway.cpp -o lora_gateway_pi2_winput.o
+	g++ $(CFLAGS) -DRASPBERRY -DRASPBERRY2 -DIS_RCV_GATEWAY -DWINPUT -c lora_gateway.cpp -o lora_gateway_pi2_winput.o
 
 arduPi.o: arduPi.cpp arduPi.h
 	g++ -c arduPi.cpp -o arduPi.o	
@@ -59,10 +61,10 @@ lora_las_gateway_pi2_wnetkey: lora_las_gateway_pi2.o LoRaActivitySharing.o arduP
 	g++ -lrt -lpthread lora_las_gateway.o LoRaActivitySharing.o arduPi_pi2.o SX1272_pi2_wnetkey.o -o lora_las_gateway_pi2_wnetkey
 	
 lora_las_gateway.o: lora_gateway.cpp
-	g++ -DRASPBERRY -DIS_RCV_GATEWAY -DLORA_LAS -c lora_gateway.cpp -o lora_las_gateway.o
+	g++ $(CFLAGS) -DRASPBERRY -DIS_RCV_GATEWAY -DLORA_LAS -c lora_gateway.cpp -o lora_las_gateway.o
 
 lora_las_gateway_pi2.o: lora_gateway.cpp
-	g++ -DRASPBERRY -DRASPBERRY2 -DIS_RCV_GATEWAY -DLORA_LAS -c lora_gateway.cpp -o lora_las_gateway_pi2.o
+	g++ $(CFLAGS) -DRASPBERRY -DRASPBERRY2 -DIS_RCV_GATEWAY -DLORA_LAS -c lora_gateway.cpp -o lora_las_gateway_pi2.o
 
 LoRaActivitySharing.o: LoRaActivitySharing.cpp LoRaActivitySharing.h
 	g++ -c LoRaActivitySharing.cpp -o LoRaActivitySharing.o
@@ -75,10 +77,10 @@ lora_device_pi2: lora_gateway_dev_pi2.o arduPi_pi2.o SX1272_pi2.o
 	g++ -lrt -lpthread lora_gateway_dev.o arduPi_pi2.o SX1272_pi2.o -o lora_device_pi2
 
 lora_gateway_dev.o: lora_gateway.cpp
-	g++ -DRASPBERRY -DIS_SEND_GATEWAY -DWINPUT -c lora_gateway.cpp -o lora_gateway_dev.o
+	g++ $(CFLAGS) -DRASPBERRY -DIS_SEND_GATEWAY -DWINPUT -c lora_gateway.cpp -o lora_gateway_dev.o
 
 lora_gateway_dev_pi2.o: lora_gateway.cpp
-	g++ -DRASPBERRY -DRASPBERRY2 -DIS_SEND_GATEWAY -DWINPUT -c lora_gateway.cpp -o lora_gateway_dev_pi2.o
+	g++ $(CFLAGS) -DRASPBERRY -DRASPBERRY2 -DIS_SEND_GATEWAY -DWINPUT -c lora_gateway.cpp -o lora_gateway_dev_pi2.o
 #end
 		
 lib: arduPi.o arduPi_pi2.o SX1272.o SX1272_pi2.o SX1272_wnetkey.o SX1272_pi2_wnetkey.o lora_gateway.o lora_las_gateway.o lora_gateway_pi2.o lora_las_gateway_pi2.o

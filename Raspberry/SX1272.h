@@ -317,7 +317,8 @@ const uint8_t MAX_LENGTH = 255;
 const uint8_t MAX_PAYLOAD = 251;
 const uint8_t MAX_LENGTH_FSK = 64;
 const uint8_t MAX_PAYLOAD_FSK = 60;
-const uint8_t ACK_LENGTH = 5;
+//modified by C. Pham, 7 instead of 5 because we added a type field which should be PKT_TYPE_ACK and the SNR
+const uint8_t ACK_LENGTH = 7;
 // added by C. Pham
 #ifdef W_NET_KEY
 const uint8_t NET_KEY_LENGTH=2;
@@ -1192,6 +1193,7 @@ public:
     bool _RSSIonSend;
     bool _enableCarrierSense;
     bool _rawFormat;
+    int8_t _rcv_snr_in_ack;
 
 #ifdef W_REQUESTED_ACK
     uint8_t _requestACK;

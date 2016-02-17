@@ -176,10 +176,17 @@
 // Include the SX1272 
 #include "SX1272.h"
 
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// please uncomment only 1 choice
+//
 // uncomment if your radio is an HopeRF RFM92W or RFM95W
 //#define RADIO_RFM92_95
 // uncomment if your radio is a Modtronix inAirB (the one with +20dBm features), if inAir9, leave commented
 //#define RADIO_INAIR9B
+// uncomment if you only know that it has 20dBm feature
+//#define RADIO_20DBM
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 #ifdef RASPBERRY
 #include <stdio.h>
@@ -225,7 +232,7 @@
   
 //#define RECEIVE_ALL 
 //#define IS_RCV_GATEWAY
-//#define IS_SEND_GATEWAY
+#//define IS_SEND_GATEWAY
 //#define CAD_TEST
 //#define LORA_LAS
 //#define WINPUT
@@ -305,7 +312,7 @@ bool RSSIonSend=true;
 uint8_t loraMode=LORAMODE;
 uint8_t loraChannelIndex=0;
 uint32_t loraChannel=loraChannelArray[loraChannelIndex];
-#if defined RADIO_RFM92_95 || defined RADIO_INAIR9B
+#if defined RADIO_RFM92_95 || defined RADIO_INAIR9B || defined RADIO_20DBM
 // HopeRF 92W/95W and inAir9B need the PA_BOOST
 // so 'x' set the PA_BOOST but then limit the power to +14dBm 
 char loraPower='x';
@@ -1585,7 +1592,7 @@ void loop(void)
 
       endSend=millis();  
       
-      if (withAck || withTmpAck) {
+      if ((withAck || withTmpAck) && !e) {
         sx1272.getSNR();
         sx1272.getRSSIpacket();
          

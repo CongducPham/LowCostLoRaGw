@@ -3742,10 +3742,14 @@ uint8_t SX1272::setACK()
     {
         // Setting ACK
         ACK.dst = packet_received.src; // ACK destination is packet source
+        ACK.type = PKT_TYPE_ACK;
         ACK.src = packet_received.dst; // ACK source is packet destination
         ACK.packnum = packet_received.packnum; // packet number that has been correctly received
-        ACK.length = 0;		  // length = 0 to show that's an ACK
+        ACK.length = 2;
         ACK.data[0] = _reception;	// CRC of the received packet
+        // added by C. Pham
+        // store the SNR
+        ACK.data[1]= readRegister(REG_PKT_SNR_VALUE);
 
         // Setting address pointer in FIFO data buffer
         writeRegister(REG_FIFO_ADDR_PTR, 0x80);
@@ -3754,10 +3758,12 @@ uint8_t SX1272::setACK()
 
         // Writing ACK to send in FIFO
         writeRegister(REG_FIFO, ACK.dst); 		// Writing the destination in FIFO
+        writeRegister(REG_FIFO, ACK.type);
         writeRegister(REG_FIFO, ACK.src);		// Writing the source in FIFO
         writeRegister(REG_FIFO, ACK.packnum);	// Writing the packet number in FIFO
         writeRegister(REG_FIFO, ACK.length); 	// Writing the packet length in FIFO
         writeRegister(REG_FIFO, ACK.data[0]);	// Writing the ACK in FIFO
+        writeRegister(REG_FIFO, ACK.data[1]);	// Writing the ACK in FIFO
 
         //#if (SX1272_debug_mode > 0)
         Serial.println(F("## ACK set and written in FIFO ##"));
@@ -3773,6 +3779,8 @@ uint8_t SX1272::setACK()
         Serial.println(ACK.length);				// Printing ACK length
         Serial.print(F("ACK payload: "));
         Serial.println(ACK.data[0]);			// Printing ACK payload
+        Serial.print(F("ACK SNR last rcv pkt: "));
+        Serial.println(_SNR);
         Serial.println(F("##"));
         Serial.println();
         //#endif
@@ -3934,10 +3942,14 @@ uint8_t SX1272::receivePacketTimeout(uint16_t wait)
         else
         {
             state_f = 0;  // The packet has been correctly received
+            // added by C. Pham
+            // we get the SNR and RSSI of the received packet for future usage
+            getSNR();
+            getRSSIpacket();
         }
 
         // need to send an ACK
-        if ( state == 5 ) {
+        if ( state == 5 && state_f == 0) {
 
             state = setACK();
 
@@ -5922,45 +5934,75 @@ uint8_t SX1272::getACK(uint16_t wait)
     {
         // Storing the received ACK
         ACK.dst = _destination;
+        ACK.type = readRegister(REG_FIFO);
         ACK.src = readRegister(REG_FIFO);
         ACK.packnum = readRegister(REG_FIFO);
         ACK.length = readRegister(REG_FIFO);
         ACK.data[0] = readRegister(REG_FIFO);
+        ACK.data[1] = readRegister(REG_FIFO);
 
-        // Checking the received ACK
-        if( ACK.dst == packet_sent.src )
-        {
-            if( ACK.src == packet_sent.dst )
+        if (ACK.type == PKT_TYPE_ACK) {
+
+            // Checking the received ACK
+            if( ACK.dst == packet_sent.src )
             {
-                if( ACK.packnum == packet_sent.packnum )
+                if( ACK.src == packet_sent.dst )
                 {
-                    if( ACK.length == 0 )
+                    if( ACK.packnum == packet_sent.packnum )
                     {
-                        if( ACK.data[0] == CORRECT_PACKET )
+                        if( ACK.length == 2 )
                         {
-                            state = 0;
-                            //#if (SX1272_debug_mode > 0)
-                            // Printing the received ACK
-                            Serial.println(F("## ACK received:"));
-                            Serial.print(F("Destination: "));
-                            Serial.println(ACK.dst);			 	// Printing destination
-                            Serial.print(F("Source: "));
-                            Serial.println(ACK.src);			 	// Printing source
-                            Serial.print(F("ACK number: "));
-                            Serial.println(ACK.packnum);			// Printing ACK number
-                            Serial.print(F("ACK length: "));
-                            Serial.println(ACK.length);				// Printing ACK length
-                            Serial.print(F("ACK payload: "));
-                            Serial.println(ACK.data[0]);			// Printing ACK payload
-                            Serial.println(F("##"));
-                            Serial.println();
-                            //#endif
+                            if( ACK.data[0] == CORRECT_PACKET )
+                            {
+                                state = 0;
+                                //#if (SX1272_debug_mode > 0)
+                                // Printing the received ACK
+                                Serial.println(F("## ACK received:"));
+                                Serial.print(F("Destination: "));
+                                Serial.println(ACK.dst);			 	// Printing destination
+                                Serial.print(F("Source: "));
+                                Serial.println(ACK.src);			 	// Printing source
+                                Serial.print(F("ACK number: "));
+                                Serial.println(ACK.packnum);			// Printing ACK number
+                                Serial.print(F("ACK length: "));
+                                Serial.println(ACK.length);				// Printing ACK length
+                                Serial.print(F("ACK payload: "));
+                                Serial.println(ACK.data[0]);			// Printing ACK payload
+                                Serial.print(F("ACK SNR of rcv pkt at gw: "));
+
+                                value = ACK.data[1];
+
+                                if( value & 0x80 ) // The SNR sign bit is 1
+                                {
+                                    // Invert and divide by 4
+                                    value = ( ( ~value + 1 ) & 0xFF ) >> 2;
+                                    _rcv_snr_in_ack = -value;
+                                }
+                                else
+                                {
+                                    // Divide by 4
+                                    _rcv_snr_in_ack = ( value & 0xFF ) >> 2;
+                                }
+
+                                Serial.println(_rcv_snr_in_ack);
+                                Serial.println(F("##"));
+                                Serial.println();
+                                //#endif
+                            }
+                            else
+                            {
+                                state = 1;
+                                //#if (SX1272_debug_mode > 0)
+                                Serial.println(F("** N-ACK received **"));
+                                Serial.println();
+                                //#endif
+                            }
                         }
                         else
                         {
                             state = 1;
                             //#if (SX1272_debug_mode > 0)
-                            Serial.println(F("** N-ACK received **"));
+                            Serial.println(F("** ACK length incorrectly received **"));
                             Serial.println();
                             //#endif
                         }
@@ -5969,7 +6011,7 @@ uint8_t SX1272::getACK(uint16_t wait)
                     {
                         state = 1;
                         //#if (SX1272_debug_mode > 0)
-                        Serial.println(F("** ACK length incorrectly received **"));
+                        Serial.println(F("** ACK number incorrectly received **"));
                         Serial.println();
                         //#endif
                     }
@@ -5978,18 +6020,10 @@ uint8_t SX1272::getACK(uint16_t wait)
                 {
                     state = 1;
                     //#if (SX1272_debug_mode > 0)
-                    Serial.println(F("** ACK number incorrectly received **"));
+                    Serial.println(F("** ACK source incorrectly received **"));
                     Serial.println();
                     //#endif
                 }
-            }
-            else
-            {
-                state = 1;
-                //#if (SX1272_debug_mode > 0)
-                Serial.println(F("** ACK source incorrectly received **"));
-                Serial.println();
-                //#endif
             }
         }
         else

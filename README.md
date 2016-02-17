@@ -4,9 +4,9 @@ Low-cost LoRa gateway with Raspberry
 
 Fisrt install a Raspberry with Raspbian. Then install python packages such as requests, python-firebase,… as needed
 
-Follow procedure to have Dropbox mounted on your Raspberry if you want to use this feature, otherwise, just create a Dropbox folder with a subforder LoRa-test. 
+Follow procedure to have Dropbox mounted on your Raspberry if you want to use this feature, otherwise, just create a Dropbox folder with a subforder LoRa-test that will be used locally. You can mount Dropbox later on if you want: the local folders and contents will be unchanged.
 
-Create a folder named gateway for instance then copy all the files of the distrib's Raspberry folder in it. DO NOT modify the lora_gateway.cpp file unless you know what you are doing. Then:
+Create a folder named lora_gateway for instance then copy all the files of the distrib's Raspberry folder in it. DO NOT modify the lora_gateway.cpp file unless you know what you are doing. Check the radio.makefile file to select the radio module that you have. Uncomment only 1 choice or leave all lines commented if you do not have neither an HopeRF92/95 or inAir9B or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it). For instance, with both Libelium LoRa and inAir9 (not inAir9B) you should leave all lines commented. Then:
 
 	> make lora_gateway
 
@@ -64,7 +64,7 @@ The program has been tested on Arduino Mega and Due with the Libelium Multi-Prot
 An interactive end-device for sending LoRa messages with the Arduino IDE
 ------------------------------------------------------------------------
 
-With the Arduino IDE, open the Arduino_LoRa_Gateway sketch, compile it and upload to an Arduino board.
+With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and check that "#define IS_SEND_GATEWAY" is uncommented. Then compile it and upload to an Arduino board.
 
 By default, the end-device have address 6 and runs in LoRa mode 4.
 
@@ -80,12 +80,7 @@ When testing with the interactive end-device, you should not use the --wappkey o
 Use an Arduino as a LoRa gateway
 --------------------------------
 
-The gateway can also be based on an Arduino board, as described in the web page. With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and set the compilation #define as follows:
-
-#define IS_RCV_GATEWAY
-//#define IS_SEND_GATEWAY
-
-compile the code and upload to an Arduino board. Then follow instruction on how to use the Arduino board as a gateway.
+The gateway can also be based on an Arduino board, as described in the web page. With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and set the compilation #define to have IS_RCV_GATEWAY and not IS_SEND_GATEWAY. Compile the code and upload to an Arduino board. Then follow instructions on how to use the Arduino board as a gateway.
 
 
 Enjoy!
