@@ -27,13 +27,21 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 //
+// it seems that both HopeRF and Modtronix board use the PA_BOOST pin and not the RFO. Therefore, for these
+// boards we set the initial power to 'x' and not 'M'. This is the purpose of the define statement 
+//
 // uncomment if your radio is an HopeRF RFM92W or RFM95W
 //#define RADIO_RFM92_95
-// uncomment if your radio is a Modtronix inAirB (the one with +20dBm features), if inAir9, leave commented
+// uncomment if your radio is a Modtronix inAir9B (the one with +20dBm features), if inAir9, leave commented
 //#define RADIO_INAIR9B
-// uncomment if you only know that it has 20dBm feature
-//#define RADIO_20DBM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// please uncomment only 1 choice
+#define BAND868
+//#define BAND900
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define WITH_EEPROM
 #define WITH_APPKEY
@@ -326,9 +334,14 @@ void setup()
   // enable carrier sense
   sx1272._enableCarrierSense=true;  
 #endif
-    
+
+#ifdef BAND868
   // Select frequency channel
   e = sx1272.setChannel(CH_10_868);
+#else // assuming #defined BAND900
+  // Select frequency channel
+  e = sx1272.setChannel(CH_05_900);
+#endif
   Serial.print(F("Setting Channel: state "));
   Serial.println(e, DEC);
   

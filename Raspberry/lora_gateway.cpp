@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.1
+ *  Version:                1.2
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -99,6 +99,8 @@
 
 /*  Change logs
  *
+ *  Fev, 25th, 2016. v1.2
+ *        Add 900MHz support when specifying a channel in command line
  *  Jan, 22th, 2016. v1.1
  *        Add advanced configuration options when running on Linux (Raspberry typically)
  *          - options are: --mode 4 --bw 500 --cr 5 --sf 12 --freq 868.1 --ch 10 --sw 34 --raw 
@@ -180,13 +182,21 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 //
+// it seems that both HopeRF and Modtronix board use the PA_BOOST pin and not the RFO. Therefore, for these
+// boards we set the initial power to 'x' and not 'M'. This is the purpose of the define statement 
+//
 // uncomment if your radio is an HopeRF RFM92W or RFM95W
 //#define RADIO_RFM92_95
-// uncomment if your radio is a Modtronix inAirB (the one with +20dBm features), if inAir9, leave commented
+// uncomment if your radio is a Modtronix inAir9B (the one with +20dBm features), if inAir9, leave commented
 //#define RADIO_INAIR9B
-// uncomment if you only know that it has 20dBm feature
-//#define RADIO_20DBM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// please uncomment only 1 choice
+#define BAND868
+//#define BAND900
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef RASPBERRY
 #include <stdio.h>
@@ -232,7 +242,7 @@
   
 //#define RECEIVE_ALL 
 //#define IS_RCV_GATEWAY
-#//define IS_SEND_GATEWAY
+//#define IS_SEND_GATEWAY
 //#define CAD_TEST
 //#define LORA_LAS
 //#define WINPUT
@@ -243,6 +253,19 @@
 //#define LORAMODE 11
 
 #define LORAMODE 4
+
+#ifdef BAND868
+#define MAX_NB_CHANNEL 9
+#define STARTING_CHANNEL 10
+#define ENDING_CHANNEL 18
+uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_10_868,CH_11_868,CH_12_868,CH_13_868,CH_14_868,CH_15_868,CH_16_868,CH_17_868,CH_18_868};
+#else // assuming #defined BAND900
+#define MAX_NB_CHANNEL 13
+#define STARTING_CHANNEL 0
+#define ENDING_CHANNEL 12
+uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_900,CH_01_900,CH_02_900,CH_03_900,CH_04_900,CH_05_900,CH_06_900,CH_07_900,CH_08_900,
+                                            CH_09_900,CH_10_900,CH_11_900,CH_12_900};
+#endif
 
 // use the dynamic ACK feature of our modified SX1272 lib
 #define GW_AUTO_ACK 
@@ -302,8 +325,6 @@ char keyPressBuff[30];
 uint8_t keyIndex=0;
 int ch;
 #endif
-
-uint32_t loraChannelArray[9]={CH_10_868,CH_11_868,CH_12_868,CH_13_868,CH_14_868,CH_15_868,CH_16_868,CH_17_868,CH_18_868};
 
 // configuration variables
 //////////////////////////
@@ -452,9 +473,15 @@ void startConfig() {
       PRINT_CSTSTR("%s",": state ");      
     }
     else {
+#ifdef BAND868      
       PRINT_CSTSTR("%s","^$Channel CH_1");
       PRINT_VALUE("%d", loraChannelIndex);
       PRINT_CSTSTR("%s","_868: state ");
+#else
+      PRINT_CSTSTR("%s","^$Channel CH_");
+      PRINT_VALUE("%d", loraChannelIndex);
+      PRINT_CSTSTR("%s","_900: state ");
+#endif
     }
   }  
   PRINT_VALUE("%d", e);
@@ -1674,7 +1701,7 @@ int main (int argc, char *argv[]){
       switch (opt) {
            case 'a' : loraMode = atoi(optarg);
                break;
-           case 'b' : optAESgw=true;
+           case 'b' : optAESgw=true; // not used at the moment
                break;
            case 'c' : optBW = atoi(optarg); 
                       // 125, 250 or 500
@@ -1695,7 +1722,10 @@ int main (int argc, char *argv[]){
                       loraChannel=optFQ*1000000.0*RH_LORA_FCONVERT;
                break;     
            case 'h' : optCH=true;
-                      loraChannelIndex=atoi(optarg)-10;
+                      loraChannelIndex=atoi(optarg);
+                      if (loraChannelIndex < STARTING_CHANNEL || loraChannelIndex > ENDING_CHANNEL)
+                        loraChannelIndex=STARTING_CHANNEL;
+                      loraChannelIndex=loraChannelIndex-STARTING_CHANNEL;  
                       loraChannel=loraChannelArray[loraChannelIndex]; 
                break;      
            case 'i' : uint8_t sw=atoi(optarg);
