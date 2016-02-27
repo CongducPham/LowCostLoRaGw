@@ -101,6 +101,7 @@
  *
  *  Fev, 25th, 2016. v1.2
  *        Add 900MHz support when specifying a channel in command line
+ *        Use by default channel 10 (865.2MHz) in 868MHz band and channel 5 (913.88) in 900MHz band
  *  Jan, 22th, 2016. v1.1
  *        Add advanced configuration options when running on Linux (Raspberry typically)
  *          - options are: --mode 4 --bw 500 --cr 5 --sf 12 --freq 868.1 --ch 10 --sw 34 --raw 
@@ -258,11 +259,13 @@
 #define MAX_NB_CHANNEL 9
 #define STARTING_CHANNEL 10
 #define ENDING_CHANNEL 18
+uint8_t loraChannelIndex=0;
 uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_10_868,CH_11_868,CH_12_868,CH_13_868,CH_14_868,CH_15_868,CH_16_868,CH_17_868,CH_18_868};
 #else // assuming #defined BAND900
 #define MAX_NB_CHANNEL 13
 #define STARTING_CHANNEL 0
 #define ENDING_CHANNEL 12
+uint8_t loraChannelIndex=5;
 uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_900,CH_01_900,CH_02_900,CH_03_900,CH_04_900,CH_05_900,CH_06_900,CH_07_900,CH_08_900,
                                             CH_09_900,CH_10_900,CH_11_900,CH_12_900};
 #endif
@@ -331,7 +334,6 @@ int ch;
 bool radioON=false;
 bool RSSIonSend=true;
 uint8_t loraMode=LORAMODE;
-uint8_t loraChannelIndex=0;
 uint32_t loraChannel=loraChannelArray[loraChannelIndex];
 #if defined RADIO_RFM92_95 || defined RADIO_INAIR9B || defined RADIO_20DBM
 // HopeRF 92W/95W and inAir9B need the PA_BOOST
@@ -1370,19 +1372,14 @@ void loop(void)
               else {      
                   i++;
                   cmdValue=getCmdValue(i);
-                  
-                  // cannot set channel greater than 17
-                  if (cmdValue > 18)
-                          cmdValue = 10;
-                  // cannot set channel lower than 10
-                  if (cmdValue < 10)
-                          cmdValue = 10;
-                  // set channel
-                  loraChannelIndex=cmdValue-10;        
-                  loraChannel=loraChannelArray[loraChannelIndex]; 
+
+                  if (cmdValue < STARTING_CHANNEL || cmdValue > ENDING_CHANNEL)
+                    loraChannelIndex=STARTING_CHANNEL;
+                  loraChannelIndex=loraChannelIndex-STARTING_CHANNEL;  
+                  loraChannel=loraChannelArray[loraChannelIndex];
                   
                   PRINT_CSTSTR("%s","^$Set LoRa channel to ");
-                  PRINT_VALUE("%d",cmdValue);             
+                  PRINT_VALUE("%d",cmdValue);
                   PRINTLN;
                   
                   // Select frequency channel
