@@ -790,7 +790,7 @@ int8_t SX1272::setMode(uint8_t mode)
             }
             else {
                 // (config1 >> 1) ---> take out bits 7-1 from REG_MODEM_CONFIG1 (=_bandwidth & _codingRate together)
-                if( (config1 >> 1) == 0x35 )
+                if( (config1 >> 1) == 0x39 )
                     state=0;
             }
 
@@ -841,7 +841,7 @@ int8_t SX1272::setMode(uint8_t mode)
             }
             else {
                 // (config1 >> 1) ---> take out bits 7-1 from REG_MODEM_CONFIG1 (=_bandwidth & _codingRate together)
-                if( (config1 >> 1) == 0x35 )
+                if( (config1 >> 1) == 0x39 )
                     state=0;
             }
 
@@ -1043,7 +1043,7 @@ int8_t SX1272::setMode(uint8_t mode)
             }
             else {
                 // (config1 >> 1) ---> take out bits 7-1 from REG_MODEM_CONFIG1 (=_bandwidth & _codingRate together)
-                if( (config1 >> 1) == 0x35 )
+                if( (config1 >> 1) == 0x39 )
                     state=0;
             }
 

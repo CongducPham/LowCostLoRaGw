@@ -82,6 +82,14 @@ Use an Arduino as a LoRa gateway
 
 The gateway can also be based on an Arduino board, as described in the web page. With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and set the compilation #define to have IS_RCV_GATEWAY and not IS_SEND_GATEWAY. Compile the code and upload to an Arduino board. Then follow instructions on how to use the Arduino board as a gateway.
 
+-------
+WARNING
+-------
+
+A/ There is currently no control on the transmit time for both gateway and end-device. When using the library to create devices, you have to ensure that the transmit time of your device is not exceeding the legal maximum transmit time defined in the regulation of your country.
+
+B/ Although 900MHz band is supported (mostly for the US ISM band), the library does not implement the frequency hopping mechanism.
+
 
 Enjoy!
 C. Pham
