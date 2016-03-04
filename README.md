@@ -24,19 +24,19 @@ By default, the gateway runs in LoRa mode 4 and has address 1.
 
 To use post-processing with the provided ThingSpeak test channel
 
-	> sudo ./lora_gateway | python ./parseLoRaStdin.py -t
+	> sudo ./lora_gateway | python ./post_processing_gw.py -t
 
 To log processing output in a file (in ~/Dropbox/LoRa-test/post_processing_1.log)
 
-	> sudo ./lora_gateway | python ./parseLoRaStdin.py -t | python ./logParseGateway
-
+	> sudo ./lora_gateway | python ./post_processing_gw.py -t | python ./log_gw
+	
 To additionally enforce application key at the gateway post-processing stage
 
-	> sudo ./lora_gateway | python ./parseLoRaStdin.py -t --wappkey | python ./logParseGateway
+	> sudo ./lora_gateway | python ./post_processing_gw.py -t --wappkey | python ./log_gw
 
 This is the command that we recommend. To test, just flash a temperature sensor as described below and it should work out-of-the-box.
 
-You can customize the post-processing stage (parseLoRaStdin.py) at your convenience later.
+You can customize the post-processing stage (post_processing_gw.py) at your convenience later.
 
 ------------------------------------------------------------------------
 An end-device example that periodically sends temperature to the gateway
@@ -48,7 +48,7 @@ With the Arduino IDE, open the Arduino_LoRa_temp_1 sketch, compile it and upload
 
 The end-device has address 6 and run in LoRa mode 4. It will send data to the gateway.
 
-The default configuration uses an application key set to [5, 6, 7, 8] and the 0xFF0xEE app key prefix is inserted.
+The default configuration uses an application key set to [5, 6, 7, 8].
 
 Use a temperature sensor (e.g. LM35DZ) and plugged in pin A0 (analog 0). You can use a power pin to power your temperature sensor if you are not concerned about power saving. Otherwise, you can use digital 8 (the sketch set this pin HIGH when reading value, then sets it back to LOW) and activate low power mode (uncomment #define LOW_POWER). You will need the LowPower library from RocketScream (https://github.com/rocketscream/Low-Power). The radio module plugged in the 3V3 pin will still be powered but should drain small amount of current in stand-by mode. Of course, the low power configuration is still very simple but it already can save lot's of energy for battery-operating mode.
 
@@ -74,7 +74,7 @@ The command will be sent to the gateway and you should see the gateway pushing t
 
 When testing with the interactive end-device, you should not use the --wappkey option for the parseLoRaStdin.py post-processing python script otherwise your command will not be accepted as only text string without logging services will be received and displayed when --wappkey is set.
 
-	> sudo ./lora_gateway | python ./parseLoRaStdin.py -t | python ./logParseGateway
+	> sudo ./lora_gateway | python ./post_processing_gw.py -t | python ./log_gw
 
 --------------------------------
 Use an Arduino as a LoRa gateway
