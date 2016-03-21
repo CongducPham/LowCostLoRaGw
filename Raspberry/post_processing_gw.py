@@ -350,7 +350,7 @@ while True:
 				
 				data = sys.stdin.readline()
 				print "rcv msg to log (\$) on dropbox: "+data,
-				f=open(os.path.expanduser(_telemetrylog_filemane),"a")
+				f=open(os.path.expanduser(_telemetrylog_filename),"a")
 				f.write(info_str+' ')	
 				now = datetime.datetime.now()
 				f.write(now.isoformat()+'> ')

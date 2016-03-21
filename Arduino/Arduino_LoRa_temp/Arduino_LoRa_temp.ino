@@ -31,7 +31,7 @@
 // boards we set the initial power to 'x' and not 'M'. This is the purpose of the define statement 
 //
 // uncomment if your radio is an HopeRF RFM92W or RFM95W
-//#define RADIO_RFM92_95
+#define RADIO_RFM92_95
 // uncomment if your radio is a Modtronix inAir9B (the one with +20dBm features), if inAir9, leave commented
 //#define RADIO_INAIR9B
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
@@ -64,7 +64,7 @@
 // use digital 8 to power the temperature sensor
 #define TEMP_PIN_POWER 8
   
-#if defined ARDUINO_AVR_PRO 
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI // Nexus board from Ideetron is a Mini
   #define SX1272_POWER 9
   // the Pro Mini works in 3.3V
   #define TEMP_SCALE  3300.0
@@ -285,6 +285,10 @@ void setup()
   Serial.println(F("Arduino Nano detected"));
 #endif
 
+#ifdef ARDUINO_AVR_MINI
+  Serial.println(F("Arduino MINI/Nexus detected"));
+#endif
+
   // Power ON the module
   sx1272.ON();
 
@@ -329,10 +333,22 @@ void setup()
 
   // SIFS=3CAD and DIFS=3SIFS
   // here we use a DIFS prior to data transmission
-  send_cad_number=3*SIFS_cad_number;  
+  send_cad_number=3*SIFS_cad_number;
+
+#ifdef LOW_POWER
+  // TODO: with low power, when setting the radio module in sleep mode
+  // there seem to be some issue with RSSI reading
+  RSSIonSend=false;
+#endif
+      
 #else
   // enable carrier sense
   sx1272._enableCarrierSense=true;  
+#ifdef LOW_POWER
+  // TODO: with low power, when setting the radio module in sleep mode
+  // there seem to be some issue with RSSI reading
+  sx1272._RSSIonSend=false;
+#endif  
 #endif
 
 #ifdef BAND868
@@ -580,6 +596,14 @@ void loop(void)
 
 #ifdef LOW_POWER
       Serial.print(F("Switch to power saving mode"));
+
+      e = sx1272.setSleepMode();
+
+      if (!e)
+        Serial.println(F("Successfully switch LoRa module in sleep mode"));
+      else  
+        Serial.println(F("Could not switch LoRa module in sleep mode"));
+              
       Serial.flush();
       delay(50);
       
@@ -587,17 +611,19 @@ void loop(void)
           
       for (int i=0; i<nCycle; i++) {  
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || ARDUINO_AVR_UNO        
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || ARDUINO_AVR_UNO || ARDUINO_AVR_MINI         
           // ATmega328P, ATmega168
-          //LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+          LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
           
-          LowPower.idle(SLEEP_8S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
-                        SPI_OFF, USART0_OFF, TWI_OFF);
+          //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
+          //              SPI_OFF, USART0_OFF, TWI_OFF);
 #elif defined ARDUINO_AVR_MEGA2560
           // ATmega2560
-          LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
-                TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
-                USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
+          LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+          
+          //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
+          //      TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
+          //      USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
 #else
           // use the delay function
           delay(8000);

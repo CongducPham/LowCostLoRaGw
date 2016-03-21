@@ -1148,6 +1148,7 @@ public:
     void CarrierSense();
     int8_t setSyncWord(uint8_t sw);
     int8_t getSyncWord();
+    int8_t setSleepMode();
 
     // SX1272 or SX1276?
     uint8_t _board;

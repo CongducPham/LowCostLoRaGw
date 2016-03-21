@@ -42,23 +42,25 @@ You can customize the post-processing stage (post_processing_gw.py) at your conv
 An end-device example that periodically sends temperature to the gateway
 ------------------------------------------------------------------------
 
-First, install the Arduino IDE 1.6.6. Then, in your sketch folder, copy the content of the distrib's Arduino folder.
+First, install the Arduino IDE 1.6.6. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
 
-With the Arduino IDE, open the Arduino_LoRa_temp_1 sketch, compile it and upload to an Arduino board.
+With the Arduino IDE, open the Arduino_LoRa_temp sketch, compile it and upload to an Arduino board.
 
 The end-device has address 6 and run in LoRa mode 4. It will send data to the gateway.
 
 The default configuration uses an application key set to [5, 6, 7, 8].
 
-Use a temperature sensor (e.g. LM35DZ) and plugged in pin A0 (analog 0). You can use a power pin to power your temperature sensor if you are not concerned about power saving. Otherwise, you can use digital 8 (the sketch set this pin HIGH when reading value, then sets it back to LOW) and activate low power mode (uncomment #define LOW_POWER). You will need the LowPower library from RocketScream (https://github.com/rocketscream/Low-Power). The radio module plugged in the 3V3 pin will still be powered but should drain small amount of current in stand-by mode. Of course, the low power configuration is still very simple but it already can save lot's of energy for battery-operating mode.
+Use a temperature sensor (e.g. LM35DZ) and plugged in pin A0 (analog 0). You can use a power pin to power your temperature sensor if you are not concerned about power saving. Otherwise, you can use digital 8 (the sketch set this pin HIGH when reading value, then sets it back to LOW) and activate low power mode (uncomment #define LOW_POWER). You will need the LowPower library from RocketScream (https://github.com/rocketscream/Low-Power). Of course, this low power configuration is still very simple but it already can save lot's of energy for battery-operating mode. The radio module can be plugged in a 3V3 pin if available (which is always the case on MEGA, Due, Uno and Nano) and still be powered but it should drain only small amount of current in sleep mode. 
+
+For low-power applications the Pro Mini from Sparkfun is certainly a good choice. This board can be either in the 5V or 3.3V version. With the Pro Mini, it is better to really use the 3.3V version running at 8MHz as power consumption will be reduced. Power for the radio module can take the output of a free digital pin that will be set to HIGH to power the radio module. In the temperature example, we use digital pin 9 set to HIGH to power the radio module with 3.3V (we have the 3.3V version) but you can use another pin. If you power your Pro Mini with the RAW pin you can use for instance 4 AA batteries to get 6V. Then you can get 3.3V on the VCC pin (which is powered by the on-board voltage regulator) instead of using a digital pin. If you use a rechargeable battery you can easily find 3.7V Li-Ion packs. In this case, you can inject directly into the VCC pin but make sure that you've unsoldered the power isolation jumper.
 
 Depending on the sensor type, the computation to get the real temperature may be changed accordingly. Here is the instruction for the LM35DZ: http://www.instructables.com/id/ARDUINO-TEMPERATURE-SENSOR-LM35/
 
-The default configuration also use the EEPROM to store the last packet sequence number in order to get it back when the sensor is restarted/rebooted. If you want to restart with a packet sequence number of 0, just comment le line "#define WITH_EEPROM"
+The default configuration also use the EEPROM to store the last packet sequence number in order to get it back when the sensor is restarted/rebooted. If you want to restart with a packet sequence number of 0, just comment the line "#define WITH_EEPROM"
 
 Once flashed, the Arduino temperature sensor will send to the gateway the following message \!#3#20.4 (20.4 is the measured temperature so you may not have the same value) prefixed by the application key every 10 minutes (with some randomization interval). This will trigger at the processing stage of the gateway the logging on the default ThinkSpeak channel (the test channel we provide) in field 3. At the gateway, 20.4 will be recorded on the provided ThingSpeak test channel in field 3 of the channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value. 
 
-The program has been tested on Arduino Mega and Due with the Libelium Multi-Protocol radio shield to connect the LoRa radio module. We also tested on the Pro Mini in which case we do not use the radio shield but simply connect the SPI pins of the radio module to the ones of the Pro Mini. The SX1272 lib has been modified to change the SPI_SS pin from 2 to 10 when you compile for the Pro Mini. Check on the web page our Pro Mini version of the LoRa temperature sensor.
+The program has been tested on Arduino Mega and Due with the Libelium Multi-Protocol radio shield to connect the LoRa radio module. We also tested on the Pro Mini and Nano in which case we do not use the radio shield but simply connect the SPI pins of the radio module to the ones of the board. The SX1272 lib has been modified to change the SPI_SS pin from 2 to 10 when you compile for the Pro Mini or Nano. Check on the web page our Pro Mini and Nano version of the LoRa temperature sensor.
 
 ------------------------------------------------------------------------
 An interactive end-device for sending LoRa messages with the Arduino IDE

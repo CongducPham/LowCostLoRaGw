@@ -6704,4 +6704,27 @@ int8_t	SX1272::setSyncWord(uint8_t sw)
 }
 
 
+int8_t SX1272::setSleepMode() {
+
+    int8_t state = 2;
+    byte value;
+
+    writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);
+    writeRegister(REG_OP_MODE, LORA_SLEEP_MODE);    // LoRa sleep mode
+	
+	//delay(50);
+	
+    value = readRegister(REG_OP_MODE);
+
+	//Serial.print(F("## REG_OP_MODE 0x"));
+	//Serial.println(value, HEX);
+	
+    if (value == LORA_SLEEP_MODE)
+        state=0;
+    else
+        state=1;
+
+    return state;
+}
+
 SX1272 sx1272 = SX1272();
