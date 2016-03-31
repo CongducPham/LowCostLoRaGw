@@ -60,13 +60,13 @@ The default configuration also use the EEPROM to store the last packet sequence 
 
 Once flashed, the Arduino temperature sensor will send to the gateway the following message \!#3#20.4 (20.4 is the measured temperature so you may not have the same value) prefixed by the application key every 10 minutes (with some randomization interval). This will trigger at the processing stage of the gateway the logging on the default ThinkSpeak channel (the test channel we provide) in field 3. At the gateway, 20.4 will be recorded on the provided ThingSpeak test channel in field 3 of the channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value. 
 
-The program has been tested on Arduino Mega and Due with the Libelium Multi-Protocol radio shield to connect the LoRa radio module. We also tested on the Pro Mini and Nano in which case we do not use the radio shield but simply connect the SPI pins of the radio module to the ones of the board. The SX1272 lib has been modified to change the SPI_SS pin from 2 to 10 when you compile for the Pro Mini or Nano. Check on the web page our Pro Mini and Nano version of the LoRa temperature sensor.
+The program has been tested on Arduino Mega and Due with the Libelium Multi-Protocol radio shield to connect the LoRa radio module. We also tested on the Pro Mini, Nano and Teensy3.1/3.2 in which case we do not use the radio shield but simply connect the SPI pins of the radio module to the ones of the board. The SX1272 lib has been modified to change the SPI_SS pin from 2 to 10 when you compile for the Pro Mini, Nano or Teensy. Check on the web page our Pro Mini, Nano and Teensy version of the LoRa temperature sensor.
 
 ------------------------------------------------------------------------
 An interactive end-device for sending LoRa messages with the Arduino IDE
 ------------------------------------------------------------------------
 
-With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and check that "#define IS_SEND_GATEWAY" is uncommented. Then compile it and upload to an Arduino board.
+With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and check that "#define IS_SEND_GATEWAY" is uncommented. Then compile it and upload to an Arduino board. It is better to use a more powerful (and with more RAM memory) Arduino platform for building the interactive device.
 
 By default, the end-device have address 6 and runs in LoRa mode 4.
 
@@ -74,7 +74,7 @@ Enter "\!SGSH52UGPVAUYG3S#1#21.6" (without the quotes) in the input window and p
 
 The command will be sent to the gateway and you should see the gateway pushing the data to the ThingSpeak test channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value.
 
-When testing with the interactive end-device, you should not use the --wappkey option for the parseLoRaStdin.py post-processing python script otherwise your command will not be accepted as only text string without logging services will be received and displayed when --wappkey is set.
+When testing with the interactive end-device, you should not use the --wappkey option for the post_processing_gw.py post-processing python script otherwise your command will not be accepted as only text string without logging services will be received and displayed when --wappkey is set.
 
 	> sudo ./lora_gateway | python ./post_processing_gw.py -t | python ./log_gw
 
@@ -82,7 +82,7 @@ When testing with the interactive end-device, you should not use the --wappkey o
 Use an Arduino as a LoRa gateway
 --------------------------------
 
-The gateway can also be based on an Arduino board, as described in the web page. With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and set the compilation #define to have IS_RCV_GATEWAY and not IS_SEND_GATEWAY. Compile the code and upload to an Arduino board. Then follow instructions on how to use the Arduino board as a gateway.
+The gateway can also be based on an Arduino board, as described in the web page. With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and set the compilation #define to have IS_RCV_GATEWAY and not IS_SEND_GATEWAY. Compile the code and upload to an Arduino board. Then follow instructions on how to use the Arduino board as a gateway. It is better to use a more powerful (and with more RAM memory) Arduino platform for building the gateway.
 
 -------
 WARNING

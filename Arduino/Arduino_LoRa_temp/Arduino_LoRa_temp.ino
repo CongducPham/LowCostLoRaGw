@@ -64,7 +64,7 @@
 // use digital 8 to power the temperature sensor
 #define TEMP_PIN_POWER 8
   
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI // Nexus board from Ideetron is a Mini
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__ // Nexus board from Ideetron is a Mini
   #define SX1272_POWER 9
   // the Pro Mini works in 3.3V
   #define TEMP_SCALE  3300.0
@@ -252,7 +252,7 @@ void setup()
 {
   int e;
   
-#ifdef ARDUINO_AVR_PRO
+#ifdef ARDUINO_AVR_PRO // add here other boards if you power the lora module with a digital pin
   // on the Pro Mini, we use digital 9 to power the SX1272
   pinMode(SX1272_POWER,OUTPUT);
   digitalWrite(SX1272_POWER,HIGH); 
@@ -287,6 +287,10 @@ void setup()
 
 #ifdef ARDUINO_AVR_MINI
   Serial.println(F("Arduino MINI/Nexus detected"));
+#endif
+
+#ifdef __MK20DX256__
+  Serial.println(F("Teensy31/32 detected"));
 #endif
 
   // Power ON the module

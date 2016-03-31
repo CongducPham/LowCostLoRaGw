@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.2
+ *  Version:                1.3
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -27,7 +27,8 @@
  *  LoRa parameters
  *    - /@M1#: set LoRa mode 1
  *    - /@C12#: use channel 12 (868MHz)
- *    - /@PL/H/M#: set power to Low, High or Max
+ *    - /@SF8#: set SF to 8
+ *    - /@PL/H/M/x/X#: set power to Low, High or Max; extreme (PA_BOOST at +14dBm), eXtreme (PA_BOOST at +20dBm)
  *    - /@A9#: set node addr to 9
  *    - /@W34#: set sync word to 0x34
  *    - /@ON# or /@OFF#: power on/off the LoRa module
@@ -99,6 +100,9 @@
 
 /*  Change logs
  *
+ *  Mar, 25th, 2016. v1.3
+ *        Add command to set the spreading factor between 6 and 12:
+ *          - /@SF8#: set SF to 8
  *  Fev, 25th, 2016. v1.2
  *        Add 900MHz support when specifying a channel in command line
  *        Use by default channel 10 (865.2MHz) in 868MHz band and channel 5 (913.88) in 900MHz band
@@ -251,7 +255,7 @@
 //#define WINPUT
 //#define WITH_SEND_LED
 
-// the special mode to test BW=125MHz, CR=4/5, SF=7
+// the special mode to test BW=125MHz, CR=4/5, SF=12
 // on the 868.1MHz channel
 //#define LORAMODE 11
 
@@ -1194,22 +1198,6 @@ void loop(void)
               PRINT_CSTSTR("%s","Set MSS to ");
               PRINT_VALUE("%d",MSS);
               PRINTLN;              
-            break;  
-                                        
-            case 'S': 
-              i++;
-              cmdValue=getCmdValue(i);
-              i++;
-              if (cmdValue>250) {
-                PRINT_CSTSTR("%s","No more than 250B\n");
-              }
-              else {
-                int k=0;
-                for (k=0; k<cmdValue; k++)
-                  cmd[k+i]='#';
-                cmd[k+i]='\0';  
-                sendCmd=true; 
-              }                    
             break;    
 
             case 'R': 
@@ -1271,6 +1259,42 @@ void loop(void)
               }
             break;
 #endif
+
+            case 'S': 
+
+              if (cmd[i+1]=='F') {
+                  i=i+2;
+                  cmdValue=getCmdValue(i);
+
+                  if (cmdValue > 5 && cmdValue < 13) {
+                      PRINT_CSTSTR("%s","^$set SF: ");
+                      PRINT_VALUE("%d",cmdValue);  
+                      PRINTLN;                    
+                      // Set spreading factor
+                      e = sx1272.setSF(cmdValue);
+                      PRINT_CSTSTR("%s","^$set SF: state ");
+                      PRINT_VALUE("%d",e);  
+                      PRINTLN;   
+                  }
+              }
+              else {            
+                  i++;
+                  cmdValue=getCmdValue(i);
+                  i++;
+                  if (cmdValue>250) {
+                    PRINT_CSTSTR("%s","No more than 250B\n");
+                  }
+                  else {
+                    int k=0;
+                    // fill the message to be sent
+                    for (k=0; k<cmdValue; k++)
+                      cmd[k+i]='#';
+                    cmd[k+i]='\0';  
+                    sendCmd=true; 
+                  }
+              }                    
+            break;  
+            
             case 'M':
               i++;
               cmdValue=getCmdValue(i);
@@ -1377,6 +1401,9 @@ void loop(void)
 
                   if (cmdValue < STARTING_CHANNEL || cmdValue > ENDING_CHANNEL)
                     loraChannelIndex=STARTING_CHANNEL;
+                  else
+                    loraChannelIndex=cmdValue;
+                      
                   loraChannelIndex=loraChannelIndex-STARTING_CHANNEL;  
                   loraChannel=loraChannelArray[loraChannelIndex];
                   

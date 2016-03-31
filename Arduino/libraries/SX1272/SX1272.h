@@ -48,7 +48,7 @@
 //#define W_INITIALIZATION
 #define SX1272_RST  3
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_MINI
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_MINI || defined __MK20DX256__
 #define SX1272_SS 10
 #else
 #define SX1272_SS 2
@@ -227,7 +227,7 @@ const uint32_t CH_16_868 = 0xD8C000; // channel 16, central freq = 867.00MHz
 const uint32_t CH_17_868 = 0xD90000; // channel 17, central freq = 868.00MHz
 
 // added by C. Pham
-const uint32_t CH_18_868 = 0xD9068B; // 868.1MHz for LoRaWAN test
+const uint32_t CH_18_868 = 0xD90666; // 868.1MHz for LoRaWAN test
 // end
 const uint32_t CH_00_900 = 0xE1C51E; // channel 00, central freq = 903.08MHz
 const uint32_t CH_01_900 = 0xE24F5C; // channel 01, central freq = 905.24MHz

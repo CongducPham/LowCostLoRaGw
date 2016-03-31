@@ -780,7 +780,7 @@ int8_t SX1272::setMode(uint8_t mode)
     // test for LoRaWAN channel
     case 11:
         setCR(CR_5);        // CR = 4/5
-        setSF(SF_7);        // SF = 7
+        setSF(SF_12);        // SF = 12
         setBW(BW_125);      // BW = 125 KHz
         // set the sync word to the LoRaWAN sync word which is 0x34
         setSyncWord(0x34);
@@ -1061,7 +1061,7 @@ int8_t SX1272::setMode(uint8_t mode)
 
             // added by C. Pham
             // test of LoRaWAN channel
-            // mode 11: BW = 125 KHz, CR = 4/5, SF = 7.
+            // mode 11: BW = 125 KHz, CR = 4/5, SF = 12.
         case 11:
 
             //modified by C. Pham
@@ -1079,7 +1079,7 @@ int8_t SX1272::setMode(uint8_t mode)
                 state = 1;
                 config2 = readRegister(REG_MODEM_CONFIG2);
 
-                if( (config2 >> 4) == SF_7 )
+                if( (config2 >> 4) == SF_12 )
                 {
                     state = 0;
                 }
