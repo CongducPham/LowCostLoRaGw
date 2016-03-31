@@ -374,7 +374,7 @@ uint8_t optSW=0x12;
   
 //////////////////////////
 
-#if defined ARDUINO && not defined _VARIANT_ARDUINO_DUE_X_
+#if defined ARDUINO && not defined _VARIANT_ARDUINO_DUE_X_ && not defined __MK20DX256__
 int freeMemory () {
   extern int __heap_start, *__brkval; 
   int v; 
@@ -555,12 +555,12 @@ void setup()
   srand (time(NULL));
 #endif
 
-#ifdef _VARIANT_ARDUINO_DUE_X_
+#if _VARIANT_ARDUINO_DUE_X_
   Serial.begin(115200);  
 #else  
   // Open serial communications and wait for port to open:
   Serial.begin(38400);
-#ifdef ARDUINO  
+#if defined ARDUINO && not defined __MK20DX256__
     // Print a start message
   Serial.print(freeMemory());
   Serial.println(F(" bytes of free memory.")); 
