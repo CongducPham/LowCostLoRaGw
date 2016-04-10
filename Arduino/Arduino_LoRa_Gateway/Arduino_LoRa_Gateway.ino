@@ -555,7 +555,7 @@ void setup()
   srand (time(NULL));
 #endif
 
-#if _VARIANT_ARDUINO_DUE_X_
+#ifdef _VARIANT_ARDUINO_DUE_X_
   Serial.begin(115200);  
 #else  
   // Open serial communications and wait for port to open:
@@ -1431,7 +1431,6 @@ void loop(void)
                 PRINT_VALUE("%c",loraPower);  
                 PRINTLN;                
                  
-                // Select frequency channel
                 e = sx1272.setPower(loraPower);
                 PRINT_CSTSTR("%s","^$Setting Power: state ");
                 PRINT_VALUE("%d",e);  

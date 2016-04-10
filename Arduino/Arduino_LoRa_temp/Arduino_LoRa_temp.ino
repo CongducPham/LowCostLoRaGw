@@ -21,7 +21,6 @@
  
 // Include the SX1272
 #include "SX1272.h"
-#include <EEPROM.h>
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,13 +42,19 @@
 //#define BAND900
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifndef _VARIANT_ARDUINO_DUE_X_
 #define WITH_EEPROM
+#endif
 #define WITH_APPKEY
 #define FLOAT_TEMP
 //#define LOW_POWER
 //#define CUSTOM_CS
 //#define LORA_LAS
 //#define WITH_AES
+
+#ifdef WITH_EEPROM
+#include <EEPROM.h>
+#endif
 
 #define DEFAULT_DEST_ADDR 1
 #define LORAMODE  4
@@ -253,9 +258,11 @@ void setup()
   int e;
   
 #ifdef ARDUINO_AVR_PRO // add here other boards if you power the lora module with a digital pin
-  // on the Pro Mini, we use digital 9 to power the SX1272
-  pinMode(SX1272_POWER,OUTPUT);
-  digitalWrite(SX1272_POWER,HIGH); 
+  // We now use the VCC pin which delivers 3.3v
+  // We observed stability issue when using a digital pin as the current is very limited.
+  // OBSOLETE: on the Pro Mini, we use digital 9 to power the SX1272
+  //pinMode(SX1272_POWER,OUTPUT);
+  //digitalWrite(SX1272_POWER,HIGH); 
 #endif
 
   // for the temperature sensor
