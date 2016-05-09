@@ -359,7 +359,8 @@ long last_periodic_sendtime=0;
 unsigned long startDoCad, endDoCad;
 bool extendedIFS=true;
 uint8_t SIFS_cad_number;
-uint8_t send_cad_number=0;
+// set to 0 to disable carrier sense based on CAD
+uint8_t send_cad_number=3;
 uint8_t SIFS_value[11]={0, 183, 94, 44, 47, 23, 24, 12, 12, 7, 4};
 uint8_t CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
 

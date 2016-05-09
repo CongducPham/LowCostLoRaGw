@@ -26,13 +26,12 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 //
-// it seems that both HopeRF and Modtronix board use the PA_BOOST pin and not the RFO. Therefore, for these
-// boards we set the initial power to 'x' and not 'M'. This is the purpose of the define statement 
-//
 // uncomment if your radio is an HopeRF RFM92W or RFM95W
-#define RADIO_RFM92_95
-// uncomment if your radio is a Modtronix inAir9B (the one with +20dBm features), if inAir9, leave commented
+//#define RADIO_RFM92_95
+// uncomment if your radio is a Modtronix inAirB (the one with +20dBm features), if inAir9, leave commented
 //#define RADIO_INAIR9B
+// uncomment if you only know that it has 20dBm feature
+//#define RADIO_20DBM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 // IMPORTANT
@@ -49,9 +48,6 @@
 #define FLOAT_TEMP
 //#define NEW_DATA_FIELD
 #define LOW_POWER
-#define CUSTOM_CS
-//#define LORA_LAS
-//#define WITH_AES
 //#define WITH_ACK
 
 #ifdef WITH_EEPROM
@@ -63,49 +59,52 @@
 #endif
 
 #define DEFAULT_DEST_ADDR 1
-#define LORAMODE  4
-#define node_addr 6
-#define field_index 3
-//#define node_addr 10
-//#define field_index 2
-//#define node_addr 3
-//#define field_index 1
+#define LORAMODE  1
+#define node_addr 8
+#define field_index 4
 
 #define TEMP_PIN_READ  A0
-// use digital 8 to power the temperature sensor
+// use digital 8 to power the temperature sensor if needed
 #define TEMP_PIN_POWER 8
   
 #if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__ // Nexus board from Ideetron is a Mini
   #define SX1272_POWER 9
   // the Pro Mini works in 3.3V
   #define TEMP_SCALE  3300.0
-#else // ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MEGA2560
+#else // ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MEGA2560 
   // the SX1272 will be powered by the 3.3V pin
   #define TEMP_SCALE  5000.0
 #endif
 
 #ifdef LOW_POWER
+#ifdef __MK20DX256__
+
+#include <avr/sleep.h>
+#include <avr/wdt.h>
+#include <avr/power.h>
+#include <avr/interrupt.h>
+
+enum period_t
+{
+  SLEEP_15MS,
+  SLEEP_30MS, 
+  SLEEP_60MS,
+  SLEEP_120MS,
+  SLEEP_250MS,
+  SLEEP_500MS,
+  SLEEP_1S,
+  SLEEP_2S,
+  SLEEP_4S,
+  SLEEP_8S,
+  SLEEP_FOREVER
+};
+#else
 // you need the LowPower library from RocketScream
 // https://github.com/rocketscream/Low-Power
 #include "LowPower.h"
+#endif
 int idlePeriodInMin = 10;
 int nCycle = idlePeriodInMin*60/8;
-#endif
-
-#ifdef WITH_AES
-#include <AES.h>
-#include "./printf.h"
-
-AES aes;
-#define AES_KEY_LENGTH  128
-byte *aes_key = (unsigned char*)"0123456789010123";
-unsigned long long int aes_iv = 36753562;
-#endif
-
-#ifdef LORA_LAS
-#include "LoRaActivitySharing.h"
-// acting as an end-device
-LASDevice loraLAS(node_addr,LAS_DEFAULT_ALPHA,DEFAULT_DEST_ADDR);
 #endif
 
 double temp;
@@ -113,23 +112,10 @@ unsigned long lastTransmissionTime=0;
 unsigned long delayBeforeTransmit=0;
 char float_str[20];
 uint8_t message[100];
-// receive window
-uint16_t w_timer=1000;
 
 int loraMode=LORAMODE;
 
-#ifdef CUSTOM_CS
-unsigned long startDoCad, endDoCad;
-bool extendedIFS=true;
-bool RSSIonSend=true;
-uint8_t SIFS_cad_number;
-uint8_t send_cad_number;
-uint8_t SIFS_value[11]={0, 183, 94, 44, 47, 23, 24, 12, 12, 7, 4};
-uint8_t CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
-#endif
-
 uint8_t my_appKey[4]={5, 6, 7, 8};
-// not used for the moment
 uint8_t DevId[4]={0x01, 0x02, 0x03, 0x04};
 
 #ifdef WITH_EEPROM
@@ -144,121 +130,30 @@ struct sx1272config {
 sx1272config my_sx1272config;
 #endif
 
-#ifdef CUSTOM_CS
-// we could use the CarrierSense function added in the SX1272 library, but it is more convenient to duplicate it here
-// so that we could easily modify it for testing
-void CarrierSense() {
-  
-  bool carrierSenseRetry=false;
-  int e;
-  
-  if (send_cad_number) {
-    do { 
-      do {
-        
-        // check for free channel (SIFS/DIFS)        
-        startDoCad=millis();
-        e = sx1272.doCAD(send_cad_number);
-        endDoCad=millis();
-        
-        Serial.print(F("--> CAD duration "));
-        Serial.print(endDoCad-startDoCad);
-        Serial.println();
-        
-        if (!e) {
-          Serial.print(F("OK1\n"));
-          
-          if (extendedIFS)  {          
-            // wait for random number of CAD
-#ifdef ARDUINO                
-            uint8_t w = random(1,8);
-#else
-            uint8_t w = rand() % 8 + 1;
-#endif
-  
-            Serial.print(F("--> waiting for "));
-            Serial.print(w);
-            Serial.print(F(" CAD = "));
-            Serial.print(CAD_value[loraMode]*w);
-            Serial.println();
-            
-            delay(CAD_value[loraMode]*w);
-            
-            // check for free channel (SIFS/DIFS) once again
-            startDoCad=millis();
-            e = sx1272.doCAD(send_cad_number);
-            endDoCad=millis();
- 
-            Serial.print(F("--> CAD duration "));
-            Serial.print(endDoCad-startDoCad);
-            Serial.println();
-        
-            if (!e)
-              Serial.print(F("OK2"));            
-            else
-              Serial.print(F("###2"));
-            
-            Serial.println();
-          }              
-        }
-        else {
-          Serial.print(F("###1\n"));  
+#if defined LOW_POWER && defined __MK20DX256__
 
-          // wait for random number of DIFS
-#ifdef ARDUINO                
-          uint8_t w = random(1,8);
-#else
-          uint8_t w = rand() % 8 + 1;
-#endif
-          
-          Serial.print(F("--> waiting for "));
-          Serial.print(w);
-          Serial.print(F(" DIFS (DIFS=3SIFS) = "));
-          Serial.print(SIFS_value[loraMode]*3*w);
-          Serial.println();
-          
-          delay(SIFS_value[loraMode]*3*w);
-          
-          Serial.print(F("--> retry\n"));
-        }
-
-      } while (e);
-    
-      // CAD is OK, but need to check RSSI
-      if (RSSIonSend) {
-    
-          e=sx1272.getRSSI();
-          
-          uint8_t rssi_retry_count=10;
-          
-          if (!e) {
-          
-            Serial.print(F("--> RSSI "));
-            Serial.print(sx1272._RSSI);       
-            Serial.println("");
-            
-            while (sx1272._RSSI > -90 && rssi_retry_count) {
-              
-              delay(1);
-              sx1272.getRSSI();
-              Serial.print(F("--> RSSI "));
-              Serial.print(sx1272._RSSI);       
-              Serial.println(); 
-              rssi_retry_count--;
-            }
-          }
-          else
-            Serial.print(F("--> RSSI error\n")); 
-        
-          if (!rssi_retry_count)
-            carrierSenseRetry=true;  
-          else
-      carrierSenseRetry=false;            
-      }
-      
-    } while (carrierSenseRetry);  
+void powerDown(period_t period)
+{
+  // seems that low power is currently not supported on the Teensy
+  // TODO!!
+  /*
+  ADCSRA = 0;   // shut off ADC
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  cli();
+  sleep_enable();
+  sei();
+  sleep_cpu();
+  sleep_disable();
+  sei();
+  
+  if (period != SLEEP_FOREVER)
+  {
+    wdt_enable(period);
+    WDTCSR |= (1 << WDIE);  
   }
+  */
 }
+
 #endif
 
 void setup()
@@ -290,7 +185,7 @@ void setup()
   Serial.begin(38400);
 #endif  
   // Print a start message
-  Serial.println(F("SX1272 module and Arduino: send packets without ACK"));
+  Serial.println(F("Simple LoRa temperature sensor"));
 
 #ifdef ARDUINO_AVR_PRO
   Serial.println(F("Arduino Pro Mini detected"));
@@ -337,46 +232,16 @@ void setup()
   Serial.print(F("Setting Mode: state "));
   Serial.println(e, DEC);
 
-  if (loraMode==1)
-    w_timer=2500;
-    
-#ifdef LORA_LAS
-  loraLAS.setSIFS(loraMode);
-#endif
-
-#ifdef CUSTOM_CS
-  if (loraMode>7)
-    SIFS_cad_number=6;
-  else 
-    SIFS_cad_number=3;
-
-  // SIFS=3CAD and DIFS=3SIFS
-  // here we use a DIFS prior to data transmission
-  send_cad_number=3*SIFS_cad_number;
-
-#ifdef LOW_POWER
-  // TODO: with low power, when setting the radio module in sleep mode
-  // there seem to be some issue with RSSI reading
-  RSSIonSend=false;
-#endif
-      
-#else
   // enable carrier sense
-  sx1272._enableCarrierSense=true;  
+  sx1272._enableCarrierSense=true;
 #ifdef LOW_POWER
   // TODO: with low power, when setting the radio module in sleep mode
   // there seem to be some issue with RSSI reading
   sx1272._RSSIonSend=false;
-#endif  
-#endif
-
-#ifdef BAND868
+#endif   
+    
   // Select frequency channel
   e = sx1272.setChannel(CH_10_868);
-#else // assuming #defined BAND900
-  // Select frequency channel
-  e = sx1272.setChannel(CH_05_900);
-#endif
   Serial.print(F("Setting Channel: state "));
   Serial.println(e, DEC);
   
@@ -398,11 +263,6 @@ void setup()
   // Print a success message
   Serial.println(F("SX1272 successfully configured"));
 
-#ifdef LORA_LAS
-  loraLAS.ON(LAS_ON_WRESET);
-#endif
-
-  //printf_begin();
   delay(500);
 }
 
@@ -429,13 +289,6 @@ void loop(void)
   long endSend;
   uint8_t app_key_offset=0;
   int e;
-    
-#ifdef LORA_LAS  
-  // call periodically to be able to detect the start of a new cycle
-  loraLAS.checkCycle();
-#else
-  //if (loraLAS._has_init && (millis()-lastTransmissionTime > 120000)) {
-#endif
 
 #ifndef LOW_POWER
   // 600000+random(15,60)*1000
@@ -469,11 +322,6 @@ void loop(void)
       app_key_offset = sizeof(my_appKey);
       // set the app key in the payload
       memcpy(message,my_appKey,app_key_offset);
-#endif
-
-#ifdef WITH_AES
-      // leave room for the real payload length byte
-      app_key_offset++;
 #endif
 
       uint8_t r_size;
@@ -516,90 +364,13 @@ void loop(void)
       
       int pl=r_size+app_key_offset;
       
-#ifdef WITH_AES
-      byte iv[N_BLOCK] ;
-      byte cipher [48] ;
-      aes.set_IV(aes_iv);
-      aes.get_IV(iv);
-
-      // if we encrypt the format is as follows
-      // appkey(4B) size(1B) payload
-      
-      // get back to the real app_key_offset
-      app_key_offset--;
-      // set the real payload size right before the real payload
-      // so that when decrypting, the receiver can know the number of relevant bytes
-      message[app_key_offset]=r_size;
-
-      for (int i=0; i<pl;i++) {
-        Serial.print(message[i], HEX);
-        Serial.print(" ");
-      }
-      Serial.println();
-        
-      Serial.println(F("Encrypting"));
-      // we encrypt the framing bytes, the appkey, the size and the payload (plus the padding)
-      aes.do_aes_encrypt(message, app_key_offset+1+r_size+1, cipher, aes_key, AES_KEY_LENGTH,iv);
-
-      uint8_t enc_s = aes.get_size();
-      Serial.print(F("Encrypted data size is "));
-      Serial.println(enc_s);
-
-      for (int i=0; i<enc_s; i++) {
-        Serial.print(message[i], HEX);
-        Serial.print(" ");
-      }
-      Serial.println();
-      
-      printf("\nCIPHER:");
-      aes.printArray(cipher,(bool)false);
-      
-      // message will now contain the serialized cipher data
-      pl=aes.fillArray(cipher,message,(bool)false);
-
-      Serial.print(F("Encrypted data size is "));
-      Serial.println(pl);
-
-      for (int i=0; i<pl;i++) {
-        Serial.print(message[i], HEX);
-        Serial.print(" ");
-      }
-                
-#endif
-    
-#ifdef CUSTOM_CS
-      CarrierSense();
-#else
       sx1272.CarrierSense();
-#endif
       
       startSend=millis();
 
-#ifdef WITH_AES
-      // indicate that we have an appkey and that payload is encrypted
-      sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_WAPPKEY | PKT_FLAG_DATA_ENCRYPTED);
-#else
       // indicate that we have an appkey
       sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_WAPPKEY);
-#endif
       
-#ifdef LORA_LAS
-
-      e = loraLAS.sendData(DEFAULT_DEST_ADDR, (uint8_t*)message, pl, 0,
-              LAS_FIRST_DATAPKT+LAS_LAST_DATAPKT, LAS_NOACK);
-      
-      if (e==TOA_OVERUSE) {
-          Serial.println(F("Not sent, TOA_OVERUSE"));  
-      }
-      
-      if (e==LAS_LBT_ERROR) {
-          Serial.println(F("LBT error"));  
-      }      
-      
-      if (e==LAS_SEND_ERROR || e==LAS_ERROR) {
-          Serial.println(F("Send error"));  
-      }      
-#else 
       // Send message to the gateway and print the result
       // with the app key if this feature is enabled
 #ifdef WITH_ACK
@@ -619,10 +390,9 @@ void loop(void)
           Serial.println(F("Abort")); 
           
       } while (e && n_retry);          
-#else
+#else      
       e = sx1272.sendPacketTimeout(DEFAULT_DEST_ADDR, message, pl);
-#endif
-#endif    
+#endif  
       endSend=millis();
     
 #ifdef WITH_EEPROM
@@ -638,16 +408,14 @@ void loop(void)
       Serial.println(endSend-startSend);
           
       Serial.print(F("LoRa Sent w/CAD in "));
-#ifdef CUSTOM_CS  
-      Serial.println(endSend-startDoCad);
-#else
+
       Serial.println(endSend-sx1272._startDoCad);
-#endif  
+
       Serial.print(F("Packet sent, state "));
       Serial.println(e);
-
+        
 #ifdef LOW_POWER
-      Serial.print(F("Switch to power saving mode"));
+      Serial.println(F("Switch to power saving mode"));
 
       e = sx1272.setSleepMode();
 
@@ -655,7 +423,7 @@ void loop(void)
         Serial.println(F("Successfully switch LoRa module in sleep mode"));
       else  
         Serial.println(F("Could not switch LoRa module in sleep mode"));
-              
+        
       Serial.flush();
       delay(50);
       
@@ -663,7 +431,7 @@ void loop(void)
           
       for (int i=0; i<nCycle; i++) {  
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || ARDUINO_AVR_UNO || ARDUINO_AVR_MINI         
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || ARDUINO_AVR_UNO || ARDUINO_AVR_MINI  
           // ATmega328P, ATmega168
           LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
           
@@ -676,6 +444,9 @@ void loop(void)
           //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
           //      TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
           //      USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
+#elif defined __MK20DX256__  
+          // Teensy3.2
+          powerDown(SLEEP_8S);  
 #else
           // use the delay function
           delay(8000);
@@ -689,35 +460,9 @@ void loop(void)
 #else
       // use a random part also to avoid colliding on the same ThingSpeak channel update
       // 10 minutes
-      //delay(120000);
-      //delay(600000+random(15,60)*1000);  
       lastTransmissionTime=millis();
-      delayBeforeTransmit=600000+random(15,60)*1000;
+      delayBeforeTransmit=60000+random(15,60)*1000;
   }
 #endif
 
-#ifdef LORA_LAS
-  // open a receive window
-  // only if radio is on for receiving LAS control messages
-  if (loraLAS._isRadioOn) {
-      e = sx1272.receivePacketTimeout(w_timer);
-    
-      if (!e) {
-         uint8_t tmp_length;
-                   
-         if (loraLAS.isLASMsg(sx1272.packet_received.data)) {
-           
-           tmp_length=sx1272.packet_received.length-OFFSET_PAYLOADLENGTH;
-           
-           int v=loraLAS.handleLASMsg(sx1272.packet_received.src,
-                                      sx1272.packet_received.data,
-                                      tmp_length);
-           
-           if (v==DSP_DATA) {
-              Serial.println(F("Strange to receive data from LR-BS"));
-           }
-         }  
-      }
-  }
-#endif
 }
