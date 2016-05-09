@@ -46,7 +46,7 @@
 #endif
 #define WITH_APPKEY
 #define FLOAT_TEMP
-//#define NEW_DATA_FIELD
+#define NEW_DATA_FIELD
 #define LOW_POWER
 //#define WITH_ACK
 
