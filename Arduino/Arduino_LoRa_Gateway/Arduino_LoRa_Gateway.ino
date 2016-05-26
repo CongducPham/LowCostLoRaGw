@@ -795,6 +795,7 @@ void loop(void)
   loraLAS.checkCycle();
 #endif
 
+#ifdef ARDUINO
   // check if we received data from the input serial port
   if (Serial.available()) {
 
@@ -814,6 +815,7 @@ void loop(void)
     
     receivedFromSerial=true; 
   }
+#endif
   
 // handle keyboard input from a UNIX terminal  
 #if not defined ARDUINO && defined WINPUT

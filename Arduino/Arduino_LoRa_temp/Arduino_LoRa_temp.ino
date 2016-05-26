@@ -49,6 +49,7 @@
 #define FLOAT_TEMP
 //#define NEW_DATA_FIELD
 #define LOW_POWER
+#define LOW_POWER_HIBERNATE
 #define CUSTOM_CS
 //#define LORA_LAS
 //#define WITH_AES
@@ -85,11 +86,19 @@
 #endif
 
 #ifdef LOW_POWER
+// this is for the Teensy31/32
+#ifdef __MK20DX256__
+#define LOW_POWER_PERIOD 60
+#include <Snooze.h>
+SnoozeBlock sleep_config;
+#else
+#define LOW_POWER_PERIOD 8
 // you need the LowPower library from RocketScream
 // https://github.com/rocketscream/Low-Power
 #include "LowPower.h"
+#endif
 int idlePeriodInMin = 10;
-int nCycle = idlePeriodInMin*60/8;
+int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
 
 #ifdef WITH_AES
@@ -377,6 +386,8 @@ void setup()
   // Select frequency channel
   e = sx1272.setChannel(CH_05_900);
 #endif
+  // just a dirty patch to test 433MHz with a radio module working in this band, e.g. inAir4 for instance
+  //e = sx1272.setChannel(0x6C4000);
   Serial.print(F("Setting Channel: state "));
   Serial.println(e, DEC);
   
@@ -659,7 +670,11 @@ void loop(void)
       Serial.flush();
       delay(50);
       
-      nCycle = idlePeriodInMin*60/8 + random(2,8);
+      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
+
+#ifdef __MK20DX256__ 
+      sleep_config.setTimer(LOW_POWER_PERIOD*1000);// milliseconds
+#endif
           
       for (int i=0; i<nCycle; i++) {  
 
@@ -676,9 +691,16 @@ void loop(void)
           //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
           //      TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
           //      USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
+#elif defined __MK20DX256__  
+          // Teensy3.2
+#ifdef LOW_POWER_HIBERNATE
+          Snooze.hibernate(sleep_config);
+#else            
+          Snooze.deepSleep(sleep_config);
+#endif  
 #else
           // use the delay function
-          delay(8000);
+          delay(LOW_POWER_PERIOD*1000);
 #endif                        
           Serial.print(".");
           Serial.flush(); 

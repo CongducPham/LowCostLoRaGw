@@ -46,8 +46,9 @@
 #endif
 #define WITH_APPKEY
 #define FLOAT_TEMP
-#define NEW_DATA_FIELD
+//#define NEW_DATA_FIELD
 #define LOW_POWER
+#define LOW_POWER_HIBERNATE
 //#define WITH_ACK
 
 #ifdef WITH_EEPROM
@@ -77,34 +78,19 @@
 #endif
 
 #ifdef LOW_POWER
+// this is for the Teensy31/32
 #ifdef __MK20DX256__
-
-#include <avr/sleep.h>
-#include <avr/wdt.h>
-#include <avr/power.h>
-#include <avr/interrupt.h>
-
-enum period_t
-{
-  SLEEP_15MS,
-  SLEEP_30MS, 
-  SLEEP_60MS,
-  SLEEP_120MS,
-  SLEEP_250MS,
-  SLEEP_500MS,
-  SLEEP_1S,
-  SLEEP_2S,
-  SLEEP_4S,
-  SLEEP_8S,
-  SLEEP_FOREVER
-};
+#define LOW_POWER_PERIOD 60
+#include <Snooze.h>
+SnoozeBlock sleep_config;
 #else
+#define LOW_POWER_PERIOD 8
 // you need the LowPower library from RocketScream
 // https://github.com/rocketscream/Low-Power
 #include "LowPower.h"
 #endif
 int idlePeriodInMin = 10;
-int nCycle = idlePeriodInMin*60/8;
+int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
 
 double temp;
@@ -128,32 +114,6 @@ struct sx1272config {
 };
 
 sx1272config my_sx1272config;
-#endif
-
-#if defined LOW_POWER && defined __MK20DX256__
-
-void powerDown(period_t period)
-{
-  // seems that low power is currently not supported on the Teensy
-  // TODO!!
-  /*
-  ADCSRA = 0;   // shut off ADC
-  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-  cli();
-  sleep_enable();
-  sei();
-  sleep_cpu();
-  sleep_disable();
-  sei();
-  
-  if (period != SLEEP_FOREVER)
-  {
-    wdt_enable(period);
-    WDTCSR |= (1 << WDIE);  
-  }
-  */
-}
-
 #endif
 
 void setup()
@@ -240,8 +200,15 @@ void setup()
   sx1272._RSSIonSend=false;
 #endif   
     
+#ifdef BAND868
   // Select frequency channel
   e = sx1272.setChannel(CH_10_868);
+#else // assuming #defined BAND900
+  // Select frequency channel
+  e = sx1272.setChannel(CH_05_900);
+#endif
+  // just a dirty patch to test 433MHz with a radio module working in this band, e.g. inAir4 for instance
+  //e = sx1272.setChannel(0x6C4000);
   Serial.print(F("Setting Channel: state "));
   Serial.println(e, DEC);
   
@@ -427,8 +394,11 @@ void loop(void)
       Serial.flush();
       delay(50);
       
-      nCycle = idlePeriodInMin*60/8 + random(2,8);
-          
+      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
+
+#ifdef __MK20DX256__ 
+      sleep_config.setTimer(LOW_POWER_PERIOD*1000);// milliseconds
+#endif          
       for (int i=0; i<nCycle; i++) {  
 
 #if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || ARDUINO_AVR_UNO || ARDUINO_AVR_MINI  
@@ -446,10 +416,14 @@ void loop(void)
           //      USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
 #elif defined __MK20DX256__  
           // Teensy3.2
-          powerDown(SLEEP_8S);  
+#ifdef LOW_POWER_HIBERNATE
+          Snooze.hibernate(sleep_config);
+#else            
+          Snooze.deepSleep(sleep_config);
+#endif  
 #else
           // use the delay function
-          delay(8000);
+          delay(LOW_POWER_PERIOD*1000);
 #endif                        
           Serial.print(".");
           Serial.flush(); 
