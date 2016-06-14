@@ -118,27 +118,26 @@ Mounting your Dropbox folder
 
 With sshfs:
 
-	look at http://mitchtech.net/dropbox-on-raspberry-pi-via-sshfs/
-	(no need of "sudo gpasswd -a pi fuse" on Jessie)
+- look at http://mitchtech.net/dropbox-on-raspberry-pi-via-sshfs/. No need of "sudo gpasswd -a pi fuse" on Jessie.
 	
 	> sudo apt-get install sshfs
 	
-	then allow option 'user_allow_other' in /etc/fuse.conf
+- then allow option 'user_allow_other' in /etc/fuse.conf
 	
 with Dropbox uploader:
 
-	look at http://anderson69s.com/2014/02/18/raspberry-pi-dropbox/
-	look at http://raspi.tv/2013/how-to-use-dropbox-with-raspberry-pi
-	look at https://github.com/andreafabrizi/Dropbox-Uploader
-	(not tested yet and not supported)	
+- look at http://anderson69s.com/2014/02/18/raspberry-pi-dropbox/
+- look at http://raspi.tv/2013/how-to-use-dropbox-with-raspberry-pi
+- look at https://github.com/andreafabrizi/Dropbox-Uploader
+- but not tested yet and not supported yet	
 	
 -------
 WARNING
 -------
 
-A/ There is currently no control on the transmit time for both gateway and end-device. When using the library to create devices, you have to ensure that the transmit time of your device is not exceeding the legal maximum transmit time defined in the regulation of your country.
+- There is currently no control on the transmit time for both gateway and end-device. When using the library to create devices, you have to ensure that the transmit time of your device is not exceeding the legal maximum transmit time defined in the regulation of your country.
 
-B/ Although 900MHz band is supported (mostly for the US ISM band), the library does not implement the frequency hopping mechanism.
+- Although 900MHz band is supported (mostly for the US ISM band), the library does not implement the frequency hopping mechanism.
 
 
 Enjoy!
