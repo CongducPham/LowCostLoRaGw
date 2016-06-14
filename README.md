@@ -2,15 +2,30 @@
 Low-cost LoRa gateway with Raspberry
 ------------------------------------
 
-Fisrt install a Raspberry with Raspbian. Then install python packages such as requests, python-firebase,… as needed
+---------------------------------
+Install Raspbian Wheezy or Jessie
+---------------------------------
 
-Follow procedure to have Dropbox mounted on your Raspberry if you want to use this feature, otherwise, just create a Dropbox folder with a subforder LoRa-test that will be used locally. You can mount Dropbox later on if you want: the local folders and contents will be unchanged.
+Fisrt install a Raspberry with Raspbian, Jessie is recommended. 
 
-Create a folder named lora_gateway for instance then copy all the files of the distrib's Raspberry folder in it. DO NOT modify the lora_gateway.cpp file unless you know what you are doing. Check the radio.makefile file to select the radio module that you have. Uncomment only 1 choice or leave all lines commented if you do not have neither an HopeRF92/95 or inAir9B or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it). For instance, with both Libelium LoRa and inAir9 (not inAir9B) you should leave all lines commented. Then:
+then
+
+	> sudo apt-get update
+	> sudo apt-get upgrade
+
+Jessie has been tested on RPI2 and RPI3 and works great.
+
+Wheezy has been tested on RPI1 and RPI2 and works great. Wheezy on RPI3 is not recommended because built-in WiFi and Bluetooth will not work properly.
+
+We recommend buying either RPI2 or RPI3. RPI3 with Jessie has built-in WiFi and Bluetooth so it is definitely a good choice. In addition RPI3 with Jessie will have a better support lifetime. 
+
+Create a "Dropbox" folder in your home directory with a subforder "LoRa-test" that will be used locally. Please put attention to the name of the folder: they must be "Dropbox/LoRa-test" because the "post_processing_gw.py" Python script uses these paths. You can mount Dropbox later on (see below) if you want: the local folders and contents will be unchanged.
+
+Create a folder named "lora_gateway" for instance then copy all the files of the distrib's Raspberry folder in it. DO NOT modify the lora_gateway.cpp file unless you know what you are doing. Check the radio.makefile file to select the radio module that you have. Uncomment only 1 choice or leave all lines commented if you do not have neither an HopeRF92/95 or inAir9B or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it). For instance, with both Libelium LoRa and inAir9 (not inAir9B) you should leave all lines commented. Then:
 
 	> make lora_gateway
 
-If you are using a Raspberry 2 (a link will be created that points to lora_gateway_pi2):
+If you are using a Raspberry 2:
 
 	> make lora_gateway_pi2
 
@@ -97,6 +112,26 @@ When your radio module can run in the 433MHz band (for instance when the radio i
 - uncomment line "e = sx1272.setChannel(0x6C4000);" in Arduino_LoRa_temp or Arduino_LoRa_Simple_temp
 - run your gateway with "lora_gateway --mode n --freq 433.0" where n is the LoRa mode you want to use (e.g. 4 with Arduino_LoRa_temp and 1 with Arduino_LoRa_Simple_temp)
 
+----------------------------
+Mounting your Dropbox folder
+----------------------------
+
+With sshfs:
+
+	look at http://mitchtech.net/dropbox-on-raspberry-pi-via-sshfs/
+	(no need of "sudo gpasswd -a pi fuse" on Jessie)
+	
+	> sudo apt-get install sshfs
+	
+	then allow option 'user_allow_other' in /etc/fuse.conf
+	
+with Dropbox uploader:
+
+	look at http://anderson69s.com/2014/02/18/raspberry-pi-dropbox/
+	look at http://raspi.tv/2013/how-to-use-dropbox-with-raspberry-pi
+	look at https://github.com/andreafabrizi/Dropbox-Uploader
+	(not tested yet and not supported)	
+	
 -------
 WARNING
 -------

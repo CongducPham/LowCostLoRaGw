@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.3
+ *  Version:                1.4
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -99,7 +99,8 @@
 */
 
 /*  Change logs
- *
+ *  June, 14th, 2016. v1.4
+ *        Fix bug on serial port for the RPI3 and for the Bluetooth interface on RPI3 which uses the serial port
  *  Mar, 25th, 2016. v1.3
  *        Add command to set the spreading factor between 6 and 12:
  *          - /@SF8#: set SF to 8
@@ -552,9 +553,6 @@ void setup()
 #ifdef ARDUINO
   delay(3000);
   randomSeed(analogRead(14));
-#else
-  srand (time(NULL));
-#endif
 
 #ifdef _VARIANT_ARDUINO_DUE_X_
   Serial.begin(115200);  
@@ -567,6 +565,10 @@ void setup()
   Serial.println(F(" bytes of free memory.")); 
 #endif  
 #endif 
+
+#else
+  srand (time(NULL));
+#endif
 
   // Power ON the module
   e = sx1272.ON();
