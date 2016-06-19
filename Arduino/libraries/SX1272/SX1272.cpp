@@ -2108,7 +2108,7 @@ int8_t	SX1272::setBW(uint16_t band)
             if( _spreadingFactor == 11 || _spreadingFactor == 12)
             { // LowDataRateOptimize (Mandatory with BW_125 if SF_11 or SF_12)
                 byte config3=readRegister(REG_MODEM_CONFIG3);
-                config3 = config3 | B0000100;
+                config3 = config3 | B00001000;
                 writeRegister(REG_MODEM_CONFIG3,config3);
             }
             break;
