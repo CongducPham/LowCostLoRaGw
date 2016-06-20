@@ -2,6 +2,7 @@
 Low-cost LoRa gateway with Raspberry
 ------------------------------------
 
+
 ---------------------------------
 Install Raspbian Wheezy or Jessie
 ---------------------------------
@@ -138,6 +139,13 @@ WARNING
 - There is currently no control on the transmit time for both gateway and end-device. When using the library to create devices, you have to ensure that the transmit time of your device is not exceeding the legal maximum transmit time defined in the regulation of your country.
 
 - Although 900MHz band is supported (mostly for the US ISM band), the library does not implement the frequency hopping mechanism.
+
+
+-----------------------
+NEW: Tutorial materials
+-----------------------
+
+Go to https://github.com/CongducPham/tutorials
 
 
 Enjoy!
