@@ -2,6 +2,7 @@
 Low-cost LoRa gateway with Raspberry
 ------------------------------------
 
+Please consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
 
 ---------------------------------
 Install Raspbian Wheezy or Jessie
@@ -146,6 +147,56 @@ with Dropbox uploader:
 - look at http://raspi.tv/2013/how-to-use-dropbox-with-raspberry-pi
 - look at https://github.com/andreafabrizi/Dropbox-Uploader
 - but not tested yet and not supported yet	
+
+-------
+ANNEX.A
+-------
+
+Pre-defined LoRa modes (from initial Libelium SX1272.h)
+
+| mode | BW | SF |
+|------|----|----|
+| 1    | 125| 12 |
+| 2    | 250| 12 |
+| 3    | 125| 10 |
+| 4    | 500| 12 |
+| 5    | 250| 10 |
+| 6    | 500| 11 |
+| 7    | 250|  9 |
+| 8    | 500|  9 |
+| 9    | 500|  7 |
+| 10   | 500|  8 |
+
+Pre-defined channels in 868MHz band (from initial Libelium SX1272.h)
+
+| ch | F(MHz) |
+|----|--------|
+| 10 | 865.2  |
+| 11 | 865.5  |
+| 12 | 865.8  |
+| 13 | 866.1  |
+| 14 | 865.4  |
+| 15 | 865.7  |
+| 16 | 866.0  |
+| 17 | 868.0  | 
+
+Pre-defined channels in 915MHz band (from initial Libelium SX1272.h)
+
+| ch | F(MHz) |
+|----|--------|
+| 00 | 903.08 |
+| 01 | 905.24 |
+| 02 | 907.40 |
+| 03 | 909.56 |
+| 04 | 911.72 |
+| 05 | 913.88 |
+| 06 | 916.04 |
+| 07 | 918.20 | 
+| 08 | 920.36 | 
+| 09 | 922.52 | 
+| 10 | 924.68 | 
+| 11 | 926.84 | 
+| 12 | 915.00 | 
 	
 -------
 WARNING
