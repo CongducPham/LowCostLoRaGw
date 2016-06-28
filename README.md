@@ -26,7 +26,7 @@ Create a folder named "lora_gateway" for instance then copy all the files of the
 
 	> make lora_gateway
 
-If you are using a Raspberry 2:
+If you are using a Raspberry v2 or v3 :
 
 	> make lora_gateway_pi2
 
@@ -34,7 +34,7 @@ To launch the gateway
 
 	> sudo ./lora_gateway
 
-On Raspberry 2 a symbolic link will be created that will point to lora_gateway_pi2.
+On Raspberry v2 or v3 a symbolic link will be created that will point to lora_gateway_pi2.
 
 By default, the gateway runs in LoRa mode 1 and has address 1.
 
@@ -58,11 +58,9 @@ You can customize the post-processing stage (post_processing_gw.py) at your conv
 First try: a simple Ping-Pong program example
 ---------------------------------------------
 
-As suggested by some people, we provide here a simple Ping-Pong program to upload on an Arduino board.
+As suggested by some people, we provide here a simple Ping-Pong program to upload on an Arduino board. First, install the Arduino IDE 1.6.6. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
 
-First, install the Arduino IDE 1.6.6. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
-
-Runs the gateway with:
+Run the gateway with:
 
 	> sudo ./lora_gateway
 	
