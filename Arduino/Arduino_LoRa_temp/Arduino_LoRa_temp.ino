@@ -64,7 +64,7 @@
 #endif
 
 #define DEFAULT_DEST_ADDR 1
-#define LORAMODE  4
+#define LORAMODE  1
 #define node_addr 6
 #define field_index 3
 //#define node_addr 10

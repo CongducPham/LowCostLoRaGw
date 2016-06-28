@@ -36,7 +36,7 @@ To launch the gateway
 
 On Raspberry 2 a symbolic link will be created that will point to lora_gateway_pi2.
 
-By default, the gateway runs in LoRa mode 4 and has address 1.
+By default, the gateway runs in LoRa mode 1 and has address 1.
 
 To use post-processing with the provided ThingSpeak test channel
 
@@ -54,6 +54,23 @@ This is the command that we recommend. To test, just flash a temperature sensor 
 
 You can customize the post-processing stage (post_processing_gw.py) at your convenience later.
 
+---------------------------------------------
+First try: a simple Ping-Pong program example
+---------------------------------------------
+
+As suggested by some people, we provide here a simple Ping-Pong program to upload on an Arduino board.
+
+First, install the Arduino IDE 1.6.6. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
+
+Runs the gateway with:
+
+	> sudo ./lora_gateway
+	
+With the Arduino IDE, open the Arduino_LoRa_Ping_Pong sketch compile it and upload to an Arduino board. The end-device runs in LoRa mode 1 and has address 8. Open the Serial Monitor (38400 bauds) to see the output of the Arduino. It will send "Ping" to the gateway by requesting an ACK every 10s. If the ACK is received then it will display "Pong received from gateway!" otherwise it displays "No Pong!".
+
+Note that in most operational scenarios, requesting ACK from the gateway is costly. Look at the next examples to see how we usually send data without requesting ACK.
+
+
 ------------------------------------------------------------------------
 An end-device example that periodically sends temperature to the gateway
 ------------------------------------------------------------------------
@@ -62,7 +79,7 @@ First, install the Arduino IDE 1.6.6. Then, in your sketch folder, copy the cont
 
 With the Arduino IDE, open the Arduino_LoRa_temp sketch (or the more simpler Arduino_LoRa_Simple_temp), compile it and upload to an Arduino board.
 
-The end-device has address 6 and run in LoRa mode 4 for Arduino_LoRa_temp and address 8 with LoRa mode 1 for Arduino_LoRa_Simple_temp. It will send data to the gateway.
+The end-device runs in LoRa mode 1 and has address 6 for Arduino_LoRa_temp and address 8 for Arduino_LoRa_Simple_temp. It will send data to the gateway.
 
 The default configuration uses an application key set to [5, 6, 7, 8].
 
@@ -88,7 +105,7 @@ An interactive end-device for sending LoRa messages with the Arduino IDE
 
 With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and check that "#define IS_SEND_GATEWAY" is uncommented. Then compile it and upload to an Arduino board. It is better to use a more powerful (and with more RAM memory) Arduino platform for building the interactive device otherwise stability issues can occur.
 
-By default, the end-device have address 6 and runs in LoRa mode 4.
+By default, the interactive end-device has address 6 and runs in LoRa mode 1.
 
 Enter "\!SGSH52UGPVAUYG3S#1#21.6" (without the quotes) in the input window and press RETURN
 
