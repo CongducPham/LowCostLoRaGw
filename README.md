@@ -167,7 +167,7 @@ Pre-defined LoRa modes (from initial Libelium SX1272.h)
 | 9    | 500|  7 |
 | 10   | 500|  8 |
 
-Pre-defined channels in 868MHz band (from initial Libelium SX1272.h)
+Pre-defined channels in 868MHz and 915MHz band (from initial Libelium SX1272.h)
 
 | ch | F(MHz) | ch | F(MHz) |
 |----|--------|----|--------|
@@ -179,25 +179,13 @@ Pre-defined channels in 868MHz band (from initial Libelium SX1272.h)
 | 15 | 865.7  | 05 | 913.88 |
 | 16 | 866.0  | 06 | 916.04 |
 | 17 | 868.0  | 07 | 918.20 |
-              | 08 | 920.36 | 
+|  - |   -    | 08 | 920.36 |
+|  - |   -    | 09 | 922.52 | 
+|  - |   -    | 10 | 924.68 | 
+|  - |   -    | 11 | 926.84 | 
+|  - |   -    | 12 | 915.00 |
 
-Pre-defined channels in 915MHz band (from initial Libelium SX1272.h)
 
-| ch | F(MHz) |
-|----|--------|
-| 00 | 903.08 |
-| 01 | 905.24 |
-| 02 | 907.40 |
-| 03 | 909.56 |
-| 04 | 911.72 |
-| 05 | 913.88 |
-| 06 | 916.04 |
-| 07 | 918.20 | 
-| 08 | 920.36 | 
-| 09 | 922.52 | 
-| 10 | 924.68 | 
-| 11 | 926.84 | 
-| 12 | 915.00 | 
 	
 -------
 WARNING
