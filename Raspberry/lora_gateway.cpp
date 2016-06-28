@@ -260,7 +260,7 @@
 // on the 868.1MHz channel
 //#define LORAMODE 11
 
-#define LORAMODE 4
+#define LORAMODE 1
 
 #ifdef BAND868
 #define MAX_NB_CHANNEL 9
