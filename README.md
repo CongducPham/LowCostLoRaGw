@@ -1,12 +1,10 @@
-------------------------------------
 Low-cost LoRa gateway with Raspberry
-------------------------------------
+====================================
 
 Please consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
 
----------------------------------
 Install Raspbian Wheezy or Jessie
----------------------------------
+=================================
 
 Fisrt install a Raspberry with Raspbian, Jessie is recommended. 
 
@@ -23,7 +21,15 @@ We recommend buying either RPI2 or RPI3. RPI3 with Jessie has built-in WiFi and 
 
 Create a "Dropbox" folder in your home directory with a subforder "LoRa-test" that will be used locally. Please put attention to the name of the folder: they must be "Dropbox/LoRa-test" because the "post_processing_gw.py" Python script uses these paths. You can mount Dropbox later on (see below) if you want: the local folders and contents will be unchanged.
 
-Create a folder named "lora_gateway" for instance then copy all the files of the distrib's Raspberry folder in it. DO NOT modify the lora_gateway.cpp file unless you know what you are doing. Check the radio.makefile file to select the radio module that you have. Uncomment only 1 choice or leave all lines commented if you do not have neither an HopeRF92/95 or inAir9B or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it). For instance, with both Libelium LoRa and inAir9 (not inAir9B) you should leave all lines commented. Then:
+    > mkdir -p Dropbox/LoRa-test 
+
+Create a folder named "lora_gateway" for instance then copy all the files of the distrib's Raspberry folder in it.
+
+    > mkdir lora_gateway
+    > cd lora_gateway
+    > "copy all files here"
+    
+DO NOT modify the lora_gateway.cpp file unless you know what you are doing. Check the radio.makefile file to select the radio module that you have. Uncomment only 1 choice or leave all lines commented if you do not have neither an HopeRF92/95 or inAir9B or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it). For instance, with both Libelium LoRa and inAir9 (not inAir9B) you should leave all lines commented. Then:
 
 	> make lora_gateway
 
@@ -55,9 +61,8 @@ This is the command that we recommend. To test, just flash a temperature sensor 
 
 You can customize the post-processing stage (post_processing_gw.py) at your convenience later.
 
----------------------------------------------
 First try: a simple Ping-Pong program example
----------------------------------------------
+=============================================
 
 As suggested by some people, we provide here a simple Ping-Pong program to upload on an Arduino board. First, install the Arduino IDE 1.6.6. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
 
@@ -70,9 +75,8 @@ With the Arduino IDE, open the Arduino_LoRa_Ping_Pong sketch compile it and uplo
 Note that in most operational scenarios, requesting ACK from the gateway is costly. Look at the next examples to see how we usually send data without requesting ACK.
 
 
-------------------------------------------------------------------------
 An end-device example that periodically sends temperature to the gateway
-------------------------------------------------------------------------
+========================================================================
 
 First, install the Arduino IDE 1.6.6. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
 
@@ -98,9 +102,8 @@ Once flashed, the Arduino temperature sensor will send to the gateway the follow
 
 The program has been tested on Arduino Uno, Mega2560, Nano, Pro Mini, Mini, Due.  We also tested on the Teensy3.1/3.2 and the Ideetron Nexus. The SX1272 lib has been modified to change the SPI_SS pin from 2 to 10 when you compile for the Pro Mini, Mini (Nexus), Nano or Teensy. 
 
-------------------------------------------------------------------------
 An interactive end-device for sending LoRa messages with the Arduino IDE
-------------------------------------------------------------------------
+========================================================================
 
 With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and check that "#define IS_SEND_GATEWAY" is uncommented. Then compile it and upload to an Arduino board. It is better to use a more powerful (and with more RAM memory) Arduino platform for building the interactive device otherwise stability issues can occur.
 
@@ -114,24 +117,21 @@ When testing with the interactive end-device, you should not use the --wappkey o
 
 	> sudo ./lora_gateway | python ./post_processing_gw.py -t | python ./log_gw
 
---------------------------------
 Use an Arduino as a LoRa gateway
---------------------------------
+================================
 
 The gateway can also be based on an Arduino board, as described in the web page. With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and set the compilation #define to have IS_RCV_GATEWAY and not IS_SEND_GATEWAY. Compile the code and upload to an Arduino board. Then follow instructions on how to use the Arduino board as a gateway. It is better to use a more powerful (and with more RAM memory) Arduino platform for building the gateway.
 
-----------------------
 Running in 433MHz band
-----------------------
+======================
 
 When your radio module can run in the 433MHz band (for instance when the radio is based on SX1276 or SX1278 chip) then you can test running at 433MHz as follows:
 
 - uncomment line "e = sx1272.setChannel(0x6C4000);" in Arduino_LoRa_temp or Arduino_LoRa_Simple_temp
 - run your gateway with "lora_gateway --mode n --freq 433.0" where n is the LoRa mode you want to use (e.g. 4 with Arduino_LoRa_temp and 1 with Arduino_LoRa_Simple_temp)
 
-----------------------------
 Mounting your Dropbox folder
-----------------------------
+============================
 
 With sshfs:
 
@@ -148,9 +148,8 @@ with Dropbox uploader:
 - look at https://github.com/andreafabrizi/Dropbox-Uploader
 - but not tested yet and not supported yet	
 
--------
 ANNEX.A
--------
+=======
 
 Pre-defined LoRa modes (from initial Libelium SX1272.h)
 
@@ -187,18 +186,16 @@ Pre-defined channels in 868MHz and 915MHz band (from initial Libelium SX1272.h)
 
 
 	
--------
 WARNING
--------
+=======
 
 - There is currently no control on the transmit time for both gateway and end-device. When using the library to create devices, you have to ensure that the transmit time of your device is not exceeding the legal maximum transmit time defined in the regulation of your country.
 
 - Although 900MHz band is supported (mostly for the US ISM band), the library does not implement the frequency hopping mechanism.
 
 
------------------------
 NEW: Tutorial materials
------------------------
+=======================
 
 Go to https://github.com/CongducPham/tutorials
 
