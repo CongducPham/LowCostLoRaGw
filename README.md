@@ -197,7 +197,12 @@ WARNING
 NEW: Tutorial materials
 =======================
 
-Go to https://github.com/CongducPham/tutorials
+Go to https://github.com/CongducPham/tutorials.
+
+NEW: Get the advanced version of the gateway
+============================================
+
+Look at the gw_advanced folder and follow instructions.
 
 
 Enjoy!

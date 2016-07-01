@@ -1,0 +1,3 @@
+#!/bin/bash
+
+scp -r * pi@$1:/home/pi/lora_gateway

@@ -1,0 +1,11 @@
+{
+	"gateway_conf" : {
+	"gateway_ID" : "000000XXXXXXXXXX",
+	"ref_latitude" : "",
+	"ref_longitude" : "",
+	"dht22" : 0
+	},
+	"log_conf" : {
+		"log_weekly" : false
+	}
+}
