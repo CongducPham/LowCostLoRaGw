@@ -77,6 +77,11 @@
   #define TEMP_SCALE  5000.0
 #endif
 
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
+unsigned int idlePeriodInMin = 10;
+///////////////////////////////////////////////////////////////////
+
 #ifdef LOW_POWER
 // this is for the Teensy31/32
 #ifdef __MK20DX256__
@@ -89,8 +94,7 @@ SnoozeBlock sleep_config;
 // https://github.com/rocketscream/Low-Power
 #include "LowPower.h"
 #endif
-int idlePeriodInMin = 10;
-int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
+unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
 
 double temp;
@@ -432,11 +436,14 @@ void loop(void)
       
       delay(50);
 #else
-      // use a random part also to avoid colliding on the same ThingSpeak channel update
-      // 10 minutes
+      // use a random part also to avoid collision
+      Serial.println(lastTransmissionTime);
+      Serial.println("Will send next value in");
       lastTransmissionTime=millis();
-      delayBeforeTransmit=60000+random(15,60)*1000;
+      delayBeforeTransmit=idlePeriodInMin*60*1000+random(15,60)*1000;
+      Serial.println(delayBeforeTransmit);
   }
 #endif
 
+  delay(50);
 }

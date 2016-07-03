@@ -1,5 +1,5 @@
 #------------------------------------------------------------
-# Copyright 2015 Congduc Pham, University of Pau, France.
+# Copyright 2016 Congduc Pham, University of Pau, France.
 # 
 # Congduc.Pham@univ-pau.fr
 #
@@ -767,9 +767,10 @@ while True:
 					
 					#upload data to thingspeak
 					#JUST FOR UPLOAD A SINGLE DATA IN A SPECIFIC FIELD AND SECOND DATA					
-					#thingspeak_uploadSingleData(data, second_data)   
+					thingspeak_uploadSingleData(data, second_data)   
 
-					thingspeak_uploadMultipleData(data_array) # upload all data in the fields
+					# if you want to upload all data starting at field 1, uncomment next line, and comment previous line
+					#thingspeak_uploadMultipleData(data_array) # upload all data in the fields
 			
 				#------------------
 				#test for FIWARE 
@@ -824,80 +825,7 @@ while True:
 					
 					#upload data to grovestreams
 					grovestreams_uploadSingleData(nomenclatures, data, str(src))
-					
-				#------------------
-				#test for connectingnature 
-				#------------------
-				if (_connectingnature):
-					#get the data
-					datacn = ldata.split('/')
-					
-					#change data in two arrays : nomenclature_array and value_array
-					iteration = 0
-					nomenclature_array = []
-					value_array = []
-					while iteration<len(datacn) :
-						if (iteration == 0 or iteration%2 == 0) :
-							nomenclature_array.append(datacn[iteration])
-						else :
-							value_array.append(datacn[iteration])
-							
-						iteration += 1
-					
-					#recovering the UTC seconds since jan 1st 1970
-					utc_time = now.strftime("%s")
-					
-					#completing data
-					str_data = "\"time\":"+utc_time+", "
-					iteration = 0
-					while iteration < len(nomenclature_array) :
-						#last iteration, do not add "," at the end
-						if iteration == len(nomenclature_array)-1 :
-							str_data += "\""+nomenclature_array[iteration]+"\" : "+value_array[iteration]
-						else :
-							str_data += "\""+nomenclature_array[iteration]+"\" : "+value_array[iteration]+", "
-						iteration += 1
-					str_data += "}"
-					
-					#upload data to connecting nature
-					connectingnature_uploadSingleData(str_data, "node"+str(src))
-					
-				#------------------
-				#test for ftpconnectingnature 
-				#------------------
-				if (_ftpconnectingnature):
-				
-					#saving data in a JSON var
-					str_json_data = "{"
-					#start from the first nomenclature
-					iteration = 2
-					while iteration < len(data_array)-1 :
-						#last iteration, do not add "," at the end
-						if iteration == len(data_array)-2 :
-							str_json_data += "\""+data_array[iteration]+"\" : "+data_array[iteration+1]
-						else :
-							str_json_data += "\""+data_array[iteration]+"\" : "+data_array[iteration+1]+", "
-						iteration += 2
-					str_json_data += "}"
-					
-					#creating string data to add in the file
-					strdata = str(ptypestr)+";"
-					strdata += str(_gwaddr)+";"
-					strdata += str(src)+";"
-					strdata += str(SNR)+";"
-					strdata += str(RSSI)+";"
-					strdata += str(cr)+";"
-					strdata += "SF"+str(sf)+"BW"+str(bw)+";"
-					strdata += str(now.isoformat())+";"
-					strdata += str(json.dumps(json.loads(str_json_data)))
-					strdata += "\n"
-					
-					#the date in string format "yyyy-MM-dd_hh:mm:ss"
-					strdate = now.strftime("%Y-%m-%d_%Hh%Mm%Ss")
-					
-					#upload data to ftp connecting nature
-					ftpconnectingnature_uploadSingleData(strdate, strdata)
-				
+									
 															
 			else: # not a known data logging prefix
 				#you may want to upload to a default service

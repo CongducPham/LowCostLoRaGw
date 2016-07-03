@@ -24,13 +24,13 @@
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// please uncomment only 1 choice
+// please uncomment only 1 choice 
 //
 // it seems that both HopeRF and Modtronix board use the PA_BOOST pin and not the RFO. Therefore, for these
 // boards we set the initial power to 'x' and not 'M'. This is the purpose of the define statement 
 //
 // uncomment if your radio is an HopeRF RFM92W or RFM95W
-#define RADIO_RFM92_95
+//#define RADIO_RFM92_95
 // uncomment if your radio is a Modtronix inAir9B (the one with +20dBm features), if inAir9, leave commented
 //#define RADIO_INAIR9B
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
@@ -85,6 +85,11 @@
   #define TEMP_SCALE  5000.0
 #endif
 
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
+unsigned int idlePeriodInMin = 10;
+///////////////////////////////////////////////////////////////////
+
 #ifdef LOW_POWER
 // this is for the Teensy31/32
 #ifdef __MK20DX256__
@@ -97,8 +102,7 @@ SnoozeBlock sleep_config;
 // https://github.com/rocketscream/Low-Power
 #include "LowPower.h"
 #endif
-int idlePeriodInMin = 10;
-int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
+unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
 
 #ifdef WITH_AES
@@ -709,12 +713,12 @@ void loop(void)
       
       delay(50);
 #else
-      // use a random part also to avoid colliding on the same ThingSpeak channel update
-      // 10 minutes
-      //delay(120000);
-      //delay(600000+random(15,60)*1000);  
+      // use a random part also to avoid collision
+      Serial.println(lastTransmissionTime);
+      Serial.println("Will send next value in");
       lastTransmissionTime=millis();
-      delayBeforeTransmit=600000+random(15,60)*1000;
+      delayBeforeTransmit=idlePeriodInMin*60*1000+random(15,60)*1000;
+      Serial.println(delayBeforeTransmit);
   }
 #endif
 
