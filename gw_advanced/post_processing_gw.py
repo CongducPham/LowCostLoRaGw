@@ -85,16 +85,6 @@ _thingspeaksnr=False
 _sensorcloud=False
 
 #------------------------------------------------------------
-#with connectingnature support?
-#------------------------------------------------------------
-_connectingnature=False
-
-#------------------------------------------------------------
-#with ftpconnectingnature support?
-#------------------------------------------------------------
-_ftpconnectingnature=False
-
-#------------------------------------------------------------
 #with grovestreams support?
 #------------------------------------------------------------
 _grovestreams=False
@@ -319,9 +309,9 @@ def dht22_target():
 
 def main(argv):
 	try:
-		opts, args = getopt.getopt(argv,'iftLam:',['ignorecomment','firebase','thingspeak','retrythsk','thingspeaksnr','fiware','sensorcloud','grovestreams','loggw','addr', 'wappkey', 'raw', 'aes', 'connectingnature', 'ftpconnectingnature', 'mongodb'])
+		opts, args = getopt.getopt(argv,'iftLam:',['ignorecomment','firebase','thingspeak','retrythsk','thingspeaksnr','fiware','sensorcloud','grovestreams','loggw','addr', 'wappkey', 'raw', 'aes', 'mongodb'])
 	except getopt.GetoptError:
-		print 'parseLoRaStdin -i -f/--firebase -t/--thingspeak --retrythsk --thingspeaksnr --fiware --sensorcloud --grovestreams -L/--loggw -a/--addr --wappkey --raw --aes --connectingnature --ftpconnectingnature -m/--mongodb'
+		print 'parseLoRaStdin -i -f/--firebase -t/--thingspeak --retrythsk --thingspeaksnr --fiware --sensorcloud --grovestreams -L/--loggw -a/--addr --wappkey --raw --aes -m/--mongodb'
 		sys.exit(2)
 	
 	for opt, arg in opts:
@@ -367,20 +357,6 @@ def main(argv):
 			_sensorcloud = True
 			global sensorcloud_uploadSingleData
 			from SensorCloud import sensorcloud_uploadSingleData
-			
-		elif opt in ("--connectingnature"):
-			print("will enable connectingnature support")
-			global _connectingnature
-			_connectingnature = True
-			global connectingnature_uploadSingleData
-			from ConnectingNature import connectingnature_uploadSingleData
-			
-		elif opt in ("--ftpconnectingnature"):
-			print("will enable ftpconnectingnature support")
-			global _ftpconnectingnature
-			_ftpconnectingnature = True
-			global ftpconnectingnature_uploadSingleData
-			from FtpConnectingNature import ftpconnectingnature_uploadSingleData	
 
 		elif opt in ("--grovestreams"):
 			print("will enable grovestreams support")
@@ -655,7 +631,7 @@ while True:
 				#upload data to firebase
 				firebase_uploadSingleData(firebase_msg, sensor_entry, msg_entry, now)
 				
-			elif (ch=='!'): #log on thingspeak, grovestreams, sensorcloud and connectingnature
+			elif (ch=='!'): #log on thingspeak, grovestreams, sensorcloud,...
 	
 				ldata = getAllLine()
 				
