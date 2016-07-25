@@ -23,15 +23,37 @@
 
 choice="Z"
 
+if [ ! -f gateway_id.txt ]
+then
+	echo "ERROR: gateway_id.txt file not found"
+	echo "should create it by running echo \"000000XXXXXXXXXX\" > gateway_id.txt"
+	echo "where XXXXXXXXXX is the last 5 bytes of your MAC Ethernet interface address"
+	echo "Example: echo \"00000027EBBEDA21\" > gateway_id.txt"
+	echo "Here is your MAC Ethernet interface address:"
+	echo "-------------------------------------------------------"
+	ifconfig | grep "eth0"
+        echo "-------------------------------------------------------"
+	echo "Enter the last 5 hex bytes of your MAC Ethernet interface address"
+	echo "in capital character and without the : separator"
+	echo "example: HWaddr b8:27:eb:be:da:21 then just enter 27EBBEDA21"
+	read macaddr
+	echo "Will write 000000$macaddr into gateway_id.txt"
+	echo "000000$macaddr" > gateway_id.txt
+	echo "Done"
+fi
+
+gatewayid=`cat gateway_id.txt`
+
 while [ "$choice" != "Q" ]
 do
-echo "========================================================* Gateway *==="
+echo "=======================================* Gateway $gatewayid *==="
 echo "0- nohup python start_gw.py &                                        +"
 echo "1- sudo ./lora_gateway --mode 1                                      +"
 echo "2- sudo ./lora_gateway --mode 1|python post_processing_gw.py -t -m 2 +"
 echo "3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +"
 echo "4- tail --line=15 ../Dropbox/LoRa-test/post-processing_*.log         +"
 echo "5- tail -f ../Dropbox/LoRa-test/post-processing_*.log                +"
+echo "6- sudo tail -f /root/Dropbox/LoRa-test/post-processing_*.log        +"
 echo "------------------------------------------------------* Bluetooth *--+"
 echo "a- run: sudo hciconfig hci0 piscan                                   +"
 echo "b- run: sudo python rfcomm-server.py                                 +"
@@ -57,8 +79,9 @@ echo "BEGIN OUTPUT"
 if [ "$choice" = "0" ]
 	then
 		echo "Running in background the full LoRa gateway" 
-		nohup python start_gw.py &
-		echo "Check ../Dropbox/LoRa-test/post-processing_*.log file (select command 5)"
+		python start_gw.py &
+		disown %1
+		echo "Check ../Dropbox/LoRa-test/post-processing_$gatewayid.log file (select command 5)"
 fi
 
 if [ "$choice" = "1" ] 
@@ -85,19 +108,28 @@ fi
 
 if [ "$choice" = "4" ] 
 	then
-		echo "Displaying last 15 lines of ../Dropbox/LoRa-test/post-processing_*.log"
+		echo "Displaying last 15 lines of ../Dropbox/LoRa-test/post-processing_$gatewayid.log"
 		echo "Current UTC date is"
 		date --utc
-		tail --line=15 ../Dropbox/LoRa-test/post-processing_*.log
+		tail --line=15 ../Dropbox/LoRa-test/post-processing_$gatewayid.log
 fi
 
 if [ "$choice" = "5" ] 
 	then
-		echo "Following last lines of ../Dropbox/LoRa-test/post-processing_*.log. CTRL-C to return"
+		echo "Following last lines of ../Dropbox/LoRa-test/post-processing_$gatewayid.log. CTRL-C to return"
 		echo "Current UTC date is"
 		date --utc
 		trap "echo" SIGINT
-		tail -f ../Dropbox/LoRa-test/post-processing_*.log
+		tail -f ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+fi
+
+if [ "$choice" = "6" ] 
+        then
+                echo "Following last lines of /root/Dropbox/LoRa-test/post-processing_$gatewayid.log. CTRL-C to return"
+                echo "Current UTC date is"
+                date --utc
+                trap "echo" SIGINT
+                sudo tail -f /root/Dropbox/LoRa-test/post-processing_$gatewayid.log
 fi
 
 if [ "$choice" = "a" ] 

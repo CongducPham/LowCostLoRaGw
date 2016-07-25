@@ -2687,53 +2687,56 @@ int8_t SX1272::setPower(char p)
 
     switch (p)
     {
-    // L = low. On SX1272: PA0 on RFO setting
-    // H = high. On SX1272: PA0 on RFO setting
-    // M = MAX. On SX1272: PA0 on RFO setting
+    // L = Low. On SX1272/76: PA0 on RFO setting
+    // H = High. On SX1272/76: PA0 on RFO setting
+    // M = MAX. On SX1272/76: PA0 on RFO setting
 
-    // x = extreme; added by C. Pham. On SX1272: PA1&PA2 PA_BOOST setting
-    // X = eXtreme; added by C. Pham. On SX1272: PA1&PA2 PA_BOOST setting + 20dBm settings
+    // x = extreme; added by C. Pham. On SX1272/76: PA1&PA2 PA_BOOST setting
+    // X = eXtreme; added by C. Pham. On SX1272/76: PA1&PA2 PA_BOOST setting + 20dBm settings
 
     // added by C. Pham
     //
     case 'x':
     case 'X':
-    case 'M':  _power = 0x0F;
-        // SX1272: 14dBm
-        // SX1276:
+    case 'M':  value = 0x0F;
+        // SX1272/76: 14dBm
         break;
 
-    // modified by C. Pham, set to 0x02 instead of 0x00
-    case 'L':  _power = 0x02;
-        // SX1272: 1dBm
-        // SX1276:
+    // modified by C. Pham, set to 0x03 instead of 0x00
+    case 'L':  value = 0x03;
+        // SX1272/76: 2dBm
         break;
 
-    case 'H':  _power = 0x07;
-        // SX1272: 6dBm
-        // SX1276:
+    case 'H':  value = 0x07;
+        // SX1272/76: 6dBm
         break;
 
     default:   state = -1;
         break;
     }
 
-    value = _power;
+    // 100mA
+    setMaxCurrent(0x0B);
 
     if (p=='x') {
         // we set only the PA_BOOST pin
         // limit to 14dBm
         value = 0x0C;
         value = value | 0B10000000;
-        // TODO: Have to set RegOcp for OcpOn and OcpTrim
+        // set RegOcp for OcpOn and OcpTrim
+        // 130mA
+        setMaxCurrent(0x10);
     }
 
     if (p=='X') {
+        // normally value = 0x0F;
         // we set the PA_BOOST pin
         value = value | 0B10000000;
         // and then set the high output power config with register REG_PA_DAC
         writeRegister(RegPaDacReg, 0x87);
-        // TODO: Have to set RegOcp for OcpOn and OcpTrim
+        // set RegOcp for OcpOn and OcpTrim
+        // 150mA
+        setMaxCurrent(0x12);
     }
     else {
         // disable high power output in all other cases
@@ -2742,12 +2745,23 @@ int8_t SX1272::setPower(char p)
 
     // added by C. Pham
     if (_board==SX1272Chip) {
+        // Pout = -1 + _power[3:0] on RFO
+        // Pout = 2 + _power[3:0] on PA_BOOST
+        // so: L=2dBm; H=6dBm, M=14dBm, x=14dBm (PA), X=20dBm(PA+PADAC)
         writeRegister(REG_PA_CONFIG, value);	// Setting output power value
     }
     else {
+        // for the SX1276
+
         // set MaxPower to 7 -> Pmax=10.8+0.6*MaxPower [dBm] = 15
         value = value | 0B01110000;
-        // then Pout = Pmax-(15-_power[3:0]) if  PaSelect=0 (RFO pin for +13dBm)
+
+        // then Pout = Pmax-(15-_power[3:0]) if  PaSelect=0 (RFO pin for +14dBm)
+        // so L=3dBm; H=7dBm; M=15dBm (but should be limited to 14dBm by RFO pin)
+
+        // and Pout = 17-(15-_power[3:0]) if  PaSelect=1 (PA_BOOST pin for +14dBm)
+        // so x= 14dBm (PA);
+        // when p=='X' for 20dBm, value is 0x0F and RegPaDacReg=0x87 so 20dBm is enabled
 
         writeRegister(REG_PA_CONFIG, value);
     }

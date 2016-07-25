@@ -32,6 +32,11 @@ if [ "$#" -ne 1 ]
     exit
 fi
 
+echo "Creating ../gateway_id.txt file"
+echo "Writing 000000$1"
+echo "000000$1" > ../gateway_id.txt
+echo "Done"
+
 echo "Replacing gw id in ../local_conf.json"
 sed -i -- 's/"000000.*"/"000000'"$1"'"/g' ../local_conf.json
 echo "Done"
@@ -137,9 +142,13 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		echo "for one reading every hour"
 fi
 
-echo "*****************************"
-echo "*** activate MongoDB Y/N  ***"
-echo "*****************************"
+echo ""
+echo "Current status for MongoDB is:"
+grep "is_used" ../global_conf.json
+echo ""
+echo "*******************************"
+echo "*** activate MongoDB Y/N/Q  ***"
+echo "*******************************"
 read ouinon
 
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
@@ -148,6 +157,34 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		sed -i 's/"is_used".*:.*false/"is_used" : true/g' ../global_conf.json
 		echo "Done"
 fi
+
+if [ "$ouinon" = "n" ] || [ "$ouinon" = "N" ]
+        then
+                echo "Deactivating MongoDB in global_conf.json"
+                sed -i 's/"is_used".*:.*true/"is_used" : false/g' ../global_conf.json
+                echo "Done"
+fi
+
+echo "*******************************"
+echo "*** run gateway at boot Y/N ***"
+echo "*******************************"
+read ouinon
+
+# we always remove so that there will be no duplicate lines
+echo "Removing /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local if any"
+sudo sed -i 's/\/home\/pi\/lora_gateway\/scripts\/start_gw.sh//g' /etc/rc.local
+echo "Done"
+
+if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
+        then
+		echo "Creating /root/Dropbox/LoRa-test folder if needed"
+		sudo mkdir -p /root/Dropbox/LoRa-test
+		echo "Done"
+                echo "Add /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local"
+                sudo sed -i 's/^exit 0/\/home\/pi\/lora_gateway\/scripts\/start_gw.sh\nexit 0/g' /etc/rc.local
+                echo "Done"
+fi
+
 		
 echo "**********************************************"
 echo "*** check configuration (recommended) Y/N  ***"
@@ -156,6 +193,10 @@ read ouinon
 
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 	then
+                echo "Displaying ../gateway_id.txt with less command. Press key to start. Scroll with Space, Q to quit."
+                read k
+                less ../gateway_id.txt
+
 		echo "Displaying ../global_conf.json with less command. Press key to start. Scroll with Space, Q to quit."
 		read k
 		less ../global_conf.json
@@ -182,8 +223,12 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 				
 		echo "Displaying /lib/systemd/system/bluetooth.service with less command. Press key to start. Scroll with Space, Q to quit."
 		read k
-		sudo less /lib/systemd/system/bluetooth.service											
-fi	
+		sudo less /lib/systemd/system/bluetooth.service
+
+                echo "Displaying /etc/rc.local with less command. Press key to start. Scroll with Space, Q to quit."
+                read k
+                sudo less /etc/rc.local
+fi
 
 echo "You should reboot your Raspberry"
 echo "*******************"

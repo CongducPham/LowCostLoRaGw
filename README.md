@@ -61,6 +61,32 @@ This is the command that we recommend. To test, just flash a temperature sensor 
 
 You can customize the post-processing stage (post_processing_gw.py) at your convenience later.
 
+You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in the tutorial repository (https://github.com/CongducPham/tutorials).
+
+Connect a radio module to your end-device
+=========================================
+
+To have an end-device, you have to connect a LoRa radio module to an Arduino board. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). Of course you also need to provide the power (3.3v) to the radio module. You can have a look at the "Low-cost-LoRa-IoT-step-by-step" tutorial in the tutorial repository (https://github.com/CongducPham/tutorials).
+
+There is an important issue regarding the radio modules. The Semtech SX1272/76 has actually 2 lines of RF power amplification (PA): a high efficiency PA up to 14dBm (RFO) and a high power PA up to 20dBm (PA_BOOST). Setting transmission power to "L" (Low), "H" (High), and "M" (Max) only uses the RFO and delivers 2dBm, 6dBm and 14dBm respectively. "x" (extreme) and "X" (eXtreme) use the PA_BOOST and deliver 14dBm and 20dBm respectively.
+However even if the SX1272/76 chip has the PA_BOOST and the 20dBm features, not all radio modules (integrating these SX1272/76) do have the appropriate wiring and circuits to enable these features: it depends on the choice of the reference design that itself is guided by the main intended frequency band usage, and sometimes also by the target country's regulations (such as maximum transmitted power). So you have to check with the datasheet whether your radio module has PA_BOOST (usually check whether the PA_BOOST pin is wired) and 20dBm capability before using "x" or "X". Some other radio modules only wire the PA_BOOST and not the RFO resulting in very bad range when trying to use the RFO mode ("L", "H", and "M"). In this case, one has to use "x" to indicate PA_BOOST usage to get 14dBm.
+
+Practically, we only use either "M" (Max) or "x" (extreme) to have maximum range. They both deliver 14dBm but the difference is whether the RFO pin is used or the PA_BOOST. Therefore, when uploading a sketch on your board, you have to check whether your radio module needs the PA_BOOST in order to get significant output level in which case "x" should be used instead of "M". All the examples start with:
+
+	// IMPORTANT
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// please uncomment only 1 choice
+	//
+	// uncomment if your radio is an HopeRF RFM92W or RFM95W
+	//#define RADIO_RFM92_95
+	// uncomment if your radio is a Modtronix inAirB (the one with +20dBm features), if inAir9, leave commented
+	//#define RADIO_INAIR9B
+	// uncomment if you only know that it has 20dBm feature
+	//#define RADIO_20DBM
+	/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+Uncomment RADIO_RFM92_95 if you have a HopeRF RFM92W or RFM95W. Uncomment RADIO_INAIR9B if you have a Modtronix inAir9B (if inAir9, leave commented). If you have another non listed radio module, try first by leaving RADIO_20DBM commented, then see whether the packet reception is correct with a reasonably high SNR (such as 6 to 10 dB) at some meters of the gateway. If not, then try with RADIO_20DBM uncommented.
+
 First try: a simple Ping-Pong program example
 =============================================
 
@@ -70,7 +96,9 @@ Run the gateway with:
 
 	> sudo ./lora_gateway
 	
-With the Arduino IDE, open the Arduino_LoRa_Ping_Pong sketch compile it and upload to an Arduino board. The end-device runs in LoRa mode 1 and has address 8. Open the Serial Monitor (38400 bauds) to see the output of the Arduino. It will send "Ping" to the gateway by requesting an ACK every 10s. If the ACK is received then it will display "Pong received from gateway!" otherwise it displays "No Pong!".
+With the Arduino IDE, open the Arduino_LoRa_Ping_Pong sketch compile it and upload to an Arduino board. Check your radio module first, see "Connect a radio module to your end-device" above.
+
+The end-device runs in LoRa mode 1 and has address 8. Open the Serial Monitor (38400 bauds) to see the output of the Arduino. It will send "Ping" to the gateway by requesting an ACK every 10s. If the ACK is received then it will display "Pong received from gateway!" otherwise it displays "No Pong!".
 
 Note that in most operational scenarios, requesting ACK from the gateway is costly. Look at the next examples to see how we usually send data without requesting ACK.
 
@@ -80,7 +108,7 @@ An end-device example that periodically sends temperature to the gateway
 
 First, install the Arduino IDE 1.6.6. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
 
-With the Arduino IDE, open the Arduino_LoRa_temp sketch (or the more simpler Arduino_LoRa_Simple_temp), compile it and upload to an Arduino board.
+With the Arduino IDE, open the Arduino_LoRa_temp sketch (or the more simpler Arduino_LoRa_Simple_temp), compile it and upload to an Arduino board. Check your radio module first, see "Connect a radio module to your end-device" above.
 
 The end-device runs in LoRa mode 1 and has address 6 for Arduino_LoRa_temp and address 8 for Arduino_LoRa_Simple_temp. It will send data to the gateway.
 
@@ -198,6 +226,8 @@ NEW: Tutorial materials
 =======================
 
 Go to https://github.com/CongducPham/tutorials.
+
+Look at our FAQ!
 
 NEW: Get the advanced version of the gateway
 ============================================
