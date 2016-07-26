@@ -47,7 +47,33 @@ B.7. We added a configuration script (scripts/config_raspbian.sh) to help you co
 Install the advanced version
 ============================
 
-Copy all the files (including sub-folders) of the gw_advanced folder in your lora_gateway folder on the Raspberry. Some files will be overwritten but it is normal. If you previously run the basic version with some private cloud keys/credentials, you have to save them first. For instance, if you have a ThingSpeak channel write key, you have to put it back into ThingSpeak.py.
+If you got the entire LowCostLoRaGw repository you should have the LowCostLoRaGw/gw_advanced folder already on your Raspberry:
+
+	pi@raspberrypi:~ $ ls -l LowCostLoRaGw/
+	total 32
+	drwxr-xr-x 7 pi pi  4096 Jul 26 15:38 Arduino
+	drwxr-xr-x 5 pi pi  4096 Jul 26 15:38 gw_advanced
+	drwxr-xr-x 2 pi pi  4096 Jul 26 15:38 Raspberry
+	-rw-r--r-- 1 pi pi 15522 Jul 26 15:38 README.md
+	drwxr-xr-x 2 pi pi  4096 Jul 26 15:38 tutorials
+
+Otherwise, get the advanced version with:
+
+	> svn checkout https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_advanced
+
+Note that you may have to install svn before being able to use the svn command:
+
+	> sudo apt-get install subversion
+		
+Then, copy all the content (all the files including sub-folders) of gw_advanced into your lora_gateway folder:
+
+	> cp -R LowCostLoRaGw/gw_advanced/* lora_gateway
+
+or	
+
+	> cp -R gw_advanced/* lora_gateway
+	
+Some files will be overwritten but it is normal. If you previously run the basic version with some private cloud keys/credentials, you have to save them first. For instance, if you have a ThingSpeak channel write key, you have to put it back into ThingSpeak.py.
 
 global_conf.json and local_conf.json
 ------------------------------------

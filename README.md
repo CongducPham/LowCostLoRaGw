@@ -19,15 +19,56 @@ Wheezy has been tested on RPI1 and RPI2 and works great. Wheezy on RPI3 is not r
 
 We recommend buying either RPI2 or RPI3. RPI3 with Jessie has built-in WiFi and Bluetooth so it is definitely a good choice. In addition RPI3 with Jessie will have a better support lifetime. 
 
-Create a "Dropbox" folder in your home directory with a subforder "LoRa-test" that will be used locally. Please put attention to the name of the folder: they must be "Dropbox/LoRa-test" because the "post_processing_gw.py" Python script uses these paths. You can mount Dropbox later on (see below) if you want: the local folders and contents will be unchanged.
+Log as **pi** user on your Raspberry using ssh or connect a display and a keyboard. Create a "Dropbox" folder in your home directory with a subforder "LoRa-test" that will be used locally. Please put attention to the name of the folders: they must be "Dropbox/LoRa-test" because the "post_processing_gw.py" Python script uses these paths. You can mount Dropbox later on (see below) if you want: the local folders and contents will be unchanged.
 
     > mkdir -p Dropbox/LoRa-test 
 
-Create a folder named "lora_gateway" for instance then copy all the files of the distrib's Raspberry folder in it.
+To get all the gateway files you have 2 options.
+
+First option
+------------
+
+Get all the repository:
+
+	> git clone https://github.com/CongducPham/LowCostLoRaGw.git
+	
+You will get the entire repository:
+
+	pi@raspberrypi:~ $ ls -l LowCostLoRaGw/
+	total 32
+	drwxr-xr-x 7 pi pi  4096 Jul 26 15:38 Arduino
+	drwxr-xr-x 5 pi pi  4096 Jul 26 15:38 gw_advanced
+	drwxr-xr-x 2 pi pi  4096 Jul 26 15:38 Raspberry
+	-rw-r--r-- 1 pi pi 15522 Jul 26 15:38 README.md
+	drwxr-xr-x 2 pi pi  4096 Jul 26 15:38 tutorials
+	
+Create a folder named "lora_gateway" for instance then copy all the files of the LowCostLoRaGw/Raspberry folder in it.
 
     > mkdir lora_gateway
     > cd lora_gateway
-    > "copy all files here"
+    > cp -R ../LowCostLoRaGw/Raspberry/* .
+    
+Or if you want to "move" the LowCostLoRaGw/Raspberry folder, simply do (without creating the lora_gateway folder before):
+
+	> mv LowCostLoRaGw/Raspberry ./lora_gateway    
+
+Second option
+-------------
+
+Get only the gateway part:
+
+	> svn checkout https://github.com/CongducPham/LowCostLoRaGw/trunk/Raspberry lora_gateway
+	
+That will create the lora_gateway folder and get all the file of (GitHub) LowCostLoRaGw/Raspberry in it. Then:
+
+	> cd lora_gateway
+
+Note that you may have to install svn before being able to use the svn command:
+
+	> sudo apt-get install subversion
+	
+Compiling the low-level gateway program
+---------------------------------------	 	
     
 DO NOT modify the lora_gateway.cpp file unless you know what you are doing. Check the radio.makefile file to select the radio module that you have. Uncomment only 1 choice or leave all lines commented if you do not have neither an HopeRF92/95 or inAir9B or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it). For instance, with both Libelium LoRa and inAir9 (not inAir9B) you should leave all lines commented. Then:
 
