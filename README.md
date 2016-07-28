@@ -6,24 +6,28 @@ Please consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
 Install Raspbian Wheezy or Jessie
 =================================
 
-Fisrt install a Raspberry with Raspbian, Jessie is recommended. 
+Fisrt install a Raspberry with Raspbian, Jessie is recommended.
 
-then
+then (you need to have Internet access on your Raspberry):
 
 	> sudo apt-get update
 	> sudo apt-get upgrade
 
-Jessie has been tested on RPI2 and RPI3 and works great.
+Jessie has been tested on RPI1, RPI2 and RPI3, and works great.
 
 Wheezy has been tested on RPI1 and RPI2 and works great. Wheezy on RPI3 is not recommended because built-in WiFi and Bluetooth will not work properly.
 
 We recommend buying either RPI2 or RPI3. RPI3 with Jessie has built-in WiFi and Bluetooth so it is definitely a good choice. In addition RPI3 with Jessie will have a better support lifetime. 
 
-Log as **pi** user on your Raspberry using ssh or connect a display and a keyboard. Create a "Dropbox" folder in your home directory with a subforder "LoRa-test" that will be used locally. Please put attention to the name of the folders: they must be "Dropbox/LoRa-test" because the "post_processing_gw.py" Python script uses these paths. You can mount Dropbox later on (see below) if you want: the local folders and contents will be unchanged.
+Connect a radio module to Raspberry
+===================================
 
-    > mkdir -p Dropbox/LoRa-test 
+You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). Of course you also need to provide the power (3.3v) to the radio module. You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
 
-To get all the gateway files you have 2 options.
+Install the low-level LoRa gateway
+==================================
+
+Log as **pi** user on your Raspberry using ssh or connect a display and a keyboard. To get all the low-level LoRa gateway files you have 2 options.
 
 First option
 ------------
@@ -86,23 +90,34 @@ On Raspberry v2 or v3 a symbolic link will be created that will point to lora_ga
 
 By default, the gateway runs in LoRa mode 1 and has address 1.
 
-To use post-processing with the provided ThingSpeak test channel
+You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
+
+Adding LoRa gateway's post-processing features
+==============================================
+
+A data post-processing stage in added after the low-level LoRa gateway program. The post_processing_gw.py script can be customized to process sensor raw data from the low-level LoRa gateway. A typical processing task is to push received data to Internet servers or dedicated (public or private) IoT clouds. post_processing_gw.py is a template that already implement data uploading to various public IoT clouds.
+
+For instance, to push data to the provided ThingSpeak WAZIUP test channel
 
 	> sudo ./lora_gateway | python ./post_processing_gw.py -t
 
-To log processing output in a file (in ~/Dropbox/LoRa-test/post_processing_1.log)
+To log processing output in a file (in ~/Dropbox/LoRa-test/post_processing.log)
 
 	> sudo ./lora_gateway | python ./post_processing_gw.py -t | python ./log_gw
+	
+**Note that if you want to run and test the above command now**, you have to create a "Dropbox" folder in your home directory with a subforder "LoRa-test" that will be used locally. Please put attention to the name of the folders: they must be "Dropbox/LoRa-test" because the "post_processing_gw.py" Python script uses these paths. You can mount Dropbox later on if you want: the local folders and contents will be unchanged. **Otherwise, just run the config_raspbian.sh configurarion script as it will be described later on (recommended)**.
+
+    > mkdir -p Dropbox/LoRa-test 	
 	
 To additionally enforce application key at the gateway post-processing stage
 
 	> sudo ./lora_gateway | python ./post_processing_gw.py -t --wappkey | python ./log_gw
 
-This is the command that we recommend. To test, just flash a temperature sensor as described below and it should work out-of-the-box.
+This is the command that we recommend. To test, just flash a temperature sensor and it should work out-of-the-box.
 
 You can customize the post-processing stage (post_processing_gw.py) at your convenience later.
 
-You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in the tutorial repository (https://github.com/CongducPham/tutorials).
+You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
 
 Connect a radio module to your end-device
 =========================================
