@@ -18,6 +18,15 @@
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #------------------------------------------------------------
 
+# IMPORTANT
+# Parts that can be modified are identified with
+
+#////////////////////////////////////////////////////////////
+# TEXT
+
+# END
+#////////////////////////////////////////////////////////////
+
 import sys
 from threading import Timer
 import time
@@ -25,6 +34,56 @@ import datetime
 import getopt
 import os
 import subprocess
+
+#////////////////////////////////////////////////////////////
+# ADD HERE BOOLEAN VARIABLES TO SUPPORT OTHER CLOUDS
+# OR VARIABLES FOR YOUR OWN NEEDS 
+#////////////////////////////////////////////////////////////
+
+#------------------------------------------------------------
+#with firebase support?
+#------------------------------------------------------------
+_firebase=0
+#------------------------------------------------------------
+#change here the entry path for your firebase sensor data
+_dbpath='/LoRa/LIUPPA/RPIgateway/'
+#change here for your own firebase url when you have one
+_defdatabase='https://XXXXXXXXXXX.firebaseio.com'
+#------------------------------------------------------------
+
+#------------------------------------------------------------
+#with thingspeak support?
+#------------------------------------------------------------
+_thingspeak=0
+#plot snr instead of seq
+_thingspeaksnr=0
+#------------------------------------------------------------
+#we have a public channel for your test
+#https://thingspeak.com/channels/66794
+#the write key is SGSH52UGPVAUYG3S
+#the read key is 5OMG8DESB3PTUX20
+#change here for your own channel write key when you have one
+_defchannel='SGSH52UGPVAUYG3S'
+#------------------------------------------------------------
+
+#------------------------------------------------------------
+#with fiware support?
+#------------------------------------------------------------
+_fiware=0
+#------------------------------------------------------------
+
+#////////////////////////////////////////////////////////////
+# ADD HERE APP KEYS THAT YOU WANT TO ALLOW FOR YOUR GATEWAY
+#////////////////////////////////////////////////////////////
+
+app_key_list = [
+	#change here your application key
+	[1,2,3,4],
+	[5,6,7,8] 
+]
+
+# END
+#////////////////////////////////////////////////////////////
 
 #------------------------------------------------------------
 #header packet information
@@ -62,58 +121,18 @@ sf=0
 _ignoreComment=1
 #------------------------------------------------------------
 
-
-#------------------------------------------------------------
-#with firebase support?
-#------------------------------------------------------------
-_firebase=0
-#------------------------------------------------------------
-#change here the entry path for your firebase sensor data
-_dbpath='/LoRa/LIUPPA/RPIgateway/'
-#change here for your own firebase url when you have one
-_defdatabase='https://XXXXXXXXXXX.firebaseio.com'
-#------------------------------------------------------------
-
-
-#------------------------------------------------------------
-#with thingspeak support?
-#------------------------------------------------------------
-_thingspeak=0
-#plot snr instead of seq
-_thingspeaksnr=0
-#------------------------------------------------------------
-#we have a public channel for your test
-#https://thingspeak.com/channels/66794
-#the write key is SGSH52UGPVAUYG3S
-#the read key is 5OMG8DESB3PTUX20
-#change here for your own channel write key when you have one
-_defchannel='SGSH52UGPVAUYG3S'
-#------------------------------------------------------------
-
-#------------------------------------------------------------
-#with fiware support?
-#------------------------------------------------------------
-_fiware=0
-#------------------------------------------------------------
-
 #------------------------------------------------------------
 #log gateway message?
 #------------------------------------------------------------
 _logGateway=0
 #gateway id/addr, just for giving a different name to various log files
 _gwaddr=1
-#------------------------------------------------------------
-#change here the various path for your log file on Dropbox
-_gwlog_filename = "~/Dropbox/LoRa-test/gateway_"+str(_gwaddr)+".log"
-_telemetrylog_filename = "~/Dropbox/LoRa-test/telemetry_"+str(_gwaddr)+".log"
-#------------------------------------------------------------
 
 #------------------------------------------------------------
 #raw output from gateway?
 #------------------------------------------------------------
 _rawFormat=0
 #------------------------------------------------------------
-
 
 #------------------------------------------------------------
 #check for app key?
@@ -124,20 +143,29 @@ the_app_key = [0,0,0,0]
 
 #valid app key? by default we do not check for the app key
 _validappkey=1
+
+#////////////////////////////////////////////////////////////
+# CHANGE HERE THE VARIOUS PATHS FOR YOUR LOG FILES
+#////////////////////////////////////////////////////////////
+
+_gwlog_filename = "~/Dropbox/LoRa-test/gateway_"+str(_gwaddr)+".log"
+_telemetrylog_filename = "~/Dropbox/LoRa-test/telemetry_"+str(_gwaddr)+".log"
+
+#////////////////////////////////////////////////////////////
+# ADD HERE OPTIONS THAT YOU MAY WANT TO ADD
+# BE CAREFUL, IT IS NOT ADVISED TO REMOVE OPTIONS UNLESS YOU
+# REALLY KNOW WHAT YOU ARE DOING
+#////////////////////////////////////////////////////////////
+
 #------------------------------------------------------------
-#add here app keys that you want to allow for your gateway
-app_key_list = [
-	#change here your application key
-	[1,2,3,4],
-	[5,6,7,8] 
-]
+#for parsing the options
 #------------------------------------------------------------
 
 def main(argv):
 	try:
 		opts, args = getopt.getopt(argv,'iftLa:',['ignorecomment','firebase','thingspeak','fiware','loggw','addr', 'wappkey', 'raw'])
 	except getopt.GetoptError:
-		print 'parseLoRaStdin -i -f -t --fiware -L -a --wappkey --raw'
+		print 'post_processing_gw -i -f -t --fiware -L -a --wappkey --raw'
 		sys.exit(2)
 	
 	for opt, arg in opts:
@@ -185,10 +213,21 @@ def main(argv):
 			global _rawFormat
 			_rawFormat = 1
 			print "raw output from gw, will handle packet format"			
+			
+# END
+#////////////////////////////////////////////////////////////
 		
 if __name__ == "__main__":
 	main(sys.argv[1:])
       
+#------------------------------------------------------------
+#main loop
+#------------------------------------------------------------
+
+while True:
+	sys.stdout.flush()
+	ch=sys.stdin.read(1)
+
 #expected prefixes
 #	^p 	indicates a ctrl pkt info ^pdst(%d),ptype(%d),src(%d),seq(%d),len(%d),SNR(%d),RSSI=(%d) for the last received packet
 #		example: ^p1,16,3,0,234,8,-45
@@ -227,13 +266,10 @@ if __name__ == "__main__":
 #
 #
 
-while True:
-	sys.stdout.flush()
-	ch=sys.stdin.read(1)
-
-#
+#------------------------------------------------------------
 # '^' is reserved for control information from the gateway
-#
+#------------------------------------------------------------
+
 	if (ch=='^'):
 		now = datetime.datetime.now()
 		ch=sys.stdin.read(1)
@@ -299,9 +335,9 @@ while True:
 		continue
 
 
-#
+#------------------------------------------------------------
 # '\' is reserved for message logging service
-#
+#------------------------------------------------------------
 
 	if (ch=='\\'):
 		now = datetime.datetime.now()
@@ -323,7 +359,13 @@ while True:
 				f.write(now.isoformat()+'> ')
 				f.write(data)
 				f.close()	
-								
+
+			#/////////////////////////////////////////////////////////////
+			# YOU CAN MODIFY HERE HOW YOU WANT DATA TO BE PUSHED TO CLOUDS
+			# WE PROVIDE EXAMPLES FOR THINGSPEAK, GROVESTREAM
+			# IT IS ADVISED TO USE A SEPERATE PYTHON SCRIPT PER CLOUD
+			#////////////////////////////////////////////////////////////
+											
 			elif (ch=='&' and _firebase==1): #log on Firebase
 				
 				data = sys.stdin.readline()
@@ -439,7 +481,10 @@ while True:
 						print("FiWare: Entity updated with ENTITY_ID "+entity_id)
 					else:
 						print("FiWare: Entity update failed")
-						
+
+			# END
+			#////////////////////////////////////////////////////////////
+									
 			else: # not a known data logging prefix
 				print 'unrecognized data logging prefix'
 				sys.stdin.readline() 

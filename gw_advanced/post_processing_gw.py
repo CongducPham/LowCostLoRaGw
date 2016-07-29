@@ -19,6 +19,15 @@
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #------------------------------------------------------------
 
+# IMPORTANT
+# Parts that can be modified are identified with
+
+#////////////////////////////////////////////////////////////
+# TEXT
+
+# END
+#////////////////////////////////////////////////////////////
+
 import sys
 import select
 import threading
@@ -29,6 +38,79 @@ import getopt
 import os
 import json
 import re
+
+#////////////////////////////////////////////////////////////
+# ADD HERE BOOLEAN VARIABLES TO SUPPORT OTHER CLOUDS
+# OR VARIABLES FOR YOUR OWN NEEDS 
+#////////////////////////////////////////////////////////////
+
+#------------------------------------------------------------
+#with firebase support?
+#------------------------------------------------------------
+_firebase=False
+
+#------------------------------------------------------------
+#with thingspeak support?
+#------------------------------------------------------------
+_thingspeak=False
+#plot snr instead of seq
+_thingspeaksnr=False
+
+#------------------------------------------------------------
+#with sensorcloud support?
+#------------------------------------------------------------
+_sensorcloud=False
+
+#------------------------------------------------------------
+#with grovestreams support?
+#------------------------------------------------------------
+_grovestreams=False
+
+#------------------------------------------------------------
+#with fiware support?
+#------------------------------------------------------------
+_fiware=False
+
+#////////////////////////////////////////////////////////////
+# ADD HERE APP KEYS THAT YOU WANT TO ALLOW FOR YOUR GATEWAY
+#////////////////////////////////////////////////////////////
+# NOTE: the format of the application key list has changed from 
+# a list of list, to a list of string that will be process as 
+# a byte array. Doing so wilL allow for dictionary construction
+# using the appkey to retrieve information such as encryption key,...
+
+app_key_list = [
+	#for testing
+	'****',
+	#change here your application key
+	'\x01\x02\x03\x04',
+	'\x05\x06\x07\x08' 
+]
+
+#////////////////////////////////////////////////////////////
+#FOR AES DECRYPTION
+#////////////////////////////////////////////////////////////
+
+#put your key here, should match the end-device's key
+aes_key="0123456789010123"
+#put your initialisation vector here, should match the end-device's initialisation vector
+aes_iv="\x9a\xd0\x30\x02\x00\x00\x00\x00\x9a\xd0\x30\x02\x00\x00\x00\x00"
+#aes_iv="\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00
+
+#association between appkey and aes_key
+appkey_aeskey = {
+	'\x01\x02\x03\x04':"0123456789010123",
+	'\x05\x06\x07\x08':"0123456789010123"
+}
+
+#association between appkey and aes_iv
+appkey_aesiv = {
+	'\x01\x02\x03\x04':"\x9a\xd0\x30\x02\x00\x00\x00\x00\x9a\xd0\x30\x02\x00\x00\x00\x00",
+	'\x05\x06\x07\x08':"\x9a\xd0\x30\x02\x00\x00\x00\x00\x9a\xd0\x30\x02\x00\x00\x00\x00"
+}
+
+# END
+#////////////////////////////////////////////////////////////
 
 #------------------------------------------------------------
 #header packet information
@@ -60,38 +142,10 @@ cr=0
 sf=0
 #------------------------------------------------------------
 
-
 #------------------------------------------------------------
 #will ignore lines beginning with '?'
 #------------------------------------------------------------
 _ignoreComment=1
-
-#------------------------------------------------------------
-#with firebase support?
-#------------------------------------------------------------
-_firebase=False
-
-#------------------------------------------------------------
-#with thingspeak support?
-#------------------------------------------------------------
-_thingspeak=False
-#plot snr instead of seq
-_thingspeaksnr=False
-
-#------------------------------------------------------------
-#with sensorcloud support?
-#------------------------------------------------------------
-_sensorcloud=False
-
-#------------------------------------------------------------
-#with grovestreams support?
-#------------------------------------------------------------
-_grovestreams=False
-
-#------------------------------------------------------------
-#with fiware support?
-#------------------------------------------------------------
-_fiware=False
 
 #------------------------------------------------------------
 #with mongoDB support?
@@ -104,29 +158,6 @@ _mongodb = False
 _logGateway=0
 #path of json file containing the gateway address
 _filename_path = "local_conf.json"
-
-
-#open json file to recover gateway_address
-f = open(os.path.expanduser(_filename_path),"r")
-lines = f.readlines()
-f.close()
-array = ""
-#get all the lines in a string
-for line in lines :
-	array += line
-
-#change it into a python array
-json_array = json.loads(array)
-
-#set the gateway_address for having different log filenames
-_gwaddr = json_array["gateway_conf"]["gateway_ID"]
-
-
-#------------------------------------------------------------
-#change here the various path for your log file on Dropbox
-_gwlog_filename = "~/Dropbox/LoRa-test/gateway_"+str(_gwaddr)+".log"
-_telemetrylog_filename = "~/Dropbox/LoRa-test/telemetry_"+str(_gwaddr)+".log"
-#------------------------------------------------------------
 
 #------------------------------------------------------------
 #raw output from gateway?
@@ -148,6 +179,30 @@ the_app_key = '\x00\x00\x00\x00'
 _validappkey=1
 
 #------------------------------------------------------------
+#for local AES decrypting
+#------------------------------------------------------------	
+_aes=0
+_hasClearData=0
+
+#------------------------------------------------------------
+#open json file to recover gateway_address
+#------------------------------------------------------------
+f = open(os.path.expanduser(_filename_path),"r")
+lines = f.readlines()
+f.close()
+array = ""
+#get all the lines in a string
+for line in lines :
+	array += line
+
+#change it into a python array
+json_array = json.loads(array)
+
+#set the gateway_address for having different log filenames
+_gwaddr = json_array["gateway_conf"]["gateway_ID"]
+
+
+#------------------------------------------------------------
 #initialize gateway DHT22 sensor
 #------------------------------------------------------------
 _gw_dht22 = json_array["gateway_conf"]["dht22"]
@@ -162,21 +217,44 @@ if(_gw_dht22):
 	_temperature = 0
 	_humidity = 0
 
-#------------------------------------------------------------
-#add here app keys that you want to allow for your gateway
-#
-#NOTE:	the format of the application key list has changed from a list of list, to a list of string that will be
-#		process as a byte array. Doing so wil allow for dictionary construction using the appkey to retrieve information
-#		such as an encryption key,...
-#		
-app_key_list = [
-	#for testing
-	'****',
-	#change here your application key
-	'\x01\x02\x03\x04',
-	'\x05\x06\x07\x08' 
-]
-#------------------------------------------------------------
+# retrieve dht22 values
+def save_dht22_values():
+	global _temperature, _humidity, _date_save_dht22
+	_humidity, _temperature = get_dht22_values()
+	
+	_date_save_dht22 = datetime.datetime.utcnow()
+
+	print "Gateway TC : "+_temperature+" C | HU : "+_humidity+" % at "+str(_date_save_dht22)
+	
+	#save values from the gateway box's DHT22 sensor, if _mongodb is true
+	if(_mongodb):
+		#saving data in a JSON var
+		str_json_data = "{\"th\":"+_temperature+", \"hu\":"+_humidity+"}"
+	
+		#creating document to add
+		doc = {
+			"type" : "DATA_GW_DHT22",
+			"gateway_eui" : _gwaddr, 
+			"node_eui" : "gw",
+			"snr" : "", 
+			"rssi" : "", 
+			"cr" : "", 
+			"datarate" : "", 
+			"time" : _date_save_dht22,
+			"data" : json.dumps(json.loads(str_json_data))
+		}
+	
+		#adding the document
+		add_document(doc)
+	
+def dht22_target():
+	while True:
+		print "Getting gateway temperature"
+		save_dht22_values()
+		sys.stdout.flush()	
+		global _gw_dht22
+		time.sleep(_gw_dht22)
+
 
 #------------------------------------------------------------
 #for managing the input data when we can have aes encryption
@@ -219,76 +297,59 @@ def fillLinebuf(n):
 	global _linebuf
 	# fill in our _linebuf from stdin
 	_linebuf=sys.stdin.read(n)
-	
-#------------------------------------------------------------
-	
-#------------------------------------------------------------
-#for local AES decrypting
-#------------------------------------------------------------	
-_aes=0
-_hasClearData=0
-#put your key here, should match the end-device's key
-aes_key="0123456789010123"
-#put your initialisation vector here, should match the end-device's initialisation vector
-aes_iv="\x9a\xd0\x30\x02\x00\x00\x00\x00\x9a\xd0\x30\x02\x00\x00\x00\x00"
-#aes_iv="\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00
 
-#association between appkey and aes_key
-appkey_aeskey = {
-	'\x01\x02\x03\x04':"0123456789010123",
-	'\x05\x06\x07\x08':"0123456789010123"
-}
+#////////////////////////////////////////////////////////////
+# CHANGE HERE THE VARIOUS PATHS FOR YOUR LOG FILES
+#////////////////////////////////////////////////////////////
 
-#association between appkey and aes_iv
-appkey_aesiv = {
-	'\x01\x02\x03\x04':"\x9a\xd0\x30\x02\x00\x00\x00\x00\x9a\xd0\x30\x02\x00\x00\x00\x00",
-	'\x05\x06\x07\x08':"\x9a\xd0\x30\x02\x00\x00\x00\x00\x9a\xd0\x30\x02\x00\x00\x00\x00"
-}
+_gwlog_filename = "~/Dropbox/LoRa-test/gateway_"+str(_gwaddr)+".log"
+_telemetrylog_filename = "~/Dropbox/LoRa-test/telemetry_"+str(_gwaddr)+".log"
+
+#////////////////////////////////////////////////////////////
+# ADD HERE OPTIONS THAT YOU MAY WANT TO ADD
+# BE CAREFUL, IT IS NOT ADVISED TO REMOVE OPTIONS UNLESS YOU
+# REALLY KNOW WHAT YOU ARE DOING
+#////////////////////////////////////////////////////////////
+
 #------------------------------------------------------------
-	
-# retrieve dht22 values
-def save_dht22_values():
-	global _temperature, _humidity, _date_save_dht22
-	_humidity, _temperature = get_dht22_values()
-	
-	_date_save_dht22 = datetime.datetime.utcnow()
-
-	print "Gateway TC : "+_temperature+" C | HU : "+_humidity+" % at "+str(_date_save_dht22)
-	
-	#save values from the gateway box's DHT22 sensor, if _mongodb is true
-	if(_mongodb):
-		#saving data in a JSON var
-		str_json_data = "{\"th\":"+_temperature+", \"hu\":"+_humidity+"}"
-	
-		#creating document to add
-		doc = {
-			"type" : "DATA_GW_DHT22",
-			"gateway_eui" : _gwaddr, 
-			"node_eui" : "gw",
-			"snr" : "", 
-			"rssi" : "", 
-			"cr" : "", 
-			"datarate" : "", 
-			"time" : _date_save_dht22,
-			"data" : json.dumps(json.loads(str_json_data))
-		}
-	
-		#adding the document
-		add_document(doc)
-	
-def dht22_target():
-	while True:
-		print "Getting gateway temperature"
-		save_dht22_values()
-		sys.stdout.flush()	
-		global _gw_dht22
-		time.sleep(_gw_dht22)	
+#for parsing the options
+#------------------------------------------------------------
 
 def main(argv):
 	try:
-		opts, args = getopt.getopt(argv,'iftLam:',['ignorecomment','firebase','thingspeak','retrythsk','thingspeaksnr','fiware','sensorcloud','grovestreams','loggw','addr', 'wappkey', 'raw', 'aes', 'mongodb'])
+		opts, args = getopt.getopt(argv,'iftLam:',[\
+		'ignorecomment',\
+		'firebase',\
+		'thingspeak',\
+		'retrythsk',\
+		'thingspeaksnr',\
+		'fiware',\
+		'sensorcloud',\
+		'grovestreams',\
+		'loggw',\
+		'addr',\
+		'wappkey',\
+		'raw',\
+		'aes',\
+		'mongodb'])
+		
 	except getopt.GetoptError:
-		print 'parseLoRaStdin -i -f/--firebase -t/--thingspeak --retrythsk --thingspeaksnr --fiware --sensorcloud --grovestreams -L/--loggw -a/--addr --wappkey --raw --aes -m/--mongodb'
+		print 'post_processing_gw '+\
+		'-i/--ignorecomment '+\
+		'-f/--firebase '+\
+		'-t/--thingspeak '+\
+		'--retrythsk '+\
+		'--thingspeaksnr '+\
+		'--fiware '+\
+		'--sensorcloud '+\
+		'--grovestreams '+\
+		'-L/--loggw '+\
+		'-a/--addr '+\
+		'--wappkey '+\
+		'--raw '+\
+		'--aes '+\
+		'-m/--mongodb'
+		
 		sys.exit(2)
 	
 	for opt, arg in opts:
@@ -370,7 +431,7 @@ def main(argv):
 			global AES
 			from Crypto.Cipher import AES
 			print("enable AES encrypted data")
-			
+						
 		elif opt in ("-m", "--mongodb"):
 			print("will enable local MongoDB support, max months to store is "+arg)
 			global _mongodb
@@ -380,11 +441,27 @@ def main(argv):
 			from MongoDB import add_document, remove_if_new_month, mongodb_set_max_months
 			#setting max months
 			mongodb_set_max_months(int(arg))
-			
+
+# END
+#////////////////////////////////////////////////////////////			
 					
 if __name__ == "__main__":
 	main(sys.argv[1:])
-      
+
+#gateway dht22
+if (_gw_dht22):
+	print "Starting thread to measure gateway temperature"
+	t = threading.Thread(target=dht22_target)
+	t.daemon = True
+	t.start()
+
+print "Current working directory: "+os.getcwd()
+
+while True:
+
+	sys.stdout.flush()
+  	ch = getSingleChar()
+
 #expected prefixes
 #	^p 	indicates a ctrl pkt info ^pdst(%d),ptype(%d),src(%d),seq(%d),len(%d),SNR(%d),RSSI=(%d) for the last received packet
 #		example: ^p1,16,3,0,234,8,-45
@@ -417,21 +494,10 @@ if __name__ == "__main__":
 #
 #
 
-#gateway dht22
-if (_gw_dht22):
-	print "Starting thread to measure gateway temperature"
-	t = threading.Thread(target=dht22_target)
-	t.daemon = True
-	t.start()
-
-while True:
-
-	sys.stdout.flush()
-  	ch = getSingleChar()
-
-#
+#------------------------------------------------------------
 # '^' is reserved for control information from the gateway
-#
+#------------------------------------------------------------
+
 	if (ch=='^'):
 		now = datetime.datetime.utcnow()
 		ch=sys.stdin.read(1)
@@ -500,9 +566,9 @@ while True:
 		continue
 
 
-#
+#------------------------------------------------------------
 # '\' is reserved for message logging service
-#
+#------------------------------------------------------------
 
 	if (ch=='\\'):
 		now = datetime.datetime.utcnow()
@@ -523,7 +589,13 @@ while True:
 				f.write(now.isoformat()+'> ')
 				f.write(data)
 				f.close()	
-								
+
+			#/////////////////////////////////////////////////////////////
+			# YOU CAN MODIFY HERE HOW YOU WANT DATA TO BE PUSHED TO CLOUDS
+			# WE PROVIDE EXAMPLES FOR THINGSPEAK, GROVESTREAM
+			# IT IS ADVISED TO USE A SEPERATE PYTHON SCRIPT PER CLOUD
+			#////////////////////////////////////////////////////////////
+											
 			elif (ch=='&' and _firebase): #log on Firebase
 				
 				ldata = getAllLine()
@@ -606,7 +678,7 @@ while True:
 				#upload data to firebase
 				firebase_uploadSingleData(firebase_msg, sensor_entry, msg_entry, now)
 				
-			elif (ch=='!'): #log on thingspeak, grovestreams, sensorcloud,...
+			elif (ch=='!'): #log on thingspeak, grovestreams, sensorcloud and connectingnature
 	
 				ldata = getAllLine()
 				
@@ -776,7 +848,10 @@ while True:
 					
 					#upload data to grovestreams
 					grovestreams_uploadSingleData(nomenclatures, data, str(src))
-									
+					
+
+			# END
+			#////////////////////////////////////////////////////////////				
 															
 			else: # not a known data logging prefix
 				#you may want to upload to a default service
