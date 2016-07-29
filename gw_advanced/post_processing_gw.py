@@ -24,7 +24,6 @@ import select
 import threading
 from threading import Timer
 import time
-from collections import deque
 import datetime
 import getopt
 import os
@@ -127,7 +126,6 @@ _gwaddr = json_array["gateway_conf"]["gateway_ID"]
 #change here the various path for your log file on Dropbox
 _gwlog_filename = "~/Dropbox/LoRa-test/gateway_"+str(_gwaddr)+".log"
 _telemetrylog_filename = "~/Dropbox/LoRa-test/telemetry_"+str(_gwaddr)+".log"
-_imagelog_filename = "~/Dropbox/LoRa-test/image_"+str(_gwaddr)+".log"
 #------------------------------------------------------------
 
 #------------------------------------------------------------
@@ -178,18 +176,6 @@ app_key_list = [
 	'\x01\x02\x03\x04',
 	'\x05\x06\x07\x08' 
 ]
-#------------------------------------------------------------
-
-
-#------------------------------------------------------------
-#for handling images
-#------------------------------------------------------------
-#list of active nodes
-nodeL = deque([])
-#association to get the file handler
-fileH = {}
-#global image seq number
-rcvImg=0
 #------------------------------------------------------------
 
 #------------------------------------------------------------
@@ -259,15 +245,6 @@ appkey_aesiv = {
 	'\x05\x06\x07\x08':"\x9a\xd0\x30\x02\x00\x00\x00\x00\x9a\xd0\x30\x02\x00\x00\x00\x00"
 }
 #------------------------------------------------------------
-
-def image_timeout():
-	#get the node which timer has expired first
-	#i.e. the one that received image packet earlier
-	node_id=nodeL.popleft()
-	print "close file for node %d" % node_id
-	f=fileH[node_id]
-	f.close()
-	del fileH[node_id]
 	
 # retrieve dht22 values
 def save_dht22_values():
@@ -438,8 +415,6 @@ if __name__ == "__main__":
 #
 #	\xFF\xFE		indicates radio data prefix
 #
-#	\xFF\x50-\x54 	indicates an image packet. Next fields are src_adr(2B), seq(1B), Q(1B), size(1B)
-#					cam id is coded with the second framing byte: i.e. \x50 means cam id = 0
 #
 
 #gateway dht22
@@ -944,64 +919,6 @@ while True:
 						_validappkey=1
 						print("but app key disabled")				
 				
-			continue	
-					
-					
-		if (ch >= '\x50' and ch <= '\x54'):
-			print("--> got image packet")
-			
-			cam_id=ord(ch)-0x50;
-			src_adr_msb = ord(getSingleChar())
-			src_adr_lsb = ord(getSingleChar())
-			src_adr = src_adr_msb*256+src_adr_lsb
-					
-			seq_num = ord(getSingleChar())
-	
-			Q = ord(getSingleChar())
-	
-			data_len = ord(getSingleChar())
-	
-			if (src_adr in nodeL):
-				#already in list
-				#get the file handler
-				theFile=fileH[src_adr]
-				#TODO
-				#start some timer to remove the node from nodeL
-			else:
-				#new image packet from this node
-				nodeL.append(src_adr)
-				filename =("~/Dropbox/LoRa-test/images/tmp_%d-node#%.4d-cam#%d-Q%d.dat" % (rcvImg,src_adr,cam_id,Q))
-				print("first pkt from node %d" % src_adr)
-				print("creating file %s" % filename)
-				open(os.path.expanduser(filename),"w")
-				# associates the file handler to this node
-				fileH.update({src_adr:theFile})
-				rcvImg=rcvImg+1
-				t = Timer(35, image_timeout)
-				t.start()
-				#log only the first packet and the filename
-				f=open(os.path.expanduser(_imagelog_filename),"a")
-				f.write(info_str+' ')	
-				now = datetime.datetime.now()
-				f.write(now.isoformat()+'> ')
-				f.write(filename+'\n')
-				f.close()				
-							
-			print("pkt %d from node %d data size is %d" % (seq_num,src_adr,data_len))
-			print("write to file")
-			
-			theFile.write(format(data_len, '04X')+' ')
-	
-			for i in range(1, data_len):
-				ch=getSingleChar()
-				# sys.stdout.write(hex(ord(ch)))
-				# sys.stdout.buffer.write(ch)
-				print (hex(ord(ch))),
-				theFile.write(format(ord(ch), '02X')+' ')
-				
-			print("End")
-			sys.stdout.flush()
-			theFile.flush()
 			continue
 			
 	if (ch == '?' and _ignoreComment==1):
