@@ -177,10 +177,7 @@ echo "Done"
 
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
         then
-		echo "Creating /root/Dropbox/LoRa-test folder if needed"
-		sudo mkdir -p /root/Dropbox/LoRa-test
-		echo "Done"
-                echo "Add /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local"
+        		echo "Add /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local"
                 sudo sed -i 's/^exit 0/\/home\/pi\/lora_gateway\/scripts\/start_gw.sh\nexit 0/g' /etc/rc.local
                 echo "Done"
 fi

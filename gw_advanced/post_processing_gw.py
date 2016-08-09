@@ -156,8 +156,6 @@ _mongodb = False
 #log gateway message?
 #------------------------------------------------------------
 _logGateway=0
-#path of json file containing the gateway address
-_filename_path = "local_conf.json"
 
 #------------------------------------------------------------
 #raw output from gateway?
@@ -200,6 +198,16 @@ json_array = json.loads(array)
 
 #set the gateway_address for having different log filenames
 _gwaddr = json_array["gateway_conf"]["gateway_ID"]
+
+#////////////////////////////////////////////////////////////
+# CHANGE HERE THE VARIOUS PATHS FOR YOUR LOG FILES
+#////////////////////////////////////////////////////////////
+_folder_path = "/home/pi/Dropbox/LoRa-test/"
+_gwlog_filename = _folder_path+"gateway_"+str(_gwaddr)+".log"
+_telemetrylog_filename = _folder_path+"telemetry_"+str(_gwaddr)+".log"
+
+# END
+#////////////////////////////////////////////////////////////
 
 
 #------------------------------------------------------------
@@ -298,12 +306,6 @@ def fillLinebuf(n):
 	# fill in our _linebuf from stdin
 	_linebuf=sys.stdin.read(n)
 
-#////////////////////////////////////////////////////////////
-# CHANGE HERE THE VARIOUS PATHS FOR YOUR LOG FILES
-#////////////////////////////////////////////////////////////
-
-_gwlog_filename = "~/Dropbox/LoRa-test/gateway_"+str(_gwaddr)+".log"
-_telemetrylog_filename = "~/Dropbox/LoRa-test/telemetry_"+str(_gwaddr)+".log"
 
 #////////////////////////////////////////////////////////////
 # ADD HERE OPTIONS THAT YOU MAY WANT TO ADD

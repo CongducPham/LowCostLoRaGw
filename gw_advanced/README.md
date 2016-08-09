@@ -143,6 +143,8 @@ in the /etc/rc.local file, before the "exit 0" line
 
 If you use the config_raspbian.sh script, it can do it for you.
 
+**IMPORTANT NOTICE**: when the gateway is run at boot, it is run under root identity. In the post_processing_gw.py script, the folder path for log files is now hard coded as /home/pi/Dropbox/LoRa-test instead of ~/Dropbox/LoRa-test in previous version. In this way, even if the gateway is run under root identity, the log files are stored in the pi user account.
+
 A/ Install a WiFi access-point
 ==============================
 
@@ -363,7 +365,6 @@ You can use cmd.sh as follows:
 	3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +
 	4- tail --line=15 ../Dropbox/LoRa-test/post-processing_*.log         +
 	5- tail -f ../Dropbox/LoRa-test/post-processing_*.log                +
-	6- sudo tail -f /root/Dropbox/LoRa-test/post-processing_*.log        +
 	------------------------------------------------------* Bluetooth *--+
 	a- run: sudo hciconfig hci0 piscan                                   +
 	b- run: sudo python rfcomm-server.py                                 +
@@ -405,8 +406,5 @@ If you enter 27EBBEDA21, cmd.sh will create the gateway_id.txt file with the fol
 If you use the config_raspbian.sh script, it can do it for you because you already have to provide the last 5 bytes of the gateway eth0 interface MAC address to config_raspbian.
 	
 To run an operational gateway, use option 0. Then use option 3 to verify whether all the processes have been launched. You can then use option 5 to see the logs in real time. To test the simple gateway, use option 1. If you access your gateway with ssh, using option 0 allows you to quit the ssh session and leave your gateway running. You can ssh at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an ssh apps to log on 192.168.200.1 and launch cmd.sh from your smartphone.	
-
-To stop the gateway, use option K.
-
-Pay attention to option 6. If you configured your gateway to start at boot, then the LoRa gateway program is running under root identity. You can check this with option 3. In this case the log files are under /root/Dropbox/LoRa-test folder. Therefore use option 6 to follow the gateway post-processing log file instead of option 5. You can still kill all gateway related processes using option K. Then, either reboot your Raspberry, or use option 0 to interactively start the LoRa gateway under the pi identity. If you do so, then use option 5 to follow the gateway post-processing log file.
+To stop the gateway, use option K. This option can also kill the gateway processes that are run at boot.
 	

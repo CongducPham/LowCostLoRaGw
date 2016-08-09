@@ -51,9 +51,8 @@ echo "0- nohup python start_gw.py &                                        +"
 echo "1- sudo ./lora_gateway --mode 1                                      +"
 echo "2- sudo ./lora_gateway --mode 1|python post_processing_gw.py -t -m 2 +"
 echo "3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +"
-echo "4- tail --line=15 ../Dropbox/LoRa-test/post-processing_*.log         +"
-echo "5- tail -f ../Dropbox/LoRa-test/post-processing_*.log                +"
-echo "6- sudo tail -f /root/Dropbox/LoRa-test/post-processing_*.log        +"
+echo "4- tail --line=25 ../Dropbox/LoRa-test/post-processing_*.log         +"
+echo "5- tail --line=25 -f ../Dropbox/LoRa-test/post-processing_*.log      +"
 echo "------------------------------------------------------* Bluetooth *--+"
 echo "a- run: sudo hciconfig hci0 piscan                                   +"
 echo "b- run: sudo python rfcomm-server.py                                 +"
@@ -65,6 +64,7 @@ echo "f- test: ping www.univ-pau.fr                                        +"
 echo "--------------------------------------------------* Configuration *--+"
 echo "A- show global_conf.json                                             +"
 echo "B- show local_conf.json                                              +"
+echo "C- edit global_conf.json                                             +"
 echo "-----------------------------------------------------------* kill *--+"
 echo "K- kill all gateway related processes                                +"
 echo "k- kill rfcomm-server process                                        +"
@@ -108,10 +108,10 @@ fi
 
 if [ "$choice" = "4" ] 
 	then
-		echo "Displaying last 15 lines of ../Dropbox/LoRa-test/post-processing_$gatewayid.log"
+		echo "Displaying last 25 lines of ../Dropbox/LoRa-test/post-processing_$gatewayid.log"
 		echo "Current UTC date is"
 		date --utc
-		tail --line=15 ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+		tail --line=25 ../Dropbox/LoRa-test/post-processing_$gatewayid.log
 fi
 
 if [ "$choice" = "5" ] 
@@ -120,16 +120,7 @@ if [ "$choice" = "5" ]
 		echo "Current UTC date is"
 		date --utc
 		trap "echo" SIGINT
-		tail -f ../Dropbox/LoRa-test/post-processing_$gatewayid.log
-fi
-
-if [ "$choice" = "6" ] 
-        then
-                echo "Following last lines of /root/Dropbox/LoRa-test/post-processing_$gatewayid.log. CTRL-C to return"
-                echo "Current UTC date is"
-                date --utc
-                trap "echo" SIGINT
-                sudo tail -f /root/Dropbox/LoRa-test/post-processing_$gatewayid.log
+		tail --line=25 -f ../Dropbox/LoRa-test/post-processing_$gatewayid.log
 fi
 
 if [ "$choice" = "a" ] 
@@ -189,6 +180,12 @@ if [ "$choice" = "B" ]
         then
                 echo "Showing local_conf.json"
                 cat local_conf.json
+fi
+
+if [ "$choice" = "C" ] 
+        then
+                echo "Editing global_conf.json. CTRL-O to save, CTRL-X to return"
+                nano global_conf.json
 fi
 
 if [ "$choice" = "K" ] 
