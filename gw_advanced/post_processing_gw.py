@@ -185,7 +185,7 @@ _hasClearData=0
 #------------------------------------------------------------
 #open json file to recover gateway_address
 #------------------------------------------------------------
-f = open(os.path.expanduser(_filename_path),"r")
+f = open(os.path.expanduser("local_conf.json"),"r")
 lines = f.readlines()
 f.close()
 array = ""
