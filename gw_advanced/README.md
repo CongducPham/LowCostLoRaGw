@@ -41,7 +41,7 @@ B.5. We added the possibility to have a temperature/humidity sensor connected to
 
 B.6. We added simple 128-bit AES decryption capabilities at the gateway in the post_processing_gw.py script. The end-device can encrypt using an 128-bit AES library. The common AES key must be known by both the end-device and the gateway. It is just a demonstration for simple deployment usage.
 
-B.7. We added a configuration script (scripts/config_raspbian.sh) to help you configure the gateway with MongoDB, WiFi and Bluetooth features
+B.7. We added a configuration script (scripts/config_gw.sh) to help you configure the gateway with MongoDB, WiFi and Bluetooth features
 
 
 Install the advanced version
@@ -79,7 +79,7 @@ global_conf.json and local_conf.json
 ------------------------------------
 If you only want to use the new configuration and startup procedure, you can just stop here and edit both global_conf.json and local_conf.json. In global_conf.json, you either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
 
-In local_conf.json, it is important to set the gateway ID as indicated previously. The config_raspbian.sh script can do it for you, see below.
+In local_conf.json, it is important to set the gateway ID as indicated previously. The config_gw.sh script can do it for you, see below.
 
 **If you just want to use the new configuration and startup procedure, you have nothing more to install**
 
@@ -113,7 +113,7 @@ AES encryption
 
     > sudo pip install pycrypto
 
-The config_raspbian.sh in the scripts folder can help you for WiFi and Bluettoth configuration tasks after you've performed all the apt-get commands. If you don't want some features, just skip them. You have to provide the last 5 hex-byte of your eth0 interface.
+The config_gw.sh in the scripts folder can help you for WiFi and Bluettoth configuration tasks after you've performed all the apt-get commands. If you don't want some features, just skip them. You have to provide the last 5 hex-byte of your eth0 interface.
 
     > cd scripts
     > ifconfig
@@ -128,9 +128,9 @@ The config_raspbian.sh in the scripts folder can help you for WiFi and Bluettoth
           
 In the example, we have "HWaddr b8:27:eb:be:da:21" then use "27EBBEDA21"
 
-    > ./config_raspbian.sh 27EBBEDA21
+    > ./config_gw.sh 27EBBEDA21
 
-Then check steps A to I as described below. **config_raspbian.sh takes care of configuring steps A and B only**.
+Then check steps A to I as described below. **config_gw.sh takes care of configuring steps A and B only**.
 
 Run the gateway at boot
 =======================
@@ -141,7 +141,7 @@ If you want to run the gateway at boot, you can add the following line:
 	
 in the /etc/rc.local file, before the "exit 0" line
 
-If you use the config_raspbian.sh script, it can do it for you.
+If you use the config_gw.sh script, it can do it for you.
 
 **IMPORTANT NOTICE**: when the gateway is run at boot, it is run under root identity. In the post_processing_gw.py script, the folder path for log files is now hard coded as /home/pi/Dropbox/LoRa-test instead of ~/Dropbox/LoRa-test in previous version. In this way, even if the gateway is run under root identity, the log files are stored in the pi user account.
 
@@ -403,7 +403,7 @@ If you enter 27EBBEDA21, cmd.sh will create the gateway_id.txt file with the fol
 	> cat gateway_id.txt
 	00000027EBBEDA21
 	
-If you use the config_raspbian.sh script, it can do it for you because you already have to provide the last 5 bytes of the gateway eth0 interface MAC address to config_raspbian.
+If you use the config_gw.sh script, it can do it for you because you already have to provide the last 5 bytes of the gateway eth0 interface MAC address to config_gw.
 	
 To run an operational gateway, use option 0. Then use option 3 to verify whether all the processes have been launched. You can then use option 5 to see the logs in real time. To test the simple gateway, use option 1. If you access your gateway with ssh, using option 0 allows you to quit the ssh session and leave your gateway running. You can ssh at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an ssh apps to log on 192.168.200.1 and launch cmd.sh from your smartphone.	
 To stop the gateway, use option K. This option can also kill the gateway processes that are run at boot.

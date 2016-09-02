@@ -29,13 +29,11 @@ import datetime
 import json
 import getopt
 
-_filename_path = "local_conf.json"
-
 #use "os.path.expanduser(path)" to allow use of "~"
 _folder_path = "/home/pi/Dropbox/LoRa-test/"
 
 #open json file to recover gateway_address
-f = open(os.path.expanduser(_filename_path),"r")
+f = open(os.path.expanduser("local_conf.json"),"r")
 lines = f.readlines()
 f.close()
 array = ""
