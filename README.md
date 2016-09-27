@@ -3,6 +3,10 @@ Low-cost LoRa gateway with Raspberry
 
 Please consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
 
+NEW: get the zipped SD card image (Raspbian Jessie) with all the advanced features already installed and working out-of-the-box with the Arduino_LoRa_Simple_temp example on a demo ThingSpeak channel.
+
+http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip
+
 Install Raspbian Wheezy or Jessie
 =================================
 
@@ -283,12 +287,12 @@ NEW: Tutorial materials
 
 Go to https://github.com/CongducPham/tutorials.
 
-Look at our FAQ!
+Look at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.pdf)!
 
 NEW: Get the advanced version of the gateway
 ============================================
 
-Look at the gw_advanced folder and follow instructions.
+Look at the [gw_advanced folder](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced) and follow instructions.
 
 
 Enjoy!

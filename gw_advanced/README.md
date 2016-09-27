@@ -1,8 +1,23 @@
 Advanced features and configuration tools for the low-cost LoRa gateway with Raspberry
 ======================================================================================
 
-
 IMPORTANT: We should start first with the simple gateway installation. Then follow the instruction here to have the advanced version.
+
+NEW: Zipped SD card image
+=========================
+
+[raspberrypi-jessie-WAZIUP-demo.dmg.zip](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
+
+- Based on Raspbian Jessie 
+- Supports Raspberry 1B+, RPI2 and RPI3
+- Includes all the advanced features described in the gw_advanced github
+- Get the zipped image, unzip it, install it on an 8GB SD card, see [this tutorial](https://www.raspberrypi.org/documentation/installation/installing-images/) from www.raspberrypi.org
+- Plug the SD card into your Raspberry
+- Connect a radio module (see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)
+- Power-on the Raspberry
+- The LoRa gateway starts automatically when RPI is powered on
+- By default, incoming data are uploaded to the [WAZIUP ThingSpeak demo channel](https://thingspeak.com/channels/123986)
+- Works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
 
 What is added?
 ==============
@@ -41,13 +56,13 @@ B.5. We added the possibility to have a temperature/humidity sensor connected to
 
 B.6. We added simple 128-bit AES decryption capabilities at the gateway in the post_processing_gw.py script. The end-device can encrypt using an 128-bit AES library. The common AES key must be known by both the end-device and the gateway. It is just a demonstration for simple deployment usage.
 
-B.7. We added a configuration script (scripts/config_gw.sh) to help you configure the gateway with MongoDB, WiFi and Bluetooth features
+B.7. We added a configuration script (scripts/config_gw.sh) to help you configure the gateway with MongoDB, WiFi and Bluetooth features. It is highly recommended to use this script to set your gateway once all the files have been copied.
 
 
 Install the advanced version
 ============================
 
-If you got the entire LowCostLoRaGw repository you should have the LowCostLoRaGw/gw_advanced folder already on your Raspberry:
+If you got the entire LowCostLoRaGw github repository you should have the LowCostLoRaGw/gw_advanced folder already on your Raspberry:
 
 	pi@raspberrypi:~ $ ls -l LowCostLoRaGw/
 	total 32
@@ -77,6 +92,7 @@ Some files will be overwritten but it is normal. If you previously run the basic
 
 global_conf.json and local_conf.json
 ------------------------------------
+
 If you only want to use the new configuration and startup procedure, you can just stop here and edit both global_conf.json and local_conf.json. In global_conf.json, you either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
 
 In local_conf.json, it is important to set the gateway ID as indicated previously. The config_gw.sh script can do it for you, see below.
@@ -85,6 +101,7 @@ In local_conf.json, it is important to set the gateway ID as indicated previousl
 
 Installing the new features
 ---------------------------
+
 You need to install some additional packages:
 
 WiFi access-point
@@ -113,7 +130,7 @@ AES encryption
 
     > sudo pip install pycrypto
 
-The config_gw.sh in the scripts folder can help you for WiFi and Bluettoth configuration tasks after you've performed all the apt-get commands. If you don't want some features, just skip them. You have to provide the last 5 hex-byte of your eth0 interface.
+The config_gw.sh in the scripts folder can help you for the gateway configuration, WiFi and Bluettoth configuration tasks after you've performed all the apt-get commands. If you don't want some features, just skip them. You have to provide the last 5 hex-byte of your eth0 interface.
 
     > cd scripts
     > ifconfig
@@ -129,21 +146,21 @@ The config_gw.sh in the scripts folder can help you for WiFi and Bluettoth confi
 In the example, we have "HWaddr b8:27:eb:be:da:21" then use "27EBBEDA21"
 
     > ./config_gw.sh 27EBBEDA21
+    
+**config_gw.sh takes care of:**
 
-Then check steps A to I as described below. **config_gw.sh takes care of configuring steps A and B only**.
+- compiling the lora_gateway program, the Raspberry board version will be checked automatically
+- creating a "gateway_id.txt" file containing the gateway id (e.g. "00000027EBBEDA21")
+- setting in local_cong.json the gateway id: "gateway_ID" : "00000027EBBEDA21"
+- creating the /home/pi/Dropbox/LoRa-test folder for log files (if it does not exist) 
+- creating a "log" symbolic link in the lora_gateway folder pointing to /home/pi/Dropbox/LoRa-test folder
+- configuring /etc/hostapd/hostapd.conf for WiFi (step A)
+- configuring /etc/bluetooth/main.conf for Bluetooth (step B)
+- activating MongoDB storage (step F)
+- compiling DHT22 support (step H)
+- configuring the gateway to run the lora_gateway program at boot (step J)
 
-Run the gateway at boot
-=======================
-
-If you want to run the gateway at boot, you can add the following line:
-
-	/home/pi/lora_gateway/scripts/start_gw.sh
-	
-in the /etc/rc.local file, before the "exit 0" line
-
-If you use the config_gw.sh script, it can do it for you.
-
-**IMPORTANT NOTICE**: when the gateway is run at boot, it is run under root identity. In the post_processing_gw.py script, the folder path for log files is now hard coded as /home/pi/Dropbox/LoRa-test instead of ~/Dropbox/LoRa-test in previous version. In this way, even if the gateway is run under root identity, the log files are stored in the pi user account.
+Anyway, check steps A to J as described below and perform all needed tasks that config_gw.sh is is not addressing.
 
 A/ Install a WiFi access-point
 ==============================
@@ -351,6 +368,19 @@ I/ AES encryption
 Installing Python AES encryption package
 
 	> sudo pip install pycrypto
+	
+J/ Run the gateway at boot
+==========================
+
+If you want to run the gateway at boot, you can add the following line:
+
+	/home/pi/lora_gateway/scripts/start_gw.sh
+	
+in the /etc/rc.local file, before the "exit 0" line
+
+If you use the config_gw.sh script, it can do it for you.
+
+**IMPORTANT NOTICE**: when the gateway is run at boot, it is run under root identity. In the post_processing_gw.py script, the folder path for log files is now hard coded as /home/pi/Dropbox/LoRa-test instead of ~/Dropbox/LoRa-test in previous versions. In this way, even if the gateway is run under root identity, the log files are stored in the pi user account.
 
 USE cmd.sh to interact with the gateway
 =======================================
