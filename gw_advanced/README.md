@@ -8,16 +8,77 @@ NEW: Zipped SD card image
 
 [raspberrypi-jessie-WAZIUP-demo.dmg.zip](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
 
-- Based on Raspbian Jessie 
+- Based on Raspbian Jessie
 - Supports Raspberry 1B+, RPI2 and RPI3
 - Includes all the advanced features described in the gw_advanced github
 - Get the zipped image, unzip it, install it on an 8GB SD card, see [this tutorial](https://www.raspberrypi.org/documentation/installation/installing-images/) from www.raspberrypi.org
 - Plug the SD card into your Raspberry
 - Connect a radio module (see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)
 - Power-on the Raspberry
+- pi user
+	- login: pi
+	- password: loragateway
 - The LoRa gateway starts automatically when RPI is powered on
+- With an RPI3, the Raspberry will automatically act as a WiFi access point
+	- SSID=WAZIUP_PI_GW_27EB27F90F
+	- password=loragateway
 - By default, incoming data are uploaded to the [WAZIUP ThingSpeak demo channel](https://thingspeak.com/channels/123986)
 - Works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
+
+WiFi instructions on RPI1B+ and RPI2
+------------------------------------
+
+RPI1 and RPI2 do not come with a built-in WiFi interface therefore a WiFi USB dongle is required. Depending on the dongle, you have to check whether you need a specific driver or not. For instance, many dongles such as those from TP-Link use the Realtek chip. To know on which chip your dongle is based, type:
+	
+	> lsusb
+	
+If your dongle cannot set up an access-point, then you probably need to install a new version of hostapd. The provided Jessie image works out-of-the-box with an RPI3 and already has a custom version of hostapd for the TP-Link TL-WN725 dongle. If you have an RPI2 and this dongle you can easily enable the WiFi access point feature with the following steps after connecting to your Raspberry with ssh (by using Ethernet with DHCP server for instance):
+
+	> cd /usr/sbin
+	> sudo rm hostapd
+	> sudo ln -s hostapd.tplink725.realtek hostapd
+
+Then edit /etc/hostapd/hostapd.conf
+
+	> cd /etc/hostapd
+	> sudo nano hostapd.conf
+
+	ctrl_interface_group=0
+	beacon_int=100
+	interface=wlan0
+	### uncomment the "driver=rtl871xdrv" line if using a Realtek chip
+	### For instance TP-Link TL-WN725 dongles need the driver line
+	#driver=rtl871xdrv
+	ssid=WAZIUP_PI_GW_27EB27F90F
+	...
+
+uncomment 
+
+	#driver=rtl871xdrv
+	
+save the file and see below to configure your new gateway.
+
+Configure your new gateway
+--------------------------
+
+If you see the WiFi network WAZIUP_PI_GW_27EB27F90F then connect to this WiFi network. The address of the Raspberry is then 192.168.200.1. If you have no WiFi access point, then plug your Raspberry into a DHCP-enabled network to get an IP address or shared your laptop internet connection to make your laptop acting as a DHCP server. We will use in this example 192.168.200.1 for your gateway address (WiFi option)
+
+	> ssh pi@192.168.200.1
+	pi@192.168.200.1's password: 
+	
+	The programs included with the Debian GNU/Linux system are free software;
+	the exact distribution terms for each program are described in the
+	individual files in /usr/share/doc/*/copyright.
+	
+	Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+	permitted by applicable law.
+	Last login: Thu Aug  4 18:04:41 2016
+
+go to lora_gateway folder
+
+	> cd lora_gateway
+	
+and follows instructions in section **"Install the advanced version/Configure your gateway with config_gw.sh"**.	
 
 What is added?
 ==============
@@ -130,6 +191,9 @@ AES encryption
 
     > sudo pip install pycrypto
 
+Configure your gateway with config_gw.sh
+----------------------------------------
+
 The config_gw.sh in the scripts folder can help you for the gateway configuration, WiFi and Bluettoth configuration tasks after you've performed all the apt-get commands. If you don't want some features, just skip them. You have to provide the last 5 hex-byte of your eth0 interface.
 
     > cd scripts
@@ -161,6 +225,15 @@ In the example, we have "HWaddr b8:27:eb:be:da:21" then use "27EBBEDA21"
 - configuring the gateway to run the lora_gateway program at boot (step J)
 
 Anyway, check steps A to J as described below and perform all needed tasks that config_gw.sh is is not addressing.
+
+**Even if you installed from the zipped SD card image config_gw.sh is still needed for:**
+
+- compiling the lora_gateway program for your the Raspberry board version
+- creating a "gateway_id.txt" file containing the gateway id with last 5 hex-byte of your eth0 interface (e.g. "00000027EBBEDA21")
+- setting in local_cong.json the gateway id: "gateway_ID" : "00000027EBBEDA21"
+- configuring /etc/hostapd/hostapd.conf for to advertise a WiFi SSID corresponding to last 5 hex-byte of your eth0 interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
+- compiling DHT22 support if you connected such a sensor to your Raspberry
+
 
 A/ Install a WiFi access-point
 ==============================
