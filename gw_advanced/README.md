@@ -3,6 +3,16 @@ Advanced features and configuration tools for the low-cost LoRa gateway with Ras
 
 IMPORTANT: We should start first with the simple gateway installation. Then follow the instruction here to have the advanced version.
 
+NEW: Tutorial videos on YouTube
+===============================
+
+There are 2 tutorial videos on YouTube:
+
+- [Build your low-cost, long-range IoT device with WAZIUP](https://www.youtube.com/watch?v=YsKbJeeav_M)
+- [Build your low-cost LoRa gateway with WAZIUP](https://www.youtube.com/watch?v=peHkDhiH3lE)
+
+that show in images all the steps to build the whole framework from scratch.
+
 NEW: Zipped SD card image
 =========================
 
