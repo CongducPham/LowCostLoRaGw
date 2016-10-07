@@ -5,7 +5,18 @@ Please consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
 
 **NEW**: get the zipped SD card image (Raspbian Jessie) with all the advanced features already installed and working out-of-the-box with the Arduino_LoRa_Simple_temp example on a demo ThingSpeak channel.
 
-http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip
+[raspberrypi-jessie-WAZIUP-demo.dmg.zip](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
+
+- Based on Raspbian Jessie 
+- Supports Raspberry 1B+, RPI2 and RPI3
+- Includes all the advanced features described in the gw_advanced github
+- Get the zipped image, unzip it, install it on an 8GB SD card, see [this tutorial](https://www.raspberrypi.org/documentation/installation/installing-images/) from www.raspberrypi.org
+- Plug the SD card into your Raspberry
+- Connect a radio module (see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)
+- Power-on the Raspberry
+- The LoRa gateway starts automatically when RPI is powered on
+- By default, incoming data are uploaded to the [WAZIUP ThingSpeak demo channel](https://thingspeak.com/channels/123986)
+- Works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
 
 There are also 2 tutorial videos on YouTube:
 
@@ -292,7 +303,7 @@ WARNING
 NEW: Tutorial materials
 =======================
 
-Go to https://github.com/CongducPham/tutorials.
+Go to https://github.com/CongducPham/tutorials and look for the "Low-cost-LoRa-GW-step-by-step" tutorial.
 
 Look at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.pdf)!
 

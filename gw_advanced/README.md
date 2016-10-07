@@ -3,8 +3,8 @@ Advanced features and configuration tools for the low-cost LoRa gateway with Ras
 
 IMPORTANT: We should start first with the simple gateway installation. Then follow the instruction here to have the advanced version.
 
-NEW: Tutorial videos on YouTube
-===============================
+**NEW**: Tutorial videos on YouTube
+===================================
 
 There are 2 tutorial videos on YouTube:
 
@@ -489,6 +489,7 @@ You can use cmd.sh as follows:
 	--------------------------------------------------* Configuration *--+
 	A- show global_conf.json                                             +
 	B- show local_conf.json                                              +
+	C- edit global_conf.json                                             +	
 	-----------------------------------------------------------* kill *--+
 	K- kill all gateway related processes                                +
 	k- kill rfcomm-server process                                        +
@@ -518,6 +519,7 @@ If you enter 27EBBEDA21, cmd.sh will create the gateway_id.txt file with the fol
 	
 If you use the config_gw.sh script, it can do it for you because you already have to provide the last 5 bytes of the gateway eth0 interface MAC address to config_gw.
 	
-To run an operational gateway, use option 0. Then use option 3 to verify whether all the processes have been launched. You can then use option 5 to see the logs in real time. To test the simple gateway, use option 1. If you access your gateway with ssh, using option 0 allows you to quit the ssh session and leave your gateway running. You can ssh at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an ssh apps to log on 192.168.200.1 and launch cmd.sh from your smartphone.	
+To run an operational gateway, use option 0. Then use option 3 to verify whether all the processes have been launched. You can then use option 5 to see the logs in real time. To test the simple gateway, use option 1. If you access your gateway with ssh, using option 0 allows you to quit the ssh session and leave your gateway running. You can ssh at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an ssh apps to log on 192.168.200.1 and launch cmd.sh from your smartphone.
+
 To stop the gateway, use option K. This option can also kill the gateway processes that are run at boot.
 	
