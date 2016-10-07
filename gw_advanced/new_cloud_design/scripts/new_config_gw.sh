@@ -177,32 +177,61 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		sudo make install
 		echo "Done"
 		cd ../../scripts
-		echo "Change in local_conf.json the value in seconds between 2 readings"
+		echo "Change in local_conf.json the value in seconds between 2 readings."
 		echo "--> \"dht22\" : 3600"
-		echo "for one reading every hour"
+		echo "for one reading every hour. Set to 0 to disable DHT reading."
+		echo "***************************************"
+		echo "*** edit local_conf.json now? Y/N   ***"
+		echo "***************************************"
+		read ouinon
+		if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
+			then
+				echo "Editing local_conf.json. CTRL-O to save, CTRL-X to return. Press any key to start editing."
+				read k 
+				nano ../local_conf.json	
+		fi			
+		
 fi
 
 echo ""
-echo "Current status for MongoDB is:"
-grep "is_used" ../global_conf.json
+echo "Current status for DHT22 MongoDB is:"
+grep "dht22_mongo" ../local_conf.json
 echo ""
-echo "*******************************"
-echo "*** activate MongoDB Y/N/Q  ***"
-echo "*******************************"
+echo "*************************************"
+echo "*** activate DHT22 MongoDB Y/N/Q  ***"
+echo "*************************************"
 read ouinon
 
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 	then
-		echo "Activating MongoDB in global_conf.json"
-		sed -i 's/"is_used".*:.*false/"is_used" : true/g' ../global_conf.json
+		echo "Activating DHT22 MongoDB in local_conf.json"
+		sed -i 's/"dht22_mongo".*:.*false/"dht22_mongo" : true/g' ../local_conf.json
 		echo "Done"
 fi
 
 if [ "$ouinon" = "n" ] || [ "$ouinon" = "N" ]
 	then
-		echo "Deactivating MongoDB in global_conf.json"
-		sed -i 's/"is_used".*:.*true/"is_used" : false/g' ../global_conf.json
+		echo "Deactivating DHT22 MongoDB in local_conf.json"
+		sed -i 's/"dht22_mongo".*:.*true/"dht22_mongo" : false/g' ../local_conf.json
 		echo "Done"
+fi
+
+echo "*********************************************************"
+echo "*** edit LoRa data MongoDB local storage option? Y/N  ***"
+echo "*********************************************************"
+read ouinon
+
+if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
+	then
+		echo "INSTRUCTIONS: set the local gateway MongoDB cloud enabled field to true or false."
+		echo "Editing clouds.json. CTRL-O to save, CTRL-X to return. Press any key to start editing."
+		read k 
+		nano ../clouds.json
+fi
+
+if [ "$ouinon" = "n" ] || [ "$ouinon" = "N" ]
+	then
+		echo "WARNING: LoRa data MongoDB local storage status is unknown"
 fi
 
 echo "*******************************"
@@ -241,7 +270,11 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		echo "Displaying ../local_conf.json with less command. Press key to start. Scroll with Space, Q to quit."
 		read k
 		less ../local_conf.json
-		
+
+		echo "Displaying ../clouds.json with less command. Press key to start. Scroll with Space, Q to quit."
+		read k
+		less ../clouds.json
+				
 		echo "Displaying /etc/hostapd/hostapd.conf with less command. Press key to start. Scroll with Space, Q to quit."
 		read k
 		sudo less /etc/hostapd/hostapd.conf
