@@ -36,7 +36,7 @@ clouds.json contains a list of clouds where you want your data to be uploaded. H
 			}
 	}
 
-Note that storage on the local MongoDB is now declared as a cloud, among others that you can declare. You should not remove this cloud declaration and leace it in first position even if position has no matter. clouds.json is parsed by post_processing_gw.py using clouds_parser.py. For each cloud declaration, there are only 2 relevant fields: "script" and "enabled". "script" is used for you to provide the name of a script. You have also to indicate which launcher will be used. In this way, you can use several script languages (including shell scripts or executables provided that they read parameters that are passed by their command line). For instance, if the script is a python script, enter "python my_script_filename". "enabled" set to true indicates that you want this cloud to be active so that post_processing_gw.py will call the associated script to perform upload of the received data. All the other fields are not relevant for post_processing_gw.py but can be used by the associated script to get additional information that you may want to provide through the clouds.json file. Otherwise, you can always provide these additional information statically in the script.
+Note that storage on the local MongoDB is now declared as a cloud, among others that you can declare. You should not remove this cloud declaration and leave it in first position even if position has no matter. clouds.json is parsed by post_processing_gw.py using clouds_parser.py. For each cloud declaration, there are only 2 relevant fields: "script" and "enabled". "script" is used for you to provide the name of a script. You have also to indicate which launcher will be used. In this way, you can use several script languages (including shell scripts or executables provided that they read parameters that are passed by their command line). For instance, if the script is a python script, enter "python my_script_filename". "enabled" set to true indicates that you want this cloud to be active so that post_processing_gw.py will call the associated script to perform upload of the received data. All the other fields are not relevant for post_processing_gw.py but can be used by the associated script to get additional information that you may want to provide through the clouds.json file. Otherwise, you can always provide these additional information statically in the script.
 
 When your script is launched, post_processing_gw.py provides 5 parameters. 
 
@@ -176,6 +176,7 @@ List of new files
 - CloudFireBase.py: updated to support new design
 - CloudGrovestreams.py: updated to support new design
 - CloudThingSpeak.py: updated to support new design
+- scripts/new_config_gw.sh: updated as some configuration fields have been moved from one file to another
 - README-NewCloud.md: this README file
 
 Files that will be updated
@@ -190,6 +191,7 @@ Files that will be updated
 Files that will be obsoleted (not used anymore)
 ===============================================
 
+- scripts/config_gw.sh: (replaced by new_config_gw.sh)
 - FireBase.py (replaced by CloudFireBase.py)
 - Grovestreams.py (replaced by CloudGrovestreams.py)
 - ThingSpeak.py (replaced by CloudThingSpeak.py)
@@ -202,10 +204,13 @@ Copy all the files of the new_cloud_design forder into your lora_gateway folder 
 
 	cd new_cloud_design
 	scp -r * pi@my_gw_ip_addr:/home/pi/lora_gateway
+	
+Go into the script folder (on your raspberry gateway) and run new_config_gw (see README.md in gw_advanced folder)
+		
+If you have custom cloud information (url, write key,...) in your old python script, report them back in the Cloud*.py files. Edit clouds.json to enable/disable clouds. By default, only ThingSpeak cloud is enabled because the CloudThingSpeak.py script already has a demo ThingSpeak channel write key. To enable other clouds (Grovestreams, Firebase) create free accounts on these platforms and fill-in login/credential informations into the corresponding cloud script example.
 
-If you have custom cloud information (url, write key,...) in your old python script, report them back in the Cloud*.py files. Edit clouds.json to enable/disable clouds. 
+If you have custom cloud platforms (other than the provided examples) then look at the provided examples to see how you can create (or port) a new cloud script for these cloud platforms.
 
-If you have custom cloud platform (other than the provided examples) then look at the provided examples to see how you can create (or port) a new cloud script for this cloud platform.
 
 Enjoy!
 C. Pham	
