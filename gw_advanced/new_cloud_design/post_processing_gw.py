@@ -600,6 +600,7 @@ while True:
 					print "--> cloud[%d]" % cloud_index
 					cloud_script=_enabled_clouds[cloud_index]
 					print "uploading with "+cloud_script
+					sys.stdout.flush()
 					cmd_arg=cloud_script+" \""+ldata+"\""+" \""+pdata+"\""+" \""+rdata+"\""+" \""+tdata+"\""+" \""+_gwid+"\""
 					os.system(cmd_arg) 
 
@@ -619,6 +620,7 @@ while True:
 			print('invalid app key: discard data')
 			getAllLine()
 
+		sys.stdout.flush()
 		continue
 	
 	#handle binary prefixes
