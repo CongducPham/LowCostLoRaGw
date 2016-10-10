@@ -1,7 +1,7 @@
 Re-design of the cloud support module for the low-cost LoRa gateway
 ===================================================================
 
-Important: You should have the advanced version of the gateway. Then update it as described below if you want to use the new cloud management approach.
+**IMPORTANT**: You should have the **advanced** version of the gateway. Then update it as described below if you want to use the new cloud management approach.
 
 WHY: The purpose of this update is to simplify cloud management with data upload on various clouds performed in a more generic manner.
 

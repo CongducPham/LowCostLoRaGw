@@ -1,6 +1,8 @@
 Support for downlink transmission from gateway to devices
 =========================================================
 
+**IMPORTANT**: You should have the **advanced** version of the gateway with the **new cloud management update**. Then update it as described below if you want to use the downlink features.
+
 Add simple support for downlink transmission requests (only for Linux-based gateway). There are no changes in the way the gateway (lora_gateway program) is launched or interact with the post-processing (post_processing_gw.py) stage. The downlink transmission mechanism works as follows:
 
 - create a downlink folder in the lora_gateway folder, **ALL** downlink related files will be stored in this downlink folder
