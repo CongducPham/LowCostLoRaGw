@@ -320,6 +320,16 @@ You can implement many various ways with stronger authentication mechanisms. For
 
 You can also probably use MQTT client/server with a Python piece of code to create the donwlink-post.txt file.
 
+How to update your gateway
+==========================
+
+Copy all the files of the downlink folder into your lora_gateway folder (which normally is on your Raspberry). Use scp as follow if you want:
+
+	cd downlink
+	scp -r * pi@my_gw_ip_addr:/home/pi/lora_gateway
+	
+Then start with the build instructions.
+
 Acknowledgments
 ===============
 
