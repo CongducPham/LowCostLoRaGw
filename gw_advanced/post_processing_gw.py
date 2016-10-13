@@ -1,7 +1,7 @@
 #------------------------------------------------------------
 # Copyright 2016 Congduc Pham, University of Pau, France.
 # 
-# Congduc.Pham@univ-pau.fr
+# Congduc.Pham@univ-pau.fr 
 #
 # This file is part of the low-cost LoRa gateway developped at University of Pau
 #
@@ -29,10 +29,12 @@
 #////////////////////////////////////////////////////////////
 
 import sys
+import subprocess
 import select
 import threading
 from threading import Timer
 import time
+from collections import deque
 import datetime
 import getopt
 import os
@@ -41,7 +43,7 @@ import re
 
 #////////////////////////////////////////////////////////////
 # ADD HERE BOOLEAN VARIABLES TO SUPPORT OTHER CLOUDS
-# OR VARIABLES FOR YOUR OWN NEEDS 
+# OR VARIABLES FOR YOUR OWN NEEDS  
 #////////////////////////////////////////////////////////////
 
 #------------------------------------------------------------
@@ -60,6 +62,16 @@ _thingspeaksnr=False
 #with sensorcloud support?
 #------------------------------------------------------------
 _sensorcloud=False
+
+#------------------------------------------------------------
+#with connectingnature support?
+#------------------------------------------------------------
+_connectingnature=False
+
+#------------------------------------------------------------
+#with ftpconnectingnature support?
+#------------------------------------------------------------
+_ftpconnectingnature=False
 
 #------------------------------------------------------------
 #with grovestreams support?
@@ -205,10 +217,10 @@ _gwaddr = json_array["gateway_conf"]["gateway_ID"]
 _folder_path = "/home/pi/Dropbox/LoRa-test/"
 _gwlog_filename = _folder_path+"gateway_"+str(_gwaddr)+".log"
 _telemetrylog_filename = _folder_path+"telemetry_"+str(_gwaddr)+".log"
+_imagelog_filename = _folder_path+"image_"+str(_gwaddr)+".log"
 
 # END
 #////////////////////////////////////////////////////////////
-
 
 #------------------------------------------------------------
 #initialize gateway DHT22 sensor
@@ -263,6 +275,60 @@ def dht22_target():
 		global _gw_dht22
 		time.sleep(_gw_dht22)
 
+#------------------------------------------------------------
+#for handling images
+#------------------------------------------------------------
+#list of active nodes
+nodeL = deque([])
+#association to get the file handler
+fileH = {}
+#association to get the image filename
+imageFilenameA = {}
+#association to get the image SN
+imgsnA= {} 
+#association to get the image quality factor
+qualityA = {}
+#association to get the cam id
+camidA = {}
+#global image seq number
+imgSN=0
+
+def image_timeout():
+	#get the node which timer has expired first
+	#i.e. the one that received image packet earlier
+	node_id=nodeL.popleft()
+	print "close image file for node %d" % node_id
+	f=fileH[node_id]
+	f.close()
+	del fileH[node_id]
+	print "decoding image "+os.path.expanduser(imageFilenameA[node_id])
+	
+	cmd = '/home/pi/lora_gateway/ucam-images/decode_to_bmp -received '+os.path.expanduser(imageFilenameA[node_id])+\
+		' -SN '+str(imgsnA[node_id])+\
+		' -src '+str(node_id)+\
+		' -camid '+str(camidA[node_id])+\
+		' -Q '+str(qualityA[node_id])+\
+		' /home/pi/lora_gateway/ucam-images/128x128-test.bmp'
+	
+	print "decoding with command"
+	print cmd
+	args = cmd.split()
+
+	out = 'error'
+	
+	try:
+		out = subprocess.check_output(args, stderr=None, shell=False)
+		
+		if (out=='error'):
+			print "decoding error"
+		else:
+			print "producing file " + out 
+			print "moving decoded image file into " + os.path.expanduser(_folder_path+"images")
+			os.rename(out, os.path.expanduser(_folder_path+"images/"+out))  
+			print "done"	
+
+	except subprocess.CalledProcessError:
+		print "launching image decoding failed!"
 
 #------------------------------------------------------------
 #for managing the input data when we can have aes encryption
@@ -305,7 +371,6 @@ def fillLinebuf(n):
 	global _linebuf
 	# fill in our _linebuf from stdin
 	_linebuf=sys.stdin.read(n)
-
 
 #////////////////////////////////////////////////////////////
 # ADD HERE OPTIONS THAT YOU MAY WANT TO ADD
@@ -494,6 +559,8 @@ while True:
 #
 #	\xFF\xFE		indicates radio data prefix
 #
+#	\xFF\x50-\x54 	indicates an image packet. Next fields are src_addr(2B), seq(1B), Q(1B), size(1B)
+#					cam id is coded with the second framing byte: i.e. \x50 means cam id = 0
 #
 
 #------------------------------------------------------------
@@ -996,6 +1063,69 @@ while True:
 						_validappkey=1
 						print("but app key disabled")				
 				
+			continue	
+					
+					
+		if (ch >= '\x50' and ch <= '\x54'):
+			print("--> got image packet")
+			
+			cam_id=ord(ch)-0x50;
+			src_addr_msb = ord(getSingleChar())
+			src_addr_lsb = ord(getSingleChar())
+			src_addr = src_addr_msb*256+src_addr_lsb
+					
+			seq_num = ord(getSingleChar())
+	
+			Q = ord(getSingleChar())
+	
+			data_len = ord(getSingleChar())
+	
+			if (src_addr in nodeL):
+				#already in list
+				#get the file handler
+				theFile=fileH[src_addr]
+				#TODO
+				#start some timer to remove the node from nodeL
+			else:
+				#new image packet from this node
+				nodeL.append(src_addr)
+				filename =(_folder_path+"images/ucam_%d-node#%.4d-cam#%d-Q%d.dat" % (imgSN,src_addr,cam_id,Q))
+				print("first pkt from node %d" % src_addr)
+				print("creating file %s" % filename)
+				theFile=open(os.path.expanduser(filename),"w")
+				# associates the file handler to this node
+				fileH.update({src_addr:theFile})
+				# and associates imageFilename, imagSN,Q and cam_id
+				imageFilenameA.update({src_addr:filename})
+				imgsnA.update({src_addr:imgSN})
+				qualityA.update({src_addr:Q})
+				camidA.update({src_addr:cam_id})
+				imgSN=imgSN+1
+				t = Timer(60, image_timeout)
+				t.start()
+				#log only the first packet and the filename
+				f=open(os.path.expanduser(_imagelog_filename),"a")
+				f.write(info_str+' ')	
+				now = datetime.datetime.now()
+				f.write(now.isoformat()+'> ')
+				f.write(filename+'\n')
+				f.close()				
+							
+			print("pkt %d from node %d data size is %d" % (seq_num,src_addr,data_len))
+			print("write to file")
+			
+			theFile.write(format(data_len, '04X')+' ')
+	
+			for i in range(1, data_len):
+				ch=getSingleChar()
+				# sys.stdout.write(hex(ord(ch)))
+				# sys.stdout.buffer.write(ch)
+				print (hex(ord(ch))),
+				theFile.write(format(ord(ch), '02X')+' ')
+				
+			print("End")
+			sys.stdout.flush()
+			theFile.flush()
 			continue
 			
 	if (ch == '?' and _ignoreComment==1):

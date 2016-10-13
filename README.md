@@ -193,6 +193,8 @@ Note that in most operational scenarios, requesting ACK from the gateway is cost
 An end-device example that periodically sends temperature to the gateway
 ========================================================================
 
+See the [video here](https://www.youtube.com/watch?v=YsKbJeeav_M).
+
 First, install the Arduino IDE 1.6.6. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
 
 With the Arduino IDE, open the Arduino_LoRa_temp sketch (or the more simpler Arduino_LoRa_Simple_temp), compile it and upload to an Arduino board. Check your radio module first, see "Connect a radio module to your end-device" above.
@@ -243,7 +245,7 @@ Running in 433MHz band
 When your radio module can run in the 433MHz band (for instance when the radio is based on SX1276 or SX1278 chip) then you can test running at 433MHz as follows:
 
 - uncomment line "e = sx1272.setChannel(0x6C4000);" in Arduino_LoRa_temp or Arduino_LoRa_Simple_temp
-- run your gateway with "lora_gateway --mode n --freq 433.0" where n is the LoRa mode you want to use (e.g. 4 with Arduino_LoRa_temp and 1 with Arduino_LoRa_Simple_temp)
+- run your gateway with "lora_gateway --mode 1 --freq 433.0" to be on the same setting for Arduino_LoRa_temp and Arduino_LoRa_Simple_temp
 
 Mounting your Dropbox folder
 ============================
