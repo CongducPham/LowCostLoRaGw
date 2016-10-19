@@ -143,10 +143,6 @@ _logGateway=0
 #raw output from gateway?
 #------------------------------------------------------------
 _rawFormat=0
-#------------------------------------------------------------
-_ourcustomFormat=0;
-_lorawanFormat=0
-#------------------------------------------------------------
 
 #------------------------------------------------------------
 #check for app key?
@@ -196,9 +192,17 @@ print _enabled_clouds
 #------------------------------------------------------------
 #initialize gateway DHT22 sensor
 #------------------------------------------------------------
-_gw_dht22 = json_array["gateway_conf"]["dht22"]
+try:
+	_gw_dht22 = json_array["gateway_conf"]["dht22"]
+except KeyError:
+	_gw_dht22 = 0
+	
 _date_save_dht22 = None
-_dht22_mongo = json_array["gateway_conf"]["dht22_mongo"]
+
+try:
+	_dht22_mongo = json_array["gateway_conf"]["dht22_mongo"]
+except KeyError:
+	_dht22_mongo = 0
 
 if (_dht22_mongo):
 	global add_document	
@@ -255,8 +259,11 @@ def dht22_target():
 #for downlink features
 #------------------------------------------------------------
 
-_gw_downlink = json_array["gateway_conf"]["downlink"]
-
+try:
+	_gw_downlink = json_array["gateway_conf"]["downlink"]
+except KeyError:
+	_gw_downlink = 0
+	
 _post_downlink_file = "downlink/downlink-post.txt"
 _post_downlink_queued_file = "downlink/downlink-post-queued.txt"
 _gw_downlink_file = "downlink/downlink.txt"

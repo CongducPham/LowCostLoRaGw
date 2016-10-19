@@ -140,10 +140,6 @@ _logGateway=0
 #raw output from gateway?
 #------------------------------------------------------------
 _rawFormat=0
-#------------------------------------------------------------
-_ourcustomFormat=0;
-_lorawanFormat=0
-#------------------------------------------------------------
 
 #------------------------------------------------------------
 #check for app key?
@@ -204,10 +200,18 @@ _imagelog_filename = _folder_path+"image_"+str(_gwid)+".log"
 #------------------------------------------------------------
 #initialize gateway DHT22 sensor
 #------------------------------------------------------------
-_gw_dht22 = json_array["gateway_conf"]["dht22"]
+try:
+	_gw_dht22 = json_array["gateway_conf"]["dht22"]
+except KeyError:
+	_gw_dht22 = 0
+	
 _date_save_dht22 = None
-_dht22_mongo = json_array["gateway_conf"]["dht22_mongo"]
 
+try:
+	_dht22_mongo = json_array["gateway_conf"]["dht22_mongo"]
+except KeyError:
+	_dht22_mongo = 0
+	
 if (_dht22_mongo):
 	global add_document	
 	from MongoDB import add_document
@@ -428,62 +432,73 @@ def main(argv):
 if __name__ == "__main__":
 	main(sys.argv[1:])
 
+#------------------------------------------------------------
+#start various threads
+#------------------------------------------------------------
+
 #gateway dht22
 if (_gw_dht22):
 	print "Starting thread to measure gateway temperature"
 	t = threading.Thread(target=dht22_target)
 	t.daemon = True
 	t.start()
+	time.sleep(1)
 
+print ''
 print "Current working directory: "+os.getcwd()
+
+#------------------------------------------------------------
+#main loop
+#------------------------------------------------------------
 
 while True:
 
 	sys.stdout.flush()
+	
   	ch = getSingleChar()
 
-#expected prefixes
-#	^p 	indicates a ctrl pkt info ^pdst(%d),ptype(%d),src(%d),seq(%d),len(%d),SNR(%d),RSSI=(%d) for the last received packet
-#		example: ^p1,16,3,0,234,8,-45
-#
-#	^r	indicate a ctrl radio info ^rbw,cr,sf for the last received packet
-#		example: ^r500,5,12
-#
-#	^$	indicates an output (debug or log purposes) from the gateway that should be logged in the (Dropbox) gateway.log file 
-#		example: ^$Set LoRa mode 4
-#
-#	^l	indicates a ctrl LAS info ^lsrc(%d),type(%d)
-#		type is 1 for DSP_REG, 2 for DSP_INIT, 3 for DSP_UPDT, 4 for DSP_DATA 
-#		example: ^l3,4
-#
-#	\$	indicates a message that should be logged in the (Dropbox) telemetry.log file
-#		example: \$hello -> 	hello will be logged in the following format
-#					(src=3 seq=0 len=6 SNR=8 RSSI=-54) 2015-10-16T14:47:44.072230> hello    
-#
-#
-#	\!	indicates a message that should be logged on a cloud, see clouds.json
-#
-#		example for a ThingSpeak channel as implemented in CloudThinkSpeak.py
-#				\!SGSH52UGPVAUYG3S#9.4		-> 9.4 will be logged in the SGSH52UGPVAUYG3S ThingSpeak channel at default field, i.e. field 1
-#				\!2#9.4						-> 9.4 will be logged in the default channel at field 2
-#				\!SGSH52UGPVAUYG3S#2#9.4	-> 9.4 will be logged in the SGSH52UGPVAUYG3S ThingSpeak channel at field 2
-#				\!##9.4 or \!9.4			-> will be logged in default channel and field
-#
-#		you can add nomemclature codes:
-#				\!##TC/9.4/HU/85/DO/7		-> with ThingSpeak you can either upload only the first value or all values on several fields
-#											-> with an IoT cloud such as Grovestreams you will be able to store both nomenclatures and values 
-#
-#		you can log other information such as src, seq, len, SNR and RSSI on specific fields
-#
-#	\xFF\xFE		indicates radio data prefix
-#
-#	\xFF\x50-\x54 	indicates an image packet. Next fields are src_addr(2B), seq(1B), Q(1B), size(1B)
-#					cam id is coded with the second framing byte: i.e. \x50 means cam id = 0
-#
-
-#------------------------------------------------------------
-# '^' is reserved for control information from the gateway
-#------------------------------------------------------------
+	#expected prefixes
+	#	^p 	indicates a ctrl pkt info ^pdst(%d),ptype(%d),src(%d),seq(%d),len(%d),SNR(%d),RSSI=(%d) for the last received packet
+	#		example: ^p1,16,3,0,234,8,-45
+	#
+	#	^r	indicate a ctrl radio info ^rbw,cr,sf for the last received packet
+	#		example: ^r500,5,12
+	#
+	#	^$	indicates an output (debug or log purposes) from the gateway that should be logged in the (Dropbox) gateway.log file 
+	#		example: ^$Set LoRa mode 4
+	#
+	#	^l	indicates a ctrl LAS info ^lsrc(%d),type(%d)
+	#		type is 1 for DSP_REG, 2 for DSP_INIT, 3 for DSP_UPDT, 4 for DSP_DATA 
+	#		example: ^l3,4
+	#
+	#	\$	indicates a message that should be logged in the (Dropbox) telemetry.log file
+	#		example: \$hello -> 	hello will be logged in the following format
+	#					(src=3 seq=0 len=6 SNR=8 RSSI=-54) 2015-10-16T14:47:44.072230> hello    
+	#
+	#
+	#	\!	indicates a message that should be logged on a cloud, see clouds.json
+	#
+	#		example for a ThingSpeak channel as implemented in CloudThinkSpeak.py
+	#				\!SGSH52UGPVAUYG3S#9.4		-> 9.4 will be logged in the SGSH52UGPVAUYG3S ThingSpeak channel at default field, i.e. field 1
+	#				\!2#9.4						-> 9.4 will be logged in the default channel at field 2
+	#				\!SGSH52UGPVAUYG3S#2#9.4	-> 9.4 will be logged in the SGSH52UGPVAUYG3S ThingSpeak channel at field 2
+	#				\!##9.4 or \!9.4			-> will be logged in default channel and field
+	#
+	#		you can add nomemclature codes:
+	#				\!##TC/9.4/HU/85/DO/7		-> with ThingSpeak you can either upload only the first value or all values on several fields
+	#											-> with an IoT cloud such as Grovestreams you will be able to store both nomenclatures and values 
+	#
+	#		you can log other information such as src, seq, len, SNR and RSSI on specific fields
+	#
+	#	\xFF\xFE		indicates radio data prefix
+	#
+	#	\xFF\x50-\x54 	indicates an image packet. Next fields are src_addr(2B), seq(1B), Q(1B), size(1B)
+	#					cam id is coded with the second framing byte: i.e. \x50 means cam id = 0
+	#
+	
+	#------------------------------------------------------------
+	# '^' is reserved for control information from the gateway
+	#------------------------------------------------------------
 
 	if (ch=='^'):
 		now = datetime.datetime.utcnow()
@@ -549,7 +564,8 @@ while True:
 			f=open(os.path.expanduser(_gwlog_filename),"a")
 			f.write(now.isoformat()+'> ')
 			f.write(data)
-			f.close()					
+			f.close()		
+						
 		continue
 
 
@@ -620,7 +636,6 @@ while True:
 			print('invalid app key: discard data')
 			getAllLine()
 
-		sys.stdout.flush()
 		continue
 	
 	#handle binary prefixes

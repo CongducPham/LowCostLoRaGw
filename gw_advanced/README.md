@@ -469,6 +469,9 @@ I/ AES encryption
 Installing Python AES encryption package
 
 	> sudo pip install pycrypto
+
+or
+	> sudo apt-get install python-crypto	
 	
 J/ Run the gateway at boot
 ==========================
