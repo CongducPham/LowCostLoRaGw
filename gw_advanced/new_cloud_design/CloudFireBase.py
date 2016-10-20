@@ -35,6 +35,8 @@ import sys
 #change here for your own firebase url when you have one
 #firebase_database='https://XXXXXXXXXXX.firebaseio.com'
 
+firebase_database='https://sweltering-torch-4818.firebaseio.com'
+
 # didn't get a response from firebase server?
 connection_failure = False
 
@@ -131,7 +133,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	sf=arr[2]
 
 	firebase_msg = {
-		'dst':dst,
+		'time':now.isoformat(),		
 		'type':ptype,
 		'gateway_eui' : gwid,					
 		'node_eui':src,
@@ -141,7 +143,6 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		'rssi':RSSI,
 		'cr' : cr, 
 		'datarate' : "SF"+str(sf)+"BW"+str(bw),
-		'time':now.isoformat(),				
 		'data':ldata
 	}
 	

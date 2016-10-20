@@ -3061,7 +3061,14 @@ int8_t SX1272::setPacketLength()
 {
     uint16_t length;
 
-    length = _payloadlength + OFFSET_PAYLOADLENGTH;
+    // added by C. Pham
+    // if gateway is in rawFormat mode for packet reception, it will also send in rawFormat
+    // unless we switch it back to normal format just for transmission, e.g. for downlink transmission
+    if (_rawFormat)
+        length = _payloadlength;
+    else
+        length = _payloadlength + OFFSET_PAYLOADLENGTH;
+
     return setPacketLength(length);
 }
 
@@ -5189,11 +5196,16 @@ uint8_t SX1272::setPacket(uint8_t dest, char *payload)
         writeRegister(REG_FIFO, packet_sent.netkey[0]);
         writeRegister(REG_FIFO, packet_sent.netkey[1]);
 #endif
-        writeRegister(REG_FIFO, packet_sent.dst); 		// Writing the destination in FIFO
         // added by C. Pham
-        writeRegister(REG_FIFO, packet_sent.type); 		// Writing the packet type in FIFO
-        writeRegister(REG_FIFO, packet_sent.src);		// Writing the source in FIFO
-        writeRegister(REG_FIFO, packet_sent.packnum);	// Writing the packet number in FIFO
+        // we can skip the header for instance when we want to generate
+        // at a higher layer a LoRaWAN packet
+        if (!_rawFormat) {
+            writeRegister(REG_FIFO, packet_sent.dst); 		// Writing the destination in FIFO
+            // added by C. Pham
+            writeRegister(REG_FIFO, packet_sent.type); 		// Writing the packet type in FIFO
+            writeRegister(REG_FIFO, packet_sent.src);		// Writing the source in FIFO
+            writeRegister(REG_FIFO, packet_sent.packnum);	// Writing the packet number in FIFO
+        }
         // commented by C. Pham
         //writeRegister(REG_FIFO, packet_sent.length); 	// Writing the packet length in FIFO
         for(unsigned int i = 0; i < _payloadlength; i++)
@@ -5315,11 +5327,16 @@ uint8_t SX1272::setPacket(uint8_t dest, uint8_t *payload)
         writeRegister(REG_FIFO, packet_sent.netkey[0]);
         writeRegister(REG_FIFO, packet_sent.netkey[1]);
 #endif
-        writeRegister(REG_FIFO, packet_sent.dst); 		// Writing the destination in FIFO
         // added by C. Pham
-        writeRegister(REG_FIFO, packet_sent.type); 		// Writing the packet type in FIFO
-        writeRegister(REG_FIFO, packet_sent.src);		// Writing the source in FIFO
-        writeRegister(REG_FIFO, packet_sent.packnum);	// Writing the packet number in FIFO
+        // we can skip the header for instance when we want to generate
+        // at a higher layer a LoRaWAN packet
+        if (!_rawFormat) {
+            writeRegister(REG_FIFO, packet_sent.dst); 		// Writing the destination in FIFO
+            // added by C. Pham
+            writeRegister(REG_FIFO, packet_sent.type); 		// Writing the packet type in FIFO
+            writeRegister(REG_FIFO, packet_sent.src);		// Writing the source in FIFO
+            writeRegister(REG_FIFO, packet_sent.packnum);	// Writing the packet number in FIFO
+        }
         // commented by C. Pham
         //writeRegister(REG_FIFO, packet_sent.length); 	// Writing the packet length in FIFO
         for(unsigned int i = 0; i < _payloadlength; i++)

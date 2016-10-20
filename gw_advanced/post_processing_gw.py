@@ -99,31 +99,6 @@ app_key_list = [
 	'\x05\x06\x07\x08' 
 ]
 
-#////////////////////////////////////////////////////////////
-#FOR AES DECRYPTION
-#////////////////////////////////////////////////////////////
-
-#put your key here, should match the end-device's key
-aes_key="0123456789010123"
-#put your initialisation vector here, should match the end-device's initialisation vector
-aes_iv="\x9a\xd0\x30\x02\x00\x00\x00\x00\x9a\xd0\x30\x02\x00\x00\x00\x00"
-#aes_iv="\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00
-
-#association between appkey and aes_key
-appkey_aeskey = {
-	'\x01\x02\x03\x04':"0123456789010123",
-	'\x05\x06\x07\x08':"0123456789010123"
-}
-
-#association between appkey and aes_iv
-appkey_aesiv = {
-	'\x01\x02\x03\x04':"\x9a\xd0\x30\x02\x00\x00\x00\x00\x9a\xd0\x30\x02\x00\x00\x00\x00",
-	'\x05\x06\x07\x08':"\x9a\xd0\x30\x02\x00\x00\x00\x00\x9a\xd0\x30\x02\x00\x00\x00\x00"
-}
-
-# END
-#////////////////////////////////////////////////////////////
-
 #------------------------------------------------------------
 #header packet information
 #------------------------------------------------------------
@@ -183,12 +158,6 @@ the_app_key = '\x00\x00\x00\x00'
 
 #valid app key? by default we do not check for the app key
 _validappkey=1
-
-#------------------------------------------------------------
-#for local AES decrypting
-#------------------------------------------------------------	
-_aes=0
-_hasClearData=0
 
 #------------------------------------------------------------
 #open json file to recover gateway_address
@@ -330,9 +299,9 @@ def image_timeout():
 	except subprocess.CalledProcessError:
 		print "launching image decoding failed!"
 
-#------------------------------------------------------------
-#for managing the input data when we can have aes encryption
-#------------------------------------------------------------
+#---------------------------
+#for managing the input data 
+#---------------------------
 _linebuf="the line buffer"
 _linebuf_idx=0
 _has_linebuf=0
@@ -397,7 +366,6 @@ def main(argv):
 		'addr',\
 		'wappkey',\
 		'raw',\
-		'aes',\
 		'mongodb'])
 		
 	except getopt.GetoptError:
@@ -414,7 +382,6 @@ def main(argv):
 		'-a/--addr '+\
 		'--wappkey '+\
 		'--raw '+\
-		'--aes '+\
 		'-m/--mongodb'
 		
 		sys.exit(2)
@@ -491,13 +458,6 @@ def main(argv):
 			global _rawFormat
 			_rawFormat = 1
 			print("raw output from gateway. post_processing_gw will handle packet format")
-			
-		elif opt in ("--aes"):
-			global _aes
-			_aes = 1
-			global AES
-			from Crypto.Cipher import AES
-			print("enable AES encrypted data")
 						
 		elif opt in ("-m", "--mongodb"):
 			print("will enable local MongoDB support, max months to store is "+arg)
@@ -957,6 +917,7 @@ while True:
 
 			# if we have raw output from gw, then try to determine which kind of packet it is
 			if (_rawFormat==1):
+				print("raw format from gateway")
 				ch=getSingleChar()
 				
 				# probably our modified Libelium header where the destination is the gateway
@@ -970,17 +931,15 @@ while True:
 					# now we read datalen-4 (the header length) bytes in our line buffer
 					fillLinebuf(datalen-HEADER_SIZE)				
 				
-				# TODO: dissect LoRaWAN
-				# you can implement LoRaWAN decoding if this is necessary for your system
-				# look at the LoRaWAN packet format specification to dissect the packet in detail
-				# 
-				# LoRaWAN uses the MHDR(1B)
-				# ----------------------------
-				# | 7  6  5 | 4  3  2 | 1  0 |
-				# ----------------------------
-				#    MType      RFU     major
+				#LoRaWAN uses the MHDR(1B)
+				#----------------------------
+				#| 7  6  5 | 4  3  2 | 1  0 |
+				#----------------------------
+				#   MType      RFU     major
 				#
-				# the main MType is unconfirmed data up which value is 010
+				#the main MType is unconfirmed data up b010 or confirmed data up b100
+				#and packet format is as follows, payload starts at byte 9
+				#MHDR[1] | DevAddr[4] | FCtrl[1] | FCnt[2] | FPort[1] | EncryptedPayload | MIC[4]
 				if (ch & 0x40)==0x40:
 					# Do the LoRaWAN decoding
 					print("LoRaWAN?")
@@ -990,51 +949,15 @@ while True:
 			else:								
 				# now we read datalen bytes in our line buffer
 				fillLinebuf(datalen)				
-			
 				
 			# encrypted data payload?
 			if ((ptype & PKT_FLAG_DATA_ENCRYPTED)==PKT_FLAG_DATA_ENCRYPTED):
 				print("--> DATA encrypted: encrypted payload size is %d" % datalen)
-				
 				_hasClearData=0
-				
-				if _aes==1:
-					print("--> decrypting")
-					
-					decrypt_handler = AES.new(aes_key, AES.MODE_CBC, aes_iv)
-					# decrypt 
-					s = decrypt_handler.decrypt(_linebuf)
-					
-					for i in range(0, len(s)):
-						print "%.2X " % ord(s[i]),
-					
-					print "\nEnd"
-						
-					# get the real (decrypted) payload size
-					rsize = ord(s[APPKEY_SIZE])
-					
-					print("--> real payload size is %d" % rsize)
-					
-					# then add the appkey + the appkey framing bytes
-					rsize = rsize+APPKEY_SIZE+1
-					
-					_linebuf = s[:APPKEY_SIZE] + s[APPKEY_SIZE+1:rsize]
-					
-					for i in range(0, len(_linebuf)):
-						print "%.2X " % ord(_linebuf[i]),
-					
-					print "\nEnd"
-						
-					# normally next read from input will get data from the decrypted _linebuf
-					print "--> decrypted payload is: ",
-					print _linebuf[APPKEY_SIZE:]
-					
-					_hasClearData=1
-				else:
-					print("--> DATA encrypted: aes not activated")
-					# drain stdin of all the encrypted data
-					enc_data=getAllLine()
-					print("--> discard encrypted data")
+				print("--> DATA encrypted not supported")
+				# drain stdin of all the encrypted data
+				enc_data=getAllLine()
+				print("--> discard encrypted data")
 			else:
 				_hasClearData=1
 										

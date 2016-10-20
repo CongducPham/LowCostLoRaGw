@@ -1,7 +1,7 @@
 /*
  *  temperature sensor on analog 8 to test the LoRa gateway
  *
- *  Copyright (C) 2015 Congduc Pham, University of Pau, France
+ *  Copyright (C) 2016 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  *****************************************************************************
  */
- 
+#include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
 
@@ -41,46 +41,83 @@
 //#define BAND900
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef _VARIANT_ARDUINO_DUE_X_
+///////////////////////////////////////////////////////////////////
+// COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
+// ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
+#if not defined _VARIANT_ARDUINO_DUE_X_ && not defined __SAMD21G18A__
 #define WITH_EEPROM
 #endif
 #define WITH_APPKEY
 #define FLOAT_TEMP
-//#define NEW_DATA_FIELD
+#define NEW_DATA_FIELD
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //#define WITH_ACK
+///////////////////////////////////////////////////////////////////
 
-#ifdef WITH_EEPROM
-#include <EEPROM.h>
-#endif
-
-#ifdef WITH_ACK
-#define NB_RETRIES 2
-#endif
-
-#define DEFAULT_DEST_ADDR 1
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE LORA MODE, NODE ADDRESS 
 #define LORAMODE  1
 #define node_addr 8
-#define field_index 4
+//////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 4
+#define field_index 4
+///////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE READ PIN AND THE POWER PIN FOR THE TEMP. SENSOR
 #define TEMP_PIN_READ  A0
 // use digital 8 to power the temperature sensor if needed
 #define TEMP_PIN_POWER 8
-  
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__ // Nexus board from Ideetron is a Mini
-  #define SX1272_POWER 9
-  // the Pro Mini works in 3.3V
-  #define TEMP_SCALE  3300.0
-#else // ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MEGA2560 
-  // the SX1272 will be powered by the 3.3V pin
-  #define TEMP_SCALE  5000.0
-#endif
+///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
 unsigned int idlePeriodInMin = 10;
 ///////////////////////////////////////////////////////////////////
+
+#ifdef WITH_APPKEY
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE APPKEY, BUT IF GW CHECKS FOR APPKEY, MUST BE
+// IN THE APPKEY LIST MAINTAINED BY GW.
+uint8_t my_appKey[4]={5, 6, 7, 8};
+///////////////////////////////////////////////////////////////////
+#endif
+
+// we wrapped Serial.println to support the Arduino Zero or M0
+#if defined __SAMD21G18A__
+#define PRINTLN                   SerialUSB.println("")              
+#define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
+#define PRINT_STR(fmt,param)      SerialUSB.print(param)
+#define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
+#define FLUSHOUTPUT               SerialUSB.flush();
+#else
+#define PRINTLN                   Serial.println("")
+#define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
+#define PRINT_STR(fmt,param)      Serial.print(param)
+#define PRINT_VALUE(fmt,param)    Serial.print(param)
+#define FLUSHOUTPUT               Serial.flush();
+#endif
+
+#ifdef WITH_EEPROM
+#include <EEPROM.h>
+#endif
+
+#define DEFAULT_DEST_ADDR 1
+
+#ifdef WITH_ACK
+#define NB_RETRIES 2
+#endif
+
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__  || defined __SAMD21G18A__
+  // these boards work in 3.3V
+  // Nexus board from Ideetron is a Mini
+  #define TEMP_SCALE  3300.0
+#else // ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MEGA2560 
+  #define TEMP_SCALE  5000.0
+#endif
 
 #ifdef LOW_POWER
 // this is for the Teensy31/32
@@ -93,6 +130,13 @@ SnoozeBlock sleep_config;
 // you need the LowPower library from RocketScream
 // https://github.com/rocketscream/Low-Power
 #include "LowPower.h"
+
+#ifdef __SAMD21G18A__
+// use the RTC library
+#include "RTCZero.h"
+/* Create an rtc object */
+RTCZero rtc;
+#endif
 #endif
 unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
@@ -102,11 +146,7 @@ unsigned long lastTransmissionTime=0;
 unsigned long delayBeforeTransmit=0;
 char float_str[20];
 uint8_t message[100];
-
 int loraMode=LORAMODE;
-
-uint8_t my_appKey[4]={5, 6, 7, 8};
-uint8_t DevId[4]={0x01, 0x02, 0x03, 0x04};
 
 #ifdef WITH_EEPROM
 struct sx1272config {
@@ -123,21 +163,17 @@ sx1272config my_sx1272config;
 void setup()
 {
   int e;
-  
-#ifdef ARDUINO_AVR_PRO // add here other boards if you power the lora module with a digital pin
-  // We now use the VCC pin which delivers 3.3v
-  // We observed stability issue when using a digital pin as the current is very limited.
-  // OBSOLETE: on the Pro Mini, we use digital 9 to power the SX1272
-  //pinMode(SX1272_POWER,OUTPUT);
-  //digitalWrite(SX1272_POWER,HIGH); 
-#endif
 
   // for the temperature sensor
   pinMode(TEMP_PIN_READ, INPUT);
   // and to power the temperature sensor
   pinMode(TEMP_PIN_POWER,OUTPUT);
 
-#ifndef LOW_POWER
+#ifdef LOW_POWER
+#ifdef __SAMD21G18A__
+  rtc.begin();
+#endif  
+#else
   digitalWrite(TEMP_PIN_POWER,HIGH);
 #endif
   
@@ -147,24 +183,31 @@ void setup()
 #else  
   // Open serial communications and wait for port to open:
   Serial.begin(38400);
+#ifdef __SAMD21G18A__  
+  SerialUSB.begin(38400);
+#endif  
 #endif  
   // Print a start message
-  Serial.println(F("Simple LoRa temperature sensor"));
+  PRINT_CSTSTR("%s","Simple LoRa temperature sensor\n");
 
 #ifdef ARDUINO_AVR_PRO
-  Serial.println(F("Arduino Pro Mini detected"));
+  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");
 #endif
 
 #ifdef ARDUINO_AVR_NANO
-  Serial.println(F("Arduino Nano detected"));
+  PRINT_CSTSTR("%s","Arduino Nano detected\n");
 #endif
 
 #ifdef ARDUINO_AVR_MINI
-  Serial.println(F("Arduino MINI/Nexus detected"));
+  PRINT_CSTSTR("%s","Arduino MINI/Nexus detected\n");
 #endif
 
 #ifdef __MK20DX256__
-  Serial.println(F("Teensy31/32 detected"));
+  PRINT_CSTSTR("%s","Teensy31/32 detected\n");
+#endif
+
+#ifdef __SAMD21G18A__ 
+  PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
 #endif
 
   // Power ON the module
@@ -176,12 +219,13 @@ void setup()
 
   // found a valid config?
   if (my_sx1272config.flag1==0x12 && my_sx1272config.flag2==0x34) {
-    Serial.println(F("Get back previous sx1272 config"));
+    PRINT_CSTSTR("%s","Get back previous sx1272 config\n");
 
     // set sequence number for SX1272 library
     sx1272._packetNumber=my_sx1272config.seq;
-    Serial.print(F("Using packet sequence number of "));
-    Serial.println(sx1272._packetNumber);
+    PRINT_CSTSTR("%s","Using packet sequence number of ");
+    PRINT_VALUE("%d", sx1272._packetNumber);
+    PRINTLN;
   }
   else {
     // otherwise, write config and start over
@@ -193,8 +237,9 @@ void setup()
   
   // Set transmission mode and print the result
   e = sx1272.setMode(loraMode);
-  Serial.print(F("Setting Mode: state "));
-  Serial.println(e, DEC);
+  PRINT_CSTSTR("%s","Setting Mode: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
 
   // enable carrier sense
   sx1272._enableCarrierSense=true;
@@ -213,8 +258,9 @@ void setup()
 #endif
   // just a dirty patch to test 433MHz with a radio module working in this band, e.g. inAir4 for instance
   //e = sx1272.setChannel(0x6C4000);
-  Serial.print(F("Setting Channel: state "));
-  Serial.println(e, DEC);
+  PRINT_CSTSTR("%s","Setting Channel: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
   
   // Select output power (Max, High or Low)
 #if defined RADIO_RFM92_95 || defined RADIO_INAIR9B
@@ -223,16 +269,18 @@ void setup()
   e = sx1272.setPower('M');
 #endif  
 
-  Serial.print(F("Setting Power: state "));
-  Serial.println(e);
+  PRINT_CSTSTR("%s","Setting Power: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
   
   // Set the node address and print the result
   e = sx1272.setNodeAddress(node_addr);
-  Serial.print(F("Setting node addr: state "));
-  Serial.println(e, DEC);
+  PRINT_CSTSTR("%s","Setting node addr: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
   
   // Print a success message
-  Serial.println(F("SX1272 successfully configured"));
+  PRINT_CSTSTR("%s","SX1272 successfully configured\n");
 
   delay(500);
 }
@@ -280,15 +328,17 @@ void loop(void)
       //  
       temp = value*TEMP_SCALE/1024.0;
     
-      Serial.print(F("Reading "));
-      Serial.println(value);
+      PRINT_CSTSTR("%s","Reading ");
+      PRINT_VALUE("%d", value);
+      PRINTLN;
       
       //temp = temp - 0.5;
       temp = temp / 10.0;
 
-      Serial.print(F("(Temp is "));
-      Serial.println(temp);
-
+      PRINT_CSTSTR("%s","Temp is ");
+      PRINT_VALUE("%f", temp);
+      PRINTLN;
+      
 #ifdef WITH_APPKEY
       app_key_offset = sizeof(my_appKey);
       // set the app key in the payload
@@ -310,11 +360,13 @@ void loop(void)
       ftoa(float_str,temp,2);
 
 #ifdef NEW_DATA_FIELD
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#TC/%s", field_index, float_str);
+      // this is for testing, uncomment if you just want to test, without a real temp sensor plugged
+      //strcpy(float_str, "21.55567");
+      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#TC/%s",field_index,float_str);
 #else
       // this is for testing, uncomment if you just want to test, without a real temp sensor plugged
       //strcpy(float_str, "21.55567");
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#%s", field_index, float_str);
+      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#%s",field_index,float_str);
 #endif
       
 #else
@@ -327,11 +379,13 @@ void loop(void)
 #endif
 #endif
 
-      Serial.print(F("Sending "));
-      Serial.println((char*)(message+app_key_offset));
-
-      Serial.print(F("Real payload size is "));
-      Serial.println(r_size);
+      PRINT_CSTSTR("%s","Sending ");
+      PRINT_STR("%s",(char*)(message+app_key_offset));
+      PRINTLN;
+      
+      PRINT_CSTSTR("%s","Real payload size is ");
+      PRINT_VALUE("%d", r_size);
+      PRINTLN;
       
       int pl=r_size+app_key_offset;
       
@@ -339,8 +393,13 @@ void loop(void)
       
       startSend=millis();
 
+#ifdef WITH_APPKEY
       // indicate that we have an appkey
       sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_WAPPKEY);
+#else
+      // just a simple data packet
+      sx1272.setPacketType(PKT_TYPE_DATA);
+#endif
       
       // Send message to the gateway and print the result
       // with the app key if this feature is enabled
@@ -351,14 +410,14 @@ void loop(void)
         e = sx1272.sendPacketTimeoutACK(DEFAULT_DEST_ADDR, message, pl);
 
         if (e==3)
-          Serial.println(F("No ACK"));
+          PRINT_CSTSTR("%s","No ACK");
         
         n_retry--;
         
         if (n_retry)
-          Serial.println(F("Retry"));
+          PRINT_CSTSTR("%s","Retry");
         else
-          Serial.println(F("Abort")); 
+          PRINT_CSTSTR("%s","Abort"); 
           
       } while (e && n_retry);          
 #else      
@@ -371,33 +430,55 @@ void loop(void)
       my_sx1272config.seq=sx1272._packetNumber;
       EEPROM.put(0, my_sx1272config);
 #endif
+
+      PRINT_CSTSTR("%s","LoRa pkt size ");
+      PRINT_VALUE("%d", pl);
+      PRINTLN;
       
-      Serial.print(F("LoRa pkt seq "));
-      Serial.println(sx1272.packet_sent.packnum);
+      PRINT_CSTSTR("%s","LoRa pkt seq ");
+      PRINT_VALUE("%d", sx1272.packet_sent.packnum);
+      PRINTLN;
     
-      Serial.print(F("LoRa Sent in "));
-      Serial.println(endSend-startSend);
+      PRINT_CSTSTR("%s","LoRa Sent in ");
+      PRINT_VALUE("%ld", endSend-startSend);
+      PRINTLN;
           
-      Serial.print(F("LoRa Sent w/CAD in "));
+      PRINT_CSTSTR("%s","LoRa Sent w/CAD in ");
+      PRINT_VALUE("%ld", endSend-sx1272._startDoCad);
+      PRINTLN;
 
-      Serial.println(endSend-sx1272._startDoCad);
-
-      Serial.print(F("Packet sent, state "));
-      Serial.println(e);
+      PRINT_CSTSTR("%s","Packet sent, state ");
+      PRINT_VALUE("%d", e);
+      PRINTLN;
         
 #ifdef LOW_POWER
-      Serial.println(F("Switch to power saving mode"));
+      PRINT_CSTSTR("%s","Switch to power saving mode\n");
 
       e = sx1272.setSleepMode();
 
       if (!e)
-        Serial.println(F("Successfully switch LoRa module in sleep mode"));
+        PRINT_CSTSTR("%s","Successfully switch LoRa module in sleep mode\n");
       else  
-        Serial.println(F("Could not switch LoRa module in sleep mode"));
+        PRINT_CSTSTR("%s","Could not switch LoRa module in sleep mode\n");
         
-      Serial.flush();
+      FLUSHOUTPUT
       delay(50);
-      
+
+#ifdef __SAMD21G18A__
+      // For Arduino M0 or Zero we use the built-in RTC
+      //LowPower.standby();
+      rtc.setTime(17, 0, 0);
+      rtc.setDate(1, 1, 2000);
+      rtc.setAlarmTime(17, idlePeriodInMin, 0);
+      // for testing with 20s
+      //rtc.setAlarmTime(17, 0, 20);
+      rtc.enableAlarm(rtc.MATCH_HHMMSS);
+      //rtc.attachInterrupt(alarmMatch);
+      rtc.standbyMode();
+
+      PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
+      FLUSHOUTPUT
+#else
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
 
 #ifdef __MK20DX256__ 
@@ -424,24 +505,29 @@ void loop(void)
           Snooze.hibernate(sleep_config);
 #else            
           Snooze.deepSleep(sleep_config);
-#endif  
+#endif
+
 #else
           // use the delay function
           delay(LOW_POWER_PERIOD*1000);
 #endif                        
-          Serial.print(".");
-          Serial.flush(); 
+          PRINT_CSTSTR("%s",".");
+          FLUSHOUTPUT; 
           delay(10);                        
       }
       
       delay(50);
+#endif      
+      
 #else
       // use a random part also to avoid collision
-      Serial.println(lastTransmissionTime);
-      Serial.println("Will send next value in");
+      PRINT_VALUE("%ld", lastTransmissionTime);
+      PRINTLN;
+      PRINT_CSTSTR("%s","Will send next value in\n");
       lastTransmissionTime=millis();
       delayBeforeTransmit=idlePeriodInMin*60*1000+random(15,60)*1000;
-      Serial.println(delayBeforeTransmit);
+      PRINT_VALUE("%ld", delayBeforeTransmit);
+      PRINTLN;
   }
 #endif
 
