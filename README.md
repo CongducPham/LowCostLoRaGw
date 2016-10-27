@@ -24,7 +24,7 @@ Then, in the script folder, run new_config_gw.sh to configure your gateway, as d
 
 - new encryption and native LoRaWAN frame format
 	- **needs at least the new cloud management version** and the latest [lora_gateway.cpp](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/lora_gateway.cpp)
-	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes-lorawan/README-aes_lorawan.md)
+	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes_lorawan/README-aes_lorawan.md)
 	- end-device can send native LoRaWAN packets
 	- low-level gateway provides raw output for post_processing_gw.py to handle LoRaWAN packets
 - new Arduino code for gateway and interactive end-device
