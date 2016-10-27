@@ -18,7 +18,7 @@
  *
  *****************************************************************************
  */
- 
+#include <SPI.h>  
 // Include the SX1272
 #include "SX1272.h"
 
@@ -39,6 +39,7 @@
 // please uncomment only 1 choice
 #define BAND868
 //#define BAND900
+//#define BAND433
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define DEFAULT_DEST_ADDR 1
@@ -89,12 +90,14 @@ void setup()
 #ifdef BAND868
   // Select frequency channel
   e = sx1272.setChannel(CH_10_868);
-#else // assuming #defined BAND900
+#elif defined BAND900
   // Select frequency channel
   e = sx1272.setChannel(CH_05_900);
+#elif defined BAND433
+  // to test 433MHz with a radio module working in this band, e.g. inAir4 for instance
+  // Select frequency channel
+  e = sx1272.setChannel(CH_00_433);  
 #endif
-  // just a dirty patch to test 433MHz with a radio module working in this band, e.g. inAir4 for instance
-  //e = sx1272.setChannel(0x6C4000);
   Serial.print(F("Setting Channel: state "));
   Serial.println(e, DEC);
   
@@ -139,7 +142,7 @@ void loop(void)
 
       // this is the no-ack version
       // e = sx1272.sendPacketTimeout(DEFAULT_DEST_ADDR, message, r_size);
-
+            
       Serial.print(F("Packet sent, state "));
       Serial.println(e);
       

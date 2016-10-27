@@ -3,15 +3,35 @@ Low-cost LoRa gateway with Raspberry
 
 Please consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
 
-**This is the description of the basic version of the low-cost gateway. There is an advanced version that will upgrade some files. Look at the [gw_advanced folder](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced) and follow instructions.** With the advanced version, you can then add new updates (such as new cloud management and downlink features) in an incremental way if you want to do so. The update/upgrade steps are as follows: 
+**This is the description of the basic version of the low-cost gateway. There is an advanced version that will upgrade some files. Look at the [gw_advanced folder](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced) and follow instructions.** With the advanced version, you can then add new updates (such as new cloud management, downlink features, AES encryption and limited LoRaWAN features) in an incremental way if you want to do so. The update/upgrade steps are as follows: basic -> gw_advanced -> new cloud mngt -> downlink -> AES and LoRaWAN.
 
 - basic version -> gw_advanced: see [gw_advanced folder](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced)
 - gw_advanced -> new cloud management: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md#how-to-update-your-gateway) 
 - gw_advanced w/new cloud management -> downlink features: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/README-downlink.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/README-downlink.md#how-to-update-your-gateway)
+- gw_advanced w/new cloud management or gw_advanced w/downlink -> aes and LoRaWAN features: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes-lorawan/README-aes_lorawan.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes-lorawan/README-aes_lorawan.md.md#how-to-update-your-gateway)
+
+Latest gateway version
+----------------------
+
+The full, latest version of the low-cost gateway is available in the gw_full_latest folder. It only contains the gateway control and post-processing software. You may need to install required Raspbian Jessie packages as explained in the README file of the various updates.
+
+To get directly to the full, latest gateway version, (i) simply download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or (ii) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. See the installation procedure described [below](https://github.com/CongducPham/LowCostLoRaGw#install-the-low-level-lora-gateway) to adapt them to the the gw_full_latest folder.
+
+Then, in the script folder, run new_config_gw.sh to configure your gateway, as described [here](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced#configure-your-gateway-with-config_gwsh).
 
 **NEW** 
 =======
 
+- new encryption and native LoRaWAN frame format
+	- **needs at least the new cloud management version** and the latest [lora_gateway.cpp](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/lora_gateway.cpp)
+	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes-lorawan/README-aes_lorawan.md)
+	- end-device can send native LoRaWAN packets
+	- low-level gateway provides raw output for post_processing_gw.py to handle LoRaWAN packets
+- new Arduino code for gateway and interactive end-device
+	- code for gateway and interactive end-device are now separated in 2 sketches
+	- the old version is still in folder Arduino_LoRa_Gateway_1_4 and will not be maintained anymore. It will stay at v1.4
+	- Arduino_LoRa_Gateway now contains the gateway code. It is equivalent, in previous version v1.4, to compilation with IS_RCV_GATEWAY.
+	- Arduino_LoRa_InteractiveDevice contains the code for an interactive end-device.  It is equivalent, in previous version v1.4, to compilation with IS_SEND_GATEWAY
 - new cloud management approach: simpler, more generic
 	- https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced/new_cloud_design
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md)
@@ -190,18 +210,18 @@ The end-device runs in LoRa mode 1 and has address 8. Open the Serial Monitor (3
 Note that in most operational scenarios, requesting ACK from the gateway is costly. Look at the next examples to see how we usually send data without requesting ACK.
 
 
-An end-device example that periodically sends temperature to the gateway
-========================================================================
+A simple end-device example that periodically sends temperature to the gateway
+==============================================================================
 
 See the [video here](https://www.youtube.com/watch?v=YsKbJeeav_M).
 
-First, install the Arduino IDE 1.6.6. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
+First, install the Arduino IDE 1.6.6. Check that the AVR board library is not above 1.6.9 as there might be some compilation issue otherwise. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
 
-With the Arduino IDE, open the Arduino_LoRa_temp sketch (or the more simpler Arduino_LoRa_Simple_temp), compile it and upload to an Arduino board. Check your radio module first, see "Connect a radio module to your end-device" above.
+With the Arduino IDE, open the Arduino_LoRa_Simple_temp sketch, compile it and upload to an Arduino board. Check your radio module first, see "Connect a radio module to your end-device" above.
 
-The end-device runs in LoRa mode 1 and has address 6 for Arduino_LoRa_temp and address 8 for Arduino_LoRa_Simple_temp. It will send data to the gateway.
+The end-device runs in LoRa mode 1 and has address 8. It will send data to the gateway.
 
-The default configuration uses an application key set to [5, 6, 7, 8].
+The default configuration uses an application key filter set to [5, 6, 7, 8].
 
 Use a temperature sensor (e.g. LM35DZ) and plugged in pin A0 (analog 0). You can use a power pin to power your temperature sensor if you are not concerned about power saving. Otherwise, you can use digital 8 (the sketch set this pin HIGH when reading value, then sets it back to LOW) and activate low power mode (uncomment #define LOW_POWER), see below. 
 
@@ -211,18 +231,20 @@ The current low-power version for Arduino board use the RocketScream Low Power l
 
 For the special case of Teensy 31/32, the power saving mode uses the Snooze library provided by the Teensyduino package. You can upgrade the Snooze library from their github. With the Teensy, you can further use the HIBERNATE mode by uncommenting "USE_HIBERNATE" in the Snooze.h file of the Snooze libary and uncommenting LOW_POWER_HIBERNATE in the temperature example.
 
+For the special of the Arduino Zero, waking up the board from deep sleep mode is done with the RTC. Therefore the RTCZero library from https://github.com/arduino-libraries/RTCZero is used and you need to install it before being able to compile the example for the Arduino Zero.
+
 Depending on the sensor type, the computation to get the real temperature may be changed accordingly. Here is the instruction for the LM35DZ: http://www.instructables.com/id/ARDUINO-TEMPERATURE-SENSOR-LM35/
 
 The default configuration also use the EEPROM to store the last packet sequence number in order to get it back when the sensor is restarted/rebooted. If you want to restart with a packet sequence number of 0, just comment the line "#define WITH_EEPROM"
 
 Once flashed, the Arduino temperature sensor will send to the gateway the following message \!#3#20.4 (20.4 is the measured temperature so you may not have the same value) prefixed by the application key every 10 minutes (with some randomization interval). This will trigger at the processing stage of the gateway the logging on the default ThinkSpeak channel (the test channel we provide) in field 3. At the gateway, 20.4 will be recorded on the provided ThingSpeak test channel in field 3 of the channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value. 
 
-The program has been tested on Arduino Uno, Mega2560, Nano, Pro Mini, Mini, Due.  We also tested on the Teensy3.1/3.2 and the Ideetron Nexus. The SX1272 lib has been modified to change the SPI_SS pin from 2 to 10 when you compile for the Pro Mini, Mini (Nexus), Nano or Teensy. 
+The program has been tested on Arduino Uno, Mega2560, Nano, Pro Mini, Mini, Due, Zero.  We also tested on the Teensy3.1/3.2 and the Ideetron Nexus. The SX1272 lib has been modified to change the SPI_SS pin from 2 to 10 when you compile for the Pro Mini, Mini (Nexus), Nano or Teensy. 
 
 An interactive end-device for sending LoRa messages with the Arduino IDE
 ========================================================================
 
-With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and check that "#define IS_SEND_GATEWAY" is uncommented. Then compile it and upload to an Arduino board. It is better to use a more powerful (and with more RAM memory) Arduino platform for building the interactive device otherwise stability issues can occur.
+With the Arduino IDE, open the Arduino_LoRa_InteractiveDevice sketch. Then compile it and upload to an Arduino board. It is better to use a more powerful (and with more RAM memory such as a MEGA) Arduino platform for building the interactive device otherwise stability issues can occur.
 
 By default, the interactive end-device has address 6 and runs in LoRa mode 1.
 
@@ -237,15 +259,17 @@ When testing with the interactive end-device, you should not use the --wappkey o
 Use an Arduino as a LoRa gateway
 ================================
 
-The gateway can also be based on an Arduino board, as described in the web page. With the Arduino IDE, open the Arduino_LoRa_Gateway sketch and set the compilation #define to have IS_RCV_GATEWAY and not IS_SEND_GATEWAY. Compile the code and upload to an Arduino board. Then follow instructions on how to use the Arduino board as a gateway. It is better to use a more powerful (and with more RAM memory) Arduino platform for building the gateway.
+The gateway can also be based on an Arduino board, as described in the web page. With the Arduino IDE, open the Arduino_LoRa_Gateway sketch, compile the code and upload to an Arduino board. Then follow instructions on how to use the Arduino board as a gateway. It is better to use a more powerful (and with more RAM memory such as the MEGA) Arduino platform for building the gateway.
 
 Running in 433MHz band
 ======================
 
-When your radio module can run in the 433MHz band (for instance when the radio is based on SX1276 or SX1278 chip) then you can test running at 433MHz as follows:
+When your radio module can run in the 433MHz band (for instance when the radio is based on SX1276 or SX1278 chip, such as the inAir4 from Modtronics) then you can test running at 433MHz as follows:
 
-- uncomment line "e = sx1272.setChannel(0x6C4000);" in Arduino_LoRa_temp or Arduino_LoRa_Simple_temp
-- run your gateway with "lora_gateway --mode 1 --freq 433.0" to be on the same setting for Arduino_LoRa_temp and Arduino_LoRa_Simple_temp
+- select line "#define BAND433" in Arduino_LoRa_temp or Arduino_LoRa_Simple_temp
+- compile the lora_gateway.cpp with "#define BAND433"
+- or simply run your gateway with "lora_gateway --mode 1 --freq 433.0" to be on the same setting for Arduino_LoRa_temp and Arduino_LoRa_Simple_temp
+- for the moment only one channel is defined in the 433MHz band: 433.0MHz as CH_00_433
 
 Mounting your Dropbox folder
 ============================
@@ -283,23 +307,23 @@ Pre-defined LoRa modes (from initial Libelium SX1272.h)
 | 9    | 500|  7 |
 | 10   | 500|  8 |
 
-Pre-defined channels in 868MHz and 915MHz band (from initial Libelium SX1272.h)
+Pre-defined channels in 868MHz, 915MHz and 433MHz band (most of them from initial Libelium SX1272.h, except those marked with *)
 
-| ch | F(MHz) | ch | F(MHz) |
-|----|--------|----|--------|
-| 10 | 865.2  | 00 | 903.08 |
-| 11 | 865.5  | 01 | 905.24 |
-| 12 | 865.8  | 02 | 907.40 |
-| 13 | 866.1  | 03 | 909.56 |
-| 14 | 865.4  | 04 | 911.72 |
-| 15 | 865.7  | 05 | 913.88 |
-| 16 | 866.0  | 06 | 916.04 |
-| 17 | 868.0  | 07 | 918.20 |
-|  - |   -    | 08 | 920.36 |
-|  - |   -    | 09 | 922.52 | 
-|  - |   -    | 10 | 924.68 | 
-|  - |   -    | 11 | 926.84 | 
-|  - |   -    | 12 | 915.00 |
+| ch | F(MHz) | ch | F(MHz) | ch | F(MHz) |
+|----|--------|----|--------|----|--------|
+| 10 | 865.2  | 00 | 903.08 | 00 | 433.0* |
+| 11 | 865.5  | 01 | 905.24 |  - |   -    |
+| 12 | 865.8  | 02 | 907.40 |  - |   -    |
+| 13 | 866.1  | 03 | 909.56 |  - |   -    |
+| 14 | 865.4  | 04 | 911.72 |  - |   -    |
+| 15 | 865.7  | 05 | 913.88 |  - |   -    |
+| 16 | 866.0  | 06 | 916.04 |  - |   -    |
+| 17 | 868.0  | 07 | 918.20 |  - |   -    |
+| 18 | 868.1* | 08 | 920.36 |  - |   -    |
+|  - |   -    | 09 | 922.52 |  - |   -    |
+|  - |   -    | 10 | 924.68 |  - |   -    |
+|  - |   -    | 11 | 926.84 |  - |   -    |
+|  - |   -    | 12 | 915.00 |  - |   -    |
 
 
 	

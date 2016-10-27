@@ -2502,6 +2502,7 @@ boolean	SX1272::isChannel(uint32_t ch)
     case CH_11_900:
         //added by C. Pham
     case CH_12_900:
+    case CH_00_433:
         //end
         return true;
         break;

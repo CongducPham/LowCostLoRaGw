@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.6S
+ *  Version:                1.4
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -29,8 +29,14 @@
  *    - /@C12#: use channel 12 (868MHz)
  *    - /@SF8#: set SF to 8
  *    - /@PL/H/M/x/X#: set power to Low, High or Max; extreme (PA_BOOST at +14dBm), eXtreme (PA_BOOST at +20dBm)
+ *    - /@A9#: set node addr to 9
  *    - /@W34#: set sync word to 0x34
  *    - /@ON# or /@OFF#: power on/off the LoRa module
+ *
+ *  Use of ACK
+ *    - /@ACK#hello w/ack : sends the message and request an ACK
+ *    - /@ACKON# enables ACK (for all messages)
+ *    - /@ACKOFF# disables ACK
  * 
  *  CAD, DIFS/SIFS mechanism, RSSI checking, extended IFS
  *    - /@CAD# performs an SIFS CAD, i.e. 3 or 6 CAD depending on the LoRa mode
@@ -38,7 +44,8 @@
  *    - /@CADOFF# disables CAD (IFS) when sending data
  *    - /@RSSI# toggles checking of RSSI before transmission and after CAD
  *    - /@EIFS# toggles for extended IFS wait
- *
+ 
+ *  if compiled with IS_RCV_GATEWAY
  *    - just connect the Arduino board with LoRa module
  *    - use any serial tool to view data that is received
  *    - with a python script to read serial port, all received data could be forwarded to another application through
@@ -49,6 +56,22 @@
  *      - M, C, P, A, ON, OFF
  *      - ACKON, ACKOFF (if using unmodified SX1272 lib)
  *
+ *  if compiled with IS_SEND_GATEWAY  
+ *    - can read from serial port to send input data (ASCII format)
+ *    - remote configuration needs to be allowed by unlocking the gateway with command '/@U' with an unlock pin
+ *      - '/@U1234#'
+ *    - accepts all the command set of a receive gateway
+ *    - periodic sending of packet for range test
+ *      - /@T5000#: send a message at regular time interval of 5000ms. Use /@T0# to disable periodic sending
+ *      - /@TR5000#: send a message at random time interval between [2000, 5000]ms.
+ *      - /@Z200# sets the packet payload size to 200
+ *    - the command /@D specifies the destination node for sending remote commands
+ *      - /@D56#: set the destination node to be 56, this is permanent, until the next D command
+ *      - /@D58#hello: send hello to node 56, destination addr is only for this message
+ *      - /@D4#/@C1#Q30#: send the command string /@C1#Q30# to node 4
+ *    - the S command sends a string of arbitrary size
+ *      - /@S50# sends a 50B user payload packet filled with '#'. The real size is 55B with the Libelium header 
+ *
  *  if compiled with LORA_LAS
  *    - add LAS support
  *      - sending message will use LAS service
@@ -56,6 +79,9 @@
  *      - /@LASR# resets LAS service
  *      - /@LASON# enables LAS service
  *      - /@LASOFF# disables LAS service
+ *    - if IS_SEND_GATEWAY
+ *      - /@REG# sends a REG message 
+ *    - if IS_RCV_GATEWAY
  *      - /@LASI# initiate the INITrestart/INIT procedure that ask end-devices to send the REG msg
  *      
  *   IMPORTANT NOTICE   
@@ -63,11 +89,9 @@
  *    - the post-processing stage looks for this sequence to dissect the data, according to the format adopted by the sender 
  *    - if you use our LoRa_Temp example, then the packet format as expected by the post-processing script is as follows:
  *      - without application key and without encryption, payload starts immediately: [payload]
- *      - without application key and with encryption: original (clear) format is [size(1B)][payload]. 
- *        size is the real size of the clear payload
+ *      - without application key and with encryption: original (clear) format is [size(1B)][payload]. size is the real size of the clear payload
  *      - if application key is used, without encryption: [AppKey(4B)][payload]
- *      - if application key is used, with encryption: original (clear) format is [AppKey(4B)][size(1B)][payload]. 
- *        size is the real size of the clear payload
+ *      - if application key is used, with encryption: original (clear) format is [AppKey(4B)][size(1B)][payload]. size is the real size of the clear payload
  *    - for more details on the underlying packet format used by our modified SX1272 library
  *      - refer to the SX1272.h
  *      - see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
@@ -75,38 +99,6 @@
 */
 
 /*  Change logs
- *  Oct, 21st, 2016. v1.6S
- *        Split the lora_gateway sketch into 2 parts:   
- *          - lora_gateway: for gateway, similar to previous IS_RCV_GATEWAY
- *          - lora_interactivedevice, similar to previous IS_SEND_GATEWAY
- *        Add support for one channel in the 433MHz band: CH_00_433 = 0x6C4000 for 433.0MHz          
- *  Oct, 9th, 2016. v1.6
- *		  Change the downlink strategy
- *			    - the lora_gateway.cpp program will check for a downlink.txt file after each LoRa packet reception
- *			    - this behavior can be disable with --ndl option
- *			    - after a LoRa packet reception, lora_gateway.cpp will wait for interDownlinkCheckTime before checking for downlink.txt file
- *			    - downlink.txt will be normally generated by post_processing_gw.py
- *			    - post_processing_gw.py periodically check for downlink-post.txt and will build a queue of downlink requests
- *			    - when a lora packet from device i is processed by post_processing_gw.py, it will check if there is a pending request for device i
- *			    - if it is the case, then post_processing_gw.py generates the corresponding downlink.txt which will contain in most cases only 1 entry
- *  August, 7th, 2016. v1.5
- *        Add preliminary and simple support for downlink request (only for Linux-based gateway)
- *          - will periodically check for downlink.txt file
- *          - the file contains a series of line in JSON format: { "status" : "send_request", "dst" : 3, "data" : "/@Px#" }
- *          - mandatory key are "status", "dst" and "data". "status" must be "send_request"
- *          - each line must be terminated by \n. Do not leave an empty line at the end, just \n
- *          - you can add other fields for logging/information purposes
- *          - every interDownlinkCheckTime the existence of downlink.txt will be checked
- *          - all requests will be stored in memory and downlink.txt will be renamed, e.g. downlink-backup-2016-08-01T20:25:44.txt
- *          - downlink-queued.txt will be appended with new send_request, marked as "queued"
- *          - when there are pending send request, then every interDownlinkSendTime a transmission will occur
- *          - downlink-send.txt will be appended with new transmissions, marked as "sent" or "sent_fail"
- *          - there is no reliability implemented
- *          - it is expected that new sending request will be indicated in a new downlink.txt file
- *          - this file can be created in various ways: interactive mode, MQTT, ftp, http,...
- *        Change the CarrierSense behavior with an "only once" behavior that that a busy channel will not block the gateway
- *          - CarrierSense now accept an optional parameter that is false by default. true indicates "only once" behavior
- *          - CarrierSense now returns an integer. 1 means that CarrierSense found a busy channel under "only once" behavior      
  *  June, 14th, 2016. v1.4
  *        Fix bug on serial port for the RPI3 and for the Bluetooth interface on RPI3 which uses the serial port
  *  Mar, 25th, 2016. v1.3
@@ -203,7 +195,7 @@
 // uncomment if your radio is an HopeRF RFM92W or RFM95W
 //#define RADIO_RFM92_95
 // uncomment if your radio is a Modtronix inAir9B (the one with +20dBm features), if inAir9, leave commented
-//#define RADIO_INAIR9B
+#define RADIO_INAIR9B
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 #endif
 
@@ -212,7 +204,6 @@
 // please uncomment only 1 choice
 #define BAND868
 //#define BAND900
-//#define BAND433
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef ARDUINO
@@ -235,14 +226,13 @@
   #define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
   #define PRINT_STR(fmt,param)      Serial.print(param)
   #define PRINT_VALUE(fmt,param)    Serial.print(param)
-  #define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
   #define FLUSHOUTPUT               Serial.flush();
 #else
+
   #define PRINTLN                   printf("\n")
   #define PRINT_CSTSTR(fmt,param)   printf(fmt,param)
   #define PRINT_STR(fmt,param)      PRINT_CSTSTR(fmt,param)
   #define PRINT_VALUE(fmt,param)    PRINT_CSTSTR(fmt,param)
-  #define PRINT_HEX(fmt,param)      PRINT_VALUE(fmt,param)
   #define FLUSHOUTPUT               fflush(stdout);
 #endif
 
@@ -257,49 +247,20 @@
   #define DEBUG_STR(fmt,param)    
   #define DEBUG_VALUE(fmt,param)  
 #endif
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// FOR DOWNLINK FEATURES
-//
-#if not defined ARDUINO && defined DOWNLINK
-#define MAX_DOWNLINK_ENTRY 100
-
-#include "rapidjson/reader.h"
-#include "rapidjson/document.h"
-#include "rapidjson/writer.h"
-#include "rapidjson/stringbuffer.h"
-#include <iostream>
-
-using namespace rapidjson;
-using namespace std;
-
-char* json_entry[MAX_DOWNLINK_ENTRY];
-
-size_t json_entry_size=100;
-FILE *fp;
-int dl_line_index;
-ssize_t dl_line_size;
-int dl_total_line;
-bool hasDownlinkEntry=false;
-bool enableDownlinkCheck=false;
-bool optNDL=false;
-
-unsigned long lastDownlinkCheckTime=0;
-// we set to 10s after the gw receives a lora packet
-// to give some time for the post-processing stage to generate a downlink.txt file if any
-unsigned long interDownlinkCheckTime=10000L;
-//unsigned long interDownlinkCheckTime=120000L;
-unsigned long lastDownlinkSendTime=0;
-// 20s between 2 downlink transmissions when there are queued requests
-unsigned long interDownlinkSendTime=20000L;
-#endif
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
   
 //#define RECEIVE_ALL 
+//#define IS_RCV_GATEWAY
+#define IS_SEND_GATEWAY
 //#define CAD_TEST
 //#define LORA_LAS
 //#define WINPUT
 //#define WITH_SEND_LED
+
+// the special mode to test BW=125MHz, CR=4/5, SF=12
+// on the 868.1MHz channel
+//#define LORAMODE 11
+
+#define LORAMODE 1
 
 #ifdef BAND868
 #define MAX_NB_CHANNEL 9
@@ -307,20 +268,13 @@ unsigned long interDownlinkSendTime=20000L;
 #define ENDING_CHANNEL 18
 uint8_t loraChannelIndex=0;
 uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_10_868,CH_11_868,CH_12_868,CH_13_868,CH_14_868,CH_15_868,CH_16_868,CH_17_868,CH_18_868};
-
-#elif defined BAND900 
+#else // assuming #defined BAND900
 #define MAX_NB_CHANNEL 13
 #define STARTING_CHANNEL 0
 #define ENDING_CHANNEL 12
 uint8_t loraChannelIndex=5;
 uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_900,CH_01_900,CH_02_900,CH_03_900,CH_04_900,CH_05_900,CH_06_900,CH_07_900,CH_08_900,
                                             CH_09_900,CH_10_900,CH_11_900,CH_12_900};
-#elif defined BAND433
-#define MAX_NB_CHANNEL 1
-#define STARTING_CHANNEL 0
-#define ENDING_CHANNEL 0
-uint8_t loraChannelIndex=0;
-uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_433};                                            
 #endif
 
 // use the dynamic ACK feature of our modified SX1272 lib
@@ -330,19 +284,14 @@ uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_433};
 #define SEND_LED  44
 #endif
 
-///////////////////////////////////////////////////////////////////
-// DEFAULT LORA MODE
-#define LORAMODE 1
-// the special mode to test BW=125MHz, CR=4/5, SF=12
-// on the 868.1MHz channel
-//#define LORAMODE 11
-///////////////////////////////////////////////////////////////////
+#define DEFAULT_DEST_ADDR 1
 
-///////////////////////////////////////////////////////////////////
-// GATEWAY HAS ADDRESS 1
+#ifdef IS_SEND_GATEWAY
+#define LORA_ADDR 6
+// packet size for periodic sending
+uint8_t MSS=40;
+#else
 #define LORA_ADDR 1
-///////////////////////////////////////////////////////////////////
-
 // to unlock remote configuration feature
 #define UNLOCK_PIN 1234
 // will use 0xFF0xFE to prefix data received from LoRa, so that post-processing stage can differenciate
@@ -353,22 +302,23 @@ uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_433};
 #define DATA_PREFIX_0 0xFF
 #define DATA_PREFIX_1 0xFE
 #endif
+#endif
 
 #ifdef LORA_LAS
 #include "LoRaActivitySharing.h"
+
+#ifdef IS_SEND_GATEWAY
+// acting as an end-device
+LASDevice loraLAS(LORA_ADDR,LAS_DEFAULT_ALPHA,DEFAULT_DEST_ADDR);
+#else
 // acting as the LR-BS
 LASBase loraLAS = LASBase();
 #endif
 
-///////////////////////////////////////////////////////////////////
-// CONFIGURATION VARIABLES
-//
-#ifndef ARDUINO
-char keyPressBuff[30];
-uint8_t keyIndex=0;
-int ch;
 #endif
- 
+
+int dest_addr=DEFAULT_DEST_ADDR;
+
 char cmd[260]="****************";
 char sprintf_buf[100];
 int msg_sn=0;
@@ -380,11 +330,17 @@ boolean receivedFromSerial=false;
 boolean receivedFromLoRa=false;
 boolean withAck=false;
 
+#ifndef ARDUINO
+char keyPressBuff[30];
+uint8_t keyIndex=0;
+int ch;
+#endif
+
+// configuration variables
+//////////////////////////
 bool radioON=false;
 bool RSSIonSend=true;
-
 uint8_t loraMode=LORAMODE;
-
 uint32_t loraChannel=loraChannelArray[loraChannelIndex];
 #if defined RADIO_RFM92_95 || defined RADIO_INAIR9B || defined RADIO_20DBM
 // HopeRF 92W/95W and inAir9B need the PA_BOOST
@@ -395,8 +351,11 @@ char loraPower='x';
 // so 'M' set the output power to 15 to get +14dBm
 char loraPower='M';
 #endif
-
 uint8_t loraAddr=LORA_ADDR;
+
+unsigned int inter_pkt_time=0;
+unsigned int random_inter_pkt_time=0;
+long last_periodic_sendtime=0;
 
 unsigned long startDoCad, endDoCad;
 bool extendedIFS=true;
@@ -414,7 +373,8 @@ uint8_t optCH=0;
 bool  optRAW=false;
 double optFQ=-1.0;
 uint8_t optSW=0x12;
-///////////////////////////////////////////////////////////////////
+  
+//////////////////////////
 
 #if defined ARDUINO && not defined _VARIANT_ARDUINO_DUE_X_ && not defined __MK20DX256__
 int freeMemory () {
@@ -580,7 +540,11 @@ void startConfig() {
   
   // Print a success message
   PRINT_CSTSTR("%s","^$SX1272/76 configured ");
+#ifdef IS_SEND_GATEWAY
+  PRINT_CSTSTR("%s","as device. Waiting serial input for serial-RF bridge\n");
+#else
   PRINT_CSTSTR("%s","as LR-BS. Waiting RF input for transparent RF-serial bridge\n");
+#endif  
 }
 
 void setup()
@@ -616,8 +580,12 @@ void setup()
   e = sx1272.getSyncWord();
 
   if (!e) {
-    PRINT_CSTSTR("%s","^$Default sync word: 0x"); 
-    PRINT_HEX("%X", sx1272._syncWord);
+    PRINT_CSTSTR("%s","^$Default sync word: 0x");
+#ifdef ARDUINO
+    Serial.print(sx1272._syncWord, HEX);
+#else  
+    PRINT_VALUE("%X", sx1272._syncWord);
+#endif  
     PRINTLN;
   }    
 
@@ -625,7 +593,12 @@ void setup()
     e = sx1272.setSyncWord(optSW);
 
     PRINT_CSTSTR("%s","^$Set sync word to 0x");
-    PRINT_HEX("%X", optSW);
+#ifdef ARDUINO
+    Serial.print(optSW, HEX);
+#else  
+    PRINT_VALUE("%X", optSW);
+#endif
+    
     PRINTLN;
     PRINT_CSTSTR("%s","^$LoRa sync word: state ");
     PRINT_VALUE("%d",e);  
@@ -642,27 +615,21 @@ void setup()
 
 #ifdef LORA_LAS
   loraLAS.ON(LAS_ON_WRESET);
+  
+#ifdef IS_SEND_GATEWAY  
+  //delay(random(LAS_REG_RAND_MIN,LAS_REG_RAND_MAX));
+  //loraLAS.sendReg();
+#endif  
 #endif
 
 #ifdef CAD_TEST
   PRINT_CSTSTR("%s","Do CAD test\n");
 #endif 
-
-#if not defined ARDUINO && defined DOWNLINK
-
-  lastDownlinkCheckTime=millis();
-
-#endif
 }
 
 // we could use the CarrierSense function added in the SX1272 library, but it is more convenient to duplicate it here
 // so that we could easily modify it for testing
-// 
-// in v1.5 the "only once" behavior is implemented for the gateway when it transmit downlink packets
-// to avoid blocking the gateway on a busy channel. Therefore from v1.5 the implementation differs from the
-// carrier sense function added in the SX1272 library
-//
-int CarrierSense(bool onlyOnce=false) {
+void CarrierSense() {
   int e;
   bool carrierSenseRetry=false;
   
@@ -717,10 +684,6 @@ int CarrierSense(bool onlyOnce=false) {
         }
         else {
           PRINT_CSTSTR("%s","###1\n");  
-          
-          // if we have "only once" behavior then exit here to not have retries
-          if (onlyOnce)
-          	return 1;
 
           // wait for random number of DIFS
 #ifdef ARDUINO                
@@ -776,15 +739,13 @@ int CarrierSense(bool onlyOnce=false) {
       
     } while (carrierSenseRetry);  
   }
-  
-  return 0;
 }
 
 void loop(void)
 { 
   int i=0, e;
   int cmdValue;
-/////////////////////////////////////////////////////////////////// 
+///////////////////////  
 // ONLY FOR TESTING CAD
 #ifdef CAD_TEST
 
@@ -823,9 +784,9 @@ void loop(void)
   delay(200);
 #endif
 // ONLY FOR TESTING CAD
-///END/////////////////////////////////////////////////////////////
+///END/////////////////
 
-/////////////////////////////////////////////////////////////////// 
+//////////////////////////  
 // START OF PERIODIC TASKS
 
   receivedFromSerial=false;
@@ -858,9 +819,7 @@ void loop(void)
   }
 #endif
   
-// handle keyboard input from a UNIX terminal
-// quick & dirty way to provide command to a running gateway
-// for test & debug purposes mainly
+// handle keyboard input from a UNIX terminal  
 #if not defined ARDUINO && defined WINPUT
   
   while (unistd::read(0, &ch, 1)) {
@@ -895,11 +854,88 @@ void loop(void)
   }
 #endif
 
-/////////////////////////////////////////////////////////////////// 
-// THE MAIN PACKET RECEPTION LOOP
-//
   if (radioON && !receivedFromSerial) {
 
+///////////////////////////////////////////////////////
+// ONLY FOR END-DEVICE SENDING MESSAGES TO BASE STATION
+#ifdef IS_SEND_GATEWAY  
+      // periodic message sending? (mainly for tests)
+      if (inter_pkt_time)
+      
+        if (millis()-last_periodic_sendtime > (random_inter_pkt_time?random_inter_pkt_time:inter_pkt_time)) {
+          
+          PRINT_CSTSTR("%s","inter_pkt ");
+          PRINT_VALUE("%ld",millis()-last_periodic_sendtime);  
+          PRINTLN;
+          
+          sprintf(cmd, "msg %3.d***", msg_sn++);
+          for (i=strlen(cmd); i<MSS; i++)
+            cmd[i]='*';
+          
+          cmd[i]='\0';
+          
+          PRINT_CSTSTR("%s","Sending : ");
+          PRINT_STR("%s",cmd);  
+          PRINTLN;
+          
+          CarrierSense();
+          
+          PRINT_CSTSTR("%s","Packet number ");
+          PRINT_VALUE("%d",sx1272._packetNumber);
+          PRINTLN;
+          
+          long startSend=millis();
+          
+#ifdef WITH_SEND_LED
+          digitalWrite(SEND_LED, HIGH);
+#endif       
+          e = sx1272.sendPacketTimeout(dest_addr, (uint8_t*)cmd, strlen(cmd), 10000);
+          
+#ifdef WITH_SEND_LED
+          digitalWrite(SEND_LED, LOW);
+#endif           
+          PRINT_CSTSTR("%s","LoRa Sent in ");
+          PRINT_VALUE("%ld",millis()-startSend);  
+          PRINTLN;
+          PRINT_CSTSTR("%s","Packet sent, state ");
+          PRINT_VALUE("%d",e);
+          PRINTLN;
+          //Serial.flush();
+          
+          if (random_inter_pkt_time) {
+#ifdef ARDUINO                
+            random_inter_pkt_time=random(2000,inter_pkt_time);
+#else
+            random_inter_pkt_time = rand() % inter_pkt_time + 2000;
+#endif            
+            PRINT_CSTSTR("%s","next in ");
+            PRINT_VALUE("%ld",random_inter_pkt_time);
+            PRINTLN;
+          }
+            
+          last_periodic_sendtime=millis();       
+        }  
+        
+      // TODO
+      // the end-device should also open a receiving window to receive 
+      // INIT & UPDT messages
+      e=1;
+#ifndef CAD_TEST        
+      // open a receive window
+      uint16_t w_timer=1000;
+      
+      if (loraMode==1)
+        w_timer=2500;
+        
+      e = sx1272.receivePacketTimeout(w_timer);
+      
+#endif 
+
+// ONLY FOR END-DEVICE SENDING MESSAGES TO BASE STATION
+///END/////////////////////////////////////////////////
+#else 
+///////////////////////////////////////////////////////
+// ONLY FOR BASE STATION RECEIVING MESSAGES FROM DEVICE
       uint16_t w_timer=1000;
       
       if (loraMode==1)
@@ -929,44 +965,15 @@ void loop(void)
 #endif          
 #endif
 #endif
-/////////////////////////////////////////////////////////////////// 
+#endif 
+// ONLY FOR BASE STATION RECEIVING MESSAGES FROM DEVICE
+///END/////////////////////////////////////////////////
 
       if (!e) {
          int a=0, b=0;
          uint8_t tmp_length;
 
          receivedFromLoRa=true;
-
-#ifdef DOWNLINK         
-		 // set timer, gw will check for downlink request (downlink.txt) after
-		 // interDownlinkCheckTime 			
-         lastDownlinkCheckTime=millis();
-         // only if we enabled downlink check after packet reception
-         if (!optNDL)
-         	enableDownlinkCheck=true;
-#endif
-
-///////////////////////////////////////////////////////////////////         
-// for Linux-based gateway only
-// provide reception timestamp
-
-#ifndef ARDUINO
-         char time_buffer[30];
-         int millisec;
-         struct tm* tm_info;
-         struct timeval tv;
-        
-         gettimeofday(&tv, NULL);
-        
-         millisec = lrint(tv.tv_usec/1000.0); // Round to nearest millisec
-         
-         if (millisec>=1000) { // Allow for rounding up to nearest second
-            millisec -=1000;
-            tv.tv_sec++;
-         }
-        
-         tm_info = localtime(&tv.tv_sec);
-#endif                  
          sx1272.getSNR();
          sx1272.getRSSIpacket();
 
@@ -1006,14 +1013,34 @@ void loop(void)
                    sx1272._spreadingFactor);
                    
          PRINT_STR("%s",sprintf_buf);  
-///////////////////////////////////////////////////////////////////
 
-#ifndef ARDUINO        
-         strftime(time_buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);
-         sprintf(sprintf_buf, "^t%s.%03d\n", time_buffer, millisec);
+// for Linux-based gateway only
+///////////////////////////////
+#ifndef ARDUINO
+         char buffer[30];
+         int millisec;
+         struct tm* tm_info;
+         struct timeval tv;
+        
+         gettimeofday(&tv, NULL);
+        
+         millisec = lrint(tv.tv_usec/1000.0); // Round to nearest millisec
+         
+         if (millisec>=1000) { // Allow for rounding up to nearest second
+            millisec -=1000;
+            tv.tv_sec++;
+         }
+        
+         tm_info = localtime(&tv.tv_sec);
+        
+         strftime(buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);
+
+         sprintf(sprintf_buf, "^t%s.%03d\n", buffer, millisec);
+
          PRINT_STR("%s",sprintf_buf);
 #endif
-            
+         
+                            
 #ifdef LORA_LAS        
          if (loraLAS.isLASMsg(sx1272.packet_received.data)) {
            
@@ -1069,6 +1096,11 @@ void loop(void)
   
   if (receivedFromSerial || receivedFromLoRa) {
     
+    boolean sendCmd=false;
+    boolean withTmpAck=false;
+    int forTmpDestAddr=-1;
+    
+    
     i=0;
     
     if (cmd[i]=='/' && cmd[i+1]=='@') {
@@ -1088,8 +1120,128 @@ void loop(void)
       
       switch (cmd[i]) {
 
+#ifdef IS_SEND_GATEWAY       
+///////////////////////////////////////////////////////
+// ONLY FOR END-DEVICE SENDING MESSAGES TO BASE STATION
+
+            case 'D': 
+              i++;
+              cmdValue=getCmdValue(i);
+              
+              i++;
+              // cannot set dest addr greater than 255
+              if (cmdValue > 255)
+                      cmdValue = 255;
+              // cannot set dest addr lower than 0, 0 is broadcast
+              if (cmdValue < 0)
+                      cmdValue = 0;
+                      
+              // only a D command        
+              if (i==strlen(cmd)) {
+                  // set dest addr permanently       
+                  dest_addr=cmdValue; 
+                  PRINT_CSTSTR("%s","Set LoRa dest addr to ");
+                  PRINT_VALUE("%d",dest_addr); 
+                  PRINTLN;                
+              }
+              else {
+                  // only for the following ASCII command
+                  forTmpDestAddr=cmdValue;
+                  PRINT_CSTSTR("%s","Set LoRa dest addr FOR THIS ASCII STRING to ");
+                  PRINT_VALUE("%d",forTmpDestAddr);
+                  PRINTLN;    
+                  sendCmd=true;               
+              }
+            break;
+
+            case 'T': 
+              i++;
+              
+              if (cmd[i]=='R') {
+                random_inter_pkt_time=1;
+                i++;
+              }
+              else
+                random_inter_pkt_time=0;
+              
+              cmdValue=getCmdValue(i);
+              
+              inter_pkt_time=cmdValue;
+              
+              if (inter_pkt_time) {
+                PRINT_CSTSTR("%s","Set inter-packet time to ");
+                PRINT_VALUE("%ld",inter_pkt_time);
+                PRINTLN;   
+                last_periodic_sendtime=millis();
+              }
+              else {
+                PRINT_CSTSTR("%s","Disable periodic send\n");                  
+              }         
+
+              if (random_inter_pkt_time)
+#ifdef ARDUINO                
+                random_inter_pkt_time=random(2000,inter_pkt_time);
+#else
+                random_inter_pkt_time = rand() % inter_pkt_time + 2000;
+#endif                           
+            break;        
+            
+            // set the pkt size default is 40
+            // "Z250#"
+            case 'Z':    
+              i++;
+              cmdValue=getCmdValue(i);
+              // cannot set pkt size greater than MAX_PKT_SIZE
+              if (cmdValue > 250)
+                      cmdValue = 250;
+              // cannot set pkt size smaller than MAX_PKT_SIZE
+              if (cmdValue < 10)
+                      cmdValue = 10;
+              // set new pkt size        
+              MSS=cmdValue; 
+              
+              PRINT_CSTSTR("%s","Set MSS to ");
+              PRINT_VALUE("%d",MSS);
+              PRINTLN;              
+            break;    
+
+            case 'R': 
+#ifdef LORA_LAS             
+              if (cmd[i+1]=='E' && cmd[i+2]=='G') {
+                  PRINT_CSTSTR("%s","^$Send LAS REG msg\n");
+                  loraLAS.sendReg();
+              }
+#endif              
+              if (cmd[i+1]=='S' && cmd[i+2]=='S' && cmd[i+3]=='I') {
+                
+                RSSIonSend = !RSSIonSend;
+                
+                if (RSSIonSend)
+                  PRINT_CSTSTR("%s","RSSI ON\n");
+                else
+                  PRINT_CSTSTR("%s","RSSI OFF\n");
+              }
+            break;                
+
+            case 'E':          
+
+              if (cmd[i+1]=='I' && cmd[i+2]=='F' && cmd[i+3]=='S') {
+                
+                extendedIFS = !extendedIFS;
+                
+                if (extendedIFS)
+                  PRINT_CSTSTR("%s","EIFS ON\n");
+                else
+                  PRINT_CSTSTR("%s","EIFS OFF\n");
+              }
+            break;  
+
+#endif
+// ONLY FOR END-DEVICE SENDING MESSAGES TO BASE STATION
+///END/////////////////////////////////////////////////
+
 //uncomment if you don't want your device to be remotely configured
-//#ifdef 0
+#ifdef IS_RCV_GATEWAY
             case 'U':
             
               if (unlocked_try) {
@@ -1112,7 +1264,7 @@ void loop(void)
                   PRINT_CSTSTR("%s","^$Bad pin\n");
               }
             break;
-//#endif
+#endif
 
             case 'S': 
 
@@ -1130,7 +1282,23 @@ void loop(void)
                       PRINT_VALUE("%d",e);  
                       PRINTLN;   
                   }
-              }                  
+              }
+              else {            
+                  i++;
+                  cmdValue=getCmdValue(i);
+                  i++;
+                  if (cmdValue>250) {
+                    PRINT_CSTSTR("%s","No more than 250B\n");
+                  }
+                  else {
+                    int k=0;
+                    // fill the message to be sent
+                    for (k=0; k<cmdValue; k++)
+                      cmd[k+i]='#';
+                    cmd[k+i]='\0';  
+                    sendCmd=true; 
+                  }
+              }                    
             break;  
             
             case 'M':
@@ -1182,9 +1350,12 @@ void loop(void)
                       cmdValue = 0x12;
               
               PRINT_CSTSTR("%s","^$Set sync word to 0x");
-              PRINT_HEX("%X", cmdValue);
+#ifdef ARDUINO
+              Serial.print(cmdValue, HEX);
+#else  
+              PRINT_VALUE("%X", cmdValue);
+#endif 
               PRINTLN;
-              
               e = sx1272.setSyncWord(cmdValue);
               PRINT_CSTSTR("%s","^$LoRa sync word: state ");
               PRINT_VALUE("%d",e);  
@@ -1274,6 +1445,54 @@ void loop(void)
               else
                 PRINT_CSTSTR("%s","Invalid Power. L, H, M, x or X accepted.\n");          
             break;
+            
+            case 'A': 
+              
+              if (cmd[i+1]=='C' && cmd[i+2]=='K') {    
+
+                if (cmd[i+3]=='#') {
+                  // point to the start of the message, skip /@ACK#
+                  i=6;
+                  withTmpAck=true;
+                  sendCmd=true;         
+                }
+                else {
+
+                  if (cmd[i+3]=='O' && cmd[i+4]=='N') {
+                    withAck=true;
+                    PRINT_CSTSTR("%s","^$ACK enabled\n");
+                  }
+                  
+                  if (cmd[i+3]=='O' && cmd[i+4]=='F' && cmd[i+5]=='F') {
+                    withAck=false;    
+                    PRINT_CSTSTR("%s","^$ACK disabled\n");              
+                  }
+                }
+              }
+              else {
+              
+                i++;
+                cmdValue=getCmdValue(i);
+                
+                // cannot set addr greater than 255
+                if (cmdValue > 255)
+                        cmdValue = 255;
+                // cannot set addr lower than 1 since 0 is broadcast
+                if (cmdValue < 1)
+                        cmdValue = LORA_ADDR;
+                // set node addr        
+                loraAddr=cmdValue; 
+                
+                PRINT_CSTSTR("%s","^$Set LoRa node addr to ");
+                PRINT_VALUE("%d",loraAddr);  
+                PRINTLN;
+                // Set the node address and print the result
+                e = sx1272.setNodeAddress(loraAddr);
+                PRINT_CSTSTR("%s","^$Setting LoRa node addr: state ");
+                PRINT_VALUE("%d",e);     
+                PRINTLN;            
+              }     
+            break;
 
             case 'O': 
 
@@ -1326,11 +1545,13 @@ void loop(void)
                 if (cmd[i+3]=='O' && cmd[i+4]=='F' && cmd[i+5]=='F')
                   loraLAS.OFF();                  
 
+#ifdef IS_RCV_GATEWAY
                 // only the base station can sent an INIT restart message
                 // sends an init restart
                 if (cmd[i+3]=='I') {
                   loraLAS.sendInit(LAS_INIT_RESTART); 
                 }
+#endif
               }
             break;         
 #endif
@@ -1341,257 +1562,126 @@ void loop(void)
       }
       FLUSHOUTPUT;
     }
-  } // end of "if (receivedFromSerial || receivedFromLoRa)" 
-  
-#if not defined ARDUINO && defined DOWNLINK
-  // handle downlink request
-  else {
-  	
-  	// TODO change behavior so that the gw check for downlink when receivedFromLoRa
-  	//
-	bool triggerDownlinkCheck=false;
-				
-	// have we wrapped around?
-	if (millis()-lastDownlinkCheckTime < 0) {
-	        if (millis()+ULONG_MAX-lastDownlinkCheckTime > interDownlinkCheckTime)
-	                triggerDownlinkCheck=true;            
-	}  
-	
-    if ( (millis()-lastDownlinkCheckTime > interDownlinkCheckTime || triggerDownlinkCheck) && enableDownlinkCheck)  {	
-    	
-		char time_buffer[30];
-		int millisec;
-		struct tm* tm_info;
-		struct timeval tv;
-		
-		gettimeofday(&tv, NULL);
-		tm_info = localtime(&tv.tv_sec);
-		strftime(time_buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);   	
-
-		// use rapidjson to parse all lines
-		// if there is a downlink.txt file then read all lines in memory for
-		// further processing
-		printf("^$-----------------------------------------------------\n");
-		printf("^$Check for downlink requests %s\n", time_buffer);
-		
-		fp = fopen("downlink/downlink.txt","r");
-		
-		if (fp) {
-			
-			fclose(fp);
-			
-			// remove any \r characters introduced by various OS and/or tools
-			system("sed -i 's/\r//g' downlink/downlink.txt");
-			// remove empty lines
-			system("sed -i '/^$/d' downlink/downlink.txt");
-			
-			fp = fopen("downlink/downlink.txt","r");
-			
-			dl_total_line=1;
-			hasDownlinkEntry=true;
-			
-			// read all lines
-			while(!feof(fp)) {
-				
-				json_entry[dl_total_line]=(char*)malloc(json_entry_size*sizeof(char));
-				
-				dl_line_size=getline(&json_entry[dl_total_line], &json_entry_size, fp);
-				
-				printf("^$Read downlink %d: %ld\n", dl_total_line, dl_line_size);
-				
-				if (dl_line_size>0)
-					dl_total_line++;
-			}
-			
-			fclose(fp);
-			
-			char tmp_c[100];
-			
-			sprintf(tmp_c, "mv downlink/downlink.txt downlink/downlink-backup-%s.txt", time_buffer);
-				
-			system(tmp_c);
-		}
-		else {
-			hasDownlinkEntry=false;
-			printf("^$NO NEW DOWNLINK ENTRY\n");
-		}	
-	
-		if (hasDownlinkEntry) {
-	
-			Document document;		
-	
-			printf("^$Queue all valid downlink requests\n");
-	
-			for (dl_line_index=1; dl_line_index < dl_total_line; dl_line_index++)
-			{
-				StringBuffer json_record_buffer;
-				Writer<StringBuffer> writer(json_record_buffer);
-			
-		        printf("^$Downlink entry %d: %s", dl_line_index, json_entry[dl_line_index]);
-				
-				document.Parse(json_entry[dl_line_index]);
-		
-				if (document["status"].IsString())
-					printf("^$status = %s\n", document["status"].GetString());
-				
-				if (document["dst"].IsInt())
-					printf("^$dst = %d\n", document["dst"].GetInt());
-		      	
-		      	if (document["data"].IsString())
-					printf("^$data = %s\n", document["data"].GetString());
-				
-				// check if it is a valid send request
-				if (document["status"]=="send_request" && document["dst"].IsInt()) {
-				
-					document["status"].SetString("queued", document.GetAllocator());
-					document.Accept(writer);
-					printf("^$JSON record: %s\n", json_record_buffer.GetString());
-					FLUSHOUTPUT;
-					
-					fp = fopen("downlink/downlink-queued.txt","a");
-					
-					if (fp) {
-						
-						gettimeofday(&tv, NULL);
-						
-						// Round to nearest millisec
-						millisec = lrint(tv.tv_usec/1000.0); 
-						
-						// Allow for rounding up to nearest second
-						if (millisec>=1000) { 
-							millisec -=1000;
-							tv.tv_sec++;
-						}
-						
-						tm_info = localtime(&tv.tv_sec);
-						strftime(time_buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);
-						
-						fprintf(fp, "%s.%03d %s\n", time_buffer, millisec, json_record_buffer.GetString());
-						
-						fclose(fp);
-					}
-				}
-				else
-					printf("^$DISCARDING: not valid send_request\n");
-			}
-			
-			// set to begining of downlink request for transmission
-			dl_line_index=1;
-		}
-		
-		//printf("^$Next downlink request check in %ld min\n", interDownlinkCheckTime/60000);
-		printf("^$-----------------------------------------------------\n");    
-		//lastDownlinkCheckTime=millis();
-		// so that we can start transmitting the first request immediately if any
-		lastDownlinkSendTime=0;
-		// disable downlink check because new request will only be indicated at the next lora packet reception 
-		enableDownlinkCheck=false;
-		FLUSHOUTPUT;	
-    }
+    else
+     sendCmd=true; 
     
-    if (hasDownlinkEntry && (millis()-lastDownlinkSendTime>interDownlinkSendTime)) {
-    	
-    	Document document;
-    	
-    	printf("^$-----------------------------------------------------\n");
-    	printf("^$Process downlink requests %d: %s\n", dl_line_index, json_entry[dl_line_index]);
-    
-		StringBuffer json_record_buffer;
-		Writer<StringBuffer> writer(json_record_buffer);
-		
-		document.Parse(json_entry[dl_line_index]);
+#ifdef IS_SEND_GATEWAY 
+///////////////////////////////////////////////////////
+// ONLY FOR END-DEVICE SENDING MESSAGES TO BASE STATION
+    if (sendCmd && receivedFromSerial) {
+      
+      uint8_t pl=strlen((char*)(&cmd[i]));
+      PRINT_CSTSTR("%s","Sending. Length is ");
+      PRINT_VALUE("%d",pl);
+      PRINTLN;
+      PRINT_STR("%s",(char*)(&cmd[i]));
+      PRINTLN;
+      
+#ifdef LORA_LAS
+      if (forTmpDestAddr>=0)
+        e = loraLAS.sendData(forTmpDestAddr, (uint8_t*)(&cmd[i]), pl, 0, 
+              LAS_FIRST_DATAPKT+LAS_LAST_DATAPKT, withAck | withTmpAck);
+      else
+        e = loraLAS.sendData(dest_addr, (uint8_t*)(&cmd[i]), pl, 0,
+              LAS_FIRST_DATAPKT+LAS_LAST_DATAPKT, withAck | withTmpAck);
+      
+      if (e==TOA_OVERUSE) {
+          PRINT_CSTSTR("%s","^$Not sent, TOA_OVERUSE\n");  
+      }
+      
+      if (e==LAS_LBT_ERROR) {
+          PRINT_CSTSTR("%s","^$LBT error\n");  
+      }      
+      
+      if (e==LAS_SEND_ERROR || e==LAS_ERROR) {
+          PRINT_CSTSTR("%s","Send error\n");  
+      }      
+#else  
+      // only the DIFS/SIFS mechanism
+      // we chose to have a complete control code insytead of using the implementation of the LAS class
+      // for better debugging and tests features if needed.    
+      PRINT_CSTSTR("%s","Payload size is ");  
+      PRINT_VALUE("%d",pl);
+      PRINTLN;
+      
+      uint32_t toa = sx1272.getToA(pl+OFFSET_PAYLOADLENGTH);      
+      PRINT_CSTSTR("%s","ToA is w/4B header ");
+      PRINT_VALUE("%d",toa);
+      PRINTLN;
+      
+      long startSend, endSend;
+      long startSendCad;
+      
+      startSendCad=millis();
 
-		if (document["status"].IsString())
-			printf("^$status = %s\n", document["status"].GetString());
-		
-		if (document["dst"].IsInt())
-			printf("^$dst = %d\n", document["dst"].GetInt());
-      	
-      	if (document["data"].IsString())
-			printf("^$data = %s\n", document["data"].GetString());
-		
-		// check if it is a valid send request
-		if (document["status"]=="send_request" && document["dst"].IsInt()) {
-			
-			// disable extended IFS behavior, just a small number of CAD
-			extendedIFS=false;
-			
-			if (!CarrierSense(true)) {
-				
-				char time_buffer[30];
-				int millisec;
-				struct tm* tm_info;
-				struct timeval tv;
-						
-				gettimeofday(&tv, NULL);
-				
-				sx1272.setPacketType(PKT_TYPE_DATA);
-				
-				e = sx1272.sendPacketTimeout(document["dst"].GetInt(), (uint8_t*)document["data"].GetString(), document["data"].GetStringLength(), 10000);
-				
-				PRINT_CSTSTR("%s","Packet sent, state ");
-	      		PRINT_VALUE("%d",e);
-	      		PRINTLN;
-				
-				if (!e)
-					document["status"].SetString("sent", document.GetAllocator());
-				else
-					document["status"].SetString("sent_fail", document.GetAllocator());	
-					
-				document.Accept(writer);
-				printf("^$JSON record: %s\n", json_record_buffer.GetString());
-				FLUSHOUTPUT;
-			
-				// delete this request
-				// even if transmission is not successful
-				free(json_entry[dl_line_index]);
-				
-				fp = fopen("downlink/downlink-sent.txt","a");
-				
-				if (fp) {
-					
-					// Round to nearest millisec
-					millisec = lrint(tv.tv_usec/1000.0); 
-					
-					// Allow for rounding up to nearest second
-					if (millisec>=1000) { 
-						millisec -=1000;
-						tv.tv_sec++;
-					}
-					
-					tm_info = localtime(&tv.tv_sec);
-					strftime(time_buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);
-					
-					fprintf(fp, "%s.%03d %s\n", time_buffer, millisec, json_record_buffer.GetString());
-					
-					fclose(fp);
-				}
-				// skip it in all cases
-				dl_line_index++;
-			}
-			else {
-				printf("^$DELAYED: busy channel\n");	
-				// here we will retry later because of a busy channel
-			}
-			//set back extendedIFS
-			extendedIFS=true;
-		}
-		else {
-			printf("^$DISCARDING: not valid send_request\n");
-			// skip it
-			dl_line_index++;    	
-		}
-		
-    	if (dl_line_index==dl_total_line) {
-    		hasDownlinkEntry=false;
-    		printf("^$-----------------------------------------------------\n");
-    		printf("^$NO MORE PENDING send_request\n");
-    	}
-    	    	
-    	lastDownlinkSendTime=millis();
-    }
-  }	
+      CarrierSense();
+
+      startSend=millis();
+
+#ifdef WITH_SEND_LED
+      digitalWrite(SEND_LED, HIGH);
 #endif
+
+      PRINT_CSTSTR("%s","Packet number ");
+      PRINT_VALUE("%d",sx1272._packetNumber);
+      PRINTLN;
+
+      // to test with appkey + encrypted
+      //sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_WAPPKEY | PKT_FLAG_DATA_ENCRYPTED);
+      
+      sx1272.setPacketType(PKT_TYPE_DATA); 
+        
+      if (forTmpDestAddr>=0) {
+        if (withAck)
+          e = sx1272.sendPacketTimeoutACK(forTmpDestAddr, (uint8_t*)(&cmd[i]), pl, 10000);  
+        else    
+          e = sx1272.sendPacketTimeout(forTmpDestAddr, (uint8_t*)(&cmd[i]), pl, 10000);
+      }
+      else {
+        if (withAck || withTmpAck)   
+          e = sx1272.sendPacketTimeoutACK(dest_addr, (uint8_t*)(&cmd[i]), pl, 10000);    
+         else 
+          e = sx1272.sendPacketTimeout(dest_addr, (uint8_t*)(&cmd[i]), pl, 10000);
+      }
+
+#ifdef WITH_SEND_LED
+      digitalWrite(SEND_LED, LOW);
+#endif
+
+      endSend=millis();  
+      
+      if ((withAck || withTmpAck) && !e) {
+        sx1272.getSNR();
+        sx1272.getRSSIpacket();
+         
+        sprintf(sprintf_buf,"--- rxlora ACK. SNR=%d RSSIpkt=%d\n", 
+                   sx1272._SNR,
+                   sx1272._RSSIpacket);
+                   
+        PRINT_STR("%s",sprintf_buf);
+        
+        PRINT_CSTSTR("%s","LoRa (ACK) Sent in ");  
+      }
+      else      
+        PRINT_CSTSTR("%s","LoRa Sent in ");
+      
+      PRINT_VALUE("%ld",endSend-startSend);
+      PRINTLN;
+      
+      PRINT_CSTSTR("%s","LoRa Sent w/CAD in ");
+      PRINT_VALUE("%ld",endSend-startSendCad);
+      PRINTLN;      
+#endif    
+      PRINT_CSTSTR("%s","Packet sent, state ");
+      PRINT_VALUE("%d",e);
+      PRINTLN;
+      //Serial.flush();
+    }
+#endif 
+// ONLY FOR END-DEVICE SENDING MESSAGES TO BASE STATION
+///END/////////////////////////////////////////////////
+
+  } // end of "if (receivedFromSerial || receivedFromLoRa)"
 } 
 
 // for Linux-based gateway only
@@ -1630,17 +1720,14 @@ int main (int argc, char *argv[]){
       {"sf", required_argument, 0,    'e' }, 
       {"raw", no_argument, 0,         'f' },
       {"freq", required_argument, 0,  'g' },
-      {"ch", required_argument, 0,    'h' },       
-      {"sw", required_argument, 0,    'i' },
-#ifdef DOWNLINK      
-      {"ndl", no_argument, 0,    'j' },       
-#endif                            
+      {"ch", required_argument, 0,    'h' }, 
+      {"sw", required_argument, 0,    'i' },                       
       {0, 0, 0,  0}
   };
   
   int long_index=0;
   
-  while ((opt = getopt_long(argc, argv,"a:bc:d:e:fg:h:i:j", 
+  while ((opt = getopt_long(argc, argv,"a:bc:d:e:fg:h:i:", 
                  long_options, &long_index )) != -1) {
       switch (opt) {
            case 'a' : loraMode = atoi(optarg);
@@ -1672,14 +1759,10 @@ int main (int argc, char *argv[]){
                       loraChannelIndex=loraChannelIndex-STARTING_CHANNEL;  
                       loraChannel=loraChannelArray[loraChannelIndex]; 
                break;      
-           case 'i' : { uint8_t sw=atoi(optarg);
+           case 'i' : uint8_t sw=atoi(optarg);
                       // assume that sw is expressed in hex value
-                      optSW = (sw / 10)*16 + (sw % 10); }
-               break;
-#ifdef DOWNLINK                       
-			case 'j' : optNDL=true;
-               break;    
-#endif                                                     
+                      optSW = (sw / 10)*16 + (sw % 10);
+               break;                                   
            //default: print_usage(); 
            //    exit(EXIT_FAILURE);
       }

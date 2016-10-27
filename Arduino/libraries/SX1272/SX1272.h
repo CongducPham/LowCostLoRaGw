@@ -243,6 +243,10 @@ const uint32_t CH_10_900 = 0xE72B85; // channel 10, central freq = 924.68MHz
 const uint32_t CH_11_900 = 0xE7B5C2; // channel 11, central freq = 926.84MHz
 const uint32_t CH_12_900 = 0xE4C000; // default channel 915MHz, the module is configured with it
 
+// added by C. Pham
+const uint32_t CH_00_433 = 0x6C4000; // 433.0MHz
+// end
+
 //LORA BANDWIDTH:
 // modified by C. Pham
 const uint8_t SX1272_BW_125 = 0x00;

@@ -1,7 +1,8 @@
 /*
  *  temperature sensor on analog 8 to test the LoRa gateway
- *
- *  Copyright (C) 2015 Congduc Pham, University of Pau, France
+ *  extended version with AES and custom Carrier Sense features
+ *  
+ *  Copyright (C) 2016 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,21 +19,20 @@
  *
  *****************************************************************************
  */
- 
+#include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// please uncomment only 1 choice 
-//
-// it seems that both HopeRF and Modtronix board use the PA_BOOST pin and not the RFO. Therefore, for these
-// boards we set the initial power to 'x' and not 'M'. This is the purpose of the define statement 
+// please uncomment only 1 choice
 //
 // uncomment if your radio is an HopeRF RFM92W or RFM95W
 //#define RADIO_RFM92_95
-// uncomment if your radio is a Modtronix inAir9B (the one with +20dBm features), if inAir9, leave commented
+// uncomment if your radio is a Modtronix inAirB (the one with +20dBm features), if inAir9, leave commented
 //#define RADIO_INAIR9B
+// uncomment if you only know that it has 20dBm feature
+//#define RADIO_20DBM
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 // IMPORTANT
@@ -40,55 +40,93 @@
 // please uncomment only 1 choice
 #define BAND868
 //#define BAND900
+//#define BAND433
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef _VARIANT_ARDUINO_DUE_X_
+///////////////////////////////////////////////////////////////////
+// COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
+// ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
+#if not defined _VARIANT_ARDUINO_DUE_X_ && not defined __SAMD21G18A__
 #define WITH_EEPROM
 #endif
 #define WITH_APPKEY
 #define FLOAT_TEMP
-//#define NEW_DATA_FIELD
+#define NEW_DATA_FIELD
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 #define CUSTOM_CS
 //#define LORA_LAS
-//#define WITH_AES
+#define WITH_AES
+#define LORAWAN
+#define TO_LORAWAN_GW
 //#define WITH_ACK
+///////////////////////////////////////////////////////////////////
 
-#ifdef WITH_EEPROM
-#include <EEPROM.h>
-#endif
-
-#ifdef WITH_ACK
-#define NB_RETRIES 2
-#endif
-
-#define DEFAULT_DEST_ADDR 1
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE LORA MODE, NODE ADDRESS 
 #define LORAMODE  1
 #define node_addr 6
-#define field_index 3
-//#define node_addr 10
-//#define field_index 2
-//#define node_addr 3
-//#define field_index 1
+//////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 4
+#define field_index 3
+///////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE READ PIN AND THE POWER PIN FOR THE TEMP. SENSOR
 #define TEMP_PIN_READ  A0
-// use digital 8 to power the temperature sensor
+// use digital 8 to power the temperature sensor if needed
 #define TEMP_PIN_POWER 8
-  
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__ // Nexus board from Ideetron is a Mini
-  #define SX1272_POWER 9
-  // the Pro Mini works in 3.3V
-  #define TEMP_SCALE  3300.0
-#else // ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MEGA2560
-  // the SX1272 will be powered by the 3.3V pin
-  #define TEMP_SCALE  5000.0
-#endif
+///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
 unsigned int idlePeriodInMin = 10;
 ///////////////////////////////////////////////////////////////////
+
+#ifdef WITH_APPKEY
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE APPKEY, BUT IF GW CHECKS FOR APPKEY, MUST BE
+// IN THE APPKEY LIST MAINTAINED BY GW.
+uint8_t my_appKey[4]={5, 6, 7, 8};
+///////////////////////////////////////////////////////////////////
+#endif
+
+// we wrapped Serial.println to support the Arduino Zero or M0
+#if defined __SAMD21G18A__
+#define PRINTLN                   SerialUSB.println("")              
+#define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
+#define PRINT_STR(fmt,param)      SerialUSB.print(param)
+#define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
+#define PRINT_HEX(fmt,param)      SerialUSB.print(param,HEX)
+#define FLUSHOUTPUT               SerialUSB.flush();
+#else
+#define PRINTLN                   Serial.println("")
+#define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
+#define PRINT_STR(fmt,param)      Serial.print(param)
+#define PRINT_VALUE(fmt,param)    Serial.print(param)
+#define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
+#define FLUSHOUTPUT               Serial.flush();
+#endif
+
+#ifdef WITH_EEPROM
+#include <EEPROM.h>
+#endif
+
+#define DEFAULT_DEST_ADDR 1
+
+#ifdef WITH_ACK
+#define NB_RETRIES 2
+#endif
+
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__ || defined __SAMD21G18A__
+  // these boards work in 3.3V
+  // Nexus board from Ideetron is a Mini
+  #define TEMP_SCALE  3300.0
+#else // ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MEGA2560
+  #define TEMP_SCALE  5000.0
+#endif
 
 #ifdef LOW_POWER
 // this is for the Teensy31/32
@@ -101,18 +139,40 @@ SnoozeBlock sleep_config;
 // you need the LowPower library from RocketScream
 // https://github.com/rocketscream/Low-Power
 #include "LowPower.h"
+
+#ifdef __SAMD21G18A__
+// use the RTC library
+#include "RTCZero.h"
+/* Create an rtc object */
+RTCZero rtc;
+#endif
 #endif
 unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
 
 #ifdef WITH_AES
-#include <AES.h>
-#include "./printf.h"
 
-AES aes;
-#define AES_KEY_LENGTH  128
-byte *aes_key = (unsigned char*)"0123456789010123";
-unsigned long long int aes_iv = 36753562;
+#include "AES-128_V10.h"
+#include "Encrypt_V31.h"
+
+unsigned char AppSkey[16] = {
+  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
+  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
+};
+
+unsigned char NwkSkey[16] = {
+  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
+  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
+};
+
+unsigned char DevAddr[4] = {
+  0x00, 0x00, 0x00, node_addr
+};
+
+uint16_t Frame_Counter_Up = 0x0000;
+// we use the same convention than for LoRaWAN as we will use the same AES convention
+// See LoRaWAN specifications
+unsigned char Direction = 0x00;
 #endif
 
 #ifdef LORA_LAS
@@ -126,24 +186,12 @@ unsigned long lastTransmissionTime=0;
 unsigned long delayBeforeTransmit=0;
 char float_str[20];
 uint8_t message[100];
-// receive window
-uint16_t w_timer=1000;
 
+#ifdef TO_LORAWAN_GW
+int loraMode=1;
+#else
 int loraMode=LORAMODE;
-
-#ifdef CUSTOM_CS
-unsigned long startDoCad, endDoCad;
-bool extendedIFS=true;
-bool RSSIonSend=true;
-uint8_t SIFS_cad_number;
-uint8_t send_cad_number;
-uint8_t SIFS_value[11]={0, 183, 94, 44, 47, 23, 24, 12, 12, 7, 4};
-uint8_t CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
 #endif
-
-uint8_t my_appKey[4]={5, 6, 7, 8};
-// not used for the moment
-uint8_t DevId[4]={0x01, 0x02, 0x03, 0x04};
 
 #ifdef WITH_EEPROM
 struct sx1272config {
@@ -157,7 +205,18 @@ struct sx1272config {
 sx1272config my_sx1272config;
 #endif
 
+// receive window
+uint16_t w_timer=1000;
+
 #ifdef CUSTOM_CS
+unsigned long startDoCad, endDoCad;
+bool extendedIFS=true;
+bool RSSIonSend=true;
+uint8_t SIFS_cad_number;
+uint8_t send_cad_number;
+uint8_t SIFS_value[11]={0, 183, 94, 44, 47, 23, 24, 12, 12, 7, 4};
+uint8_t CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
+
 // we could use the CarrierSense function added in the SX1272 library, but it is more convenient to duplicate it here
 // so that we could easily modify it for testing
 void CarrierSense() {
@@ -174,12 +233,12 @@ void CarrierSense() {
         e = sx1272.doCAD(send_cad_number);
         endDoCad=millis();
         
-        Serial.print(F("--> CAD duration "));
-        Serial.print(endDoCad-startDoCad);
-        Serial.println();
+        PRINT_CSTSTR("%s","--> CAD duration ");
+        PRINT_VALUE("%ld",endDoCad-startDoCad);
+        PRINTLN;
         
         if (!e) {
-          Serial.print(F("OK1\n"));
+          PRINT_CSTSTR("%s","OK1\n");
           
           if (extendedIFS)  {          
             // wait for random number of CAD
@@ -189,11 +248,11 @@ void CarrierSense() {
             uint8_t w = rand() % 8 + 1;
 #endif
   
-            Serial.print(F("--> waiting for "));
-            Serial.print(w);
-            Serial.print(F(" CAD = "));
-            Serial.print(CAD_value[loraMode]*w);
-            Serial.println();
+            PRINT_CSTSTR("%s","--> waiting for ");
+            PRINT_VALUE("%d",w);
+            PRINT_CSTSTR("%s"," CAD = ");
+            PRINT_VALUE("%d",CAD_value[loraMode]*w);
+            PRINTLN;
             
             delay(CAD_value[loraMode]*w);
             
@@ -202,20 +261,20 @@ void CarrierSense() {
             e = sx1272.doCAD(send_cad_number);
             endDoCad=millis();
  
-            Serial.print(F("--> CAD duration "));
-            Serial.print(endDoCad-startDoCad);
-            Serial.println();
+            PRINT_CSTSTR("%s","--> CAD duration ");
+            PRINT_VALUE("%ld",endDoCad-startDoCad);
+            PRINTLN;
         
             if (!e)
-              Serial.print(F("OK2"));            
+              PRINT_CSTSTR("%s","OK2");            
             else
-              Serial.print(F("###2"));
+              PRINT_CSTSTR("%s","###2");
             
-            Serial.println();
+            PRINTLN;
           }              
         }
         else {
-          Serial.print(F("###1\n"));  
+          PRINT_CSTSTR("%s","###1\n");  
 
           // wait for random number of DIFS
 #ifdef ARDUINO                
@@ -224,15 +283,15 @@ void CarrierSense() {
           uint8_t w = rand() % 8 + 1;
 #endif
           
-          Serial.print(F("--> waiting for "));
-          Serial.print(w);
-          Serial.print(F(" DIFS (DIFS=3SIFS) = "));
-          Serial.print(SIFS_value[loraMode]*3*w);
-          Serial.println();
+          PRINT_CSTSTR("%s","--> waiting for ");
+          PRINT_VALUE("%d",w);
+          PRINT_CSTSTR("%s"," DIFS (DIFS=3SIFS) = ");
+          PRINT_VALUE("%d",SIFS_value[loraMode]*3*w);
+          PRINTLN;
           
           delay(SIFS_value[loraMode]*3*w);
           
-          Serial.print(F("--> retry\n"));
+          PRINT_CSTSTR("%s","--> retry\n");
         }
 
       } while (e);
@@ -246,22 +305,22 @@ void CarrierSense() {
           
           if (!e) {
           
-            Serial.print(F("--> RSSI "));
-            Serial.print(sx1272._RSSI);       
-            Serial.println("");
+            PRINT_CSTSTR("%s","--> RSSI ");
+            PRINT_VALUE("%d", sx1272._RSSI);
+            PRINTLN;
             
             while (sx1272._RSSI > -90 && rssi_retry_count) {
               
               delay(1);
               sx1272.getRSSI();
-              Serial.print(F("--> RSSI "));
-              Serial.print(sx1272._RSSI);       
-              Serial.println(); 
+              PRINT_CSTSTR("%s","--> RSSI ");
+              PRINT_VALUE("%d",  sx1272._RSSI);       
+              PRINTLN; 
               rssi_retry_count--;
             }
           }
           else
-            Serial.print(F("--> RSSI error\n")); 
+            PRINT_CSTSTR("%s","--> RSSI error\n");
         
           if (!rssi_retry_count)
             carrierSenseRetry=true;  
@@ -277,21 +336,17 @@ void CarrierSense() {
 void setup()
 {
   int e;
-  
-#ifdef ARDUINO_AVR_PRO // add here other boards if you power the lora module with a digital pin
-  // We now use the VCC pin which delivers 3.3v
-  // We observed stability issue when using a digital pin as the current is very limited.
-  // OBSOLETE: on the Pro Mini, we use digital 9 to power the SX1272
-  //pinMode(SX1272_POWER,OUTPUT);
-  //digitalWrite(SX1272_POWER,HIGH); 
-#endif
 
   // for the temperature sensor
   pinMode(TEMP_PIN_READ, INPUT);
   // and to power the temperature sensor
   pinMode(TEMP_PIN_POWER,OUTPUT);
 
-#ifndef LOW_POWER
+#ifdef LOW_POWER
+#ifdef __SAMD21G18A__
+  rtc.begin();
+#endif  
+#else
   digitalWrite(TEMP_PIN_POWER,HIGH);
 #endif
   
@@ -301,24 +356,31 @@ void setup()
 #else  
   // Open serial communications and wait for port to open:
   Serial.begin(38400);
+#ifdef __SAMD21G18A__  
+  SerialUSB.begin(38400);
+#endif  
 #endif  
   // Print a start message
-  Serial.println(F("SX1272 module and Arduino: send packets without ACK"));
+  PRINT_CSTSTR("%s","LoRa temperature sensor, extended version\n");
 
 #ifdef ARDUINO_AVR_PRO
-  Serial.println(F("Arduino Pro Mini detected"));
+  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");
 #endif
 
 #ifdef ARDUINO_AVR_NANO
-  Serial.println(F("Arduino Nano detected"));
+  PRINT_CSTSTR("%s","Arduino Nano detected\n");
 #endif
 
 #ifdef ARDUINO_AVR_MINI
-  Serial.println(F("Arduino MINI/Nexus detected"));
+  PRINT_CSTSTR("%s","Arduino MINI/Nexus detected\n");
 #endif
 
 #ifdef __MK20DX256__
-  Serial.println(F("Teensy31/32 detected"));
+  PRINT_CSTSTR("%s","Teensy31/32 detected\n");
+#endif
+
+#ifdef __SAMD21G18A__ 
+  PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
 #endif
 
   // Power ON the module
@@ -330,12 +392,13 @@ void setup()
 
   // found a valid config?
   if (my_sx1272config.flag1==0x12 && my_sx1272config.flag2==0x34) {
-    Serial.println(F("Get back previous sx1272 config"));
+    PRINT_CSTSTR("%s","Get back previous sx1272 config\n");
 
     // set sequence number for SX1272 library
     sx1272._packetNumber=my_sx1272config.seq;
-    Serial.print(F("Using packet sequence number of "));
-    Serial.println(sx1272._packetNumber);
+    PRINT_CSTSTR("%s","Using packet sequence number of ");
+    PRINT_VALUE("%d", sx1272._packetNumber);
+    PRINTLN;
   }
   else {
     // otherwise, write config and start over
@@ -347,8 +410,9 @@ void setup()
   
   // Set transmission mode and print the result
   e = sx1272.setMode(loraMode);
-  Serial.print(F("Setting Mode: state "));
-  Serial.println(e, DEC);
+  PRINT_CSTSTR("%s","Setting Mode: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
 
   if (loraMode==1)
     w_timer=2500;
@@ -384,16 +448,25 @@ void setup()
 #endif
 
 #ifdef BAND868
-  // Select frequency channel
+#ifdef TO_LORAWAN_GW
+  // Select frequency channel 868.1
+  e = sx1272.setChannel(CH_18_868);
+#else
+  // Select frequency channel 865.2
   e = sx1272.setChannel(CH_10_868);
-#else // assuming #defined BAND900
+#endif
+#elif defined BAND900
   // Select frequency channel
   e = sx1272.setChannel(CH_05_900);
+#elif defined BAND433
+  // to test 433MHz with a radio module working in this band, e.g. inAir4 for instance
+  // Select frequency channel
+  e = sx1272.setChannel(CH_00_433);   
 #endif
-  // just a dirty patch to test 433MHz with a radio module working in this band, e.g. inAir4 for instance
-  //e = sx1272.setChannel(0x6C4000);
-  Serial.print(F("Setting Channel: state "));
-  Serial.println(e, DEC);
+
+  PRINT_CSTSTR("%s","Setting Channel: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
   
   // Select output power (Max, High or Low)
 #if defined RADIO_RFM92_95 || defined RADIO_INAIR9B
@@ -402,16 +475,25 @@ void setup()
   e = sx1272.setPower('M');
 #endif  
 
-  Serial.print(F("Setting Power: state "));
-  Serial.println(e);
+  PRINT_CSTSTR("%s","Setting Power: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
   
   // Set the node address and print the result
   e = sx1272.setNodeAddress(node_addr);
-  Serial.print(F("Setting node addr: state "));
-  Serial.println(e, DEC);
-  
+  PRINT_CSTSTR("%s","Setting node addr: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
+
+#ifdef TO_LORAWAN_GW
+  e = sx1272.setSyncWord(0x34);
+  PRINT_CSTSTR("%s","Set sync word to 0x34 state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
+#endif  
+
   // Print a success message
-  Serial.println(F("SX1272 successfully configured"));
+  PRINT_CSTSTR("%s","SX1272 successfully configured\n");
 
 #ifdef LORA_LAS
   loraLAS.ON(LAS_ON_WRESET);
@@ -471,24 +553,21 @@ void loop(void)
       //  
       temp = value*TEMP_SCALE/1024.0;
     
-      Serial.print(F("Reading "));
-      Serial.println(value);
+      PRINT_CSTSTR("%s","Reading ");
+      PRINT_VALUE("%d", value);
+      PRINTLN;
       
       //temp = temp - 0.5;
       temp = temp / 10.0;
 
-      Serial.print(F("(Temp is "));
-      Serial.println(temp);
+      PRINT_CSTSTR("%s","Temp is ");
+      PRINT_VALUE("%f", temp);
+      PRINTLN;
 
-#ifdef WITH_APPKEY
+#if defined WITH_APPKEY && not defined WITH_AES
       app_key_offset = sizeof(my_appKey);
       // set the app key in the payload
       memcpy(message,my_appKey,app_key_offset);
-#endif
-
-#ifdef WITH_AES
-      // leave room for the real payload length byte
-      app_key_offset++;
 #endif
 
       uint8_t r_size;
@@ -523,63 +602,123 @@ void loop(void)
 #endif
 #endif
 
-      Serial.print(F("Sending "));
-      Serial.println((char*)(message+app_key_offset));
-
-      Serial.print(F("Real payload size is "));
-      Serial.println(r_size);
+      PRINT_CSTSTR("%s","Sending ");
+      PRINT_STR("%s",(char*)(message+app_key_offset));
+      PRINTLN;
+      
+      PRINT_CSTSTR("%s","Real payload size is ");
+      PRINT_VALUE("%d", r_size);
+      PRINTLN;
       
       int pl=r_size+app_key_offset;
       
 #ifdef WITH_AES
-      byte iv[N_BLOCK] ;
-      byte cipher [48] ;
-      aes.set_IV(aes_iv);
-      aes.get_IV(iv);
-
-      // if we encrypt the format is as follows
-      // appkey(4B) size(1B) payload
-      
-      // get back to the real app_key_offset
-      app_key_offset--;
-      // set the real payload size right before the real payload
-      // so that when decrypting, the receiver can know the number of relevant bytes
-      message[app_key_offset]=r_size;
-
+      // if encryption then we DO NOT use appkey
+      //
+      PRINT_STR("%s",(char*)message);
+      PRINTLN;
+      PRINT_CSTSTR("%s","plain payload hex\n");
       for (int i=0; i<pl;i++) {
-        Serial.print(message[i], HEX);
-        Serial.print(" ");
+        if (message[i]<16)
+          PRINT_CSTSTR("%s","0");
+        PRINT_HEX("%X", message[i]);
+        PRINT_CSTSTR("%s"," ");
       }
-      Serial.println();
-        
-      Serial.println(F("Encrypting"));
-      // we encrypt the framing bytes, the appkey, the size and the payload (plus the padding)
-      aes.do_aes_encrypt(message, app_key_offset+1+r_size+1, cipher, aes_key, AES_KEY_LENGTH,iv);
+      PRINTLN; 
 
-      uint8_t enc_s = aes.get_size();
-      Serial.print(F("Encrypted data size is "));
-      Serial.println(enc_s);
-
-      for (int i=0; i<enc_s; i++) {
-        Serial.print(message[i], HEX);
-        Serial.print(" ");
+      PRINT_CSTSTR("%s","Encrypting\n");     
+      PRINT_CSTSTR("%s","encrypted payload\n");
+      Encrypt_Payload((unsigned char*)message, pl, Frame_Counter_Up, Direction);
+      //Print encrypted message
+      for(int i = 0; i < pl; i++)      
+      {
+        if (message[i]<16)
+          PRINT_CSTSTR("%s","0");
+        PRINT_HEX("%X", message[i]);         
+        PRINT_CSTSTR("%s"," ");
       }
-      Serial.println();
+      PRINTLN;   
+
+      // with encryption, we use for the payload a LoRaWAN packet format to reuse available LoRaWAN encryption libraries
+      //
+      unsigned char LORAWAN_Data[256];
+      unsigned char LORAWAN_Package_Length;
+      unsigned char MIC[4];
+      //Unconfirmed data up
+      unsigned char Mac_Header = 0x40;
+      // no ADR, not an ACK and no options
+      unsigned char Frame_Control = 0x00;
+      // with application data so Frame_Port = 1..223
+      unsigned char Frame_Port = 0x01; 
+
+      //Build the Radio Package, LoRaWAN format
+      //See LoRaWAN specification
+      LORAWAN_Data[0] = Mac_Header;
+    
+      LORAWAN_Data[1] = DevAddr[3];
+      LORAWAN_Data[2] = DevAddr[2];
+      LORAWAN_Data[3] = DevAddr[1];
+      LORAWAN_Data[4] = DevAddr[0];
+    
+      LORAWAN_Data[5] = Frame_Control;
+    
+      LORAWAN_Data[6] = (Frame_Counter_Up & 0x00FF);
+      LORAWAN_Data[7] = ((Frame_Counter_Up >> 8) & 0x00FF);
+    
+      LORAWAN_Data[8] = Frame_Port;
+    
+      //Set Current package length
+      LORAWAN_Package_Length = 9;
       
-      printf("\nCIPHER:");
-      aes.printArray(cipher,(bool)false);
-      
-      // message will now contain the serialized cipher data
-      pl=aes.fillArray(cipher,message,(bool)false);
-
-      Serial.print(F("Encrypted data size is "));
-      Serial.println(pl);
-
-      for (int i=0; i<pl;i++) {
-        Serial.print(message[i], HEX);
-        Serial.print(" ");
+      //Load Data
+      for(int i = 0; i < r_size; i++)
+      {
+        // see that we don't take the appkey, just the encrypted data that starts that message[app_key_offset]
+        LORAWAN_Data[LORAWAN_Package_Length + i] = message[i];
       }
-                
+    
+      //Add data Lenth to package length
+      LORAWAN_Package_Length = LORAWAN_Package_Length + r_size;
+    
+      PRINT_CSTSTR("%s","calculate MIC with NwkSKey\n");
+      //Calculate MIC
+      Calculate_MIC(LORAWAN_Data, MIC, LORAWAN_Package_Length, Frame_Counter_Up, Direction);
+    
+      //Load MIC in package
+      for(int i=0; i < 4; i++)
+      {
+        LORAWAN_Data[i + LORAWAN_Package_Length] = MIC[i];
+      }
+    
+      //Add MIC length to package length
+      LORAWAN_Package_Length = LORAWAN_Package_Length + 4;
+    
+      PRINT_CSTSTR("%s","transmitted LoRaWAN-like packet:\n");
+      PRINT_CSTSTR("%s","MHDR[1] | DevAddr[4] | FCtrl[1] | FCnt[2] | FPort[1] | EncryptedPayload | MIC[4]\n");
+      //Print transmitted data
+      for(int i = 0; i < LORAWAN_Package_Length; i++)
+      {
+        if (LORAWAN_Data[i]<16)
+          PRINT_CSTSTR("%s","0");
+        PRINT_HEX("%X", LORAWAN_Data[i]);         
+        PRINT_CSTSTR("%s"," ");
+      }
+      PRINTLN;      
+
+      // copy back to message
+      memcpy(message,LORAWAN_Data,LORAWAN_Package_Length);
+      pl = LORAWAN_Package_Length;
+
+#ifdef LORAWAN
+      PRINT_CSTSTR("%s","end-device uses native LoRaWAN packet format\n");
+      // indicate to SX1272 lib that raw mode at transmission is required to avoid our own packet header
+      sx1272._rawFormat=true;
+#else
+      PRINT_CSTSTR("%s","end-device uses encapsulated LoRaWAN packet format only for encryption\n");
+#endif
+      // in any case, we increment Frame_Counter_Up
+      // even if the transmission will not succeed
+      Frame_Counter_Up++;
 #endif
     
 #ifdef CUSTOM_CS
@@ -591,11 +730,17 @@ void loop(void)
       startSend=millis();
 
 #ifdef WITH_AES
-      // indicate that we have an appkey and that payload is encrypted
-      sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_WAPPKEY | PKT_FLAG_DATA_ENCRYPTED);
+      // indicate that payload is encrypted
+      // DO NOT take into account appkey
+      sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_ENCRYPTED);
 #else
+#ifdef WITH_APPKEY
       // indicate that we have an appkey
       sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_WAPPKEY);
+#else
+      // just a simple data packet
+      sx1272.setPacketType(PKT_TYPE_DATA);
+#endif
 #endif
       
 #ifdef LORA_LAS
@@ -604,16 +749,16 @@ void loop(void)
               LAS_FIRST_DATAPKT+LAS_LAST_DATAPKT, LAS_NOACK);
       
       if (e==TOA_OVERUSE) {
-          Serial.println(F("Not sent, TOA_OVERUSE"));  
+          PRINT_CSTSTR("%s","Not sent, TOA_OVERUSE\n");  
       }
       
       if (e==LAS_LBT_ERROR) {
-          Serial.println(F("LBT error"));  
+          PRINT_CSTSTR("%s","LBT error\n");  
       }      
       
       if (e==LAS_SEND_ERROR || e==LAS_ERROR) {
-          Serial.println(F("Send error"));  
-      }      
+          PRINT_CSTSTR("%s","Send error\n");  
+      }    
 #else 
       // Send message to the gateway and print the result
       // with the app key if this feature is enabled
@@ -624,14 +769,14 @@ void loop(void)
         e = sx1272.sendPacketTimeoutACK(DEFAULT_DEST_ADDR, message, pl);
 
         if (e==3)
-          Serial.println(F("No ACK"));
+          PRINT_CSTSTR("%s","No ACK");
         
         n_retry--;
         
         if (n_retry)
-          Serial.println(F("Retry"));
+          PRINT_CSTSTR("%s","Retry");
         else
-          Serial.println(F("Abort")); 
+          PRINT_CSTSTR("%s","Abort"); 
           
       } while (e && n_retry);          
 #else
@@ -639,41 +784,66 @@ void loop(void)
 #endif
 #endif    
       endSend=millis();
-    
+
+#ifdef LORAWAN
+      // switch back to normal behavior
+      sx1272._rawFormat=false;
+#endif
+          
 #ifdef WITH_EEPROM
       // save packet number for next packet in case of reboot
       my_sx1272config.seq=sx1272._packetNumber;
       EEPROM.put(0, my_sx1272config);
 #endif
+
+      PRINT_CSTSTR("%s","LoRa pkt size ");
+      PRINT_VALUE("%d", pl);
+      PRINTLN;
       
-      Serial.print(F("LoRa pkt seq "));
-      Serial.println(sx1272.packet_sent.packnum);
+      PRINT_CSTSTR("%s","LoRa pkt seq ");
+      PRINT_VALUE("%d", sx1272.packet_sent.packnum);
+      PRINTLN;
     
-      Serial.print(F("LoRa Sent in "));
-      Serial.println(endSend-startSend);
+      PRINT_CSTSTR("%s","LoRa Sent in ");
+      PRINT_VALUE("%ld", endSend-startSend);
+      PRINTLN;
           
-      Serial.print(F("LoRa Sent w/CAD in "));
-#ifdef CUSTOM_CS  
-      Serial.println(endSend-startDoCad);
-#else
-      Serial.println(endSend-sx1272._startDoCad);
-#endif  
-      Serial.print(F("Packet sent, state "));
-      Serial.println(e);
+      PRINT_CSTSTR("%s","LoRa Sent w/CAD in ");
+      PRINT_VALUE("%ld", endSend-sx1272._startDoCad);
+      PRINTLN;
+       
+      PRINT_CSTSTR("%s","Packet sent, state ");
+      PRINT_VALUE("%d", e);
+      PRINTLN;
 
 #ifdef LOW_POWER
-      Serial.print(F("Switch to power saving mode"));
+      PRINT_CSTSTR("%s","Switch to power saving mode\n");
 
       e = sx1272.setSleepMode();
 
       if (!e)
-        Serial.println(F("Successfully switch LoRa module in sleep mode"));
+        PRINT_CSTSTR("%s","Successfully switch LoRa module in sleep mode\n");
       else  
-        Serial.println(F("Could not switch LoRa module in sleep mode"));
-              
-      Serial.flush();
+        PRINT_CSTSTR("%s","Could not switch LoRa module in sleep mode\n");
+        
+      FLUSHOUTPUT
       delay(50);
       
+#ifdef __SAMD21G18A__
+      // For Arduino M0 or Zero we use the built-in RTC
+      //LowPower.standby();
+      rtc.setTime(17, 0, 0);
+      rtc.setDate(1, 1, 2000);
+      rtc.setAlarmTime(17, idlePeriodInMin, 0);
+      // for testing with 20s
+      //rtc.setAlarmTime(17, 0, 20);
+      rtc.enableAlarm(rtc.MATCH_HHMMSS);
+      //rtc.attachInterrupt(alarmMatch);
+      rtc.standbyMode();
+
+      PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
+      FLUSHOUTPUT
+#else
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
 
 #ifdef __MK20DX256__ 
@@ -706,19 +876,23 @@ void loop(void)
           // use the delay function
           delay(LOW_POWER_PERIOD*1000);
 #endif                        
-          Serial.print(".");
-          Serial.flush(); 
+          PRINT_CSTSTR("%s",".");
+          FLUSHOUTPUT; 
           delay(10);                        
       }
       
       delay(50);
+#endif  
+      
 #else
       // use a random part also to avoid collision
-      Serial.println(lastTransmissionTime);
-      Serial.println("Will send next value in");
+      PRINT_VALUE("%ld", lastTransmissionTime);
+      PRINTLN;
+      PRINT_CSTSTR("%s","Will send next value in\n");
       lastTransmissionTime=millis();
       delayBeforeTransmit=idlePeriodInMin*60*1000+random(15,60)*1000;
-      Serial.println(delayBeforeTransmit);
+      PRINT_VALUE("%ld", delayBeforeTransmit);
+      PRINTLN;
   }
 #endif
 
@@ -740,7 +914,7 @@ void loop(void)
                                       tmp_length);
            
            if (v==DSP_DATA) {
-              Serial.println(F("Strange to receive data from LR-BS"));
+              PRINT_CSTSTR("%s","Strange to receive data from LR-BS\n");
            }
          }  
       }

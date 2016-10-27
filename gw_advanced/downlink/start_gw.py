@@ -30,6 +30,14 @@ import os
 global_conf_filename = "global_conf.json"
 local_conf_filename = "local_conf.json"
 
+global_json_array={}
+local_json_array={}
+
+#recover each field different than 0 and call post_processing_gw.py with parameters
+call_string_cpp = "sudo ./lora_gateway"
+call_string_python = " | python post_processing_gw.py"
+call_string_log_gw = ""
+	
 def start_config_from_json() :
 	#open json file to recover values
 	f = open(os.path.expanduser(global_conf_filename),"r")
@@ -40,6 +48,7 @@ def start_config_from_json() :
 	for line in lines :
 		array += line
 	
+	global global_json_array
 	#change it into a python array
 	global_json_array = json.loads(array)
 	
@@ -51,45 +60,73 @@ def start_config_from_json() :
 	for line in lines :
 		array += line
 	
+	global local_json_array
 	#change it into a python array
 	local_json_array = json.loads(array)	
 	
-	#recover each field different than 0 and call post_processing_gw.py with parameters
-	call_string_cpp = "sudo ./lora_gateway"
-	call_string_python = " | python post_processing_gw.py"
-	call_string_log_gw = ""
+	global call_string_cpp
+	global call_string_python
+	global call_string_log_gw
 	
+try:		
 	if global_json_array["ignorecomment"] :
 		call_string_python += " --ignorecomment"
-		
+except KeyError:
+	pass		
+
+try:		
 	if global_json_array["loggw"] :
 		call_string_python += " --loggw"
-		
+except KeyError:
+	pass		
+
+try:		
 	if global_json_array["wappkey"] :
 		call_string_python += " --wappkey"
-		
+except KeyError:
+	pass		
+
+try:		
 	if global_json_array["raw"] :
 		call_string_python += " --raw"
-		
+		call_string_cpp += " --raw"
+except KeyError:
+	pass
+
+try:			
 	if global_json_array["aes"] :
 		call_string_python += " --aes"
-		
+except KeyError:
+	pass
+
+try:			
 	if global_json_array["log_post_processing"] :
 		call_string_log_gw = " | python log_gw.py"
-	
+except KeyError:
+	pass
+
+try:		
 	if global_json_array["mode"] != -1 :
 		call_string_cpp += " --mode %s" % str(global_json_array["mode"])
 	else :
 		call_string_cpp += " --bw %s --cr %s --sf %s" % (str(global_json_array["bw"]),str(global_json_array["cr"]),str(global_json_array["sf"]))
-	
+except KeyError:
+	call_string_cpp += " --mode 1"
+
+try:		
 	if global_json_array["ch"] != -1 :
 		call_string_cpp += " --ch %s" % str(global_json_array["ch"])
 	elif global_json_array["freq"] != -1:
 		call_string_cpp += " --freq %s" % str(global_json_array["freq"])
-		
+except KeyError:
+	pass
+
+try:			
 	if local_json_array["gateway_conf"]["downlink"]==0 :
 		call_string_cpp += " --ndl"	
-		
+except KeyError:
+	pass
+			
 	print call_string_cpp+call_string_python+call_string_log_gw
 	#launch the commands
 	os.system(call_string_cpp + call_string_python + call_string_log_gw)
