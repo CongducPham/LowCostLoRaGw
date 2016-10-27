@@ -8,7 +8,7 @@ Please consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
 - basic version -> gw_advanced: see [gw_advanced folder](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced)
 - gw_advanced -> new cloud management: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md#how-to-update-your-gateway) 
 - gw_advanced w/new cloud management -> downlink features: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/README-downlink.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/README-downlink.md#how-to-update-your-gateway)
-- gw_advanced w/new cloud management or gw_advanced w/downlink -> aes and LoRaWAN features: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes_lorawan/README-aes_lorawan.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes_lorawan/README-aes_lorawan.md.md#how-to-update-your-gateway)
+- gw_advanced w/new cloud management or gw_advanced w/downlink -> aes and LoRaWAN features: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes_lorawan/README-aes_lorawan.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes_lorawan/README-aes_lorawan.md#how-to-update-your-gateway)
 
 Latest gateway version
 ----------------------
