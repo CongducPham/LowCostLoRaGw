@@ -262,7 +262,6 @@ pending_downlink_requests = []
 
 def check_downlink():
 
-	#TODO
 	# - post_processing_gw.py checks and uses downlink/downlink_post.txt as input
 	# - post_processing_gw.py will maintain a list of downlink message requests by reading downlink/downlink_post.txt
 	# - valid requests will be appended to downlink/downlink-post_queued.txt
@@ -661,7 +660,7 @@ while True:
 					f = open(os.path.expanduser(_post_downlink_queued_file),"w")
 					for downlink_request in pending_downlink_requests:
 						f.write("%s" % downlink_request)
-					#TODO: should be write all pending request for this node
+					#TODO: should we write all pending request for this node
 					#or only the first one?
 					#currently, we do only the first one					
 					break;
@@ -745,7 +744,8 @@ while True:
 					cloud_script=_enabled_clouds[cloud_index]
 					print "uploading with "+cloud_script
 					sys.stdout.flush()
-					cmd_arg=cloud_script+" \""+ldata+"\""+" \""+pdata+"\""+" \""+rdata+"\""+" \""+tdata+"\""+" \""+_gwid+"\""
+					cmd_arg=cloud_script+" \""+ldata.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
+					print cmd_arg
 					os.system(cmd_arg) 
 
 				print "--> cloud end"
@@ -859,8 +859,8 @@ while True:
 								cloud_script=_cloud_for_lorawan_encrypted_data[cloud_index]
 								print "uploading with "+cloud_script
 								sys.stdout.flush()
-								#TODO: pdata should be updated for the correct data length
-								cmd_arg=cloud_script+" \""+lorapktstr_b64+"\""+" \""+pdata+"\""+" \""+rdata+"\""+" \""+tdata+"\""+" \""+_gwid+"\""
+								cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
+								print cmd_arg
 								os.system(cmd_arg) 
 							print "--> LoRaWAN encrypted cloud end"					
 						
@@ -905,17 +905,20 @@ while True:
 						if len(_cloud_for_encrypted_data)==0:
 							print "--> discard encrypted data"
 						else:					
+							#update pdata with new data length
+							pdata="%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,datalen,SNR,RSSI)
+							
 							#loop over all enabled clouds to upload data
 							#once again, it is up to the corresponding cloud script to handle the data format
-							#
+							#							
 							for cloud_index in range(0,len(_cloud_for_encrypted_data)):
 								
 								print "--> encrypted cloud[%d]" % cloud_index
 								cloud_script=_cloud_for_encrypted_data[cloud_index]
 								print "uploading with "+cloud_script
 								sys.stdout.flush()
-								#TODO: pdata should be updated for the correct data length
-								cmd_arg=cloud_script+" \""+lorapktstr_b64+"\""+" \""+pdata+"\""+" \""+rdata+"\""+" \""+tdata+"\""+" \""+_gwid+"\""
+								cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
+								print cmd_arg
 								os.system(cmd_arg) 
 							print "--> encrypted cloud end"	
 			else:
