@@ -803,7 +803,8 @@ while True:
 					print "Header[dst=%d ptype=0x%.2X src=%d seq=%d]" % (dst,ptype,src,seq)
 					#now we read datalen-4 (the header length) bytes in our line buffer
 					fillLinebuf(datalen-HEADER_SIZE)
-					datalen=datalen-HEADER_SIZE				
+					datalen=datalen-HEADER_SIZE
+					pdata="%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,datalen,SNR,RSSI)				
 				
 				#LoRaWAN uses the MHDR(1B)
 				#----------------------------

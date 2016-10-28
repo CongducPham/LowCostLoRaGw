@@ -57,22 +57,28 @@ def loraWAN_process_pkt(lorapkt):
 		
 if __name__ == "__main__":
 	
-	#we assume that the input frame is given in base64 format
-	lorapktstr_b64=sys.argv[1]
+	argc=len(sys.argv)
 	
-	pdata=sys.argv[2]
+	if argc>1:
+		#we assume that the input frame is given in base64 format
+		lorapktstr_b64=sys.argv[1]
+	else:
+		sys.exit("loraWAN.py needs at least a base64 encoded string argument")
 	
-	arr = map(int,pdata.split(','))
-	dst=arr[0]
-	ptype=arr[1]
-	ptype=PKT_TYPE_DATA			
-	src=arr[2]
-	seq=arr[3]
-	datalen=arr[4]
-	SNR=arr[5]
-	RSSI=arr[6]
-	
-	rdata=sys.argv[3]
+	if argc>2:	
+		pdata=sys.argv[2]
+		arr = map(int,pdata.split(','))
+		dst=arr[0]
+		ptype=arr[1]
+		ptype=PKT_TYPE_DATA			
+		src=arr[2]
+		seq=arr[3]
+		datalen=arr[4]
+		SNR=arr[5]
+		RSSI=arr[6]
+
+	if argc>3:	
+		rdata=sys.argv[3]
 	
 	lorapktstr=base64.b64decode(lorapktstr_b64)
 	
@@ -87,8 +93,10 @@ if __name__ == "__main__":
 		print '?'+plain_payload
 	else:	
 		print "?plain payload is : "+plain_payload
-		print "^p%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,len(plain_payload),SNR,RSSI)
-		print "^r"+rdata
+		if argc>2:
+			print "^p%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,len(plain_payload),SNR,RSSI)
+		if argc>3:
+			print "^r"+rdata
 		print "\xFF\xFE"+plain_payload
 
 		

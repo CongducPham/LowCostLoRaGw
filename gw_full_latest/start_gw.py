@@ -68,64 +68,64 @@ def start_config_from_json() :
 	global call_string_python
 	global call_string_log_gw
 	
-try:		
-	if global_json_array["ignorecomment"] :
-		call_string_python += " --ignorecomment"
-except KeyError:
-	pass		
-
-try:		
-	if global_json_array["loggw"] :
-		call_string_python += " --loggw"
-except KeyError:
-	pass		
-
-try:		
-	if global_json_array["wappkey"] :
-		call_string_python += " --wappkey"
-except KeyError:
-	pass		
-
-try:		
-	if global_json_array["raw"] :
-		call_string_python += " --raw"
-		call_string_cpp += " --raw"
-except KeyError:
-	pass
-
-try:			
-	if global_json_array["aes"] :
-		call_string_python += " --aes"
-except KeyError:
-	pass
-
-try:			
-	if global_json_array["log_post_processing"] :
-		call_string_log_gw = " | python log_gw.py"
-except KeyError:
-	pass
-
-try:		
-	if global_json_array["mode"] != -1 :
-		call_string_cpp += " --mode %s" % str(global_json_array["mode"])
-	else :
-		call_string_cpp += " --bw %s --cr %s --sf %s" % (str(global_json_array["bw"]),str(global_json_array["cr"]),str(global_json_array["sf"]))
-except KeyError:
-	call_string_cpp += " --mode 1"
-
-try:		
-	if global_json_array["ch"] != -1 :
-		call_string_cpp += " --ch %s" % str(global_json_array["ch"])
-	elif global_json_array["freq"] != -1:
-		call_string_cpp += " --freq %s" % str(global_json_array["freq"])
-except KeyError:
-	pass
-
-try:			
-	if local_json_array["gateway_conf"]["downlink"]==0 :
-		call_string_cpp += " --ndl"	
-except KeyError:
-	pass
+	try:		
+		if global_json_array["ignorecomment"] :
+			call_string_python += " --ignorecomment"
+	except KeyError:
+		pass		
+	
+	try:		
+		if global_json_array["loggw"] :
+			call_string_python += " --loggw"
+	except KeyError:
+		pass		
+	
+	try:		
+		if global_json_array["wappkey"] :
+			call_string_python += " --wappkey"
+	except KeyError:
+		pass		
+	
+	try:		
+		if global_json_array["raw"] :
+			call_string_python += " --raw"
+			call_string_cpp += " --raw"
+	except KeyError:
+		pass
+	
+	try:			
+		if global_json_array["aes"] :
+			call_string_python += " --aes"
+	except KeyError:
+		pass
+	
+	try:			
+		if global_json_array["log_post_processing"] :
+			call_string_log_gw = " | python log_gw.py"
+	except KeyError:
+		pass
+	
+	try:		
+		if global_json_array["mode"] != -1 :
+			call_string_cpp += " --mode %s" % str(global_json_array["mode"])
+		else :
+			call_string_cpp += " --bw %s --cr %s --sf %s" % (str(global_json_array["bw"]),str(global_json_array["cr"]),str(global_json_array["sf"]))
+	except KeyError:
+		call_string_cpp += " --mode 1"
+	
+	try:		
+		if global_json_array["ch"] != -1 :
+			call_string_cpp += " --ch %s" % str(global_json_array["ch"])
+		elif global_json_array["freq"] != -1:
+			call_string_cpp += " --freq %s" % str(global_json_array["freq"])
+	except KeyError:
+		pass
+	
+	try:			
+		if local_json_array["gateway_conf"]["downlink"]==0 :
+			call_string_cpp += " --ndl"	
+	except KeyError:
+		pass
 			
 	print call_string_cpp+call_string_python+call_string_log_gw
 	#launch the commands

@@ -901,7 +901,7 @@ frame_b64 contains the encrypted LoRaWAN packet in base64 format while data_b64 
 Example 8: use loraWAN.py to decrypt both encapsulated and native encryted LoRaWAN packet
 =========================================================================================
 
-Once the LoRaWAN packet is stored in base64 format (frame_b64) in the cloud, it can be decrypted by the final application that knows both NwkSKey and AppSKey. We provide an exemple in python with the loraWAN.py script that can be called from the command line given the base64-encoded packet (frame_b64), the packet info string (pdata) and the radio info string (rdata) as parameters:
+Once the LoRaWAN packet is stored in base64 format (frame_b64) in the cloud, it can be decrypted by the final application that knows both NwkSKey and AppSKey. We provide an exemple in python with the loraWAN.py script that can be called from the command line given a mandatory base64-encoded string argument (frame_b64) and 2 optional arguments, the packet info string (pdata) and the radio info string (rdata), as parameters:
 
 	> python loraWAN.py "QAYAAAAAAAABTynnSXehwueB5hamaP11aHQ=" "1,20,6,0,26,8,-45" "125,5,12"
 	?loraWAN: valid MIC
@@ -951,7 +951,7 @@ Once the application has the plain payload, it can further push the plain data i
 	ThingSpeak: returned code from server is 218
 	--> cloud end
 
-loraWAN.py set the packet type and the data length to the appropriate value for post_processing_gw.py. post_processing_gw.py uses exactely the same cloud configuration than a normal gateway would have. Note the 2 '?' in front of the plain data. These are normally the data prefix \xFF\xFE inserted by the lora_gateway program and emulated by loraWAN.py. The '?' in front of the other lines indicate to post_processing_gw.py that these lines should be ignored.
+If you use this feature where post_processing_gw.py takes its input from loraWAN.py, **you have to pass at least 2 arguments**: the base64-encoded string and the packet info string. loraWAN.py set the packet type and the data length to the appropriate value for post_processing_gw.py. post_processing_gw.py uses exactely the same cloud configuration than a normal gateway would have. Note the 2 '?' in front of the plain data. These are normally the data prefix \xFF\xFE inserted by the lora_gateway program and emulated by loraWAN.py. The '?' in front of the other lines indicate to post_processing_gw.py that these lines should be ignored.
 
 List of new files
 =================

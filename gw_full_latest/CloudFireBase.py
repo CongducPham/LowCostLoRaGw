@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright 2015 Congduc Pham, University of Pau, France.
+# Copyright 2016 Congduc Pham, University of Pau, France.
 # 
 # Congduc.Pham@univ-pau.fr
 #
@@ -34,8 +34,6 @@ import sys
 
 #change here for your own firebase url when you have one
 #firebase_database='https://XXXXXXXXXXX.firebaseio.com'
-
-firebase_database='https://sweltering-torch-4818.firebaseio.com'
 
 # didn't get a response from firebase server?
 connection_failure = False
