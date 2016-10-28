@@ -54,7 +54,7 @@
 			"script":"python CloudFireBaseAES.py",
 			"type":"iotcloud",			
 			"write_key":"",
-			"enabled":true			
+			"enabled":false			
 		}
 	],
 	"lorawan_encrypted_clouds" : [
@@ -63,7 +63,7 @@
 			"script":"python CloudFireBaseLWAES.py",
 			"type":"iotcloud",			
 			"write_key":"",
-			"enabled":true			
+			"enabled":false			
 		}
 	]	
 }

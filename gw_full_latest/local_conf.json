@@ -5,7 +5,7 @@
 	"ref_longitude" : "",
 	"dht22" : 0,
 	"dht22_mongo": false,
-	"downlink" : 60
+	"downlink" : 0
 	},
 	"log_conf" : {
 		"log_weekly" : false

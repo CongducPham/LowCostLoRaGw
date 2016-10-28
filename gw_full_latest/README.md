@@ -3,23 +3,35 @@ Low-cost LoRa gateway with Raspberry
 
 Please consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
 
-**This is the description of the basic version of the low-cost gateway. There is an advanced version that will upgrade some files. Look at the [gw_advanced folder](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced) and follow instructions.** With the advanced version, you can then add new updates (such as new cloud management, downlink features, AES encryption and limited LoRaWAN features) in an incremental way if you want to do so. The update/upgrade steps are as follows: 
+**This is the description of the basic version of the low-cost gateway. There is an advanced version that will upgrade some files. Look at the [gw_advanced folder](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced) and follow instructions.** With the advanced version, you can then add new updates (such as new cloud management, downlink features, AES encryption and limited LoRaWAN features) in an incremental way if you want to do so. The update/upgrade steps are as follows: basic -> gw_advanced -> new cloud mngt -> downlink -> AES and LoRaWAN.
 
 - basic version -> gw_advanced: see [gw_advanced folder](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced)
 - gw_advanced -> new cloud management: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md#how-to-update-your-gateway) 
 - gw_advanced w/new cloud management -> downlink features: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/README-downlink.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/README-downlink.md#how-to-update-your-gateway)
-- gw_advanced w/new cloud management or gw_advanced w/downlink -> aes and LoRaWAN features: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes-lorawan/README-aes_lorawan.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes-lorawan/README-aes_lorawan.md.md#how-to-update-your-gateway)
+- gw_advanced w/new cloud management or gw_advanced w/downlink -> aes and LoRaWAN features: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes_lorawan/README-aes_lorawan.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes_lorawan/README-aes_lorawan.md#how-to-update-your-gateway)
+
+Latest gateway version (recommended for new users)
+--------------------------------------------------
+
+The full, latest version of the low-cost gateway is available in the gw_full_latest folder. It only contains the gateway control and post-processing software. You may need to install required Raspbian Jessie packages as explained in the README file of the various updates.
+
+To get directly to the full, latest gateway version, (i) simply download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or (ii) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. See the installation procedure described [below](https://github.com/CongducPham/LowCostLoRaGw#install-the-low-level-lora-gateway) to adapt them to the the gw_full_latest folder.
+
+Then, in the script folder, run new_config_gw.sh to configure your gateway, as described [here](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced#configure-your-gateway-with-config_gwsh).
+
+By default both local_conf.json and global_conf.json configure the gateway with a simple behavior: LoRa mode 1 (BW125SF12), no DHT sensor in gateway (so no MongoDB for DHT sensor), no downlink, no AES, no raw mode. clouds.json enables only the ThingSpeak demo channel (even the local MongiDB storage is disabled). You can customize your gateway later when you have more cloud accounts and when you know better what features you want to enable.
 
 **NEW** 
 =======
 
-- Both end-device and gateway support limited LoRaWAN functionalities
+- new encryption and native LoRaWAN frame format
 	- **needs at least the new cloud management version** and the latest [lora_gateway.cpp](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/lora_gateway.cpp)
-	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes-lorawan/README-aes_lorawan.md)
-	- end-device can send LoRaWAN packet
+	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes_lorawan/README-aes_lorawan.md)
+	- end-device can send native LoRaWAN packets
 	- low-level gateway provides raw output for post_processing_gw.py to handle LoRaWAN packets
-- Arduino code for gateway and interactive end-device are now separated
-	- old version is still in folder Arduino_LoRa_Gateway_1_4 and will not be maintained anymore. It will stay at v1.4
+- new Arduino code for gateway and interactive end-device
+	- code for gateway and interactive end-device are now separated in 2 sketches
+	- the old version is still in folder Arduino_LoRa_Gateway_1_4 and will not be maintained anymore. It will stay at v1.4
 	- Arduino_LoRa_Gateway now contains the gateway code. It is equivalent, in previous version v1.4, to compilation with IS_RCV_GATEWAY.
 	- Arduino_LoRa_InteractiveDevice contains the code for an interactive end-device.  It is equivalent, in previous version v1.4, to compilation with IS_SEND_GATEWAY
 - new cloud management approach: simpler, more generic
@@ -325,15 +337,15 @@ WARNING
 - Although 900MHz band is supported (mostly for the US ISM band), the library does not implement the frequency hopping mechanism.
 
 
-NEW: Tutorial materials
+Tutorial materials
 =======================
 
 Go to https://github.com/CongducPham/tutorials and look for the "Low-cost-LoRa-GW-step-by-step" tutorial.
 
 Look at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.pdf)!
 
-NEW: Get the advanced version of the gateway
-============================================
+Get the advanced version of the gateway with many additional features
+==========================================================================
 
 Look at the [gw_advanced folder](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced) and follow instructions.
 
