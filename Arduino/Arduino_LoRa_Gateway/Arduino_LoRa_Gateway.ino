@@ -79,7 +79,7 @@
  *        Split the lora_gateway sketch into 2 parts:   
  *          - lora_gateway: for gateway, similar to previous IS_RCV_GATEWAY
  *          - lora_interactivedevice, similar to previous IS_SEND_GATEWAY
- *        Add support for one channel in the 433MHz band: CH_00_433 = 0x6C4000 for 433.0MHz          
+ *        Add support for 4 channels in the 433MHz band. Default is CH_00_433 = 0x6C5333 for 433.3MHz. See SX1272.h.         
  *  Oct, 9th, 2016. v1.6
  *		  Change the downlink strategy
  *			    - the lora_gateway.cpp program will check for a downlink.txt file after each LoRa packet reception
@@ -316,11 +316,11 @@ uint8_t loraChannelIndex=5;
 uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_900,CH_01_900,CH_02_900,CH_03_900,CH_04_900,CH_05_900,CH_06_900,CH_07_900,CH_08_900,
                                             CH_09_900,CH_10_900,CH_11_900,CH_12_900};
 #elif defined BAND433
-#define MAX_NB_CHANNEL 1
+#define MAX_NB_CHANNEL 4
 #define STARTING_CHANNEL 0
-#define ENDING_CHANNEL 0
+#define ENDING_CHANNEL 3
 uint8_t loraChannelIndex=0;
-uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_433};                                            
+uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_433,CH_01_433,CH_02_433,CH_03_433};                                              
 #endif
 
 // use the dynamic ACK feature of our modified SX1272 lib

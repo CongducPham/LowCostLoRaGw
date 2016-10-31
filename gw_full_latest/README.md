@@ -271,7 +271,7 @@ When your radio module can run in the 433MHz band (for instance when the radio i
 - select line "#define BAND433" in Arduino_LoRa_temp or Arduino_LoRa_Simple_temp
 - compile the lora_gateway.cpp with "#define BAND433"
 - or simply run your gateway with "lora_gateway --mode 1 --freq 433.0" to be on the same setting for Arduino_LoRa_temp and Arduino_LoRa_Simple_temp
-- for the moment only one channel is defined in the 433MHz band: 433.0MHz as CH_00_433
+- there are 4 channels in the 433MHz band: 433.3MHz as CH_00_433, 433.6MHz as CH_01_433, 433.9MHz as CH_02_433 and 434.3MHz as CH_03_433 
 
 Mounting your Dropbox folder
 ============================
@@ -313,10 +313,10 @@ Pre-defined channels in 868MHz, 915MHz and 433MHz band (most of them from initia
 
 | ch | F(MHz) | ch | F(MHz) | ch | F(MHz) |
 |----|--------|----|--------|----|--------|
-| 10 | 865.2  | 00 | 903.08 | 00 | 433.0* |
-| 11 | 865.5  | 01 | 905.24 |  - |   -    |
-| 12 | 865.8  | 02 | 907.40 |  - |   -    |
-| 13 | 866.1  | 03 | 909.56 |  - |   -    |
+| 10 | 865.2  | 00 | 903.08 | 00 | 433.3* |
+| 11 | 865.5  | 01 | 905.24 | 01 | 433.6* |
+| 12 | 865.8  | 02 | 907.40 | 02 | 433.9* |
+| 13 | 866.1  | 03 | 909.56 | 03 | 434.3* |
 | 14 | 865.4  | 04 | 911.72 |  - |   -    |
 | 15 | 865.7  | 05 | 913.88 |  - |   -    |
 | 16 | 866.0  | 06 | 916.04 |  - |   -    |
@@ -334,7 +334,7 @@ WARNING
 
 - There is currently no control on the transmit time for both gateway and end-device. When using the library to create devices, you have to ensure that the transmit time of your device is not exceeding the legal maximum transmit time defined in the regulation of your country.
 
-- Although 900MHz band is supported (mostly for the US ISM band), the library does not implement the frequency hopping mechanism.
+- Although 900MHz band is supported (mostly for the US ISM band), the library does not implement the frequency hopping mechanism nor the limited dwell time.
 
 
 Tutorial materials
