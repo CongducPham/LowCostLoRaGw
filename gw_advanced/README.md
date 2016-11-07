@@ -143,9 +143,7 @@ B.4. We added the support of Bluetooth connection. A simple Android App running 
 
 B.5. We added the possibility to have a temperature/humidity sensor connected to the Raspberry gateway in order to periodically monitor the temperature/humidity level inside the gateway casing. These data are saved in the local MongoDB database and can therefore be visualized just like data coming from remote sensors. We currently support the DHT22 temperature/humidity sensor which is a digital (1-wire) sensor. Remember that the Raspberry has no analog input so an analog sensor such as the LM35 is not suitable.
 
-B.6. We added simple 128-bit AES decryption capabilities at the gateway in the post_processing_gw.py script. The end-device can encrypt using an 128-bit AES library. The common AES key must be known by both the end-device and the gateway. It is just a demonstration for simple deployment usage.
-
-B.7. We added a configuration script (scripts/config_gw.sh) to help you configure the gateway with MongoDB, WiFi and Bluetooth features. It is highly recommended to use this script to set your gateway once all the files have been copied.
+B.6. We added a configuration script (scripts/config_gw.sh) to help you configure the gateway with MongoDB, WiFi and Bluetooth features. It is highly recommended to use this script to set your gateway once all the files have been copied.
 
 
 Install the advanced version
@@ -214,10 +212,6 @@ Web server, PHP and MongoDB link
     > sudo apt-get install php5 libapache2-mod-php5
     > sudo apt-get install php5-dev php5-cli php-pear
     > sudo pecl install mongo
-    
-AES encryption
-
-    > sudo pip install pycrypto
 
 Configure your gateway with config_gw.sh
 ----------------------------------------
@@ -252,7 +246,7 @@ In the example, we have "HWaddr b8:27:eb:be:da:21" then use "27EBBEDA21"
 - compiling DHT22 support (step H)
 - configuring the gateway to run the lora_gateway program at boot (step J)
 
-Anyway, check steps A to J as described below and perform all needed tasks that config_gw.sh is is not addressing.
+Anyway, check steps A to I as described below and perform all needed tasks that config_gw.sh is is not addressing.
 
 **Even if you installed from the zipped SD card image config_gw.sh is still needed for:**
 
@@ -463,17 +457,7 @@ and set to a value in second. For instance 600 will take a measure every 10 minu
 
 Use a DHT22 sensor and prepare it with a 10kOhms resistance between pin 1 (VCC) and pin 2 (data). It is also recommended to have a 100nF condensator between pin 1 (VCC) and pin 4 (Ground). Then connect DHT22's pin 1 to RPI's pin 1 (3.3v DC Power), DHT22's pin 2 to RPI's pin 7 (GPIO04) and DHT22's pin 4 to RPI's pin 6 (Ground).
 	
-I/ AES encryption
-=================
-
-Installing Python AES encryption package
-
-	> sudo pip install pycrypto
-
-or
-	> sudo apt-get install python-crypto	
-	
-J/ Run the gateway at boot
+I/ Run the gateway at boot
 ==========================
 
 If you want to run the gateway at boot, you can add the following line:
