@@ -1,0 +1,59 @@
+#######################################
+# Syntax Coloring Map For RTC
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+RTCZero	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+getDay					KEYWORD2
+getMonth				KEYWORD2
+getYear					KEYWORD2
+getHours 				KEYWORD2
+getMinutes			KEYWORD2
+getSeconds 			KEYWORD2
+
+setDay					KEYWORD2
+setMonth				KEYWORD2
+setYear					KEYWORD2
+setHours 				KEYWORD2
+setMinutes			KEYWORD2
+setSeconds 			KEYWORD2
+setDate					KEYWORD2
+setTime					KEYWORD2
+
+getEpoch			KEYWORD2
+getY2kEpoch			KEYWORD2
+setEpoch			KEYWORD2
+setY2kEpoch			KEYWORD2
+
+getAlarmDay			KEYWORD2
+getAlarmMonth		KEYWORD2
+getAlarmYear		KEYWORD2
+getAlarmHours 	KEYWORD2
+getAlarmMinutes	KEYWORD2
+getAlarmSeconds KEYWORD2
+
+setAlarmDay			KEYWORD2
+setAlarmMonth		KEYWORD2
+setAlarmYear		KEYWORD2
+setAlarmHours 	KEYWORD2
+setAlarmMinutes	KEYWORD2
+setAlarmSeconds KEYWORD2
+setAlarmDate		KEYWORD2
+setAlarmTime		KEYWORD2
+
+enableAlarm 		KEYWORD2
+disableAlarm 		KEYWORD2
+
+standbyMode			KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
