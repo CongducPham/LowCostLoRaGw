@@ -2602,6 +2602,9 @@ int8_t SX1272::setChannel(uint32_t ch)
         state = 1;
     }
 
+    // commented by C. Pham to avoid adding new channel
+    // besides, the test aboce is sufficient
+    /*
     if( not isChannel(ch) )
     {
         state = -1;
@@ -2612,6 +2615,7 @@ int8_t SX1272::setChannel(uint32_t ch)
         printf("\n");
 #endif
     }
+    */
 
     writeRegister(REG_OP_MODE, st0);	// Getting back to previous status
     delay(100);
@@ -4669,6 +4673,12 @@ uint8_t SX1272::setTimeout()
 #endif
 
     state = 1;
+
+    // changed by C. Pham
+    // we always use MAX_TIMEOUT
+    _sendTime = MAX_TIMEOUT;
+
+    /*
     if( _modem == LORA )
     {
         switch(_spreadingFactor)
@@ -4989,6 +4999,8 @@ uint8_t SX1272::setTimeout()
     }
     delay = ((0.1*_sendTime) + 1);
     _sendTime = (uint16_t) ((_sendTime * 1.2) + (rand()%delay));
+
+    */
 #if (SX1272_debug_mode > 1)
     printf("Timeout to send/receive is: ");
     printf("%d",_sendTime);
@@ -5632,6 +5644,9 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, char *payload)
     }
     if( state == 0 )
     {
+        // added by C. Pham
+        printf("wait for ACK\n");
+
         if( availableData() )
         {
             state_f = getACK();	// Getting ACK
@@ -5687,6 +5702,9 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_t le
     }
     if( state == 0 )
     {
+        // added by C. Pham
+        printf("wait for ACK\n");
+
         if( availableData() )
         {
             state_f = getACK();	// Getting ACK
@@ -5741,6 +5759,9 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, char *payload, uint16_t wait)
     }
     if( state == 0 )
     {
+        // added by C. Pham
+        printf("wait for ACK\n");
+
         if( availableData() )
         {
             state_f = getACK();	// Getting ACK
@@ -5795,6 +5816,9 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_t le
     }
     if( state == 0 )
     {
+        // added by C. Pham
+        printf("wait for ACK\n");
+
         if( availableData() )
         {
             state_f = getACK();	// Getting ACK
@@ -6604,6 +6628,125 @@ int8_t	SX1272::setSyncWord(uint8_t sw)
     }
 
     writeRegister(REG_OP_MODE,st0);	// Getting back to previous status
+    delay(100);
+    return state;
+}
+
+int8_t SX1272::setSleepMode() {
+
+    int8_t state = 2;
+    byte value;
+
+    writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);
+    writeRegister(REG_OP_MODE, LORA_SLEEP_MODE);    // LoRa sleep mode
+
+    //delay(50);
+
+    value = readRegister(REG_OP_MODE);
+
+    //Serial.print(F("## REG_OP_MODE 0x"));
+    //Serial.println(value, HEX);
+
+    if (value == LORA_SLEEP_MODE)
+        state=0;
+    else
+        state=1;
+
+    return state;
+}
+
+int8_t SX1272::setPowerDBM(uint8_t dbm) {
+    byte st0;
+    int8_t state = 2;
+    byte value = 0x00;
+
+    byte RegPaDacReg=(_board==SX1272Chip)?0x5A:0x4D;
+
+#if (SX1272_debug_mode > 1)
+    printf("\n");
+    printf("Starting 'setPowerDBM'\n");
+#endif
+
+    st0 = readRegister(REG_OP_MODE);	  // Save the previous status
+    if( _modem == LORA )
+    { // LoRa Stdby mode to write in registers
+        writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);
+    }
+    else
+    { // FSK Stdby mode to write in registers
+        writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);
+    }
+
+    if (dbm > 14)
+        return state;
+
+    // disable high power output in all other cases
+    writeRegister(RegPaDacReg, 0x84);
+
+    if (dbm > 10)
+        // set RegOcp for OcpOn and OcpTrim
+        // 130mA
+        setMaxCurrent(0x10);
+    else
+        // 100mA
+        setMaxCurrent(0x0B);
+
+    if (_board==SX1272Chip) {
+        // Pout = -1 + _power[3:0] on RFO
+        // Pout = 2 + _power[3:0] on PA_BOOST
+        if (_needPABOOST) {
+            value = dbm - 2;
+            // we set the PA_BOOST pin
+            value = value | 0B10000000;
+        }
+        else
+            value = dbm + 1;
+
+        writeRegister(REG_PA_CONFIG, value);	// Setting output power value
+    }
+    else {
+        // for the SX1276
+        uint8_t pmax=15;
+
+        // then Pout = Pmax-(15-_power[3:0]) if  PaSelect=0 (RFO pin for +14dBm)
+        // so L=3dBm; H=7dBm; M=15dBm (but should be limited to 14dBm by RFO pin)
+
+        // and Pout = 17-(15-_power[3:0]) if  PaSelect=1 (PA_BOOST pin for +14dBm)
+        // so x= 14dBm (PA);
+        // when p=='X' for 20dBm, value is 0x0F and RegPaDacReg=0x87 so 20dBm is enabled
+
+        if (_needPABOOST) {
+            value = dbm - 17 + 15;
+            // we set the PA_BOOST pin
+            value = value | 0B10000000;
+        }
+        else
+            value = dbm - pmax + 15;
+
+        // set MaxPower to 7 -> Pmax=10.8+0.6*MaxPower [dBm] = 15
+        value = value | 0B01110000;
+
+        writeRegister(REG_PA_CONFIG, value);
+    }
+
+    _power=value;
+
+    value = readRegister(REG_PA_CONFIG);
+
+    if( value == _power )
+    {
+        state = 0;
+#if (SX1272_debug_mode > 1)
+        printf("## Output power has been successfully set ##\n");
+        printf("\n");
+#endif
+    }
+    else
+    {
+        state = 1;
+    }
+
+    writeRegister(REG_OP_MODE, st0);	// Getting back to previous status
     delay(100);
     return state;
 }

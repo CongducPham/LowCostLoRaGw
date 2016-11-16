@@ -127,7 +127,7 @@ Note that you may have to install svn before being able to use the svn command:
 Compiling the low-level gateway program
 ---------------------------------------	 	
     
-DO NOT modify the lora_gateway.cpp file unless you know what you are doing. Check the radio.makefile file to select the radio module that you have. Uncomment only 1 choice or leave all lines commented if you do not have neither an HopeRF92/95 or inAir9B or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it). For instance, with both Libelium LoRa and inAir9 (not inAir9B) you should leave all lines commented. Then:
+DO NOT modify the lora_gateway.cpp file unless you know what you are doing. Check the radio.makefile file to indicate whether your radio module uses the PA_BOOST amplifier line or not (which means it uses the RFO line). HopeRF RFM92W/95W or inAir9B or NiceRF1276 or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it) need the -DPABOOST. Both Libelium SX1272 and inAir9 (not inAir9B) do not use PA_BOOST. You can also define a maximum output power to stay within transmission power regulations of your country. For instance, if you do not define anything, then the output power is set to 14dBm (ETSI european regulations), otherwise use -DMAX_DBM=10 for 10dBm. Then:
 
 	> make lora_gateway
 
@@ -184,17 +184,13 @@ Practically, we only use either "M" (Max) or "x" (extreme) to have maximum range
 
 	// IMPORTANT
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// please uncomment only 1 choice
 	//
-	// uncomment if your radio is an HopeRF RFM92W or RFM95W
-	//#define RADIO_RFM92_95
-	// uncomment if your radio is a Modtronix inAirB (the one with +20dBm features), if inAir9, leave commented
-	//#define RADIO_INAIR9B
-	// uncomment if you only know that it has 20dBm feature
-	//#define RADIO_20DBM
-	/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+	// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+	// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+	//#define PABOOST
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////  
 
-Uncomment RADIO_RFM92_95 if you have a HopeRF RFM92W or RFM95W. Uncomment RADIO_INAIR9B if you have a Modtronix inAir9B (if inAir9, leave commented). If you have another non listed radio module, try first by leaving RADIO_20DBM commented, then see whether the packet reception is correct with a reasonably high SNR (such as 6 to 10 dB) at some meters of the gateway. If not, then try with RADIO_20DBM uncommented.
+Uncomment PABOOST if you have a HopeRF RFM92W or RFM95W, or a Modtronix inAir9B (if inAir9, leave commented) or a NiceRF1276. If you have another non listed radio module, try first by leaving PABOOST commented, then see whether the packet reception is correct with a reasonably high SNR (such as 6 to 10 dB) at some meters of the gateway. If not, then try with PABOOST uncommented.
 
 First try: a simple Ping-Pong program example
 =============================================
@@ -318,28 +314,32 @@ Pre-defined channels in 868MHz, 915MHz and 433MHz band (most of them from initia
 
 | ch | F(MHz) | ch | F(MHz) | ch | F(MHz) |
 |----|--------|----|--------|----|--------|
-| 10 | 865.2  | 00 | 903.08 | 00 | 433.3* |
-| 11 | 865.5  | 01 | 905.24 | 01 | 433.6* |
-| 12 | 865.8  | 02 | 907.40 | 02 | 433.9* |
-| 13 | 866.1  | 03 | 909.56 | 03 | 434.3* |
-| 14 | 865.4  | 04 | 911.72 |  - |   -    |
-| 15 | 865.7  | 05 | 913.88 |  - |   -    |
-| 16 | 866.0  | 06 | 916.04 |  - |   -    |
-| 17 | 868.0  | 07 | 918.20 |  - |   -    |
-| 18 | 868.1* | 08 | 920.36 |  - |   -    |
-|  - |   -    | 09 | 922.52 |  - |   -    |
-|  - |   -    | 10 | 924.68 |  - |   -    |
-|  - |   -    | 11 | 926.84 |  - |   -    |
-|  - |   -    | 12 | 915.00 |  - |   -    |
-
-
+| 04 | 863.2* | 00 | 903.08 | 00 | 433.3* |
+| 05 | 863.5* | 01 | 905.24 | 01 | 433.6* |
+| 06 | 863.8* | 02 | 907.40 | 02 | 433.9* |
+| 07 | 864.1* | 03 | 909.56 | 03 | 434.3* |
+| 08 | 864.4* | 04 | 911.72 |  - |   -    |
+| 09 | 864.7* | 05 | 913.88 |  - |   -    |
+| 10 | 865.2  | 06 | 916.04 |  - |   -    |
+| 11 | 865.5  | 07 | 918.20 |  - |   -    |
+| 12 | 865.8  | 08 | 920.36 |  - |   -    |
+| 13 | 866.1  | 09 | 922.52 |  - |   -    |
+| 14 | 866.4  | 10 | 924.68 |  - |   -    |
+| 15 | 867.7  | 11 | 926.84 |  - |   -    |
+| 16 | 867.0  | 12 | 915.00 |  - |   -    |
+| 17 | 868.0  |
+| 18 | 868.1* |
+|  - |   -    |
+|  - |   -    |
+|  - |   -    |
+|  - |   -    |
 	
 WARNING
 =======
 
-- There is currently no control on the transmit time for both gateway and end-device. When using the library to create devices, you have to ensure that the transmit time of your device is not exceeding the legal maximum transmit time defined in the regulation of your country.
+- There is currently no control on the transmit time for both gateway and end-device. When using the library to create devices, you have to ensure that the transmit time of your device is not exceeding the legal maximum transmit time defined in the regulation of your country (for instance ETSI define 1% duty-cycle, i.e. 36s/hour).
 
-- Although 900MHz band is supported (mostly for the US ISM band), the library does not implement the frequency hopping mechanism nor the limited dwell time.
+- Although 900MHz band is supported (mostly for the US ISM band), the library does not implement the frequency hopping mechanism nor the limited dwell time (e.g. 400ms per transmission).
 
 
 Tutorial materials

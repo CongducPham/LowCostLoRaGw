@@ -216,8 +216,15 @@
 /////
 
 //FREQUENCY CHANNELS:
-const uint32_t CH_10_868 = 0xD84CCC; // channel 10, central freq = 865.20MHz
-									 // = 865200000*RH_LORA_FCONVERT
+// added by C. Pham for Senegal
+const uint32_t CH_04_868 = 0xD7CCCC; // channel 04, central freq = 863.20MHz
+const uint32_t CH_05_868 = 0xD7E000; // channel 05, central freq = 863.50MHz
+const uint32_t CH_06_868 = 0xD7F333; // channel 06, central freq = 863.80MHz
+const uint32_t CH_07_868 = 0xD80666; // channel 07, central freq = 864.10MHz
+const uint32_t CH_08_868 = 0xD81999; // channel 08, central freq = 864.40MHz
+const uint32_t CH_09_868 = 0xD82CCC; // channel 09, central freq = 864.70MHz
+//
+const uint32_t CH_10_868 = 0xD84CCC; // channel 10, central freq = 865.20MHz, = 865200000*RH_LORA_FCONVERT
 const uint32_t CH_11_868 = 0xD86000; // channel 11, central freq = 865.50MHz
 const uint32_t CH_12_868 = 0xD87333; // channel 12, central freq = 865.80MHz
 const uint32_t CH_13_868 = 0xD88666; // channel 13, central freq = 866.10MHz
@@ -1156,7 +1163,7 @@ public:
     int8_t setSyncWord(uint8_t sw);
     int8_t getSyncWord();
     int8_t setSleepMode();
-    int8_t setPowerDBM(uint8_t dbm, uint8_t PA_BOOST=0);
+    int8_t setPowerDBM(uint8_t dbm);
 
     // SX1272 or SX1276?
     uint8_t _board;
@@ -1173,6 +1180,7 @@ public:
     bool _enableCarrierSense;
     bool _rawFormat;
     int8_t _rcv_snr_in_ack;
+    bool _needPABOOST;
 
 #ifdef W_REQUESTED_ACK
 	uint8_t _requestACK;

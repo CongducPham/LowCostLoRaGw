@@ -185,17 +185,13 @@
 #include "SX1272.h"
 
 #ifdef ARDUINO
-// IMPORTANT when using an Arduino. For a Raspberry-based gateway the distribution uses a radio.makefile file
+// IMPORTANT when using an Arduino only. For a Raspberry-based gateway the distribution uses a radio.makefile file
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 //
-// it seems that both HopeRF and Modtronix board use the PA_BOOST pin and not the RFO. Therefore, for these
-// boards we set the initial power to 'x' and not 'M'. This is the purpose of the define statement 
-//
-// uncomment if your radio is an HopeRF RFM92W or RFM95W
-//#define RADIO_RFM92_95
-// uncomment if your radio is a Modtronix inAir9B (the one with +20dBm features), if inAir9, leave commented
-//#define RADIO_INAIR9B
+// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+//#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 #endif
 
@@ -206,7 +202,11 @@
 //#define BAND900
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef RASPBERRY
+#ifndef MAX_DBM
+#define MAX_DBM 14
+#endif
+
+#ifndef ARDUINO
 #include <stdio.h>
 #include <getopt.h>
 #include <stdlib.h>
@@ -497,11 +497,15 @@ void startConfig() {
   PRINT_VALUE("%d", e);
   PRINTLN; 
   
-  // Select output power (Max, High or Low)
-  e = sx1272.setPower(loraPower);
+  // Select output power in dBm
+  e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
 
-  PRINT_CSTSTR("%s","^$Set LoRa Power to ");
-  PRINT_VALUE("%c",loraPower);  
+#ifdef PABOOST
+  PRINT_CSTSTR("%s","^$Use PA_BOOST amplifier line");
+  PRINTLN;  
+#endif  
+  PRINT_CSTSTR("%s","^$Set LoRa power dBm to ");
+  PRINT_VALUE("%d",(uint8_t)MAX_DBM);  
   PRINTLN;
                 
   PRINT_CSTSTR("%s","^$Power: state ");
@@ -554,17 +558,18 @@ void setup()
   delay(3000);
   randomSeed(analogRead(14));
 
-#ifdef _VARIANT_ARDUINO_DUE_X_
-  Serial.begin(115200);  
-#else  
   // Open serial communications and wait for port to open:
-  Serial.begin(38400);
-#if defined ARDUINO && not defined __MK20DX256__
+#ifdef __SAMD21G18A__  
+  SerialUSB.begin(38400);
+#else
+  Serial.begin(38400);  
+#endif
+
+#if defined ARDUINO && not defined __MK20DX256__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
     // Print a start message
   Serial.print(freeMemory());
   Serial.println(F(" bytes of free memory.")); 
 #endif  
-#endif 
 
 #else
   srand (time(NULL));
@@ -1240,6 +1245,7 @@ void loop(void)
 // ONLY FOR END-DEVICE SENDING MESSAGES TO BASE STATION
 ///END/////////////////////////////////////////////////
 
+//uncomment if you don't want your device to be remotely configured
 #ifdef IS_RCV_GATEWAY
             case 'U':
             
@@ -1603,8 +1609,8 @@ void loop(void)
       PRINT_VALUE("%d",pl);
       PRINTLN;
       
-      uint32_t toa = sx1272.getToA(pl+5);      
-      PRINT_CSTSTR("%s","ToA is w/5B Libelium header ");
+      uint32_t toa = sx1272.getToA(pl+OFFSET_PAYLOADLENGTH);      
+      PRINT_CSTSTR("%s","ToA is w/4B header ");
       PRINT_VALUE("%d",toa);
       PRINTLN;
       

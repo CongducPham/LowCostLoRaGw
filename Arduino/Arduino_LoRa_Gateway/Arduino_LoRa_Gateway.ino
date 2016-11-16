@@ -193,17 +193,13 @@
 #include "SX1272.h"
 
 #ifdef ARDUINO
-// IMPORTANT when using an Arduino. For a Raspberry-based gateway the distribution uses a radio.makefile file
+// IMPORTANT when using an Arduino only. For a Raspberry-based gateway the distribution uses a radio.makefile file
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 //
-// it seems that both HopeRF and Modtronix board use the PA_BOOST pin and not the RFO. Therefore, for these
-// boards we set the initial power to 'x' and not 'M'. This is the purpose of the define statement 
-//
-// uncomment if your radio is an HopeRF RFM92W or RFM95W
-//#define RADIO_RFM92_95
-// uncomment if your radio is a Modtronix inAir9B (the one with +20dBm features), if inAir9, leave commented
-//#define RADIO_INAIR9B
+// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+//#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 #endif
 
@@ -214,6 +210,10 @@
 //#define BAND900
 //#define BAND433
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifndef MAX_DBM
+#define MAX_DBM 14
+#endif
 
 #ifndef ARDUINO
 #include <stdio.h>
@@ -302,11 +302,16 @@ unsigned long interDownlinkSendTime=20000L;
 //#define WITH_SEND_LED
 
 #ifdef BAND868
-#define MAX_NB_CHANNEL 9
-#define STARTING_CHANNEL 10
+#define MAX_NB_CHANNEL 15
+#define STARTING_CHANNEL 4
 #define ENDING_CHANNEL 18
+#ifdef SENEGAL_REGULATION
 uint8_t loraChannelIndex=0;
-uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_10_868,CH_11_868,CH_12_868,CH_13_868,CH_14_868,CH_15_868,CH_16_868,CH_17_868,CH_18_868};
+#else
+uint8_t loraChannelIndex=6;
+#endif
+uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_04_868,CH_05_868,CH_06_868,CH_07_868,CH_08_868,CH_09_868,
+                                            CH_10_868,CH_11_868,CH_12_868,CH_13_868,CH_14_868,CH_15_868,CH_16_868,CH_17_868,CH_18_868};
 
 #elif defined BAND900 
 #define MAX_NB_CHANNEL 13
@@ -514,7 +519,6 @@ void startConfig() {
     PRINT_CSTSTR("%s","^$Channel CH_18_868: state ");    
   }
   else {
-    // work also for loraMode 0
     e = sx1272.setChannel(loraChannel);
 
     if (optFQ>0.0) {
@@ -523,25 +527,40 @@ void startConfig() {
       PRINT_CSTSTR("%s",": state ");      
     }
     else {
-#ifdef BAND868      
+#ifdef BAND868
+    if (loraChannelIndex>5) {      
       PRINT_CSTSTR("%s","^$Channel CH_1");
-      PRINT_VALUE("%d", loraChannelIndex);
-      PRINT_CSTSTR("%s","_868: state ");
-#else
-      PRINT_CSTSTR("%s","^$Channel CH_");
-      PRINT_VALUE("%d", loraChannelIndex);
-      PRINT_CSTSTR("%s","_900: state ");
+      PRINT_VALUE("%d", loraChannelIndex-6);      
+    }
+    else {
+      PRINT_CSTSTR("%s","^$Channel CH_0");
+      PRINT_VALUE("%d", loraChannelIndex+STARTING_CHANNEL);        
+    }
+    PRINT_CSTSTR("%s","_868: state ");
+#elif defined BAND900
+    PRINT_CSTSTR("%s","^$Channel CH_");
+    PRINT_VALUE("%d", loraChannelIndex);
+    PRINT_CSTSTR("%s","_900: state ");
+#elif defined BAND433
+    //e = sx1272.setChannel(0x6C4000);
+    PRINT_CSTSTR("%s","^$Channel CH_");
+    PRINT_VALUE("%d", loraChannelIndex);  
+    PRINT_CSTSTR("%s","_433: state ");  
 #endif
     }
   }  
   PRINT_VALUE("%d", e);
   PRINTLN; 
   
-  // Select output power (Max, High or Low)
-  e = sx1272.setPower(loraPower);
+  // Select output power in dBm
+  e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
 
-  PRINT_CSTSTR("%s","^$Set LoRa Power to ");
-  PRINT_VALUE("%c",loraPower);  
+#ifdef PABOOST
+  PRINT_CSTSTR("%s","^$Use PA_BOOST amplifier line");
+  PRINTLN;  
+#endif  
+  PRINT_CSTSTR("%s","^$Set LoRa power dBm to ");
+  PRINT_VALUE("%d",(uint8_t)MAX_DBM);  
   PRINTLN;
                 
   PRINT_CSTSTR("%s","^$Power: state ");
@@ -590,17 +609,18 @@ void setup()
   delay(3000);
   randomSeed(analogRead(14));
 
-#ifdef _VARIANT_ARDUINO_DUE_X_
-  Serial.begin(115200);  
-#else  
   // Open serial communications and wait for port to open:
-  Serial.begin(38400);
-#if defined ARDUINO && not defined __MK20DX256__
+#ifdef __SAMD21G18A__  
+  SerialUSB.begin(38400);
+#else
+  Serial.begin(38400);  
+#endif
+
+#if defined ARDUINO && not defined __MK20DX256__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
     // Print a start message
   Serial.print(freeMemory());
   Serial.println(F(" bytes of free memory.")); 
 #endif  
-#endif 
 
 #else
   srand (time(NULL));

@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.4S
+ *  Version:                1.5
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -29,6 +29,7 @@
  *    - /@C12#: use channel 12 (868MHz)
  *    - /@SF8#: set SF to 8
  *    - /@PL/H/M/x/X#: set power to Low, High or Max; extreme (PA_BOOST at +14dBm), eXtreme (PA_BOOST at +20dBm)
+ *    - /@DBM10#: set power output to 10dBm. Check #define PABOOST for appropriate compilation
  *    - /@A9#: set node addr to 9
  *    - /@W34#: set sync word to 0x34
  *    - /@ON# or /@OFF#: power on/off the LoRa module
@@ -80,6 +81,8 @@
 */
 
 /*  Change logs
+ *  Nov, 16th, 2016. v1.5
+ *        Add /@DBM command to set output power in dbm. 0 < dbm < 15
  *  Oct, 21st, 2016. v1.4S
  *        Split the lora_gateway sketch into 2 parts:   
  *          - lora_gateway: for gateway, similar to previous IS_RCV_GATEWAY
@@ -171,17 +174,21 @@
 // Include the SX1272 
 #include "SX1272.h"
 
-// IMPORTANT 
+// IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 //
-// it seems that both HopeRF and Modtronix board use the PA_BOOST pin and not the RFO. Therefore, for these
-// boards we set the initial power to 'x' and not 'M'. This is the purpose of the define statement 
+#define ETSI_EUROPE_REGULATION
+//#define FCC_US_REGULATION
+//#define SENEGAL_REGULATION
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
-// uncomment if your radio is an HopeRF RFM92W or RFM95W
-//#define RADIO_RFM92_95
-// uncomment if your radio is a Modtronix inAir9B (the one with +20dBm features), if inAir9, leave commented
-//#define RADIO_INAIR9B
+// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+//#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 // IMPORTANT
@@ -192,12 +199,28 @@
 //#define BAND433
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#define PRINTLN                   Serial.println("")              
+#ifdef ETSI_EUROPE_REGULATION
+#define MAX_DBM 14
+#elif defined SENEGAL_REGULATION
+#define MAX_DBM 10
+#endif
+
+// we wrapped Serial.println to support the Arduino Zero or M0
+#if defined __SAMD21G18A__
+#define PRINTLN                   SerialUSB.println("")              
+#define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
+#define PRINT_STR(fmt,param)      SerialUSB.print(param)
+#define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
+#define PRINT_HEX(fmt,param)      SerialUSB.print(param,HEX)
+#define FLUSHOUTPUT               SerialUSB.flush();
+#else
+#define PRINTLN                   Serial.println("")
 #define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
 #define PRINT_STR(fmt,param)      Serial.print(param)
 #define PRINT_VALUE(fmt,param)    Serial.print(param)
 #define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
 #define FLUSHOUTPUT               Serial.flush();
+#endif
 
 #ifdef DEBUG
   #define DEBUGLN                 PRINTLN
@@ -214,14 +237,19 @@
 //#define CAD_TEST
 //#define LORA_LAS
 //#define WITH_SEND_LED
-#define WITH_AES
+//#define WITH_AES
 
 #ifdef BAND868
-#define MAX_NB_CHANNEL 9
-#define STARTING_CHANNEL 10
+#define MAX_NB_CHANNEL 15
+#define STARTING_CHANNEL 4
 #define ENDING_CHANNEL 18
+#ifdef SENEGAL_REGULATION
 uint8_t loraChannelIndex=0;
-uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_10_868,CH_11_868,CH_12_868,CH_13_868,CH_14_868,CH_15_868,CH_16_868,CH_17_868,CH_18_868};
+#else
+uint8_t loraChannelIndex=6;
+#endif
+uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_04_868,CH_05_868,CH_06_868,CH_07_868,CH_08_868,CH_09_868,
+                                            CH_10_868,CH_11_868,CH_12_868,CH_13_868,CH_14_868,CH_15_868,CH_16_868,CH_17_868,CH_18_868};
 
 #elif defined BAND900 
 #define MAX_NB_CHANNEL 13
@@ -289,7 +317,8 @@ bool RSSIonSend=true;
 uint8_t loraMode=LORAMODE;
 
 uint32_t loraChannel=loraChannelArray[loraChannelIndex];
-#if defined RADIO_RFM92_95 || defined RADIO_INAIR9B || defined RADIO_20DBM
+
+#ifdef PABOOST
 // HopeRF 92W/95W and inAir9B need the PA_BOOST
 // so 'x' set the PA_BOOST but then limit the power to +14dBm 
 char loraPower='x';
@@ -404,12 +433,17 @@ void startConfig() {
     PRINT_CSTSTR("%s","^$Channel CH_18_868: state ");    
   }
   else {
-    // work also for loraMode 0
     e = sx1272.setChannel(loraChannel);
 
-#ifdef BAND868      
-    PRINT_CSTSTR("%s","^$Channel CH_1");
-    PRINT_VALUE("%d", loraChannelIndex);
+#ifdef BAND868
+    if (loraChannelIndex>5) {      
+      PRINT_CSTSTR("%s","^$Channel CH_1");
+      PRINT_VALUE("%d", loraChannelIndex-6);      
+    }
+    else {
+      PRINT_CSTSTR("%s","^$Channel CH_0");
+      PRINT_VALUE("%d", loraChannelIndex+STARTING_CHANNEL);        
+    }
     PRINT_CSTSTR("%s","_868: state ");
 #elif defined BAND900
     PRINT_CSTSTR("%s","^$Channel CH_");
@@ -426,11 +460,15 @@ void startConfig() {
   PRINT_VALUE("%d", e);
   PRINTLN; 
   
-  // Select output power (Max, High or Low)
-  e = sx1272.setPower(loraPower);
+  // Select output power in dBm
+  e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
 
-  PRINT_CSTSTR("%s","^$Set LoRa Power to ");
-  PRINT_VALUE("%c",loraPower);  
+#ifdef PABOOST
+  PRINT_CSTSTR("%s","^$Use PA_BOOST amplifier line");
+  PRINTLN;  
+#endif  
+  PRINT_CSTSTR("%s","^$Set LoRa power dBm to ");
+  PRINT_VALUE("%d",(uint8_t)MAX_DBM);  
   PRINTLN;
                 
   PRINT_CSTSTR("%s","^$Power: state ");
@@ -464,25 +502,21 @@ void startConfig() {
 void setup()
 {
   int e;
-#ifdef ARDUINO
   delay(3000);
   randomSeed(analogRead(14));
 
-#ifdef _VARIANT_ARDUINO_DUE_X_
-  Serial.begin(115200);  
-#else  
   // Open serial communications and wait for port to open:
-  Serial.begin(38400);
-#if defined ARDUINO && not defined __MK20DX256__
+#ifdef __SAMD21G18A__  
+  SerialUSB.begin(38400);
+#else
+  Serial.begin(38400);  
+#endif  
+
+#if defined ARDUINO && not defined __MK20DX256__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
     // Print a start message
   Serial.print(freeMemory());
   Serial.println(F(" bytes of free memory.")); 
-#endif  
-#endif 
-
-#else
-  srand (time(NULL));
-#endif
+#endif   
 
   // Power ON the module
   e = sx1272.ON();
@@ -885,32 +919,53 @@ void loop(void)
       switch (cmd[i]) {
 
             case 'D': 
-              i++;
-              cmdValue=getCmdValue(i);
-              
-              i++;
-              // cannot set dest addr greater than 255
-              if (cmdValue > 255)
-                      cmdValue = 255;
-              // cannot set dest addr lower than 0, 0 is broadcast
-              if (cmdValue < 0)
-                      cmdValue = 0;
-                      
-              // only a D command        
-              if (i==strlen(cmd)) {
-                  // set dest addr permanently       
-                  dest_addr=cmdValue; 
-                  PRINT_CSTSTR("%s","Set LoRa dest addr to ");
-                  PRINT_VALUE("%d",dest_addr); 
-                  PRINTLN;                
+              if (cmd[i+1]=='B' && cmd[i+2]=='M') {
+                  i=i+3;
+                  cmdValue=getCmdValue(i);
+
+                  if (cmdValue > 0 && cmdValue < 15) {
+                      PRINT_CSTSTR("%s","^$set power dBm: ");
+                      PRINT_VALUE("%d",cmdValue);  
+                      PRINTLN;                    
+                      // Set power dBm
+#if defined RADIO_RFM92_95 || defined RADIO_INAIR9B || defined RADIO_20DBM                      
+                      e = sx1272.setPowerDBM((uint8_t)cmdValue, 1);
+#else
+                      e = sx1272.setPowerDBM((uint8_t)cmdValue);
+#endif
+                      PRINT_CSTSTR("%s","^$set power dBm: state ");
+                      PRINT_VALUE("%d",e);  
+                      PRINTLN;   
+                  }                                
               }
               else {
-                  // only for the following ASCII command
-                  forTmpDestAddr=cmdValue;
-                  PRINT_CSTSTR("%s","Set LoRa dest addr FOR THIS ASCII STRING to ");
-                  PRINT_VALUE("%d",forTmpDestAddr);
-                  PRINTLN;    
-                  sendCmd=true;               
+                  i++;
+                  cmdValue=getCmdValue(i);
+                  
+                  i++;
+                  // cannot set dest addr greater than 255
+                  if (cmdValue > 255)
+                          cmdValue = 255;
+                  // cannot set dest addr lower than 0, 0 is broadcast
+                  if (cmdValue < 0)
+                          cmdValue = 0;
+                          
+                  // only a D command        
+                  if (i==strlen(cmd)) {
+                      // set dest addr permanently       
+                      dest_addr=cmdValue; 
+                      PRINT_CSTSTR("%s","Set LoRa dest addr to ");
+                      PRINT_VALUE("%d",dest_addr); 
+                      PRINTLN;                
+                  }
+                  else {
+                      // only for the following ASCII command
+                      forTmpDestAddr=cmdValue;
+                      PRINT_CSTSTR("%s","Set LoRa dest addr FOR THIS ASCII STRING to ");
+                      PRINT_VALUE("%d",forTmpDestAddr);
+                      PRINTLN;    
+                      sendCmd=true;               
+                  }
               }
             break;
 

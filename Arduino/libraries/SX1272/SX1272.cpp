@@ -99,6 +99,7 @@ SX1272::SX1272()
     _enableCarrierSense=false;
     // DIFS by default
     _send_cad_number=9;
+    _needPABOOST=false;
 #ifdef W_REQUESTED_ACK
     _requestACK = 0;
 #endif
@@ -2477,6 +2478,14 @@ boolean	SX1272::isChannel(uint32_t ch)
     // Checking available values for _channel
     switch(ch)
     {
+        //added by C. Pham
+    case CH_04_868:
+    case CH_05_868:
+    case CH_06_868:
+    case CH_07_868:
+    case CH_08_868:
+    case CH_09_868:
+        //end
     case CH_10_868:
     case CH_11_868:
     case CH_12_868:
@@ -2641,6 +2650,9 @@ int8_t SX1272::setChannel(uint32_t ch)
         state = 1;
     }
 
+    // commented by C. Pham to avoid adding new channel
+    // besides, the test aboce is sufficient
+    /*
     if(!isChannel(ch) )
     {
         state = -1;
@@ -2651,6 +2663,7 @@ int8_t SX1272::setChannel(uint32_t ch)
         Serial.println();
 #endif
     }
+    */
 
     writeRegister(REG_OP_MODE, st0);	// Getting back to previous status
     delay(100);
@@ -4712,7 +4725,7 @@ uint8_t SX1272::setTimeout()
 
     state = 1;
 
-    // chaged by C. Pham
+    // changed by C. Pham
     // we always use MAX_TIMEOUT
     _sendTime = MAX_TIMEOUT;
 
@@ -6779,7 +6792,7 @@ int8_t SX1272::setSleepMode() {
     return state;
 }
 
-int8_t SX1272::setPowerDBM(uint8_t dbm, uint8_t PA_BOOST) {
+int8_t SX1272::setPowerDBM(uint8_t dbm) {
     byte st0;
     int8_t state = 2;
     byte value = 0x00;
@@ -6818,7 +6831,7 @@ int8_t SX1272::setPowerDBM(uint8_t dbm, uint8_t PA_BOOST) {
     if (_board==SX1272Chip) {
         // Pout = -1 + _power[3:0] on RFO
         // Pout = 2 + _power[3:0] on PA_BOOST
-        if (PA_BOOST) {
+        if (_needPABOOST) {
             value = dbm - 2;
             // we set the PA_BOOST pin
             value = value | B10000000;
@@ -6839,7 +6852,7 @@ int8_t SX1272::setPowerDBM(uint8_t dbm, uint8_t PA_BOOST) {
         // so x= 14dBm (PA);
         // when p=='X' for 20dBm, value is 0x0F and RegPaDacReg=0x87 so 20dBm is enabled
 
-        if (PA_BOOST) {
+        if (_needPABOOST) {
             value = dbm - 17 + 15;
             // we set the PA_BOOST pin
             value = value | B10000000;

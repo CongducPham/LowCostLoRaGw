@@ -17,6 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
+ * last update: Nov. 16th by C. Pham
  */
 #include <SPI.h> 
 // Include the SX1272
@@ -26,12 +27,17 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 //
-// uncomment if your radio is an HopeRF RFM92W or RFM95W
-//#define RADIO_RFM92_95
-// uncomment if your radio is a Modtronix inAirB (the one with +20dBm features), if inAir9, leave commented
-//#define RADIO_INAIR9B
-// uncomment if you only know that it has 20dBm feature
-//#define RADIO_20DBM
+#define ETSI_EUROPE_REGULATION
+//#define FCC_US_REGULATION
+//#define SENEGAL_REGULATION
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+//#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 // IMPORTANT
@@ -41,6 +47,24 @@
 //#define BAND900
 //#define BAND433
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef ETSI_EUROPE_REGULATION
+#define MAX_DBM 14
+#elif defined SENEGAL_REGULATION
+#define MAX_DBM 10
+#endif
+
+#ifdef BAND868
+#ifdef SENEGAL_REGULATION
+const uint32_t DEFAULT_CHANNEL=CH_04_868;
+#else
+const uint32_t DEFAULT_CHANNEL=CH_10_868;
+#endif
+#elif defined BAND900
+const uint32_t DEFAULT_CHANNEL=CH_05_900;
+#elif defined BAND433
+const uint32_t DEFAULT_CHANNEL=CH_00_433;
+#endif
 
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
@@ -177,16 +201,13 @@ void setup()
 #else
   digitalWrite(TEMP_PIN_POWER,HIGH);
 #endif
-  
+
   delay(3000);
-#ifdef _VARIANT_ARDUINO_DUE_X_
-  Serial.begin(115200);  
-#else  
   // Open serial communications and wait for port to open:
-  Serial.begin(38400);
 #ifdef __SAMD21G18A__  
   SerialUSB.begin(38400);
-#endif  
+#else
+  Serial.begin(38400);  
 #endif  
   // Print a start message
   PRINT_CSTSTR("%s","Simple LoRa temperature sensor\n");
@@ -250,29 +271,18 @@ void setup()
   sx1272._RSSIonSend=false;
 #endif   
     
-#ifdef BAND868
   // Select frequency channel
-  e = sx1272.setChannel(CH_10_868);
-#elif defined BAND900
-  // Select frequency channel
-  e = sx1272.setChannel(CH_05_900);
-#elif defined BAND433
-  // to test 433MHz with a radio module working in this band, e.g. inAir4 for instance
-  // Select frequency channel
-  e = sx1272.setChannel(CH_00_433);  
-#endif
-
+  e = sx1272.setChannel(DEFAULT_CHANNEL);
   PRINT_CSTSTR("%s","Setting Channel: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
   
-  // Select output power (Max, High or Low)
-#if defined RADIO_RFM92_95 || defined RADIO_INAIR9B
-  e = sx1272.setPower('x');
-#else
-  e = sx1272.setPower('M');
+  // Select amplifier line; PABOOST or RFO
+#ifdef PABOOST
+  sx1272._needPABOOST=true;
 #endif  
 
+  e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
   PRINT_CSTSTR("%s","Setting Power: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
