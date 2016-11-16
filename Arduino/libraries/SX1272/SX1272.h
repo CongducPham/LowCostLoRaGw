@@ -341,7 +341,7 @@ const uint8_t OFFSET_PAYLOADLENGTH = 4;
 const uint8_t OFFSET_RSSI = 137;
 const uint8_t NOISE_FIGURE = 6.0;
 const uint8_t NOISE_ABSOLUTE_ZERO = 174.0;
-const uint16_t MAX_TIMEOUT = 8000;		//8000 msec = 8.0 sec
+const uint16_t MAX_TIMEOUT = 10000;		//10000 msec = 10.0 sec
 const uint16_t MAX_WAIT = 12000;		//12000 msec = 12.0 sec
 const uint8_t MAX_RETRIES = 5;
 const uint8_t CORRECT_PACKET = 0;
@@ -1156,6 +1156,7 @@ public:
     int8_t setSyncWord(uint8_t sw);
     int8_t getSyncWord();
     int8_t setSleepMode();
+    int8_t setPowerDBM(uint8_t dbm, uint8_t PA_BOOST=0);
 
     // SX1272 or SX1276?
     uint8_t _board;

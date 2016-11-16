@@ -2503,6 +2503,9 @@ boolean	SX1272::isChannel(uint32_t ch)
         //added by C. Pham
     case CH_12_900:
     case CH_00_433:
+    case CH_01_433:
+    case CH_02_433:
+    case CH_03_433:
         //end
         return true;
         break;
@@ -4076,6 +4079,8 @@ uint8_t SX1272::receivePacketTimeoutACK()
 */
 uint8_t SX1272::receivePacketTimeoutACK(uint16_t wait)
 {
+    // commented by C. Pham because not used
+    /*
     uint8_t state = 2;
     uint8_t state_f = 2;
 
@@ -4141,6 +4146,7 @@ uint8_t SX1272::receivePacketTimeoutACK(uint16_t wait)
         state_f = 1;
     }
     return state_f;
+    */
 }
 
 /*
@@ -4705,6 +4711,12 @@ uint8_t SX1272::setTimeout()
 #endif
 
     state = 1;
+
+    // chaged by C. Pham
+    // we always use MAX_TIMEOUT
+    _sendTime = MAX_TIMEOUT;
+
+    /*
     if( _modem == LORA )
     {
         switch(_spreadingFactor)
@@ -5025,6 +5037,8 @@ uint8_t SX1272::setTimeout()
     }
     delay = ((0.1*_sendTime) + 1);
     _sendTime = (uint16_t) ((_sendTime * 1.2) + (rand()%delay));
+
+    */
 #if (SX1272_debug_mode > 1)
     Serial.print(F("Timeout to send/receive is: "));
     Serial.println(_sendTime, DEC);
@@ -5752,6 +5766,9 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_t le
     }
     if( state == 0 )
     {
+        // added by C. Pham
+        Serial.println(F("wait for ACK"));
+
         if( availableData() )
         {
             state_f = getACK();	// Getting ACK
@@ -6759,6 +6776,102 @@ int8_t SX1272::setSleepMode() {
     else
         state=1;
 
+    return state;
+}
+
+int8_t SX1272::setPowerDBM(uint8_t dbm, uint8_t PA_BOOST) {
+    byte st0;
+    int8_t state = 2;
+    byte value = 0x00;
+
+    byte RegPaDacReg=(_board==SX1272Chip)?0x5A:0x4D;
+
+#if (SX1272_debug_mode > 1)
+    Serial.println();
+    Serial.println(F("Starting 'setPowerDBM'"));
+#endif
+
+    st0 = readRegister(REG_OP_MODE);	  // Save the previous status
+    if( _modem == LORA )
+    { // LoRa Stdby mode to write in registers
+        writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);
+    }
+    else
+    { // FSK Stdby mode to write in registers
+        writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);
+    }
+
+    if (dbm > 14)
+        return state;
+
+    // disable high power output in all other cases
+    writeRegister(RegPaDacReg, 0x84);
+
+    if (dbm > 10)
+        // set RegOcp for OcpOn and OcpTrim
+        // 130mA
+        setMaxCurrent(0x10);
+    else
+        // 100mA
+        setMaxCurrent(0x0B);
+
+    if (_board==SX1272Chip) {
+        // Pout = -1 + _power[3:0] on RFO
+        // Pout = 2 + _power[3:0] on PA_BOOST
+        if (PA_BOOST) {
+            value = dbm - 2;
+            // we set the PA_BOOST pin
+            value = value | B10000000;
+        }
+        else
+            value = dbm + 1;
+
+        writeRegister(REG_PA_CONFIG, value);	// Setting output power value
+    }
+    else {
+        // for the SX1276
+        uint8_t pmax=15;
+
+        // then Pout = Pmax-(15-_power[3:0]) if  PaSelect=0 (RFO pin for +14dBm)
+        // so L=3dBm; H=7dBm; M=15dBm (but should be limited to 14dBm by RFO pin)
+
+        // and Pout = 17-(15-_power[3:0]) if  PaSelect=1 (PA_BOOST pin for +14dBm)
+        // so x= 14dBm (PA);
+        // when p=='X' for 20dBm, value is 0x0F and RegPaDacReg=0x87 so 20dBm is enabled
+
+        if (PA_BOOST) {
+            value = dbm - 17 + 15;
+            // we set the PA_BOOST pin
+            value = value | B10000000;
+        }
+        else
+            value = dbm - pmax + 15;
+
+        // set MaxPower to 7 -> Pmax=10.8+0.6*MaxPower [dBm] = 15
+        value = value | B01110000;
+
+        writeRegister(REG_PA_CONFIG, value);
+    }
+
+    _power=value;
+
+    value = readRegister(REG_PA_CONFIG);
+
+    if( value == _power )
+    {
+        state = 0;
+#if (SX1272_debug_mode > 1)
+        Serial.println(F("## Output power has been successfully set ##"));
+        Serial.println();
+#endif
+    }
+    else
+    {
+        state = 1;
+    }
+
+    writeRegister(REG_OP_MODE, st0);	// Getting back to previous status
+    delay(100);
     return state;
 }
 
