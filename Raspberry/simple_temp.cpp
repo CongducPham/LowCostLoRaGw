@@ -88,6 +88,11 @@
 #define DEFAULT_NODE_ADDR 8
 //////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 4
+#define field_index 4
+///////////////////////////////////////////////////////////////////
+
 #ifdef BAND868
   #define MAX_NB_CHANNEL 9
   #define STARTING_CHANNEL 10
@@ -187,6 +192,10 @@ void loop(void)
 
     uint8_t r_size;
 
+    // then use app_key_offset to skip the app key
+
+    r_size=sprintf((char*)message+app_key_offset, "\\!#%d#TC/%.2f", field_index, temp);
+
     PRINT_CSTSTR("%s","Sending ");
     PRINT_STR("%s",(char*)(message+app_key_offset));
     PRINTLN;
@@ -253,7 +262,6 @@ void loop(void)
     PRINT_VALUE("%d", e);
     PRINTLN;
 
-    delay(50);
 }
 
 int main (int argc, char *argv[]){
@@ -274,6 +282,7 @@ int main (int argc, char *argv[]){
 
     while(1){
         loop();
+        delay(1000);
     }
 
     return 0;
