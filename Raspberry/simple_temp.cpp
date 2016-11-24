@@ -108,7 +108,31 @@
 #define WITH_SEND_LED
 
 #ifdef WITH_SEND_LED
-  // Define the LED pin
+  /***
+
+    RPI vs arduPi GPIO Pin Layout
+
+    | Raspbeery Pi  v2,3 GPIO Pin | arduPi IO Pin | Alternativ Function |
+    | --------------------------- |---------------| --------------------|
+    |  2                          |               |  I2C:SDA            |
+    |  3                          |               |  I2C:SCL            |
+    |  4                          |  6            |                     |
+    |  8                          |  10           |  SPI:CE0            |
+    |  9                          |  12           |  SPI:CE0            |
+    |  10                         |  11           |  SPI:CE0            |
+    |  11                         |  13           |  SPI:CE0            |
+    |  14                         |  1            |  UART:TX            |
+    |  15                         |  0            |  UART:RX            |
+    |  17                         |  7            |                     |
+    |  18                         |  2            |                     |
+    |  21/27                      |  8            |                     |
+    |  22                         |  9            |                     |
+    |  23                         |  3            |                     |
+    |  24                         |  4            |                     |
+    |  25                         |  5            |                     |
+
+   ***/
+  // Define the LED pin based on the arduPi IO Pin column
   #define SEND_LED  3
 #endif
 ///////////////////////////////////////////////////////////////////
