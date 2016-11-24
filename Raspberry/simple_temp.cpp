@@ -21,7 +21,9 @@
 
 
 // IMPORTANT
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+// please uncomment only 1 choice
 #define ETSI_EUROPE_REGULATION
 //#define FCC_US_REGULATION
 //#define SENEGAL_REGULATION
@@ -53,7 +55,97 @@
   const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE LORA MODE, NODE ADDRESS
+#define LORAMODE  1
+// the special mode to test BW=125MHz, CR=4/5, SF=12
+// on the 868.1MHz channel
+//#define LORAMODE 11
+//////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////
+#define DEFAULT_NODE_ADDR 8
+#define DEFAULT_DEST_ADDR 1
+//////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////
+//#define WITH_APPKEY
+
+#ifdef WITH_APPKEY
+  // CHANGE HERE THE APPKEY, BUT IF GW CHECKS FOR APPKEY, MUST BE
+  // IN THE APPKEY LIST MAINTAINED BY GW.
+  uint8_t my_appKey[4]={5, 6, 7, 8};
+#endif
+//////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////
+#define WITH_ACK
+
+#ifdef WITH_ACK
+  #define NB_RETRIES 3
+#endif
+//////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////
+// use the dynamic ACK feature of our modified SX1272 lib
+#define GW_AUTO_ACK
+//////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 4
+#define THINGSPEAK_FIELD_INDEX 4
+///////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+#define WITH_SEND_LED
+
+#ifdef WITH_SEND_LED
+  // Define the LED pin
+  #define SEND_LED  3
+#endif
+///////////////////////////////////////////////////////////////////
+
+#ifdef BAND868
+  #define MAX_NB_CHANNEL 9
+  #define STARTING_CHANNEL 10
+  #define ENDING_CHANNEL 18
+  uint8_t loraChannelIndex=0;
+  uint32_t loraChannelArray[MAX_NB_CHANNEL]={
+          CH_10_868,
+          CH_11_868,
+          CH_12_868,
+          CH_13_868,
+          CH_14_868,
+          CH_15_868,
+          CH_16_868,
+          CH_17_868,
+          CH_18_868
+  };
+#elif defined BAND900
+  #define MAX_NB_CHANNEL 13
+  #define STARTING_CHANNEL 0
+  #define ENDING_CHANNEL 12
+  uint8_t loraChannelIndex=5;
+  uint32_t loraChannelArray[MAX_NB_CHANNEL]={
+        CH_00_900,
+        CH_01_900,
+        CH_02_900,
+        CH_03_900,
+        CH_04_900,
+        CH_05_900,
+        CH_06_900,
+        CH_07_900,
+        CH_08_900,
+        CH_09_900,
+        CH_10_900,
+        CH_11_900,
+        CH_12_900
+  };
+#endif
 
 #define PRINTLN                   printf("\n")
 #define PRINT_CSTSTR(fmt,param)   printf(fmt,param)
@@ -62,7 +154,7 @@
 #define FLUSHOUTPUT               fflush(stdout);
 
 #ifdef DEBUG
-  #define DEBUGLN                 PRINTLN
+#define DEBUGLN                 PRINTLN
   #define DEBUG_CSTSTR(fmt,param) PRINT_CSTSTR(fmt,param)
   #define DEBUG_STR(fmt,param)    PRINT_CSTSTR(fmt,param)
   #define DEBUG_VALUE(fmt,param)  PRINT_VALUE(fmt,param)
@@ -73,53 +165,17 @@
   #define DEBUG_VALUE(fmt,param)
 #endif
 
-//#define RECEIVE_ALL
-//#define CAD_TEST
-//#define WINPUT
-//#define WITH_SEND_LED
 
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE LORA MODE, NODE ADDRESS
-#define LORAMODE  1
-// the special mode to test BW=125MHz, CR=4/5, SF=12
-// on the 868.1MHz channel
-//#define LORAMODE 11
-
-#define DEFAULT_NODE_ADDR 8
-//////////////////////////////////////////////////////////////////
-
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 4
-#define field_index 4
-///////////////////////////////////////////////////////////////////
-
-#ifdef BAND868
-  #define MAX_NB_CHANNEL 9
-  #define STARTING_CHANNEL 10
-  #define ENDING_CHANNEL 18
-uint8_t loraChannelIndex=0;
-uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_10_868,CH_11_868,CH_12_868,CH_13_868,CH_14_868,CH_15_868,CH_16_868,CH_17_868,CH_18_868};
-#else // assuming #defined BAND900
-  #define MAX_NB_CHANNEL 13
-  #define STARTING_CHANNEL 0
-  #define ENDING_CHANNEL 12
-  uint8_t loraChannelIndex=5;
-  uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_900,CH_01_900,CH_02_900,CH_03_900,CH_04_900,CH_05_900,CH_06_900,CH_07_900,CH_08_900,
-                                            CH_09_900,CH_10_900,CH_11_900,CH_12_900};
-#endif
-
-// use the dynamic ACK feature of our modified SX1272 lib
-#define GW_AUTO_ACK
-
-#ifdef WITH_SEND_LED
-  #define SEND_LED  44
-#endif
-
-#define DEFAULT_DEST_ADDR 1
 
 int node_addr = DEFAULT_NODE_ADDR;
 double temp;
 uint8_t message[100];
+
+
+///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 
 void setup()
 {
@@ -164,11 +220,6 @@ void setup()
 
     FLUSHOUTPUT;
     delay(1000);
-
-
-#ifdef CAD_TEST
-    PRINT_CSTSTR("%s","Do CAD test\n");
-#endif
 }
 
 void loop(void)
@@ -194,7 +245,7 @@ void loop(void)
 
     // then use app_key_offset to skip the app key
 
-    r_size=sprintf((char*)message+app_key_offset, "\\!#%d#TC/%.2f", field_index, temp);
+    r_size=sprintf((char*)message+app_key_offset, "\\!#%d#TC/%.2f", THINGSPEAK_FIELD_INDEX, temp);
 
     PRINT_CSTSTR("%s","Sending ");
     PRINT_STR("%s",(char*)(message+app_key_offset));
@@ -220,6 +271,10 @@ void loop(void)
 
     // Send message to the gateway and print the result
     // with the app key if this feature is enabled
+#ifdef WITH_SEND_LED
+    digitalWrite(SEND_LED, HIGH);
+#endif
+
 #ifdef WITH_ACK
     int n_retry=NB_RETRIES;
 
@@ -240,6 +295,11 @@ void loop(void)
 #else
     e = sx1272.sendPacketTimeout(DEFAULT_DEST_ADDR, message, pl);
 #endif
+
+#ifdef WITH_SEND_LED
+    digitalWrite(SEND_LED, LOW);
+#endif
+
     endSend=millis();
 
     PRINT_CSTSTR("%s","LoRa pkt size ");
