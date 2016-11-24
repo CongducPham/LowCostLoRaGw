@@ -1,5 +1,16 @@
 include radio.makefile
 
+###############################################################################
+#  Simple Temp example
+###############################################################################
+simple_temp_pi2: simple_temp_pi2.o arduPi_pi2.o SX1272_pi2.o
+	$(CXX) -lrt -lpthread simple_temp_pi2.o arduPi_pi2.o SX1272_pi2.o -o simple_temp_pi2
+
+simple_temp_pi2.o: simple_temp.cpp
+	$(CXX) $(CFLAGS) -DRASPBERRY -DRASPBERRY2 -DIS_RCV_GATEWAY -c simple_temp.cpp -o simple_temp_pi2.o
+
+###############################################################################
+
 lora_gateway: lora_gateway.o arduPi.o SX1272.o
 	$(CXX) -lrt -lpthread lora_gateway.o arduPi.o SX1272.o -o lora_gateway
 
@@ -88,4 +99,4 @@ lora_gateway_dev_pi2.o: lora_gateway.cpp
 lib: arduPi.o arduPi_pi2.o SX1272.o SX1272_pi2.o SX1272_wnetkey.o SX1272_pi2_wnetkey.o lora_gateway.o lora_las_gateway.o lora_gateway_pi2.o lora_las_gateway_pi2.o
 
 clean:
-	-rm *.o lora_*gateway
+	-rm *.o lora_*gateway simple_*temp_pi2
