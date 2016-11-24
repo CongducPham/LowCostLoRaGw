@@ -85,7 +85,7 @@
 // on the 868.1MHz channel
 //#define LORAMODE 11
 
-#define node_addr 8
+#define DEFAULT_NODE_ADDR 8
 //////////////////////////////////////////////////////////////////
 
 #ifdef BAND868
@@ -112,6 +112,7 @@ uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_10_868,CH_11_868,CH_12_868,CH_13_8
 
 #define DEFAULT_DEST_ADDR 1
 
+int node_addr = DEFAULT_NODE_ADDR;
 double temp;
 uint8_t message[100];
 
@@ -256,7 +257,18 @@ void loop(void)
 }
 
 int main (int argc, char *argv[]){
-    std::cout << "Hello World!" << std::endl;
+
+    if(argc < 2) {
+        PRINT_CSTSTR("%s", "Need the node address as a parameter!");
+        PRINTLN;
+        PRINT_CSTSTR("Example: %s <nodeAddr>", argv[0]);
+        PRINTLN;
+        return 1;
+    }
+    node_addr = (uint8_t)atoi(argv[1]);
+    PRINT_CSTSTR("%s", "My node address is: ");
+    PRINT_VALUE("%d", node_addr);
+    PRINTLN;
 
     setup();
 
