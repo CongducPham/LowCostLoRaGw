@@ -30,7 +30,9 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
- *
+ *  Now, 26th, 2016
+ *		- add preliminary support for ToA limitation
+ *      - when in "production" mode, uncomment #define LIMIT_TOA
  *  Jan, 23rd, 2016
  *      - the packet format at transmission does not use the original Libelium format anymore
  *      * the retry field is removed therefore all operations using retry will probably not work well, not tested though
@@ -70,6 +72,17 @@
 // based on SIFS=3CAD
 uint8_t sx1272_SIFS_value[11]={0, 183, 94, 44, 47, 23, 24, 12, 12, 7, 4};
 uint8_t sx1272_CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
+
+#define LIMIT_TOA
+// 0.1% for testing
+#define MAX_DUTY_CYCLE_PER_HOUR 3600L
+// 1%, regular mode
+//#define MAX_DUTY_CYCLE_PER_HOUR 36000L
+// normally 1 hour, set to smaller value for testing
+//#define DUTYCYCLE_DURATION 3600000L
+// 4 min for testing
+#define DUTYCYCLE_DURATION 240000L
+
 // end
 
 //**********************************************************************/
@@ -100,6 +113,10 @@ SX1272::SX1272()
     // DIFS by default
     _send_cad_number=9;
     _needPABOOST=false;
+    _limitToA=false;
+    _startToAcycle=millis();
+    _remainingToA=MAX_DUTY_CYCLE_PER_HOUR;
+    _endToAcycle=_startToAcycle+DUTYCYCLE_DURATION;
 #ifdef W_REQUESTED_ACK
     _requestACK = 0;
 #endif
@@ -368,6 +385,18 @@ uint8_t SX1272::ON()
     setSyncWord(_defaultSyncWord);
     getSyncWord();
     _defaultSyncWord=_syncWord;
+
+#ifdef LIMIT_TOA
+    uint16_t remainingToA=limitToA();
+    Serial.println(F("## Limit ToA ON ##"));
+    Serial.print(F("cycle begins at "));
+    Serial.print(_startToAcycle);
+    Serial.print(F(" cycle ends at "));
+    Serial.print(_endToAcycle);
+    Serial.print(F(" remaining ToA is "));
+    Serial.print(remainingToA);
+    Serial.println();
+#endif
     //end
 
     return state;
@@ -2650,8 +2679,8 @@ int8_t SX1272::setChannel(uint32_t ch)
         state = 1;
     }
 
-    // commented by C. Pham to avoid adding new channel
-    // besides, the test aboce is sufficient
+    // commented by C. Pham to avoid adding new channel each time
+    // besides, the test above is sufficient
     /*
     if(!isChannel(ch) )
     {
@@ -3759,10 +3788,21 @@ uint8_t SX1272::setACK()
 {
     uint8_t state = 2;
 
-    //#if (SX1272_debug_mode > 1)
+#if (SX1272_debug_mode > 1)
     Serial.println();
     Serial.println(F("Starting 'setACK'"));
-    //#endif
+#endif
+
+    // added by C. Pham
+    // check for enough remaining ToA
+    // when operating under duty-cycle mode
+    if (_limitToA) {
+        if (getRemainingToA() - getToA(ACK_LENGTH) < 0) {
+            Serial.print(F("## not enough ToA for ACK at"));
+            Serial.println(millis());
+            return SX1272_ERROR_TOA;
+        }
+    }
 
     // delay(1000);
 
@@ -3952,7 +3992,7 @@ uint8_t SX1272::receivePacketTimeout(uint16_t wait)
 
 #if (SX1272_debug_mode > 1)
     Serial.println();
-    Serial.println(F("Starting 'receivePacketTimeoutACK'"));
+    Serial.println(F("Starting 'receivePacketTimeout'"));
 #endif
 
     state = receive();
@@ -5153,11 +5193,26 @@ uint8_t SX1272::setPacket(uint8_t dest, char *payload)
 {
     int8_t state = 2;
 
-
 #if (SX1272_debug_mode > 1)
     Serial.println();
     Serial.println(F("Starting 'setPacket'"));
 #endif
+
+    // added by C. Pham
+    // check for enough remaining ToA
+    // when operating under duty-cycle mode
+    if (_limitToA) {
+        uint16_t length16 = (uint16_t)strlen(payload);
+
+        if (!_rawFormat)
+            length16 = length16 + OFFSET_PAYLOADLENGTH;
+
+        if (getRemainingToA() - getToA(length16) < 0) {
+            Serial.print(F("## not enough ToA at "));
+            Serial.println(millis());
+            return SX1272_ERROR_TOA;
+        }
+    }
 
     clearFlags();	// Initializing flags
 
@@ -5288,6 +5343,24 @@ uint8_t SX1272::setPacket(uint8_t dest, uint8_t *payload)
     Serial.println();
     Serial.println(F("Starting 'setPacket'"));
 #endif
+
+    // added by C. Pham
+    // check for enough remaining ToA
+    // when operating under duty-cycle mode
+    if (_limitToA) {
+        // here truncPayload() should have been called before in
+        // sendPacketTimeout(uint8_t dest, uint8_t *payload, uint16_t length16)
+        uint16_t length16 = _payloadlength;
+
+        if (!_rawFormat)
+            length16 = length16 + OFFSET_PAYLOADLENGTH;
+
+        if (getRemainingToA() - getToA(length16) < 0) {
+            Serial.print(F("## not enough ToA at "));
+            Serial.println(millis());
+            return SX1272_ERROR_TOA;
+        }
+    }
 
     st0 = readRegister(REG_OP_MODE);	// Save the previous status
     clearFlags();	// Initializing flags
@@ -5501,6 +5574,10 @@ uint8_t SX1272::sendWithTimeout(uint16_t wait)
         Serial.println(F("## Packet successfully sent ##"));
         Serial.println();
 #endif
+        // added by C. Pham
+        // normally there should be enough remaing ToA as the test has been done earlier
+        if (_limitToA)
+            removeToA(_currentToA);
     }
     else
     {
@@ -5728,7 +5805,7 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, char *payload)
         }
         else
         {
-            state_f = 3;
+            state_f = SX1272_ERROR_ACK;
             // added by C. Pham
             Serial.println(F("no ACK"));
         }
@@ -5788,7 +5865,9 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_t le
         }
         else
         {
-            state_f = 3;
+            state_f = SX1272_ERROR_ACK;
+            // added by C. Pham
+            Serial.println(F("no ACK"));
         }
     }
     else
@@ -5844,7 +5923,7 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, char *payload, uint16_t wait)
         }
         else
         {
-            state_f = 3;
+            state_f = SX1272_ERROR_ACK;
             // added by C. Pham
             Serial.println(F("no ACK"));
         }
@@ -5902,7 +5981,7 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_t le
         }
         else
         {
-            state_f = 3;
+            state_f = SX1272_ERROR_ACK;
             // added by C. Pham
             Serial.println(F("no ACK"));
         }
@@ -6553,7 +6632,8 @@ uint16_t SX1272::getToA(uint8_t pl) {
     Serial.println(airTime);
 #endif
     // return in ms
-    return ceil(airTime/1000)+1;
+    _currentToA=ceil(airTime/1000)+1;
+    return _currentToA;
 }
 
 // need to set _send_cad_number to a value > 0
@@ -6886,6 +6966,59 @@ int8_t SX1272::setPowerDBM(uint8_t dbm) {
     writeRegister(REG_OP_MODE, st0);	// Getting back to previous status
     delay(100);
     return state;
+}
+
+long SX1272::limitToA() {
+
+    // first time we set limitToA?
+    // in this design, once you set _limitToA to true
+    // it is not possible to set it back to false
+    if (_limitToA==false) {
+        _startToAcycle=millis();
+        _remainingToA=MAX_DUTY_CYCLE_PER_HOUR;
+        // we are handling millis() rollover by calculating the end of cycle time
+        _endToAcycle=_startToAcycle+DUTYCYCLE_DURATION;
+    }
+
+    _limitToA=true;
+    return getRemainingToA();
+}
+
+long SX1272::getRemainingToA() {
+
+    if (_limitToA==false)
+        return MAX_DUTY_CYCLE_PER_HOUR;
+
+    // we compare to the end of cycle so that millis() rollover is taken into account
+    // using unsigned long modulo operation
+    if ( (millis() > _endToAcycle ) ) {
+        _startToAcycle=_endToAcycle;
+        _remainingToA=MAX_DUTY_CYCLE_PER_HOUR;
+        _endToAcycle=_startToAcycle+DUTYCYCLE_DURATION;
+
+        Serial.println(F("## new cycle for ToA ##"));
+        Serial.print(F("cycle begins at "));
+        Serial.print(_startToAcycle);
+        Serial.print(F(" cycle ends at "));
+        Serial.print(_endToAcycle);
+        Serial.print(F(" remaining ToA is "));
+        Serial.print(_remainingToA);
+        Serial.println();
+    }
+
+    return _remainingToA;
+}
+
+long SX1272::removeToA(uint16_t toa) {
+
+    // first, update _remainingToA
+    getRemainingToA();
+
+    if (_limitToA) {
+        _remainingToA-=toa;
+    }
+
+    return _remainingToA;
 }
 
 SX1272 sx1272 = SX1272();

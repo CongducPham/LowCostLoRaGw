@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Nov. 16th by C. Pham
+ * last update: Nov. 26th by C. Pham
  */
 #include <SPI.h> 
 // Include the SX1272
@@ -35,14 +35,6 @@
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
-// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-//#define PABOOST
-/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-
-// IMPORTANT
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 #define BAND868
 //#define BAND900
@@ -51,8 +43,13 @@
 
 #ifdef ETSI_EUROPE_REGULATION
 #define MAX_DBM 14
+// previous way for setting output power
+// char powerLevel='M';
 #elif defined SENEGAL_REGULATION
 #define MAX_DBM 10
+// previous way for setting output power
+// 'H' is actually 6dBm, so better to use the new way to set output power
+// char powerLevel='H';
 #endif
 
 #ifdef BAND868
@@ -66,6 +63,14 @@ const uint32_t DEFAULT_CHANNEL=CH_05_900;
 #elif defined BAND433
 const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
+
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+//#define PABOOST
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
@@ -144,17 +149,22 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 #define NB_RETRIES 2
 #endif
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__ || defined __SAMD21G18A__
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__ || defined __MKL26Z64__ || defined __SAMD21G18A__
+  // if you have a Pro Mini running at 5V, then change here
   // these boards work in 3.3V
   // Nexus board from Ideetron is a Mini
+  // __MK20DX256__ is for Teensy31/32
+  // __MKL26Z64__ is for TeensyLC
+  // __SAMD21G18A__ is for Zero/M0 and FeatherM0 (Cortex-M0)
   #define TEMP_SCALE  3300.0
 #else // ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MEGA2560
+  // also for all other boards, so change here if required.
   #define TEMP_SCALE  5000.0
 #endif
 
 #ifdef LOW_POWER
-// this is for the Teensy31/32
-#ifdef __MK20DX256__
+// this is for the Teensy31/32 & TeensyLC
+#if defined __MK20DX256__ || defined __MKL26Z64__
 #define LOW_POWER_PERIOD 60
 #include <Snooze.h>
 SnoozeBlock sleep_config;
@@ -206,8 +216,7 @@ LASDevice loraLAS(node_addr,LAS_DEFAULT_ALPHA,DEFAULT_DEST_ADDR);
 #endif
 
 double temp;
-unsigned long lastTransmissionTime=0;
-unsigned long delayBeforeTransmit=0;
+unsigned long nextTransmissionTime=0L;
 char float_str[20];
 uint8_t message[100];
 
@@ -400,6 +409,10 @@ void setup()
   PRINT_CSTSTR("%s","Teensy31/32 detected\n");
 #endif
 
+#ifdef __MKL26Z64__
+  PRINT_CSTSTR("%s","TeensyLC detected\n");
+#endif
+
 #ifdef __SAMD21G18A__ 
   PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
 #endif
@@ -477,9 +490,18 @@ void setup()
   // Select amplifier line; PABOOST or RFO
 #ifdef PABOOST
   sx1272._needPABOOST=true;
-#endif  
+  // previous way for setting output power
+  // powerLevel='x';
+#else
+  // previous way for setting output power
+  // powerLevel='M';  
+#endif
+
+  // previous way for setting output power
+  // e = sx1272.setPower(powerLevel);  
 
   e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
+  
   PRINT_CSTSTR("%s","Setting Power: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
@@ -541,7 +563,7 @@ void loop(void)
 
 #ifndef LOW_POWER
   // 600000+random(15,60)*1000
-  if (millis()-lastTransmissionTime > delayBeforeTransmit) {
+  if (millis() > nextTransmissionTime) {
 #endif
 
 #ifdef LOW_POWER
@@ -851,7 +873,7 @@ void loop(void)
 #else
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
 
-#ifdef __MK20DX256__ 
+#if defined __MK20DX256__ || defined __MKL26Z64__
       sleep_config.setTimer(LOW_POWER_PERIOD*1000);// milliseconds
 #endif
           
@@ -870,8 +892,8 @@ void loop(void)
           //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
           //      TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
           //      USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
-#elif defined __MK20DX256__  
-          // Teensy3.2
+#elif defined __MK20DX256__ || defined __MKL26Z64__
+          // Teensy31/32 & TeensyLC
 #ifdef LOW_POWER_HIBERNATE
           Snooze.hibernate(sleep_config);
 #else            
@@ -890,13 +912,12 @@ void loop(void)
 #endif  
       
 #else
-      // use a random part also to avoid collision
-      PRINT_VALUE("%ld", lastTransmissionTime);
+      PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;
-      PRINT_CSTSTR("%s","Will send next value in\n");
-      lastTransmissionTime=millis();
-      delayBeforeTransmit=idlePeriodInMin*60*1000+random(15,60)*1000;
-      PRINT_VALUE("%ld", delayBeforeTransmit);
+      PRINT_CSTSTR("%s","Will send next value at\n");
+      // use a random part also to avoid collision
+      nextTransmissionTime=millis()+(unsigned long)idlePeriodInMin*60*1000+(unsigned long)random(15,60)*1000;
+      PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;
   }
 #endif

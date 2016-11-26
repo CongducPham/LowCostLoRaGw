@@ -43,12 +43,13 @@
  *****************************************************************************/
 
 // added by C. Pham
+// do not remove!
 #define W_REQUESTED_ACK
 //#define W_NET_KEY
 //#define W_INITIALIZATION
 #define SX1272_RST  3
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_MINI || defined __MK20DX256__
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_MICRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__
 #define SX1272_SS 10
 #else
 #define SX1272_SS 2
@@ -367,6 +368,9 @@ const uint8_t INCORRECT_PACKET = 1;
 #define PKT_FLAG_DATA_ENCRYPTED     0x04
 #define PKT_FLAG_DATA_WAPPKEY       0x02
 #define PKT_FLAG_DATA_ISBINARY      0x01
+
+#define SX1272_ERROR_ACK        3
+#define SX1272_ERROR_TOA        4
 
 //! Structure :
 /*!
@@ -1164,6 +1168,9 @@ public:
     int8_t getSyncWord();
     int8_t setSleepMode();
     int8_t setPowerDBM(uint8_t dbm);
+    long limitToA();
+    long getRemainingToA();
+    long removeToA(uint16_t toa);
 
     // SX1272 or SX1276?
     uint8_t _board;
@@ -1381,6 +1388,15 @@ public:
    	*/
 	uint16_t _sendTime;
 
+    // added by C. Pham for ToA management
+    //
+private:
+
+    bool _limitToA;
+    long _remainingToA;
+    unsigned long _startToAcycle;
+    unsigned long _endToAcycle;
+    uint16_t _currentToA;
 };
 
 extern SX1272	sx1272;

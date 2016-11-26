@@ -67,11 +67,52 @@
 // based on SIFS=3CAD
 uint8_t sx1272_SIFS_value[11]={0, 183, 94, 44, 47, 23, 24, 12, 12, 7, 4};
 uint8_t sx1272_CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
+
+#define MAX_DUTY_CYCLE_PER_HOUR 36000
+#define ULONG_MAX 	         4294967295UL
 // end
 
 //**********************************************************************
 // Public functions.
 //**********************************************************************
+
+SX1272::SX1272()
+{
+    // Initialize class variables
+    _bandwidth = BW_125;
+    _codingRate = CR_5;
+    _spreadingFactor = SF_7;
+    _channel = CH_12_900;
+    _header = HEADER_ON;
+    _CRC = CRC_OFF;
+    _modem = FSK;
+    _power = 15;
+    _packetNumber = 0;
+    _reception = CORRECT_PACKET;
+    _retries = 0;
+    // added by C. Pham
+    _defaultSyncWord=0x12;
+    _rawFormat=false;
+    _extendedIFS=true;
+    _RSSIonSend=true;
+    // disabled by default
+    _enableCarrierSense=false;
+    // DIFS by default
+    _send_cad_number=9;
+    _needPABOOST=false;
+    _limitToA=false;
+    _startToAcycle=millis();
+    _remainingToA=MAX_DUTY_CYCLE_PER_HOUR;
+#ifdef W_REQUESTED_ACK
+    _requestACK = 0;
+#endif
+#ifdef W_NET_KEY
+    _my_netkey[0] = net_key_0;
+    _my_netkey[1] = net_key_1;
+#endif
+    _maxRetries = 3;
+    packet_sent.retry = _retries;
+}
 
 // added by C. Pham
 // copied from LoRaMAC-Node
@@ -3718,6 +3759,17 @@ uint8_t SX1272::setACK()
     printf("Starting 'setACK'\n");
 #endif
 
+    // added by C. Pham
+    // check for enough remaining ToA
+    // when operating under duty-cycle mode
+    if (_limitToA) {
+        if (getRemainingToA() - getToA(ACK_LENGTH) < 0) {
+            printf("## not enough ToA for ACK at ");
+            printf("%d\n", millis());
+            return SX1272_ERROR_TOA;
+        }
+    }
+
     // delay(1000);
 
     clearFlags();	// Initializing flags
@@ -4057,6 +4109,8 @@ uint8_t SX1272::receivePacketTimeoutACK()
 */
 uint8_t SX1272::receivePacketTimeoutACK(uint16_t wait)
 {
+    // commented by C. Pham because not used
+    /*
     uint8_t state = 2;
     uint8_t state_f = 2;
 
@@ -4121,7 +4175,8 @@ uint8_t SX1272::receivePacketTimeoutACK(uint16_t wait)
     {
         state_f = 1;
     }
-    return state_f;
+    return state_f; 
+    */
 }
 
 /*
@@ -5103,11 +5158,26 @@ uint8_t SX1272::setPacket(uint8_t dest, char *payload)
 {
     int8_t state = 2;
 
-
 #if (SX1272_debug_mode > 1)
     printf("\n");
     printf("Starting 'setPacket'\n");
 #endif
+
+    // added by C. Pham
+    // check for enough remaining ToA
+    // when operating under duty-cycle mode
+    if (_limitToA) {
+        uint16_t length16 = (uint16_t)strlen(payload);
+
+        if (!_rawFormat)
+            length16 = length16 + OFFSET_PAYLOADLENGTH;
+
+        if (getRemainingToA() - getToA(length16) < 0) {
+            printf("## not enough ToA at ");
+            printf("%d\n", millis());
+            return SX1272_ERROR_TOA;
+        }
+    }
 
     clearFlags();	// Initializing flags
 
@@ -5230,6 +5300,24 @@ uint8_t SX1272::setPacket(uint8_t dest, uint8_t *payload)
     printf("\n");
     printf("Starting 'setPacket'\n");
 #endif
+
+    // added by C. Pham
+    // check for enough remaining ToA
+    // when operating under duty-cycle mode
+    if (_limitToA) {
+        // here truncPayload() should have been called before in
+        // sendPacketTimeout(uint8_t dest, uint8_t *payload, uint16_t length16)
+        uint16_t length16 = _payloadlength;
+
+        if (!_rawFormat)
+            length16 = length16 + OFFSET_PAYLOADLENGTH;
+
+        if (getRemainingToA() - getToA(length16) < 0) {
+            printf("## not enough ToA at ");
+            printf("%d\n", millis());
+            return SX1272_ERROR_TOA;
+        }
+    }
 
     st0 = readRegister(REG_OP_MODE);	// Save the previous status
     clearFlags();	// Initializing flags
@@ -5653,7 +5741,9 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, char *payload)
         }
         else
         {
-            state_f = 3;
+            state_f = SX1272_ERROR_ACK;
+            // added by C. Pham
+            printf("no ACK\n");
         }
     }
     else
@@ -5711,7 +5801,9 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_t le
         }
         else
         {
-            state_f = 3;
+            state_f = SX1272_ERROR_ACK;
+            // added by C. Pham
+            printf("no ACK\n");
         }
     }
     else
@@ -5768,7 +5860,9 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, char *payload, uint16_t wait)
         }
         else
         {
-            state_f = 3;
+            state_f = SX1272_ERROR_ACK;
+            // added by C. Pham
+            printf("no ACK\n");
         }
     }
     else
@@ -5825,7 +5919,9 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_t le
         }
         else
         {
-            state_f = 3;
+            state_f = SX1272_ERROR_ACK;
+            // added by C. Pham
+            printf("no ACK\n");
         }
     }
     else
@@ -6750,5 +6846,58 @@ int8_t SX1272::setPowerDBM(uint8_t dbm) {
     delay(100);
     return state;
 }
+
+long SX1272::limitToA() {
+
+    // first time we set limitToA?
+    // in this design, once you set _limitToA to true
+    // it is not possible to set it back to false
+    if (_limitToA==false) {
+        _startToAcycle=millis();
+        _remainingToA=MAX_DUTY_CYCLE_PER_HOUR;
+        // we are handling millis() rollover by calculating the end of cycle time
+        _endToAcycle=_startToAcycle+DUTYCYCLE_DURATION;
+    }
+
+    _limitToA=true;
+    return getRemainingToA();
+}
+
+long SX1272::getRemainingToA() {
+
+    if (_limitToA==false)
+        return MAX_DUTY_CYCLE_PER_HOUR;
+
+    // we compare to the end of cycle so that millis() rollover is taken into account
+    // using unsigned long modulo operation
+    if ( (millis() > _endToAcycle ) ) {
+        _startToAcycle=_endToAcycle;
+        _remainingToA=MAX_DUTY_CYCLE_PER_HOUR;
+        _endToAcycle=_startToAcycle+DUTYCYCLE_DURATION;
+
+        printf("## new cycle for ToA ##\n");
+        printf("cycle begins at ");
+        printf("%ld", _startToAcycle);
+        printf(" cycle ends at ");
+        printf("%ld", _endToAcycle);
+        printf(" remaining ToA is ");
+        printf("%ld\n", _remainingToA);
+    }
+
+    return _remainingToA;
+}
+
+long SX1272::removeToA(uint16_t toa) {
+
+    // first, update _remainingToA
+    getRemainingToA();
+
+    if (_limitToA) {
+        _remainingToA-=toa;
+    }
+
+    return _remainingToA;
+}
+
 
 SX1272 sx1272 = SX1272();

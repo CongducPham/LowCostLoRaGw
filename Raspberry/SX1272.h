@@ -367,6 +367,9 @@ const uint8_t INCORRECT_PACKET = 1;
 #define PKT_FLAG_DATA_WAPPKEY       0x02
 #define PKT_FLAG_DATA_ISBINARY      0x01
 
+#define SX1272_ERROR_ACK        3
+#define SX1272_ERROR_TOA        4
+
 //! Structure :
 /*!
  */
@@ -430,47 +433,6 @@ class SX1272
 {
 
 public:
-
-	//! class constructor
-  	/*!
-	It does nothing
-	\param void
-	\return void
-  	 */
-   	SX1272()
-    {
-		// Initialize class variables
-		_bandwidth = BW_125;
-		_codingRate = CR_5;
-		_spreadingFactor = SF_7;
-		_channel = CH_12_900;
-		_header = HEADER_ON;
-		_CRC = CRC_OFF;
-		_modem = FSK;
-		_power = 15;
-		_packetNumber = 0;
-		_reception = CORRECT_PACKET;
-        _retries = 0;
-        // added by C. Pham
-        _defaultSyncWord=0x12;
-        _rawFormat=false;
-        _extendedIFS=true;
-        _RSSIonSend=true;
-        // disabled by default
-        _enableCarrierSense=false;
-        // DIFS by default
-        _send_cad_number=9;
-        _needPABOOST=false;
-#ifdef W_REQUESTED_ACK
-        _requestACK = 0;
-#endif
-#ifdef W_NET_KEY
-        _my_netkey[0] = net_key_0;
-        _my_netkey[1] = net_key_1;
-#endif
-		_maxRetries = 3;
-		packet_sent.retry = _retries;
-	};
 
 	//! It puts the module ON
   	/*!
@@ -1196,6 +1158,9 @@ public:
     int8_t getSyncWord();
     int8_t setSleepMode();
     int8_t setPowerDBM(uint8_t dbm);
+    long limitToA();
+    long getRemainingToA();
+    long removeToA(uint16_t toa);
 
     // SX1272 or SX1276?
     uint8_t _board;
@@ -1419,6 +1384,14 @@ private:
 
 	char txbuf[2];
 	char rxbuf[2];
+
+    // added by C. Pham for ToA management
+    //
+    bool _limitToA;
+    long _remainingToA;
+    unsigned long _startToAcycle;
+    unsigned long _endToAcycle;
+    uint16_t _currentToA;
 };
 
 extern SX1272	sx1272;

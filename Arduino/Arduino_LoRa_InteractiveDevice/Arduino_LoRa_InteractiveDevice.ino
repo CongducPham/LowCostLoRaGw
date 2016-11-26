@@ -17,6 +17,8 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
+ * last update: Nov. 26th by C. Pham
+ * 
  *  Version:                1.5
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
@@ -185,14 +187,6 @@
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
-// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-//#define PABOOST
-/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-
-// IMPORTANT
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 #define BAND868
 //#define BAND900
@@ -204,6 +198,14 @@
 #elif defined SENEGAL_REGULATION
 #define MAX_DBM 10
 #endif
+
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+//#define PABOOST
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__
@@ -234,10 +236,11 @@
   #define DEBUG_VALUE(fmt,param)  
 #endif
 
+#define SHOW_FREEMEMORY
 //#define CAD_TEST
 //#define LORA_LAS
 //#define WITH_SEND_LED
-//#define WITH_AES
+#define WITH_AES
 
 #ifdef BAND868
 #define MAX_NB_CHANNEL 15
@@ -318,16 +321,6 @@ uint8_t loraMode=LORAMODE;
 
 uint32_t loraChannel=loraChannelArray[loraChannelIndex];
 
-#ifdef PABOOST
-// HopeRF 92W/95W and inAir9B need the PA_BOOST
-// so 'x' set the PA_BOOST but then limit the power to +14dBm 
-char loraPower='x';
-#else
-// other radio board such as Libelium LoRa or inAir9 do not need the PA_BOOST
-// so 'M' set the output power to 15 to get +14dBm
-char loraPower='M';
-#endif
-
 uint8_t loraAddr=LORA_ADDR;
 
 unsigned long startDoCad, endDoCad;
@@ -340,7 +333,7 @@ uint8_t CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
 
 unsigned int inter_pkt_time=0;
 unsigned int random_inter_pkt_time=0;
-long last_periodic_sendtime=0;
+unsigned long next_periodic_sendtime=0L;
 // packet size for periodic sending
 uint8_t MSS=40;
 
@@ -372,7 +365,7 @@ boolean full_lorawan=false;
 #endif
 ///////////////////////////////////////////////////////////////////
 
-#if defined ARDUINO && not defined _VARIANT_ARDUINO_DUE_X_ && not defined __MK20DX256__
+#if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
 int freeMemory () {
   extern int __heap_start, *__brkval; 
   int v; 
@@ -459,17 +452,27 @@ void startConfig() {
   }  
   PRINT_VALUE("%d", e);
   PRINTLN; 
-  
-  // Select output power in dBm
-  e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
 
 #ifdef PABOOST
+  sx1272._needPABOOST=true;
   PRINT_CSTSTR("%s","^$Use PA_BOOST amplifier line");
   PRINTLN;  
-#endif  
+  // previous way for setting output power
+  // powerLevel='x';  
+#else
+  // previous way for setting output power
+  // powerLevel='M';  
+#endif
+ 
   PRINT_CSTSTR("%s","^$Set LoRa power dBm to ");
   PRINT_VALUE("%d",(uint8_t)MAX_DBM);  
   PRINTLN;
+
+  // previous way for setting output power
+  // e = sx1272.setPower(powerLevel);  
+    
+  // Select output power in dBm
+  e = sx1272.setPowerDBM((uint8_t)MAX_DBM);  
                 
   PRINT_CSTSTR("%s","^$Power: state ");
   PRINT_VALUE("%d", e);
@@ -512,7 +515,31 @@ void setup()
   Serial.begin(38400);  
 #endif  
 
-#if defined ARDUINO && not defined __MK20DX256__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
+#ifdef ARDUINO_AVR_PRO
+  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");
+#endif
+
+#ifdef ARDUINO_AVR_NANO
+  PRINT_CSTSTR("%s","Arduino Nano detected\n");
+#endif
+
+#ifdef ARDUINO_AVR_MINI
+  PRINT_CSTSTR("%s","Arduino MINI/Nexus detected\n");
+#endif
+
+#ifdef __MK20DX256__
+  PRINT_CSTSTR("%s","Teensy31/32 detected\n");
+#endif
+
+#ifdef __MKL26Z64__
+  PRINT_CSTSTR("%s","TeensyLC detected\n");
+#endif
+
+#ifdef __SAMD21G18A__ 
+  PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
+#endif
+
+#if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
     // Print a start message
   Serial.print(freeMemory());
   Serial.println(F(" bytes of free memory.")); 
@@ -743,10 +770,10 @@ void loop(void)
       // periodic message sending? (mainly for tests)
       if (inter_pkt_time)
       
-        if (millis()-last_periodic_sendtime > (random_inter_pkt_time?random_inter_pkt_time:inter_pkt_time)) {
+        if (millis() > next_periodic_sendtime) {
           
-          PRINT_CSTSTR("%s","inter_pkt ");
-          PRINT_VALUE("%ld",millis()-last_periodic_sendtime);  
+          PRINT_CSTSTR("%s","time is ");
+          PRINT_VALUE("%ld",millis());  
           PRINTLN;
           
           sprintf(cmd, "msg %3.d***", msg_sn++);
@@ -785,13 +812,15 @@ void loop(void)
           
           if (random_inter_pkt_time) {                
             random_inter_pkt_time=random(2000,inter_pkt_time);
-           
-            PRINT_CSTSTR("%s","next in ");
-            PRINT_VALUE("%ld",random_inter_pkt_time);
-            PRINTLN;
+
+            next_periodic_sendtime = millis() + random_inter_pkt_time;
           }
+          else
+            next_periodic_sendtime = millis() + inter_pkt_time;
             
-          last_periodic_sendtime=millis();       
+          PRINT_CSTSTR("%s","next at ");
+          PRINT_VALUE("%ld", random_inter_pkt_time);
+          PRINTLN;     
         }  
         
       // TODO
@@ -987,14 +1016,17 @@ void loop(void)
                 PRINT_CSTSTR("%s","Set inter-packet time to ");
                 PRINT_VALUE("%ld",inter_pkt_time);
                 PRINTLN;   
-                last_periodic_sendtime=millis();
+                next_periodic_sendtime=millis()+inter_pkt_time;
               }
               else {
                 PRINT_CSTSTR("%s","Disable periodic send\n");                  
               }         
 
-              if (random_inter_pkt_time)               
-                random_inter_pkt_time=random(2000,inter_pkt_time);                           
+              if (random_inter_pkt_time) {  
+                random_inter_pkt_time=random(2000,inter_pkt_time); 
+                next_periodic_sendtime=millis()+random_inter_pkt_time;  
+              }          
+                                          
             break;        
             
             // set the pkt size default is 40
@@ -1232,7 +1264,7 @@ void loop(void)
             case 'P': 
 
               if (cmd[i+1]=='L' || cmd[i+1]=='H' || cmd[i+1]=='M' || cmd[i+1]=='x' || cmd[i+1]=='X' ) {
-                loraPower=cmd[i+1];
+                char loraPower=cmd[i+1];
 
                 PRINT_CSTSTR("%s","^$Set LoRa Power to ");
                 PRINT_VALUE("%c",loraPower);  

@@ -83,7 +83,11 @@ void setup()
   int e;
   
   // Open serial communications and wait for port to open:
-  Serial.begin(38400);
+#ifdef __SAMD21G18A__  
+  SerialUSB.begin(38400);
+#else
+  Serial.begin(38400);  
+#endif 
 
   // Print a start message
   Serial.println(F("Simple LoRa ping-pong with the gateway"));
@@ -102,6 +106,10 @@ void setup()
 
 #ifdef __MK20DX256__
   Serial.println(F("Teensy31/32 detected"));
+#endif
+
+#ifdef __SAMD21G18A__ 
+  SerialUSB.println(F("Arduino M0/Zero detected"));
 #endif
 
   // Power ON the module

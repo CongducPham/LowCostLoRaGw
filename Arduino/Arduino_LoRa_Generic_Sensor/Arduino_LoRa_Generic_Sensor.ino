@@ -1,5 +1,5 @@
 /*
- *  temperature sensor on analog 8 to test the LoRa gateway
+ *  Demonstration of generic sensors with the LoRa gateway
  *
  *  Copyright (C) 2016 Congduc Pham, University of Pau, France
  *
@@ -17,11 +17,25 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
+ * Modified by Nicolas Bertuol (May 2016), University of Pau, France.
+ * first version of generic sensor
+ * nicolas.bertuol@etud.univ-pau.fr
+ * 
  * last update: Nov. 26th by C. Pham
  */
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
+// Include sensors
+#include "Sensor.h"
+#include "DHT22_Humidity.h"
+#include "DHT22_Temperature.h"
+#include "LeafWetness.h"
+#include "LM35.h"
+//#include <OneWire.h>
+#include "DS18B20.h"
+#include "rawAnalog.h"
+#include "HCSR04.h"
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +82,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 //
 // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-#define PABOOST
+//#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////
@@ -79,7 +93,6 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
 #define WITH_APPKEY
 #define FLOAT_TEMP
-#define NEW_DATA_FIELD
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //#define WITH_ACK
@@ -88,24 +101,12 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE LORA MODE, NODE ADDRESS 
 #define LORAMODE  1
-#define node_addr 10
+#define node_addr 13
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 4
-#define field_index 4
-///////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE READ PIN AND THE POWER PIN FOR THE TEMP. SENSOR
-#define TEMP_PIN_READ  A0
-// use digital 8 to power the temperature sensor if needed
-#define TEMP_PIN_POWER 8
-///////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 1;
+unsigned int idlePeriodInMin = 10;
 ///////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
@@ -124,7 +125,7 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 #define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
 #define FLUSHOUTPUT               SerialUSB.flush();
 #else
-#define PRINTLN                   Serial.println("")
+#define PRINTLN                   Serial.println("")              
 #define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
 #define PRINT_STR(fmt,param)      Serial.print(param)
 #define PRINT_VALUE(fmt,param)    Serial.print(param)
@@ -139,19 +140,6 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 
 #ifdef WITH_ACK
 #define NB_RETRIES 2
-#endif
-
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__  || defined __MKL26Z64__ || defined __SAMD21G18A__
-  // if you have a Pro Mini running at 5V, then change here
-  // these boards work in 3.3V
-  // Nexus board from Ideetron is a Mini
-  // __MK20DX256__ is for Teensy31/32
-  // __MKL26Z64__ is for TeensyLC
-  // __SAMD21G18A__ is for Zero/M0 and FeatherM0 (Cortex-M0)
-  #define TEMP_SCALE  3300.0
-#else // ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MEGA2560 
-  // also for all other boards, so change here if required.
-  #define TEMP_SCALE  5000.0
 #endif
 
 #ifdef LOW_POWER
@@ -176,9 +164,7 @@ RTCZero rtc;
 unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
 
-double temp;
 unsigned long nextTransmissionTime=0L;
-char float_str[20];
 uint8_t message[100];
 int loraMode=LORAMODE;
 
@@ -194,22 +180,61 @@ struct sx1272config {
 sx1272config my_sx1272config;
 #endif
 
-void setup()
+// SENSORS DEFINITION 
+//////////////////////////////////////////////////////////////////
+// CHANGE HERE THE NUMBER OF SENSORS, SOME CAN BE NOT CONNECTED
+const int number_of_sensors = 7;
+//////////////////////////////////////////////////////////////////
+
+// array containing sensors pointers
+Sensor* sensor_ptrs[number_of_sensors];
+
+#if not defined _VARIANT_ARDUINO_DUE_X_ && defined FLOAT_TEMP
+
+char *ftoa(char *a, double f, int precision)
 {
+ long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
+ 
+ char *ret = a;
+ long heiltal = (long)f;
+ itoa(heiltal, a, 10);
+ while (*a != '\0') a++;
+ *a++ = '.';
+ long desimal = abs((long)((f - heiltal) * p[precision]));
+ itoa(desimal, a, 10);
+ return ret;
+}
+#endif
+
+void setup()
+{  
   int e;
 
-  // for the temperature sensor
-  pinMode(TEMP_PIN_READ, INPUT);
-  // and to power the temperature sensor
-  pinMode(TEMP_PIN_POWER,OUTPUT);
-
 #ifdef LOW_POWER
+  bool low_power_status = IS_LOWPOWER;
 #ifdef __SAMD21G18A__
   rtc.begin();
 #endif  
 #else
-  digitalWrite(TEMP_PIN_POWER,HIGH);
+  bool low_power_status = IS_NOT_LOWPOWER;
 #endif
+
+//////////////////////////////////////////////////////////////////
+// ADD YOUR SENSORS HERE   
+// Sensor(nomenclature, is_analog, is_connected, is_low_power, pin_read, pin_power, pin_trigger=-1)
+  sensor_ptrs[0] = new LM35("tc", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 8);
+  sensor_ptrs[1] = new DHT22_Temperature("TC", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 9);
+  sensor_ptrs[2] = new DHT22_Humidity("HU", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 9);
+  sensor_ptrs[3] = new LeafWetness("lw", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7);
+  sensor_ptrs[4] = new DS18B20("DS", IS_NOT_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) 4, (uint8_t) 7);
+  sensor_ptrs[5] = new rawAnalog("SH", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 6);
+  sensor_ptrs[6] = new HCSR04("DIS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 39, (uint8_t) 41, (uint8_t) 40);
+
+  // for non connected sensors, indicate whether you want some fake data, for test purposes for instance
+  sensor_ptrs[3]->set_fake_data(true);
+  sensor_ptrs[4]->set_fake_data(true); 
+
+//////////////////////////////////////////////////////////////////  
 
   delay(3000);
   // Open serial communications and wait for port to open:
@@ -217,9 +242,9 @@ void setup()
   SerialUSB.begin(38400);
 #else
   Serial.begin(38400);  
-#endif  
+#endif 
   // Print a start message
-  PRINT_CSTSTR("%s","Simple LoRa temperature sensor\n");
+  PRINT_CSTSTR("%s","Generic LoRa sensor\n");
 
 #ifdef ARDUINO_AVR_PRO
   PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");
@@ -235,6 +260,10 @@ void setup()
 
 #ifdef __MK20DX256__
   PRINT_CSTSTR("%s","Teensy31/32 detected\n");
+#endif
+
+#ifdef __MKL26Z64__
+  PRINT_CSTSTR("%s","TeensyLC detected\n");
 #endif
 
 #ifdef __SAMD21G18A__ 
@@ -278,8 +307,8 @@ void setup()
   // TODO: with low power, when setting the radio module in sleep mode
   // there seem to be some issue with RSSI reading
   sx1272._RSSIonSend=false;
-#endif   
-    
+#endif 
+
   // Select frequency channel
   e = sx1272.setChannel(DEFAULT_CHANNEL);
   PRINT_CSTSTR("%s","Setting Channel: state ");
@@ -297,8 +326,8 @@ void setup()
 #endif
 
   // previous way for setting output power
-  // e = sx1272.setPower(powerLevel); 
-
+  // e = sx1272.setPower(powerLevel);
+  
   e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
   PRINT_CSTSTR("%s","Setting Power: state ");
   PRINT_VALUE("%d", e);
@@ -316,23 +345,6 @@ void setup()
   delay(500);
 }
 
-#if not defined _VARIANT_ARDUINO_DUE_X_ && defined FLOAT_TEMP
-
-char *ftoa(char *a, double f, int precision)
-{
- long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
- 
- char *ret = a;
- long heiltal = (long)f;
- itoa(heiltal, a, 10);
- while (*a != '\0') a++;
- *a++ = '.';
- long desimal = abs((long)((f - heiltal) * p[precision]));
- itoa(desimal, a, 10);
- return ret;
-}
-#endif
-
 void loop(void)
 {
   long startSend;
@@ -345,31 +357,6 @@ void loop(void)
   if (millis() > nextTransmissionTime) {
 #endif
 
-#ifdef LOW_POWER
-      digitalWrite(TEMP_PIN_POWER,HIGH);
-      // security?
-      delay(200);    
-      int value = analogRead(TEMP_PIN_READ);
-      digitalWrite(TEMP_PIN_POWER,LOW);
-#else
-      int value = analogRead(TEMP_PIN_READ);
-#endif
-      
-      // change here how the temperature should be computed depending on your sensor type
-      //  
-      temp = value*TEMP_SCALE/1024.0;
-    
-      PRINT_CSTSTR("%s","Reading ");
-      PRINT_VALUE("%d", value);
-      PRINTLN;
-      
-      //temp = temp - 0.5;
-      temp = temp / 10.0;
-
-      PRINT_CSTSTR("%s","Temp is ");
-      PRINT_VALUE("%f", temp);
-      PRINTLN;
-      
 #ifdef WITH_APPKEY
       app_key_offset = sizeof(my_appKey);
       // set the app key in the payload
@@ -377,38 +364,32 @@ void loop(void)
 #endif
 
       uint8_t r_size;
-
-      // then use app_key_offset to skip the app key
-#ifdef _VARIANT_ARDUINO_DUE_X_
-#ifdef NEW_DATA_FIELD
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#TC/%.2f", field_index, temp);
-#else
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#%.2f", field_index, temp);
-#endif      
-#else
     
-#ifdef FLOAT_TEMP
-      ftoa(float_str,temp,2);
+      char final_str[80] = "\\!";
+      char aux[6] = "";
 
-#ifdef NEW_DATA_FIELD
-      // this is for testing, uncomment if you just want to test, without a real temp sensor plugged
-      //strcpy(float_str, "21.55567");
-      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#TC/%s",field_index,float_str);
-#else
-      // this is for testing, uncomment if you just want to test, without a real temp sensor plugged
-      //strcpy(float_str, "21.55567");
-      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#%s",field_index,float_str);
-#endif
+      // main loop for sensors, actually, you don't have to edit anything here
+      // just add a predefined sensor if needed or provide a new sensor class instance for a handle a new physical sensor
+      for (int i=0; i<number_of_sensors; i++) {
+
+          if (sensor_ptrs[i]->get_is_connected() || sensor_ptrs[i]->has_fake_data()) {
+            
+              ftoa(aux, sensor_ptrs[i]->get_value(), 2);
+          
+              if (i==0) {
+                  //sprintf(final_str, "%s%s/%s", final_str, nomenclatures_array[i], aux);
+                  sprintf(final_str, "%s%s/%s", final_str, sensor_ptrs[i]->get_nomenclature(), aux);
+                  
+              } 
+              else {
+                  sprintf(final_str, "%s/%s/%s", final_str, sensor_ptrs[i]->get_nomenclature(), aux);
+              }
+          }
+          //else
+          //  strcpy(aux,"");
+      }
       
-#else
-      
-#ifdef NEW_DATA_FIELD      
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#TC/%d", field_index, (int)temp);   
-#else
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#%d", field_index, (int)temp);
-#endif         
-#endif
-#endif
+      r_size=sprintf((char*)message+app_key_offset, final_str);
 
       PRINT_CSTSTR("%s","Sending ");
       PRINT_STR("%s",(char*)(message+app_key_offset));
@@ -424,16 +405,9 @@ void loop(void)
       
       startSend=millis();
 
-#ifdef WITH_APPKEY
       // indicate that we have an appkey
       sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_WAPPKEY);
-#else
-      // just a simple data packet
-      sx1272.setPacketType(PKT_TYPE_DATA);
-#endif
       
-      // Send message to the gateway and print the result
-      // with the app key if this feature is enabled
 #ifdef WITH_ACK
       int n_retry=NB_RETRIES;
       
@@ -448,12 +422,13 @@ void loop(void)
         if (n_retry)
           PRINT_CSTSTR("%s","Retry");
         else
-          PRINT_CSTSTR("%s","Abort"); 
+          PRINT_CSTSTR("%s","Abort");  
           
       } while (e && n_retry);          
 #else      
       e = sx1272.sendPacketTimeout(DEFAULT_DEST_ADDR, message, pl);
-#endif  
+#endif
+  
       endSend=millis();
     
 #ifdef WITH_EEPROM
@@ -461,10 +436,6 @@ void loop(void)
       my_sx1272config.seq=sx1272._packetNumber;
       EEPROM.put(0, my_sx1272config);
 #endif
-
-      PRINT_CSTSTR("%s","LoRa pkt size ");
-      PRINT_VALUE("%d", pl);
-      PRINTLN;
       
       PRINT_CSTSTR("%s","LoRa pkt seq ");
       PRINT_VALUE("%d", sx1272.packet_sent.packnum);
@@ -482,10 +453,6 @@ void loop(void)
       PRINT_VALUE("%d", e);
       PRINTLN;
 
-      PRINT_CSTSTR("%s","Remaining ToA is ");
-      PRINT_VALUE("%d", sx1272.getRemainingToA());
-      PRINTLN;
-        
 #ifdef LOW_POWER
       PRINT_CSTSTR("%s","Switch to power saving mode\n");
 
@@ -513,10 +480,10 @@ void loop(void)
 
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT
-#else
+#else      
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
 
-#if defined __MK20DX256__ || defined __MKL26Z64__ 
+#if defined __MK20DX256__ || defined __MKL26Z64__
       sleep_config.setTimer(LOW_POWER_PERIOD*1000);// milliseconds
 #endif          
       for (int i=0; i<nCycle; i++) {  
@@ -534,14 +501,13 @@ void loop(void)
           //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
           //      TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
           //      USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
-#elif defined __MK20DX256__ || defined __MKL26Z64__ 
+#elif defined __MK20DX256__ || defined __MKL26Z64__  
           // Teensy31/32 & TeensyLC
 #ifdef LOW_POWER_HIBERNATE
           Snooze.hibernate(sleep_config);
 #else            
           Snooze.deepSleep(sleep_config);
-#endif
-
+#endif  
 #else
           // use the delay function
           delay(LOW_POWER_PERIOD*1000);
@@ -552,8 +518,8 @@ void loop(void)
       }
       
       delay(50);
-#endif      
-      
+#endif 
+
 #else
       PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;
