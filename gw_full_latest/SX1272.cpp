@@ -31,6 +31,12 @@
 
 /*  CHANGE LOGS by C. Pham
  *
+ *  Now, 26th, 2016
+ *		- add preliminary support for ToA limitation
+ *      - when in "production" mode, uncomment #define LIMIT_TOA
+ *  Now, 16th, 2016
+ *		- provide better power management mechanisms
+ *		- manage PA_BOOST and dBm setting 
  *  Jan, 23rd, 2016
  *      - the packet format at transmission does not use the original Libelium format anymore
  *      * the retry field is removed therefore all operations using retry will probably not work well, not tested though
@@ -68,51 +74,20 @@
 uint8_t sx1272_SIFS_value[11]={0, 183, 94, 44, 47, 23, 24, 12, 12, 7, 4};
 uint8_t sx1272_CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
 
-#define MAX_DUTY_CYCLE_PER_HOUR 36000
-#define ULONG_MAX 	         4294967295UL
+//#define LIMIT_TOA
+// 0.1% for testing
+//#define MAX_DUTY_CYCLE_PER_HOUR 3600L
+// 1%, regular mode
+#define MAX_DUTY_CYCLE_PER_HOUR 36000L
+// normally 1 hour, set to smaller value for testing
+#define DUTYCYCLE_DURATION 3600000L
+// 4 min for testing
+//#define DUTYCYCLE_DURATION 240000L
 // end
 
 //**********************************************************************
 // Public functions.
 //**********************************************************************
-
-SX1272::SX1272()
-{
-    // Initialize class variables
-    _bandwidth = BW_125;
-    _codingRate = CR_5;
-    _spreadingFactor = SF_7;
-    _channel = CH_12_900;
-    _header = HEADER_ON;
-    _CRC = CRC_OFF;
-    _modem = FSK;
-    _power = 15;
-    _packetNumber = 0;
-    _reception = CORRECT_PACKET;
-    _retries = 0;
-    // added by C. Pham
-    _defaultSyncWord=0x12;
-    _rawFormat=false;
-    _extendedIFS=true;
-    _RSSIonSend=true;
-    // disabled by default
-    _enableCarrierSense=false;
-    // DIFS by default
-    _send_cad_number=9;
-    _needPABOOST=false;
-    _limitToA=false;
-    _startToAcycle=millis();
-    _remainingToA=MAX_DUTY_CYCLE_PER_HOUR;
-#ifdef W_REQUESTED_ACK
-    _requestACK = 0;
-#endif
-#ifdef W_NET_KEY
-    _my_netkey[0] = net_key_0;
-    _my_netkey[1] = net_key_1;
-#endif
-    _maxRetries = 3;
-    packet_sent.retry = _retries;
-}
 
 // added by C. Pham
 // copied from LoRaMAC-Node

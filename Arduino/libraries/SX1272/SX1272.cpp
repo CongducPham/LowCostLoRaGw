@@ -33,6 +33,9 @@
  *  Now, 26th, 2016
  *		- add preliminary support for ToA limitation
  *      - when in "production" mode, uncomment #define LIMIT_TOA
+ *  Now, 16th, 2016
+ *		- provide better power management mechanisms
+ *		- manage PA_BOOST and dBm setting 
  *  Jan, 23rd, 2016
  *      - the packet format at transmission does not use the original Libelium format anymore
  *      * the retry field is removed therefore all operations using retry will probably not work well, not tested though
@@ -73,15 +76,15 @@
 uint8_t sx1272_SIFS_value[11]={0, 183, 94, 44, 47, 23, 24, 12, 12, 7, 4};
 uint8_t sx1272_CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
 
-#define LIMIT_TOA
+//#define LIMIT_TOA
 // 0.1% for testing
-#define MAX_DUTY_CYCLE_PER_HOUR 3600L
+//#define MAX_DUTY_CYCLE_PER_HOUR 3600L
 // 1%, regular mode
-//#define MAX_DUTY_CYCLE_PER_HOUR 36000L
+#define MAX_DUTY_CYCLE_PER_HOUR 36000L
 // normally 1 hour, set to smaller value for testing
-//#define DUTYCYCLE_DURATION 3600000L
+#define DUTYCYCLE_DURATION 3600000L
 // 4 min for testing
-#define DUTYCYCLE_DURATION 240000L
+//#define DUTYCYCLE_DURATION 240000L
 
 // end
 
