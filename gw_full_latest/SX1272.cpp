@@ -85,10 +85,48 @@ uint8_t sx1272_CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
 //#define DUTYCYCLE_DURATION 240000L
 // end
 
-//**********************************************************************
+//**********************************************************************/
 // Public functions.
-//**********************************************************************
+//**********************************************************************/
 
+SX1272::SX1272()
+{
+    // Initialize class variables
+    _bandwidth = BW_125;
+    _codingRate = CR_5;
+    _spreadingFactor = SF_7;
+    _channel = CH_12_900;
+    _header = HEADER_ON;
+    _CRC = CRC_OFF;
+    _modem = FSK;
+    _power = 15;
+    _packetNumber = 0;
+    _reception = CORRECT_PACKET;
+    _retries = 0;
+    // added by C. Pham
+    _defaultSyncWord=0x12;
+    _rawFormat=false;
+    _extendedIFS=true;
+    _RSSIonSend=true;
+    // disabled by default
+    _enableCarrierSense=false;
+    // DIFS by default
+    _send_cad_number=9;
+    _needPABOOST=false;
+    _limitToA=false;
+    _startToAcycle=millis();
+    _remainingToA=MAX_DUTY_CYCLE_PER_HOUR;
+#ifdef W_REQUESTED_ACK
+    _requestACK = 0;
+#endif
+#ifdef W_NET_KEY
+    _my_netkey[0] = net_key_0;
+    _my_netkey[1] = net_key_1;
+#endif
+    _maxRetries = 3;
+    packet_sent.retry = _retries;
+};
+    
 // added by C. Pham
 // copied from LoRaMAC-Node
 /*!
