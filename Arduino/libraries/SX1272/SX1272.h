@@ -49,8 +49,14 @@
 //#define W_INITIALIZATION
 #define SX1272_RST  3
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_MICRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_MICRO || defined ARDUINO_AVR_MINI \
+|| defined __MK20DX256__ || defined __MKL26Z64__
 #define SX1272_SS 10
+#elif defined ARDUINO_AVR_FEATHER32U4 || defined ARDUINO_SAMD_FEATHER_M0
+// on the Adafruit Feather, the RFM95W is embeded and CS pin is normally on pin 8
+#define SX1272_SS 8
+#undef SX1272_RST
+#define SX1272_RST  4
 #else
 #define SX1272_SS 2
 #endif
@@ -346,7 +352,7 @@ const uint8_t net_key_1 = 0x34;
 // which will be replaced by packet type field
 const uint8_t OFFSET_PAYLOADLENGTH = 4;
 #endif
-const uint8_t OFFSET_RSSI = 137;
+const uint8_t OFFSET_RSSI = 139;
 const uint8_t NOISE_FIGURE = 6.0;
 const uint8_t NOISE_ABSOLUTE_ZERO = 174.0;
 const uint16_t MAX_TIMEOUT = 10000;		//10000 msec = 10.0 sec

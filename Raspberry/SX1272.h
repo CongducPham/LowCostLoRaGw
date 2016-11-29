@@ -344,7 +344,7 @@ const uint8_t net_key_1 = 0x34;
 // modified by C. Pham to remove the retry field
 const uint8_t OFFSET_PAYLOADLENGTH = 4;
 #endif
-const uint8_t OFFSET_RSSI = 137;
+const uint8_t OFFSET_RSSI = 139;
 const uint8_t NOISE_FIGURE = 6.0;
 const uint8_t NOISE_ABSOLUTE_ZERO = 174.0;
 const uint16_t MAX_TIMEOUT = 8000;		//8000 msec = 8.0 sec
