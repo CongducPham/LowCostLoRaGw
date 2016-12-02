@@ -128,6 +128,10 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	
 	#saving data in a JSON var
 	str_json_data = "{"
+	
+	# add here the RSSI
+	str_json_data += "\"RSSI\" : "+str(RSSI)+", "
+	
 	#start from the first nomenclature
 	iteration = 2
 	while iteration < len(data_array)-1 :
@@ -138,7 +142,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 			str_json_data += "\""+data_array[iteration]+"\" : "+data_array[iteration+1]+", "
 		iteration += 2
 	str_json_data += "}"
-
+	
 	#creating document to add
 	doc = {
 		"type" : ptype,

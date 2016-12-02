@@ -93,7 +93,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 4
-#define field_index 4
+#define field_index 1
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -105,7 +105,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 1;
+unsigned int idlePeriodInMin = 10;
 ///////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
@@ -517,7 +517,10 @@ void loop(void)
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
 
 #if defined __MK20DX256__ || defined __MKL26Z64__ 
-      sleep_config.setTimer(LOW_POWER_PERIOD*1000);// milliseconds
+      // warning, setTimer accepts value from 1ms to 65535ms max
+      sleep_config.setTimer(LOW_POWER_PERIOD*1000 + random(1,5)*1000);// milliseconds
+
+      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif          
       for (int i=0; i<nCycle; i++) {  
 
