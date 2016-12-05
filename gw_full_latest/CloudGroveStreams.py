@@ -40,7 +40,9 @@ import socket
 import sys
 import re
 
-### Change This!!!
+#GroveStreams Settings
+
+#Change This!!!
 api_key = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 
 base_url = '/api/feed?'
@@ -157,31 +159,40 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	# we use: TC/22.4/HU/85...
 	#
 	# but we accept also a_str#b_str#TC/22.4/HU/85... for compatibility with ThingSpeak
-	 		
+	# or simply 22.4 in which case, the nomemclature will be DEF
+
 	# get number of '#' separator
-	nsharp = ldata.count('#')			
+	nsharp = ldata.count('#')		 		
+	nslash=0
+
+	#will field delimited by '#' in the MongoDB
+	data=['','']
+				
 	#no separator
 	if nsharp==0:
-		#will use default channel and field
-		data=['','']
-		
+		# get number of '/' separator on ldata
+		nslash = ldata.count('/')
+				
 		#contains ['', '', "s1", s1value, "s2", s2value, ...]
 		data_array = data + re.split("/", ldata)		
-	elif nsharp==1:
-		#only 1 separator
+	else:				
+		data_array = re.split("#", ldata)
 		
-		data_array = re.split("#|/", ldata)
+		# only 1 separator
+		if nsharp==1:
+			# get number of '/' separator on data_array[1]
+			nslash = data_array[1].count('/')
 		
-		#if the first item has length > 1 then we assume that it is a channel write key
-		if len(data_array[0])>1:
-			#insert '' to indicate default field
-			data_array.insert(1,'');		
-		else:
-			#insert '' to indicate default channel
-			data_array.insert(0,'');		
-	else:
-		#contains [channel, field, "s1", s1value, "s2", s2value, ...]
-		data_array = re.split("#|/", ldata)	
+			# then reconstruct data_array
+			data_array=data + re.split("/", data_array[1])	
+
+		# we have 2 separators
+		if nsharp==2:
+			# get number of '/' separator on data_array[2]
+			nslash = data_array[2].count('/')
+		
+			# then reconstruct data_array
+			data_array=data + re.split("/", data_array[2])
 		
 	#just in case we have an ending CR or 0
 	data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\n', '')
@@ -193,26 +204,16 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		while not data_array[i][len(data_array[i])-1].isdigit() :
 			data_array[i] = data_array[i][:-1]
 		i += 2
-		
-	# get number of '/' separator
-	nslash = ldata.count('/')
-	
-	index_first_data = 2
-	
-	if nslash==0:
-		# old syntax without nomenclature key
-		index_first_data=2
-	else:
-		# new syntax with nomenclature key				
-		index_first_data=3
 																		
 	nomenclatures = []
+	# data to send	
 	data = []
 	
 	if nslash==0:
-		# old syntax without nomemclature key, so insert only one key
-		nomenclatures.append("temp")
-		data.append(data_array[index_first_data])
+		# old syntax without nomenclature key, so insert only one key
+		# we use DEF
+		nomenclatures.append("DEF")
+		data.append(data_array[2])
 	else:
 		#completing nomenclatures and data
 		i=2

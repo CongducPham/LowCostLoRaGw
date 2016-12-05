@@ -80,33 +80,43 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	sf=arr[2]
 
 	# this part depends on the syntax used by the end-device
-	# we use: thingspeak_channel#thingspeak_field#TC/22.4/HU/85... 
-	#		  ##TC/22.4/HU/85... or TC/22.4/HU/85... or thingspeak_channel##TC/22.4/HU/85... or #thingspeak_field#TC/22.4/HU/85... to use some default value
+	# we use: TC/22.4/HU/85...
+	#
+	# but we accept also a_str#b_str#TC/22.4/HU/85...
+	# or simply 22.4 in which case, the nomemclature will be DEF
 				
 	# get number of '#' separator
-	nsharp = ldata.count('#')			
+	nsharp = ldata.count('#')
+	nslash=0
+
+	#will field delimited by '#' in the MongoDB
+	data=['','']
+							
 	#no separator
 	if nsharp==0:
-		#will use default channel and field
-		data=['','']
-		
+		# get number of '/' separator on ldata
+		nslash = ldata.count('/')
+				
 		#contains ['', '', "s1", s1value, "s2", s2value, ...]
-		data_array = data + re.split("/", ldata)		
-	elif nsharp==1:
-		#only 1 separator
+		data_array = data + re.split("/", ldata)
+	else:				
+		data_array = re.split("#", ldata)
 		
-		data_array = re.split("#|/", ldata)
+		# only 1 separator
+		if nsharp==1:
+			# get number of '/' separator on data_array[1]
+			nslash = data_array[1].count('/')
 		
-		#if the first item has length > 1 then we assume that it is a channel write key
-		if len(data_array[0])>1:
-			#insert '' to indicate default field
-			data_array.insert(1,'');		
-		else:
-			#insert '' to indicate default channel
-			data_array.insert(0,'');		
-	else:
-		#contains [channel, field, "s1", s1value, "s2", s2value, ...]
-		data_array = re.split("#|/", ldata)	
+			# then reconstruct data_array
+			data_array=data + re.split("/", data_array[1])	
+
+		# we have 2 separators
+		if nsharp==2:
+			# get number of '/' separator on data_array[2]
+			nslash = data_array[2].count('/')
+		
+			# then reconstruct data_array
+			data_array=data + re.split("/", data_array[2])
 		
 	#just in case we have an ending CR or 0
 	data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\n', '')
@@ -134,13 +144,19 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	
 	#start from the first nomenclature
 	iteration = 2
-	while iteration < len(data_array)-1 :
-		#last iteration, do not add "," at the end
-		if iteration == len(data_array)-2 :
-			str_json_data += "\""+data_array[iteration]+"\" : "+data_array[iteration+1]
-		else :
-			str_json_data += "\""+data_array[iteration]+"\" : "+data_array[iteration+1]+", "
-		iteration += 2
+	
+	if nslash==0:
+		# no nomenclature, use DEF
+		str_json_data += "\"DEF\" : "+data_array[iteration]
+	else:
+		while iteration < len(data_array)-1 :
+			#last iteration, do not add "," at the end
+			if iteration == len(data_array)-2 :
+				str_json_data += "\""+data_array[iteration]+"\" : "+data_array[iteration+1]
+			else :
+				str_json_data += "\""+data_array[iteration]+"\" : "+data_array[iteration+1]+", "
+			iteration += 2
+		
 	str_json_data += "}"
 	
 	#creating document to add

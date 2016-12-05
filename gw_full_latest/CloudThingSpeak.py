@@ -34,9 +34,6 @@ import datetime
 import sys
 import re
 
-# WAZIUP LoRa demo channel
-#_def_thingspeak_channel_key='ORE0DIFZIIPT61DO'
-
 # LoRa test channel
 _def_thingspeak_channel_key='SGSH52UGPVAUYG3S'
 

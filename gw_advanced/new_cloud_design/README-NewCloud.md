@@ -114,12 +114,12 @@ If several cloud systems is used, each with some specific features, then the raw
 - ORE0DIFZIIPT61DO#4#22.5 : specified both a ThingSpeak write key and a field, value is 22.5
 - #4#22.5 : specified a field when using the default ThingSpeak write key, value is 22.5
 - ##22.5 : use default value for both ThingSpeak write key and field
-- 22.5 : use default value for both ThingSpeak write key and field; or use default nomenclature for Grovestreams
-- ##TC/22.5 : use the possibility to define a particular nomenclature with Grovestreams (e.g. TC for temperature in Celsius)
-- TC/22.5 : use the possibility to define a particular nomenclature with Grovestreams (e.g. TC for temperature in Celsius)
-- TC/22.5/HU/85/LU/78 : use the possibility to define multiple nomenclatures and values with Grovestreams
+- 22.5 : use default value for both ThingSpeak write key and field; or use default nomenclature (i.e. DEF) for Grovestreams and MongoDB
+- ##TC/22.5 : use the possibility to define a particular nomenclature with Grovestreams and MongoDB (e.g. TC for temperature in Celsius)
+- TC/22.5 : use the possibility to define a particular nomenclature with Grovestreams and MongoDB (e.g. TC for temperature in Celsius)
+- TC/22.5/HU/85/LU/78 : use the possibility to define multiple nomenclatures and values with Grovestreams and MongoDB
 	
-If you look at the provided example for both ThingSpeak and Grovestreams clouds, you can see how we handle/decode/process these various data formats (by looking for delimiters) so that data from an end-device can sequentially be uploaded on various clouds platforms. For instance, '#' delimiters are not relevant for Grovestreams while they are for ThingSpeak. If you only use one cloud platform then the data format and the cloud script can be much more simple.
+If you look at the provided example for ThingSpeak, Grovestreams and MongoDB clouds, you can see how we handle/decode/process these various data formats (by looking for delimiters) so that data from an end-device can sequentially be uploaded on various clouds platforms. For instance, '#' delimiters are not relevant for both Grovestreams and MongoDB (these cloud scripts will simply ignore them) while they are for ThingSpeak. If you only use one cloud platform then the data format and the cloud script can be much more simple.
 
 Output examples
 ---------------
