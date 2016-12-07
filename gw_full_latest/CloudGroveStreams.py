@@ -40,10 +40,9 @@ import socket
 import sys
 import re
 
-#GroveStreams Settings
-
-#Change This!!!
-api_key = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+# get key definition from external file to ease
+# update of cloud script in the future
+import key_GroveStreams
 
 base_url = '/api/feed?'
 
@@ -95,7 +94,7 @@ def send_data(data, src, nomenclatures):
 			url += "&"+nomenclatures[i]+"="+data[i]
 			i += 1
 			                       
-		headers = {"Connection" : "close", "Content-type": "application/json", "Cookie" : "api_key="+api_key}
+		headers = {"Connection" : "close", "Content-type": "application/json", "Cookie" : "api_key="+key_GroveStreams.api_key}
 
 		print('Grovestreams: Uploading feed to: ' + url)
 

@@ -34,8 +34,9 @@ import datetime
 import sys
 import re
 
-# LoRa test channel
-_def_thingspeak_channel_key='SGSH52UGPVAUYG3S'
+# get key definition from external file to ease
+# update of cloud script in the future
+import key_ThingSpeak
 
 # didn't get a response from thingspeak server?
 connection_failure = False
@@ -83,7 +84,7 @@ def send_data(data, second_data):
 				
 	#use default channel?
 	if data[0]=='':
-		data[0]=_def_thingspeak_channel_key
+		data[0]=key_ThingSpeak._def_thingspeak_channel_key
 		print 'default',
 	else:
 		print data[0],
@@ -175,7 +176,7 @@ def thingspeak_uploadMultipleData(data_array):
 	
 		#use default channel?
 		if data_array[0]=='':
-			data_array[0]=_def_thingspeak_channel_key
+			data_array[0]=key_ThingSpeak._def_thingspeak_channel_key
 			print 'default',
 		else:
 			print data_array[0],

@@ -5,8 +5,8 @@ Re-design of the cloud support module for the low-cost LoRa gateway
 
 WHY: The purpose of this update is to simplify cloud management with data upload on various clouds performed in a more generic manner.
 
-Decription 
-----------
+Description 
+-----------
 
 clouds.json contains a list of clouds where you want your data to be uploaded. Here is an example with 3 clouds: local MongoDB, ThingSpeak and Grovestreams.
 
@@ -105,13 +105,18 @@ The main data upload processing task in post_processing_gw.py is now very simple
 		os.system(cmd_arg) 
 	print "--> cloud end"
 
+Good practice for storing keys
+------------------------------
+
+Most of cloud platforms use some kind of keys for write access. These keys should be stored in a separate Python file so that updates on the cloud script can be realized independently from the existing keys (for instance if you already customized from a previous install). In the provided examples, key_FireBase.py, key_GroveStreams.py and key_ThingSpeak.py contain keys for their corresponding clouds. For instance, CloudThingSpeak.py starts with an "import key_ThingSpeak" statement. Only key_ThingSpeak.py has a usable key, which is our LoRa demo channel write key: SGSH52UGPVAUYG3S. For the other clouds, you have to create your own account in order to get your private key before being able to upload data to FireBase or GroveStreams.
+
 Some words about data format
 ----------------------------
 	
 If several cloud systems is used, each with some specific features, then the raw data format can be complex and the decoding tasks of these data by the various scripts may need to be also more complex. This is exactely the case with our example templates where we want to be able to specify a particular write key and field when uploading to ThingSpeak and still be able to use the dynamic field creation feature of Grovestreams platform. For example, we want to be able to send various message formats such as:
 
-- ORE0DIFZIIPT61DO##22.5 : specified a ThingSpeak write key with a the default field, value is 22.5
-- ORE0DIFZIIPT61DO#4#22.5 : specified both a ThingSpeak write key and a field, value is 22.5
+- SGSH52UGPVAUYG3S##22.5 : specified a ThingSpeak write key with a the default field, value is 22.5
+- SGSH52UGPVAUYG3S#4#22.5 : specified both a ThingSpeak write key and a field, value is 22.5
 - #4#22.5 : specified a field when using the default ThingSpeak write key, value is 22.5
 - ##22.5 : use default value for both ThingSpeak write key and field
 - 22.5 : use default value for both ThingSpeak write key and field; or use default nomenclature (i.e. DEF) for Grovestreams and MongoDB
@@ -145,7 +150,7 @@ When incoming data is processed, post_processing_gw.py will loop over all enable
 	ThingSpeak: uploading
 	rcv msg to log (\!) on ThingSpeak ( default , 4 ): 21.5
 	ThingSpeak: will issue curl cmd
-	curl -s -k -X POST --data field4=21.5&field8=0 https://api.thingspeak.com/update?key=ORE0DIFZIIPT61DO
+	curl -s -k -X POST --data field4=21.5&field8=0 https://api.thingspeak.com/update?key=SGSH52UGPVAUYG3S
 	ThingSpeak: returned code from server is 156
 	--> cloud[1]
 	uploading with python CloudGroveStreams.py
@@ -176,6 +181,7 @@ List of new files
 - CloudFireBase.py: updated to support new design
 - CloudGrovestreams.py: updated to support new design
 - CloudThingSpeak.py: updated to support new design
+- key_FireBase.py, key_GroveStreams.py and key_ThingSpeak.py: contain keys for the corresponding clouds
 - scripts/new_config_gw.sh: updated as some configuration fields have been moved from one file to another
 - README-NewCloud.md: this README file
 
