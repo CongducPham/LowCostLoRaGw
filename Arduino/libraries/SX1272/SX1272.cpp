@@ -30,6 +30,9 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
+ *
+ *  Dec, 17th, 2016
+ *      - fix bug making -DPABOOST in radio.makefile inoperant
  *  Now, 26th, 2016
  *		- add preliminary support for ToA limitation
  *      - when in "production" mode, uncomment #define LIMIT_TOA
@@ -115,7 +118,11 @@ SX1272::SX1272()
     _enableCarrierSense=false;
     // DIFS by default
     _send_cad_number=9;
+#ifdef PABOOST
+    _needPABOOST=true;
+#else
     _needPABOOST=false;
+#endif
     _limitToA=false;
     _startToAcycle=millis();
     _remainingToA=MAX_DUTY_CYCLE_PER_HOUR;
@@ -6417,6 +6424,17 @@ uint8_t SX1272::doCAD(uint8_t counter)
     uint8_t retryCAD = 3;
     uint8_t save_counter;
     byte st0;
+    int rssi_count=0;
+    int rssi_mean=0;
+    double bw=0.0;
+    bool hasRSSI=false;
+    unsigned long startRSSI=0;
+
+    bw=(_bandwidth==BW_125)?125e3:((_bandwidth==BW_250)?250e3:500e3);
+    // Symbol rate : time for one symbol (usecs)
+    double rs = bw / ( 1 << _spreadingFactor);
+    double ts = 1 / rs;
+    ts = ts * 1000000.0;
 
     st0 = readRegister(REG_OP_MODE);	// Save the previous status
 
@@ -6434,17 +6452,29 @@ uint8_t SX1272::doCAD(uint8_t counter)
 
         do {
 
-            // wait to CadDone flag
-            startCAD = previous = millis();
+            hasRSSI=false;
 
             clearFlags();	// Initializing flags
 
+            // wait to CadDone flag
+            startCAD = previous = millis();
+
             writeRegister(REG_OP_MODE, LORA_CAD_MODE);  // LORA mode - Cad
+
+            startRSSI=micros();
 
             value = readRegister(REG_IRQ_FLAGS);
             // Wait until CAD ends (CAD Done flag) or the timeout expires
             while ((bitRead(value, 2) == 0) && (millis() - previous < wait))
             {
+                // only one reading per CAD
+                if (micros()-startRSSI > ts+240 && !hasRSSI) {
+                    _RSSI = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)) + readRegister(REG_RSSI_VALUE_LORA);
+                    rssi_mean += _RSSI;
+                    rssi_count++;
+                    hasRSSI=true;
+                }
+
                 value = readRegister(REG_IRQ_FLAGS);
                 // Condition to avoid an overflow (DO NOT REMOVE)
                 if( millis() < previous )
@@ -6507,6 +6537,9 @@ uint8_t SX1272::doCAD(uint8_t counter)
             }
 
         } while (counter && !failedCAD);
+
+        rssi_mean = rssi_mean / rssi_count;
+        _RSSI = rssi_mean;
     }
 
     writeRegister(REG_OP_MODE, st0);

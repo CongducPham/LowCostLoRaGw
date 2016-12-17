@@ -31,6 +31,8 @@
 
 /*  CHANGE LOGS by C. Pham
  *
+ *  Dec, 17th, 2016
+ *      - fix bug making -DPABOOST in radio.makefile inoperant
  *  Now, 26th, 2016
  *		- add preliminary support for ToA limitation
  *      - when in "production" mode, uncomment #define LIMIT_TOA
@@ -112,7 +114,11 @@ SX1272::SX1272()
     _enableCarrierSense=false;
     // DIFS by default
     _send_cad_number=9;
+#ifdef PABOOST
+    _needPABOOST=true;
+#else
     _needPABOOST=false;
+#endif
     _limitToA=false;
     _startToAcycle=millis();
     _remainingToA=MAX_DUTY_CYCLE_PER_HOUR;
