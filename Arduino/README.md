@@ -83,15 +83,16 @@ One main issue for a eligible board is to have a 3.3v pin to power the radio mod
 **Small form factor**
 
 - Arduino Pro Mini (8MHz/3.3V version), Arduino Nano (ATmega328 16MHz/5V but 3.3v pin), Arduino Micro (ATmega32u4 16MHz/5V but 3.3v pin)
-- Teensy31, 32 and LC
+- Teensy LC/31/32/35/36
 - Ideetron Nexus (which is an ATmega328P at 3.3v, select as Arduino Mini in IDE)  
+- Adafruit Feather 32u4 and Feather M0
 
 **Uno/MEGA form factor**
 
 - Arduino Uno, MEGA2560, Due
 - Arduino Zero, M0 (require IDE 1.7.x from http://www.arduino.org)
 
-For low-power and IoT integration desin, it is better to use either Arduino Pro Mini 8MHz/3.3v or the Teensy31/32/LC. On the Pro Mini, AES encryption can be used but then you may run out of RAM memory if you need additional library for specific physical sensors. The Teensy31/32/LC has much more RAM memory, allowing much bigger project with AES encryption and many physical sensors. If you want to build an interactive device, it is better to use a MEGA2560 or Due or Teensy31/32/LC because of memory limitation that may cause the lower memory boards to be unstable.
+For low-power and IoT integration desin, it is better to use either Arduino Pro Mini 8MHz/3.3v or the TeensyLC/31/32. On the Pro Mini, AES encryption can be used but then you may run out of RAM memory if you need additional library for specific physical sensors. The TeensyLC/31/32 has much more RAM memory, allowing much bigger project with AES encryption and many physical sensors. If you want to build an interactive device, it is better to use a MEGA2560 or Due or TeensyLC/31/32 because of memory limitation that may cause the lower memory boards to be unstable.
 
 Note that there might be current limitation issues on some boards. The radio module can draw more than 50mA when transmitting (depending on the programmed transmission power) so the current limit of most microcontroller's analog/digital pins is reached. See for instance http://playground.arduino.cc/Main/ArduinoPinCurrentLimitations. It is better to connect the radio module VCC to a dedicated 3.3v pin that usually has higher current limit. However, it may be still not enough on some boards if you use PA_BOOST at 20dBm for your radio module. So be careful. For the MEGA, Due, and Teensy, they have a 3.3v pin with higher current limit so there should not be current issues with these boards.
 
@@ -200,7 +201,7 @@ Here is a reminder of the pre-defined LoRa modes as defined by the library.
 Low-power
 ---------
 
-Low-power management is handled by various low-power libraries. For Arduino boards, it is the LowPower library from Rocket Scream. For Teensy31/32/LC, it is the Snooze library. As indicated previously, if you use another board, you may need to use a specific low-power library, or disable low-power management. By default in the example, the device will wake up every 10 minutes. You can changed it to another value, expressed in minutes. If low power is not used, the duty-cycle behavior will still be implemented but with the delay() function which is not energy-efficient.
+Low-power management is handled by various low-power libraries. For Arduino boards, it is the LowPower library from Rocket Scream. For TeensyLC/31/32, it is the Snooze library. As indicated previously, if you use another board, you may need to use a specific low-power library, or disable low-power management. By default in the example, the device will wake up every 10 minutes. You can changed it to another value, expressed in minutes. If low power is not used, the duty-cycle behavior will still be implemented but with the delay() function which is not energy-efficient.
 
 	#define LOW_POWER
 	#define LOW_POWER_HIBERNATE

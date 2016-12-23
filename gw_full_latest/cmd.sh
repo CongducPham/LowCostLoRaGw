@@ -32,7 +32,7 @@ then
 	echo "Here is your MAC Ethernet interface address:"
 	echo "-------------------------------------------------------"
 	ifconfig | grep "eth0"
-        echo "-------------------------------------------------------"
+    echo "-------------------------------------------------------"
 	echo "Enter the last 5 hex bytes of your MAC Ethernet interface address"
 	echo "in capital character and without the : separator"
 	echo "example: HWaddr b8:27:eb:be:da:21 then just enter 27EBBEDA21"
@@ -40,6 +40,9 @@ then
 	echo "Will write 000000$macaddr into gateway_id.txt"
 	echo "000000$macaddr" > gateway_id.txt
 	echo "Done"
+	echo "Replacing gw id in local_conf.json"
+	sed -i -- 's/"000000.*"/"000000'"$macaddr"'"/g' local_conf.json
+	echo "Done"	
 fi
 
 gatewayid=`cat gateway_id.txt`
@@ -47,7 +50,7 @@ gatewayid=`cat gateway_id.txt`
 while [ "$choice" != "Q" ]
 do
 echo "=======================================* Gateway $gatewayid *==="
-echo "0- nohup python start_gw.py &                                        +"
+echo "0- sudo python start_gw.py &                                         +"
 echo "1- sudo ./lora_gateway --mode 1                                      +"
 echo "2- sudo ./lora_gateway --mode 1|python post_processing_gw.py -t -m 2 +"
 echo "3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +"
@@ -79,7 +82,7 @@ echo "BEGIN OUTPUT"
 if [ "$choice" = "0" ]
 	then
 		echo "Running in background the full LoRa gateway" 
-		python start_gw.py &
+		sudo python start_gw.py &
 		disown %1
 		echo "Check ../Dropbox/LoRa-test/post-processing_$gatewayid.log file (select command 5)"
 fi
