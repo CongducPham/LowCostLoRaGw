@@ -271,7 +271,7 @@ When your radio module can run in the 433MHz band (for instance when the radio i
 
 - select line "#define BAND433" in Arduino_LoRa_temp or Arduino_LoRa_Simple_temp
 - compile the lora_gateway.cpp with "#define BAND433"
-- or simply run your gateway with "lora_gateway --mode 1 --freq 433.0" to be on the same setting for Arduino_LoRa_temp and Arduino_LoRa_Simple_temp
+- or simply run your gateway with "lora_gateway --mode 1 --freq 433.3" to be on the same setting than Arduino_LoRa_temp and Arduino_LoRa_Simple_temp
 - there are 4 channels in the 433MHz band: 433.3MHz as CH_00_433, 433.6MHz as CH_01_433, 433.9MHz as CH_02_433 and 434.3MHz as CH_03_433 
 
 Mounting your Dropbox folder
