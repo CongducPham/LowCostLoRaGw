@@ -72,6 +72,21 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define node_addr 8
 //////////////////////////////////////////////////////////////////
 
+// we wrapped Serial.println to support the Arduino Zero or M0
+#if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
+#define PRINTLN                   SerialUSB.println("")              
+#define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
+#define PRINT_STR(fmt,param)      SerialUSB.print(param)
+#define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
+#define FLUSHOUTPUT               SerialUSB.flush();
+#else
+#define PRINTLN                   Serial.println("")
+#define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
+#define PRINT_STR(fmt,param)      Serial.print(param)
+#define PRINT_VALUE(fmt,param)    Serial.print(param)
+#define FLUSHOUTPUT               Serial.flush();
+#endif
+
 #define DEFAULT_DEST_ADDR 1
 
 uint8_t message[100];
@@ -83,33 +98,33 @@ void setup()
   int e;
   
   // Open serial communications and wait for port to open:
-#ifdef __SAMD21G18A__  
+#if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0 
   SerialUSB.begin(38400);
 #else
   Serial.begin(38400);  
 #endif 
 
   // Print a start message
-  Serial.println(F("Simple LoRa ping-pong with the gateway"));
+  PRINT_CSTSTR("%s","Simple LoRa ping-pong with the gateway\n");  
 
 #ifdef ARDUINO_AVR_PRO
-  Serial.println(F("Arduino Pro Mini detected"));
+  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");
 #endif
 
 #ifdef ARDUINO_AVR_NANO
-  Serial.println(F("Arduino Nano detected"));
+  PRINT_CSTSTR("%s","Arduino Nano detected\n");
 #endif
 
 #ifdef ARDUINO_AVR_MINI
-  Serial.println(F("Arduino MINI/Nexus detected"));
+  PRINT_CSTSTR("%s","Arduino MINI/Nexus detected\n");
 #endif
 
 #ifdef __MK20DX256__
-  Serial.println(F("Teensy31/32 detected"));
+  PRINT_CSTSTR("%s","Teensy31/32 detected\n");
 #endif
 
 #ifdef __SAMD21G18A__ 
-  SerialUSB.println(F("Arduino M0/Zero detected"));
+  PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
 #endif
 
   // Power ON the module
@@ -117,34 +132,45 @@ void setup()
   
   // Set transmission mode and print the result
   e = sx1272.setMode(loraMode);
-  Serial.print(F("Setting Mode: state "));
-  Serial.println(e, DEC);
+  PRINT_CSTSTR("%s","Setting Mode: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
 
   // enable carrier sense
   sx1272._enableCarrierSense=true;
     
   // Select frequency channel
   e = sx1272.setChannel(DEFAULT_CHANNEL);
-  Serial.print(F("Setting Channel: state "));
-  Serial.println(e, DEC);
+  PRINT_CSTSTR("%s","Setting Channel: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
   
   // Select amplifier line; PABOOST or RFO
 #ifdef PABOOST
   sx1272._needPABOOST=true;
-#endif   
+  // previous way for setting output power
+  // powerLevel='x';
+#else
+  // previous way for setting output power
+  // powerLevel='M';  
+#endif
+
+  // previous way for setting output power
+  // e = sx1272.setPower(powerLevel); 
 
   e = sx1272.setPowerDBM((uint8_t)MAX_DBM); 
-
-  Serial.print(F("Setting Power: state "));
-  Serial.println(e);
+  PRINT_CSTSTR("%s","Setting Power: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
   
   // Set the node address and print the result
   e = sx1272.setNodeAddress(node_addr);
-  Serial.print(F("Setting node addr: state "));
-  Serial.println(e, DEC);
+  PRINT_CSTSTR("%s","Setting node addr: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
   
   // Print a success message
-  Serial.println(F("SX1272/76 successfully configured"));
+  PRINT_CSTSTR("%s","SX1272 successfully configured\n");
 
   delay(500);
 }
@@ -163,22 +189,26 @@ void loop(void)
       
   while (1) {
 
-      Serial.println(F("Sending Ping"));  
-      
+      PRINT_CSTSTR("%s","Sending Ping");  
+      PRINTLN;
+            
       e = sx1272.sendPacketTimeoutACK(DEFAULT_DEST_ADDR, message, r_size);
 
       // this is the no-ack version
       // e = sx1272.sendPacketTimeout(DEFAULT_DEST_ADDR, message, r_size);
             
-      Serial.print(F("Packet sent, state "));
-      Serial.println(e);
+      PRINT_CSTSTR("%s","Packet sent, state ");
+      PRINT_VALUE("%d", e);
+      PRINTLN;
       
       if (e==3)
-          Serial.println(F("No Pong!"));
+          PRINT_CSTSTR("%s","No Pong!");
         
       if (e==0)
-          Serial.println(F("Pong received from gateway!"));      
+          PRINT_CSTSTR("%s","Pong received from gateway!");      
 
+      PRINTLN;
+      
       delay(10000);    
   }          
 }

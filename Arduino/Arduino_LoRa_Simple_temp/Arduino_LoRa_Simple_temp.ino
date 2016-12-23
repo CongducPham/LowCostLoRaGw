@@ -79,7 +79,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
 #define WITH_APPKEY
 #define FLOAT_TEMP
-#define NEW_DATA_FIELD
+//#define NEW_DATA_FIELD
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //#define WITH_ACK
@@ -117,7 +117,7 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 #endif
 
 // we wrapped Serial.println to support the Arduino Zero or M0
-#if defined __SAMD21G18A__
+#if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
 #define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
 #define PRINT_STR(fmt,param)      SerialUSB.print(param)
@@ -141,10 +141,12 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 #define NB_RETRIES 2
 #endif
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__  || defined __MKL26Z64__ || defined __SAMD21G18A__
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__  || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__ || defined __SAMD21G18A__
   // if you have a Pro Mini running at 5V, then change here
   // these boards work in 3.3V
   // Nexus board from Ideetron is a Mini
+  // __MK66FX1M0__ is for Teensy36
+  // __MK64FX512__  is for Teensy35
   // __MK20DX256__ is for Teensy31/32
   // __MKL26Z64__ is for TeensyLC
   // __SAMD21G18A__ is for Zero/M0 and FeatherM0 (Cortex-M0)
@@ -155,11 +157,13 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 #endif
 
 #ifdef LOW_POWER
-// this is for the Teensy31/32 & TeensyLC
-#if defined __MK20DX256__ || defined __MKL26Z64__
+// this is for the Teensy36, Teensy35, Teensy31/32 & TeensyLC
+// need v6 of Snooze library
+#if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
 #define LOW_POWER_PERIOD 60
 #include <Snooze.h>
-SnoozeBlock sleep_config;
+SnoozeTimer timer;
+SnoozeBlock sleep_config(timer);
 #else
 #define LOW_POWER_PERIOD 8
 // you need the LowPower library from RocketScream
@@ -213,7 +217,7 @@ void setup()
 
   delay(3000);
   // Open serial communications and wait for port to open:
-#ifdef __SAMD21G18A__  
+#if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0 
   SerialUSB.begin(38400);
 #else
   Serial.begin(38400);  
@@ -516,9 +520,9 @@ void loop(void)
 #else
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
 
-#if defined __MK20DX256__ || defined __MKL26Z64__ 
+#if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
       // warning, setTimer accepts value from 1ms to 65535ms max
-      sleep_config.setTimer(LOW_POWER_PERIOD*1000 + random(1,5)*1000);// milliseconds
+      timer.setTimer(LOW_POWER_PERIOD*1000 + random(1,5)*1000);// milliseconds
 
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif          
@@ -537,7 +541,7 @@ void loop(void)
           //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
           //      TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
           //      USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
-#elif defined __MK20DX256__ || defined __MKL26Z64__ 
+#elif defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
           // Teensy31/32 & TeensyLC
 #ifdef LOW_POWER_HIBERNATE
           Snooze.hibernate(sleep_config);

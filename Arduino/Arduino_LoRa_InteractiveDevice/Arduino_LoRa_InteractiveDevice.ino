@@ -17,9 +17,9 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- * last update: Nov. 26th by C. Pham
+ * last update: Dec. 7th by C. Pham
  * 
- *  Version:                1.5
+ *  Version:                1.6
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -83,6 +83,10 @@
 */
 
 /*  Change logs
+ *  Dec, 7th, 2016. v1.6
+ *        Improve CAD_TEST mode
+ *          - will continously perform CAD, then will notify when channel activity has been detected.
+ *        Add an automatic periodic sender mode. Uncomment PERIODIC_SENDER. Change value of PERIODIC_SENDER to sending period in ms  
  *  Nov, 16th, 2016. v1.5
  *        Add /@DBM command to set output power in dbm. 0 < dbm < 15
  *  Oct, 21st, 2016. v1.4S
@@ -208,7 +212,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 // we wrapped Serial.println to support the Arduino Zero or M0
-#if defined __SAMD21G18A__
+#if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
 #define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
 #define PRINT_STR(fmt,param)      SerialUSB.print(param)
@@ -236,11 +240,16 @@
   #define DEBUG_VALUE(fmt,param)  
 #endif
 
-#define SHOW_FREEMEMORY
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE FOR VARIOUS BEHAVIORS
+/////////////////////////////////////////////////////////////////// 
+//#define SHOW_FREEMEMORY
 //#define CAD_TEST
+//#define PERIODIC_SENDER 30000
 //#define LORA_LAS
 //#define WITH_SEND_LED
-#define WITH_AES
+//#define WITH_AES
+///////////////////////////////////////////////////////////////////
 
 #ifdef BAND868
 #define MAX_NB_CHANNEL 15
@@ -334,6 +343,7 @@ uint8_t CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
 unsigned int inter_pkt_time=0;
 unsigned int random_inter_pkt_time=0;
 unsigned long next_periodic_sendtime=0L;
+
 // packet size for periodic sending
 uint8_t MSS=40;
 
@@ -509,7 +519,7 @@ void setup()
   randomSeed(analogRead(14));
 
   // Open serial communications and wait for port to open:
-#ifdef __SAMD21G18A__  
+#if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
   SerialUSB.begin(38400);
 #else
   Serial.begin(38400);  
@@ -578,6 +588,12 @@ void setup()
 #ifdef CAD_TEST
   PRINT_CSTSTR("%s","Do CAD test\n");
 #endif 
+
+#ifdef PERIODIC_SENDER
+  inter_pkt_time=PERIODIC_SENDER;
+  PRINT_CSTSTR("%s","Periodic sender ON");
+  PRINTLN;
+#endif
 }
 
 // we could use the CarrierSense function added in the SX1272 library, but it is more convenient to duplicate it here
@@ -694,39 +710,70 @@ void loop(void)
 // ONLY FOR TESTING CAD
 #ifdef CAD_TEST
 
-  startDoCad=millis();
-  e = sx1272.doCAD(SIFS_cad_number);
-  endDoCad=millis();
+  bool CadDetected=false;
+  unsigned long firstDetected, lastDetected=0;
   
-  PRINT_CSTSTR("%s","--> SIFS duration ");
-  PRINT_VALUE("%ld", endDoCad-startDoCad);
-  PRINTLN;
-
-  if (!e) 
-    PRINT_CSTSTR("%s","OK");
-  else
-    PRINT_CSTSTR("%s","###");
-
-  PRINTLN;
+  while (1) {
   
-  delay(200);
-  
-  startDoCad=millis();
-  e = sx1272.doCAD(SIFS_cad_number*3);
-  endDoCad=millis();
-  
-  PRINT_CSTSTR("%s","--> DIFS duration ");
-  PRINT_VALUE("%ld", endDoCad-startDoCad);
-  PRINTLN;
-
-  if (!e) 
-    PRINT_CSTSTR("%s","OK");
-  else
-    PRINT_CSTSTR("%s","###");
-  
-  PRINTLN;
+      startDoCad=millis();
+      e = sx1272.doCAD(6);
+      endDoCad=millis();
+      
+      //PRINT_CSTSTR("%s","--> SIFS duration ");
+      //PRINT_VALUE("%ld", endDoCad-startDoCad);
+      //PRINTLN;
     
-  delay(200);
+      //if (!e) 
+      //  PRINT_CSTSTR("%s","OK");
+      //else
+      //  PRINT_CSTSTR("%s","###");
+
+      if (e && !CadDetected) {
+        PRINT_CSTSTR("%s","#########\n");
+        PRINT_VALUE("%ld", endDoCad-lastDetected);  
+        PRINTLN;
+        PRINT_CSTSTR("%s","#########\n");                
+        firstDetected=endDoCad;
+        CadDetected=true;
+      }
+
+      if (!e && CadDetected)  {
+        PRINT_VALUE("%ld", endDoCad);
+        PRINTLN;
+        PRINT_VALUE("%ld", endDoCad-firstDetected);  
+        PRINTLN;             
+        PRINT_VALUE("%d", sx1272._RSSI);
+        PRINTLN;
+        lastDetected=endDoCad;        
+        CadDetected=false;
+      }       
+        
+      if (e) {
+        PRINT_VALUE("%ld", endDoCad);
+        PRINT_CSTSTR("%s"," ## ");
+        PRINT_VALUE("%d", sx1272._RSSI);
+        PRINTLN;
+      }
+      
+      //delay(200);
+      
+      //startDoCad=millis();
+      //e = sx1272.doCAD(SIFS_cad_number*3);
+      //endDoCad=millis();
+      
+      //PRINT_CSTSTR("%s","--> DIFS duration ");
+      //PRINT_VALUE("%ld", endDoCad-startDoCad);
+      //PRINTLN;
+    
+      //if (!e) 
+      //  PRINT_CSTSTR("%s","OK");
+      //else
+      //  PRINT_CSTSTR("%s","###");
+      
+      //PRINTLN;
+        
+      delay(200);
+  }
 #endif
 // ONLY FOR TESTING CAD
 ///END/////////////////////////////////////////////////////////////
@@ -776,7 +823,7 @@ void loop(void)
           PRINT_VALUE("%ld",millis());  
           PRINTLN;
           
-          sprintf(cmd, "msg %3.d***", msg_sn++);
+          sprintf(cmd, "msg%3d***", msg_sn++);
           for (i=strlen(cmd); i<MSS; i++)
             cmd[i]='*';
           
@@ -819,7 +866,7 @@ void loop(void)
             next_periodic_sendtime = millis() + inter_pkt_time;
             
           PRINT_CSTSTR("%s","next at ");
-          PRINT_VALUE("%ld", random_inter_pkt_time);
+          PRINT_VALUE("%ld", next_periodic_sendtime);
           PRINTLN;     
         }  
         
