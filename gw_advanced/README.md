@@ -477,7 +477,7 @@ You can use cmd.sh as follows:
 
 	> ./cmd.sh
 	=======================================* Gateway 00000027EBBEDA21 *===
-	0- nohup python start_gw.py &                                        +
+	0- sudo python start_gw.py &                                         +
 	1- sudo ./lora_gateway --mode 1                                      +
 	2- sudo ./lora_gateway --mode 1|python post_processing_gw.py -t -m 2 +
 	3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +
@@ -524,7 +524,12 @@ If you enter 27EBBEDA21, cmd.sh will create the gateway_id.txt file with the fol
 	
 If you use the config_gw.sh script, it can do it for you because you already have to provide the last 5 bytes of the gateway eth0 interface MAC address to config_gw.
 	
-To run an operational gateway, use option 0. Then use option 3 to verify whether all the processes have been launched. You can then use option 5 to see the logs in real time. To test the simple gateway, use option 1. If you access your gateway with ssh, using option 0 allows you to quit the ssh session and leave your gateway running. You can ssh at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an ssh apps to log on 192.168.200.1 and launch cmd.sh from your smartphone.	
+To run an operational gateway in the background, use option 0. This option actually performs the following commands:
+
+	> sudo python ./start_gw.py &
+	> disown %1
+	
+If you access your gateway with ssh, doing so allows you to quit the ssh session and leave your gateway still running in the background. Use option 3 to verify whether all the processes have been launched. You can then use option 5 to see the logs in real time. To test the simple gateway, use option 1. You can ssh at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an ssh apps to log on 192.168.200.1 and launch cmd.sh from your smartphone.	
 
 To stop the gateway, use option K. This option can also kill the gateway processes that are run at boot.
 	
