@@ -244,15 +244,13 @@ In the example, we have "HWaddr b8:27:eb:be:da:21" then use "27EBBEDA21"
 - configuring /etc/bluetooth/main.conf for Bluetooth (step B)
 - activating MongoDB storage (step F)
 - compiling DHT22 support (step H)
-- configuring the gateway to run the lora_gateway program at boot (step J)
+- configuring the gateway to run the lora_gateway program at boot (step I)
 
 Anyway, check steps A to I as described below and perform all needed tasks that config_gw.sh is is not addressing.
 
-**Even if you installed from the zipped SD card image config_gw.sh is still needed for:**
+**Even if you installed from the zipped SD card image config_gw.sh is still needed to personalize your gateway:**
 
 - compiling the lora_gateway program for your the Raspberry board version
-- creating a "gateway_id.txt" file containing the gateway id with last 5 hex-byte of your eth0 interface (e.g. "00000027EBBEDA21")
-- setting in local_cong.json the gateway id: "gateway_ID" : "00000027EBBEDA21"
 - configuring /etc/hostapd/hostapd.conf for to advertise a WiFi SSID corresponding to last 5 hex-byte of your eth0 interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
 - compiling DHT22 support if you connected such a sensor to your Raspberry
 
@@ -522,9 +520,7 @@ If you enter 27EBBEDA21, cmd.sh will create the gateway_id.txt file with the fol
 	> cat gateway_id.txt
 	00000027EBBEDA21
 	
-If you use the config_gw.sh script, it can do it for you because you already have to provide the last 5 bytes of the gateway eth0 interface MAC address to config_gw.
-	
-To run an operational gateway in the background, use option 0. This option actually performs the following commands:
+cmd.sh will also set the gateway id in the local_conf.json file: "gateway_ID" : "00000027EBBEDA21". Then to start the gateway in background, use option 0. This option actually performs the following commands:
 
 	> sudo python ./start_gw.py &
 	> disown %1
@@ -532,4 +528,8 @@ To run an operational gateway in the background, use option 0. This option actua
 If you access your gateway with ssh, doing so allows you to quit the ssh session and leave your gateway still running in the background. Use option 3 to verify whether all the processes have been launched. You can then use option 5 to see the logs in real time. To test the simple gateway, use option 1. You can ssh at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an ssh apps to log on 192.168.200.1 and launch cmd.sh from your smartphone.	
 
 To stop the gateway, use option K. This option can also kill the gateway processes that are run at boot.
+
+You can easily add new useful commands to the cmd.sh shell script.
 	
+Enjoy!
+C. Pham	

@@ -15,11 +15,18 @@ Latest gateway version (recommended for new users)
 
 The full, latest version of the low-cost gateway is available in the gw_full_latest folder. It only contains the gateway control and post-processing software. You may need to install required Raspbian Jessie packages as explained in the README file of the various updates.
 
-To get directly to the full, latest gateway version, (i) simply download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or (ii) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. See the installation procedure described [below](https://github.com/CongducPham/LowCostLoRaGw#install-the-low-level-lora-gateway) to adapt them to the the gw_full_latest folder.
+To get directly to the full, latest gateway version, (i) simply download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or (ii) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. See the installation procedure described [below](https://github.com/CongducPham/LowCostLoRaGw#install-the-low-level-lora-gateway) to adapt them to the gw_full_latest folder.
 
 Then, in the script folder, run new_config_gw.sh to configure your gateway, as described [here](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced#configure-your-gateway-with-config_gwsh).
 
 By default both local_conf.json and global_conf.json configure the gateway with a simple behavior: LoRa mode 1 (BW125SF12), no DHT sensor in gateway (so no MongoDB for DHT sensor), no downlink, no AES, no raw mode. clouds.json enables only the ThingSpeak demo channel (even the local MongiDB storage is disabled). You can customize your gateway later when you have more cloud accounts and when you know better what features you want to enable.
+
+To launch manually the gateway in background, type:
+
+	> sudo python ./start_gw.py &
+	> disown %1
+	
+Otherwise, use cmd.sh to execute the main operations on the gateway as described in the [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/README.md#use-cmdsh-to-interact-with-the-gateway).	
 
 **NEW** 
 =======
@@ -94,9 +101,8 @@ You will get the entire repository:
 	pi@raspberrypi:~ $ ls -l LowCostLoRaGw/
 	total 32
 	drwxr-xr-x 7 pi pi  4096 Jul 26 15:38 Arduino
-	drwxr-xr-x 5 pi pi  4096 Jul 26 15:38 gw_advanced
-	drwxr-xr-x 2 pi pi  4096 Jul 26 15:38 Raspberry
-	-rw-r--r-- 1 pi pi 15522 Jul 26 15:38 README.md
+	-rw-r--r-- 1 pi pi 15522 Jul 26 15:38 README.md	
+	drwxr-xr-x 2 pi pi  4096 Jul 26 15:38 Raspberry	
 	drwxr-xr-x 2 pi pi  4096 Jul 26 15:38 tutorials
 	
 Create a folder named "lora_gateway" for instance then copy all the files of the LowCostLoRaGw/Raspberry folder in it.
@@ -237,7 +243,7 @@ Depending on the sensor type, the computation to get the real temperature may be
 
 The default configuration also use the EEPROM to store the last packet sequence number in order to get it back when the sensor is restarted/rebooted. If you want to restart with a packet sequence number of 0, just comment the line "#define WITH_EEPROM"
 
-Once flashed, the Arduino temperature sensor will send to the gateway the following message \!#3#20.4 (20.4 is the measured temperature so you may not have the same value) prefixed by the application key every 10 minutes (with some randomization interval). This will trigger at the processing stage of the gateway the logging on the default ThinkSpeak channel (the test channel we provide) in field 3. At the gateway, 20.4 will be recorded on the provided ThingSpeak test channel in field 3 of the channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value. 
+Once flashed, the Arduino temperature sensor will send to the gateway the following message \\!#3#20.4 (20.4 is the measured temperature so you may not have the same value) prefixed by the application key every 10 minutes (with some randomization interval). This will trigger at the processing stage of the gateway the logging on the default ThinkSpeak channel (the test channel we provide) in field 3. At the gateway, 20.4 will be recorded on the provided ThingSpeak test channel in field 3 of the channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value. 
 
 The program has been tested on Arduino Uno, Mega2560, Nano, Pro Mini, Mini, Due, Zero.  We also tested on the Teensy3.1/3.2 and the Ideetron Nexus. The SX1272 lib has been modified to change the SPI_SS pin from 2 to 10 when you compile for the Pro Mini, Mini (Nexus), Nano or Teensy. 
 
@@ -251,13 +257,13 @@ With the Arduino IDE, open the Arduino_LoRa_InteractiveDevice sketch. Then compi
 
 By default, the interactive end-device has address 6 and runs in LoRa mode 1.
 
-Enter "\!SGSH52UGPVAUYG3S#1#21.6" (without the quotes) in the input window and press RETURN
+Enter "\\!SGSH52UGPVAUYG3S#1#21.6" (without the quotes) in the input window and press RETURN
 
 The command will be sent to the gateway and you should see the gateway pushing the data to the ThingSpeak test channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value.
 
 When testing with the interactive end-device, you should not use the --wappkey option for the post_processing_gw.py post-processing python script otherwise your command will not be accepted as only text string without logging services will be received and displayed when --wappkey is set.
 
-	> sudo ./lora_gateway | python ./post_processing_gw.py -t | python ./log_gw
+	> sudo ./lora_gateway | python ./post_processing_gw.py | python ./log_gw
 
 Use an Arduino as a LoRa gateway
 ================================
