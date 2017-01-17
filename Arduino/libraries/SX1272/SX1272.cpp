@@ -31,8 +31,13 @@
 
 /*  CHANGE LOGS by C. Pham
  *
+ *  Jan, 11th, 2017
+ *      - fix bug in getRSSIpacket() when SNR < 0 thanks to John Rohde from Aarhus University
  *  Dec, 17th, 2016
  *      - fix bug making -DPABOOST in radio.makefile inoperant
+ *  Dec, 1st, 2016
+ *      - add RSSI computation while performing CAD with doCAD()
+ *      - WARNING: the SX1272 lib for gateway (Raspberry) does not have this functionality
  *  Now, 26th, 2016
  *		- add preliminary support for ToA limitation
  *      - when in "production" mode, uncomment #define LIMIT_TOA
@@ -3328,6 +3333,8 @@ int8_t SX1272::getSNR()
     { // LoRa mode
         state = 1;
         value = readRegister(REG_PKT_SNR_VALUE);
+        _rawSNR = value;
+
         if( value & 0x80 ) // The SNR sign bit is 1
         {
             // Invert and divide by 4
@@ -3457,7 +3464,7 @@ int16_t SX1272::getRSSIpacket()
                 // added by C. Pham, using Semtech SX1272 rev3 March 2015
                 // for SX1272 we use -139, for SX1276, we use -157
                 // then for SX1276 when using low-frequency (i.e. 433MHz) then we use -164
-                _RSSIpacket = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)+(_channel<CH_04_868?7:0)) + (double)_RSSIpacket + (double)_SNR*0.25;
+                _RSSIpacket = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)+(_channel<CH_04_868?7:0)) + (double)_RSSIpacket + (double)_rawSNR*0.25;
                 state = 0;
             }
             else

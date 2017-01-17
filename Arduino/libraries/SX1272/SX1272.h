@@ -1194,6 +1194,7 @@ public:
     bool _rawFormat;
     int8_t _rcv_snr_in_ack;
     bool _needPABOOST;
+    uint8_t _rawSNR;
 
 #ifdef W_REQUESTED_ACK
 	uint8_t _requestACK;
