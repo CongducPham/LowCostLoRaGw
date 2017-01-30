@@ -50,6 +50,8 @@
 // previous way for setting output power
 // 'H' is actually 6dBm, so better to use the new way to set output power
 // char powerLevel='H';
+#elif defined FCC_US_REGULATION
+#define MAX_DBM 14
 #endif
 
 #ifdef BAND868

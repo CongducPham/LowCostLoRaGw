@@ -52,6 +52,8 @@
 #define MAX_DBM 14
 #elif defined SENEGAL_REGULATION
 #define MAX_DBM 10
+#elif defined FCC_US_REGULATION
+#define MAX_DBM 14
 #endif
 
 #ifdef BAND868
