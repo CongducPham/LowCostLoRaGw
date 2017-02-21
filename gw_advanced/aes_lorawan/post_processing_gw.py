@@ -17,6 +17,8 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# v2.3 - need to incorporate aux_radio features
 #------------------------------------------------------------
 
 # IMPORTANT NOTE
@@ -740,13 +742,20 @@ while True:
 				#
 				for cloud_index in range(0,len(_enabled_clouds)):
 					
-					print "--> cloud[%d]" % cloud_index
-					cloud_script=_enabled_clouds[cloud_index]
-					print "uploading with "+cloud_script
-					sys.stdout.flush()
-					cmd_arg=cloud_script+" \""+ldata.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
-					print cmd_arg
-					os.system(cmd_arg) 
+					try:
+						print "--> cloud[%d]" % cloud_index
+						cloud_script=_enabled_clouds[cloud_index]
+						print "uploading with "+cloud_script
+						sys.stdout.flush()
+						cmd_arg=cloud_script+" \""+ldata.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
+					except UnicodeDecodeError, ude:
+						print ude
+					else:
+						print cmd_arg
+						try:
+							os.system(cmd_arg)
+						except:
+							print "Error when uploading data to the cloud"	
 
 				print "--> cloud end"
 				
