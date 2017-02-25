@@ -156,7 +156,7 @@ def thingspeak_uploadSingleData(data, second_data):
 	if(connected):
 		connection_failure = False
 		
-		print("ThingSpeak: uploading")
+		print("ThingSpeak: uploading (single)")
 		send_data(data, second_data)
 	else:
 		connection_failure = True
@@ -173,6 +173,9 @@ def thingspeak_uploadMultipleData(data_array):
 	# if we got a response from the server, send the data to it
 	if(connected):
 		connection_failure = False
+		
+		print("ThingSpeak: uploading (multiple)")
+		print 'rcv msg to log (\!) on ThingSpeak (',		
 	
 		#use default channel?
 		if data_array[0]=='':
@@ -181,9 +184,21 @@ def thingspeak_uploadMultipleData(data_array):
 		else:
 			print data_array[0],
 			
-		# we ignore the field and the channel for the moment
+		print ',',
+		
+		#use default field?
+		if data_array[1]=='':
+			fieldNumber = 1
+			print 'default',
+		else:
+			fieldNumber = int(data_array[1])
+			print data_array[1],				
+	
+		print '): '
+			
+		# we skip the thingspeak channel and field index when iterating
 		iteration = 3
-		fieldNumber = 1
+
 		cmd = 'curl -s -k -X POST --data '
 		while(iteration<len(data_array)):
 			if(iteration == 3):
@@ -197,7 +212,6 @@ def thingspeak_uploadMultipleData(data_array):
 			
 		cmd += ' https://api.thingspeak.com/update?key='+data_array[0]
 		
-	
 		print("ThingSpeak: will issue curl cmd")
 		print(cmd)
 		args = cmd.split()
@@ -255,8 +269,8 @@ def thingspeak_setRetry(retry_bool):
 
 def main(ldata, pdata, rdata, tdata, gwid):
 
-	# this is common code to process packet information provided by the main gateway script (i.e. post_processing_gw.py)
-	# these information are provided in case you need them	
+	#this is common code to process packet information provided by the main gateway script (i.e. post_processing_gw.py)
+	#these information are provided in case you need them	
 	arr = map(int,pdata.split(','))
 	dst=arr[0]
 	ptype=arr[1]				
@@ -266,9 +280,10 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	SNR=arr[5]
 	RSSI=arr[6]
 
-	# this part depends on the syntax used by the end-device
-	# we use: thingspeak_channel#thingspeak_field#TC/22.4/HU/85... 
-	#		  ##TC/22.4/HU/85... or TC/22.4/HU/85... or thingspeak_channel##TC/22.4/HU/85... or #thingspeak_field#TC/22.4/HU/85... to use some default value
+	#this part depends on the syntax used by the end-device
+	#we use: thingspeak_channel#thingspeak_field#TC/22.4/HU/85... 
+	#ex: ##TC/22.4/HU/85... or TC/22.4/HU/85... or thingspeak_channel##TC/22.4/HU/85... 
+	#or #thingspeak_field#TC/22.4/HU/85... to use some default value
 				
 	# get number of '#' separator
 	nsharp = ldata.count('#')			
@@ -306,16 +321,16 @@ def main(ldata, pdata, rdata, tdata, gwid):
 			data_array[i] = data_array[i][:-1]
 		i += 2
 		
-	# get number of '/' separator
+	#get number of '/' separator
 	nslash = ldata.count('/')
 	
 	index_first_data = 2
 	
 	if nslash==0:
-		# old syntax without nomenclature key
+		#old syntax without nomenclature key
 		index_first_data=2
 	else:
-		# new syntax with nomenclature key				
+		#new syntax with nomenclature key				
 		index_first_data=3
 																		
 	second_data=str(seq)
@@ -331,11 +346,11 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	data.append(data_array[index_first_data]) #value to add (the first sensor value in data_array)
 	
 	#upload data to thingspeak
-	#JUST FOR UPLOAD A SINGLE DATA IN A SPECIFIC FIELD AND SECOND DATA					
+	#JUST FOR UPLOAD A SINGLE DATA IN A SPECIFIC FIELD AND SECOND DATA				
 	thingspeak_uploadSingleData(data, second_data)   
 
-	# if you want to upload all data starting at field 1, uncomment next line, and comment previous line
-	#thingspeak_uploadMultipleData(data_array) # upload all data in the fields		
+	#to upload multiple data with nomenclature fields, comment the previous line and uncomment the following line
+	#thingspeak_uploadMultipleData(data_array)		
 	
 if __name__ == "__main__":
 	main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
