@@ -13,7 +13,7 @@ Please consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
 Latest gateway version (recommended for new users)
 --------------------------------------------------
 
-The full, latest version of the low-cost gateway is available in the gw_full_latest folder. It only contains the gateway control and post-processing software. You may need to install required Raspbian Jessie packages as explained in the README file of the various updates.
+The full, latest version of the low-cost gateway is available in the gw_full_latest folder. It contains all the the gateway control and post-processing software but you may need to install required Raspbian Jessie packages as explained in the README file of the various updates.
 
 To get directly to the full, latest gateway version, (i) simply download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or (ii) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. See the installation procedure described [below](https://github.com/CongducPham/LowCostLoRaGw#install-the-low-level-lora-gateway) to adapt them to the gw_full_latest folder.
 
@@ -26,7 +26,15 @@ To launch manually the gateway in background, type:
 	> sudo python ./start_gw.py &
 	> disown %1
 	
-Otherwise, use cmd.sh to execute the main operations on the gateway as described in the [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/README.md#use-cmdsh-to-interact-with-the-gateway).	
+Otherwise, use cmd.sh to execute the main operations on the gateway as described in the [gateway advanced README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/README.md#use-cmdsh-to-interact-with-the-gateway).	
+
+With the latest gateway version on the github, you also have in lora_gateway/scripts an update_gw.sh script that updates your gateway with future latest versions. Simple go into lora_gateway/scripts and type:
+
+	> ./update_gw.sh
+	
+If you have an existing /home/pi/lora_gateway folder, then it will preserve all you existing configuration files (i.e. key_*, global_conf.json, local_conf.json, clouds.json and radio.makefile). As the repository does not have a gateway_id.txt file, it will also preserve your gateway id.
+
+**Note that you can also use this script to install a completely new gateway with the latest gateway version** by downloading from the github the gw_advanced/scripts/update_gw.sh script (switch in raw mode and save the script on your computer), copy it on your Raspberry gateway (using scp for instance) in /home/pi and then simply run the script (you may need to add execution right with chmod +x update_gw.sh).
 
 **NEW** 
 =======
@@ -298,8 +306,8 @@ with Dropbox uploader:
 - look at https://github.com/andreafabrizi/Dropbox-Uploader
 - but not tested yet and not supported yet	
 
-ANNEX.A
-=======
+ANNEX.A: LoRa mode and predefined channels
+==========================================
 
 Pre-defined LoRa modes (from initial Libelium SX1272.h)
 
@@ -338,6 +346,31 @@ Pre-defined channels in 868MHz, 915MHz and 433MHz band (most of them from initia
 |  - |   -    |  - |   -    |  - |   -    |
 
 
+ANNEX.B: Troubleshooting
+========================
+
+Verify if the low-level gateway program detects your radio module and if the radio module is working by simply run the low-level gateway program with:
+
+	> sudo ./lora_gateway
+	
+You should see the following output
+
+	SX1276 detected, starting.
+	SX1276 LF/HF calibration
+	...
+	^$**********Power ON: state 0
+	^$Default sync word: 0x12
+	^$LoRa mode 1
+	^$Setting mode: state 0
+	^$Channel CH_10_868: state 0
+	^$Set LoRa power dBm to 14
+	^$Power: state 0
+	^$Get Preamble Length: state 0
+	^$Preamble Length: 8
+	^$LoRa addr 1: state 0
+	^$SX1272/76 configured as LR-BS. Waiting RF input for transparent RF-serial bridge	
+
+If one of the state result is different from 0 then it might be a power/current issue. If the Preamble Length is different from 8 then it can also be a power/current issue but also indicate more important failure of the radio module. Get the "faulty" radio module and connect it to an Arduino board running the interactive end-device sketch. If the Preamble Length is now correct, then retry again with the Raspberry gateway. If the problem on the Raspberry persists, try with another radio module.
 	
 WARNING
 =======
