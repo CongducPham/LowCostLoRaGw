@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.6S
+ *  Version:                1.61S
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -75,6 +75,8 @@
 */
 
 /*  Change logs
+ *  Mar, 2nd, 2017. v1.6S
+ *		  Add preamble length verification and correction to the default value of 8 if it is not the case	
  *  Oct, 21st, 2016. v1.6S
  *        Split the lora_gateway sketch into 2 parts:   
  *          - lora_gateway: for gateway, similar to previous IS_RCV_GATEWAY
@@ -575,6 +577,18 @@ void startConfig() {
   PRINT_CSTSTR("%s","^$Preamble Length: ");
   PRINT_VALUE("%d", sx1272._preamblelength);
   PRINTLN;
+
+  if (sx1272._preamblelength != 8) {
+      PRINT_CSTSTR("%s","^$Bad Preamble Length: set back to 8");
+      sx1272.setPreambleLength(8);
+      e = sx1272.getPreambleLength();
+      PRINT_CSTSTR("%s","^$Get Preamble Length: state ");
+      PRINT_VALUE("%d", e);
+      PRINTLN;
+      PRINT_CSTSTR("%s","^$Preamble Length: ");
+      PRINT_VALUE("%d", sx1272._preamblelength);
+      PRINTLN;
+  }
   
   // Set the node address and print the result
   //e = sx1272.setNodeAddress(loraAddr);
