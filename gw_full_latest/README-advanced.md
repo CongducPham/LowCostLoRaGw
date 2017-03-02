@@ -1,7 +1,7 @@
 Advanced features and configuration tools for the low-cost LoRa gateway with Raspberry
 ======================================================================================
 
-IMPORTANT: We should start first with the simple gateway installation. Then follow the instruction here to have the advanced version.
+**IMPORTANT NOTICE**: We should start first with the simple gateway installation. Then follow the instruction here to have the advanced version.
 
 **NEW**: new cloud management approach: simpler, more generic
 =============================================================
@@ -468,6 +468,8 @@ If you use the config_gw.sh script, it can do it for you.
 
 **IMPORTANT NOTICE**: when the gateway is run at boot, it is run under root identity. In the post_processing_gw.py script, the folder path for log files is now hard coded as /home/pi/Dropbox/LoRa-test instead of ~/Dropbox/LoRa-test in previous versions. In this way, even if the gateway is run under root identity, the log files are stored in the pi user account.
 
+**IMPORTANT NOTICE**: To run an operation gateway, it is better to reboot the gateway and let the LoRa gateway program start at boot. Manually lauching the gateway can be usefull for test purposes but we observed that redirections of LoRa gateway output to the post-processing stage can be broken thus leading to a not responding gateway.
+
 USE cmd.sh to interact with the gateway
 =======================================
 
@@ -481,6 +483,7 @@ You can use cmd.sh as follows:
 	3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +
 	4- tail --line=15 ../Dropbox/LoRa-test/post-processing_*.log         +
 	5- tail -f ../Dropbox/LoRa-test/post-processing_*.log                +
+	6- less ../Dropbox/LoRa-test/post-processing_*.log                   +
 	------------------------------------------------------* Bluetooth *--+
 	a- run: sudo hciconfig hci0 piscan                                   +
 	b- run: sudo python rfcomm-server.py                                 +
@@ -492,10 +495,15 @@ You can use cmd.sh as follows:
 	--------------------------------------------------* Configuration *--+
 	A- show global_conf.json                                             +
 	B- show local_conf.json                                              +
-	C- edit global_conf.json                                             +		
+	C- show clouds.json                                                  +
+	D- edit global_conf.json                                             +
+	E- edit local_conf.json                                              +
+	F- edit clouds.json                                                  +
 	-----------------------------------------------------------* kill *--+
 	K- kill all gateway related processes                                +
 	k- kill rfcomm-server process                                        +
+	R- reboot gateway                                                    +
+	S- shutdown gateway                                                  +
 	---------------------------------------------------------------------+
 	Q- quit                                                              +
 	======================================================================
@@ -520,14 +528,36 @@ If you enter 27EBBEDA21, cmd.sh will create the gateway_id.txt file with the fol
 	> cat gateway_id.txt
 	00000027EBBEDA21
 	
-cmd.sh will also set the gateway id in the local_conf.json file: "gateway_ID" : "00000027EBBEDA21". Then to start the gateway in background, use option 0. This option actually performs the following commands:
+cmd.sh will also set the gateway id in the local_conf.json file: "gateway_ID" : "00000027EBBEDA21". 
+
+Normally, the LoRa gateway starts automatically on boot. To verify that you have a running gateway, use option 3.
+
+	BEGIN OUTPUT
+	Check for lora_gateway process
+	##############################
+	root      4119  0.0  0.3   6780  3184 ?        S    10:21   0:00 sudo python start_gw.py
+	root      4123  0.0  0.5   9228  5180 ?        S    10:21   0:00 python start_gw.py
+	root      4124  0.0  0.0   1912   364 ?        S    10:21   0:00 sh -c sudo ./lora_gateway --mode 1 --ndl | python post_processing_gw.py | python log_gw.py
+	root      4125  0.0  0.3   6780  3188 ?        S    10:21   0:00 sudo ./lora_gateway --mode 1 --ndl
+	root      4131 88.5  0.2   3700  2176 ?        R    10:21   3:31 ./lora_gateway --mode 1 --ndl
+	pi        4176  0.0  0.2   4276  1948 pts/1    S+   10:25   0:00 grep -e start_gw -e lora_gateway -e post_processing -e log_gw
+	##############################
+	The gateway is running if you see the lora_gateway process
+	END OUTPUT
+	Press RETURN/ENTER...
+
+To stop the gateway, use option K. This option can also kill the gateway processes that are run at boot.
+
+**IMPORTANT NOTICE**: Do not launch a new gateway instance with an existing one as there will be conflict on the SPI bus.
+
+You can start manually the gateway in background for test purposes with option 0. This option actually performs the following commands:
 
 	> sudo python ./start_gw.py &
 	> disown %1
 	
-If you access your gateway with ssh, doing so allows you to quit the ssh session and leave your gateway still running in the background. Use option 3 to verify whether all the processes have been launched. You can then use option 5 to see the logs in real time. To test the simple gateway, use option 1. You can ssh at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an ssh apps to log on 192.168.200.1 and launch cmd.sh from your smartphone.	
+**IMPORTANT NOTICE**: To run an operation gateway, it is better to reboot the gateway and let the LoRa gateway program start at boot. Manually lauching the gateway can be usefull for test purposes but we observed that redirections of LoRa gateway output to the post-processing stage can be broken thus leading to a not responding gateway.
 
-To stop the gateway, use option K. This option can also kill the gateway processes that are run at boot.
+You can then use option 5 to see the logs in real time. To test the simple gateway, use option 1. You can ssh at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an ssh apps to log on 192.168.200.1 and launch cmd.sh from your smartphone.	
 
 You can easily add new useful commands to the cmd.sh shell script.
 	

@@ -50,12 +50,13 @@ gatewayid=`cat gateway_id.txt`
 while [ "$choice" != "Q" ]
 do
 echo "=======================================* Gateway $gatewayid *==="
-echo "0- sudo python start_gw.py &                                         +"
+echo "0- sudo python start_gw.py & ; disown %1                             +"
 echo "1- sudo ./lora_gateway --mode 1                                      +"
 echo "2- sudo ./lora_gateway --mode 1|python post_processing_gw.py -t -m 2 +"
 echo "3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +"
 echo "4- tail --line=25 ../Dropbox/LoRa-test/post-processing_*.log         +"
 echo "5- tail --line=25 -f ../Dropbox/LoRa-test/post-processing_*.log      +"
+echo "6- less ../Dropbox/LoRa-test/post-processing_*.log                   +"
 echo "------------------------------------------------------* Bluetooth *--+"
 echo "a- run: sudo hciconfig hci0 piscan                                   +"
 echo "b- run: sudo python rfcomm-server.py                                 +"
@@ -67,10 +68,15 @@ echo "f- test: ping www.univ-pau.fr                                        +"
 echo "--------------------------------------------------* Configuration *--+"
 echo "A- show global_conf.json                                             +"
 echo "B- show local_conf.json                                              +"
-echo "C- edit global_conf.json                                             +"
+echo "C- show clouds.json                                                  +"
+echo "D- edit global_conf.json                                             +"
+echo "E- edit local_conf.json                                              +"
+echo "F- edit clouds.json                                                  +"
 echo "-----------------------------------------------------------* kill *--+"
 echo "K- kill all gateway related processes                                +"
 echo "k- kill rfcomm-server process                                        +"
+echo "R- reboot gateway                                                    +"
+echo "S- shutdown gateway                                                  +"
 echo "---------------------------------------------------------------------+"
 echo "Q- quit                                                              +"
 echo "======================================================================" 
@@ -124,6 +130,15 @@ if [ "$choice" = "5" ]
 		date --utc
 		trap "echo" SIGINT
 		tail --line=25 -f ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+fi
+
+if [ "$choice" = "6" ] 
+	then
+		echo "Display ../Dropbox/LoRa-test/post-processing_$gatewayid.log. Q to return"
+		echo "Current UTC date is"
+		date --utc
+		trap "echo" SIGINT
+		less ../Dropbox/LoRa-test/post-processing_$gatewayid.log
 fi
 
 if [ "$choice" = "a" ] 
@@ -187,8 +202,41 @@ fi
 
 if [ "$choice" = "C" ] 
         then
-                echo "Editing global_conf.json. CTRL-O to save, CTRL-X to return"
-                nano global_conf.json
+                echo "Showing clouds.json"
+                cat clouds.json
+fi
+
+if [ "$choice" = "D" ] 
+        then
+        		if [ -f global_conf.json ]
+        			then
+                		echo "Editing global_conf.json. CTRL-O to save, CTRL-X to return"
+                		nano global_conf.json
+                	else
+                		echo "Error: global_conf.json does not exist"
+                fi	
+fi
+
+if [ "$choice" = "E" ] 
+        then
+        		if [ -f local_conf.json ]
+        			then
+                		echo "Editing local_conf.json. CTRL-O to save, CTRL-X to return"
+                		nano local_conf.json
+                	else
+                		echo "Error: local_conf.json does not exist"
+                fi	
+fi
+
+if [ "$choice" = "F" ] 
+        then
+        		if [ -f clouds.json ]
+        			then
+                		echo "Editing clouds.json. CTRL-O to save, CTRL-X to return"
+                		nano clouds.json
+                	else
+                		echo "Error: clouds.json does not exist"
+                fi	
 fi
 
 if [ "$choice" = "K" ] 
@@ -201,6 +249,18 @@ if [ "$choice" = "k" ]
         then
 		echo "Killing rfcomm-server process"
 		sudo kill $(ps aux | grep -e rfcomm-server | awk '{print $2}')
+fi
+
+if [ "$choice" = "R" ] 
+        then
+		echo "Reboot gateway"
+		sudo shutdown -r now
+fi
+
+if [ "$choice" = "S" ] 
+        then
+		echo "Shutdown gateway"
+		sudo shutdown -h now
 fi
 
 echo "END OUTPUT"
