@@ -85,7 +85,7 @@ We recommend buying either RPI2 or RPI3. RPI3 with Jessie has built-in WiFi and 
 Connect a radio module to Raspberry
 ===================================
 
-You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). Of course you also need to provide the power (3.3v) to the radio module. You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
+You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the SPI pin (MOSI, MISO, CLK, CS) of the radio module to corresponding RPI's pin #19, #21, #23 and #24 respectively. Of course you also need to provide the power (3.3v) to the radio module. We use RPI's pin #17 (next to MOSI) for that purpose but any other 3.3v pin can do. It is advised to also connect the radio module RESET pin to RPI's pin #11. Note that we are referring to the RPI's physical pin number as shown [here](https://pinout.xyz/pinout/ground#). You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials) to see all these steps in image.
 
 Install the low-level LoRa gateway
 ==================================

@@ -195,9 +195,14 @@ def thingspeak_uploadMultipleData(data_array):
 			print data_array[1],				
 	
 		print '): '
-			
-		# we skip the thingspeak channel and field index when iterating
-		iteration = 3
+		
+		#we skip the thingspeak channel and field index when iterating
+        #if there is only 1 data, and without the nomemclature
+    	if len(data_array)==3:
+        	iteration = 2
+        else:
+    		#else skip also the nomenclature
+            iteration = 3
 
 		cmd = 'curl -s -k -X POST --data '
 		while(iteration<len(data_array)):
@@ -206,7 +211,7 @@ def thingspeak_uploadMultipleData(data_array):
 			else:
 				cmd += '&field'+str(fieldNumber)+'='+data_array[iteration]
 				
-			# don't get the nomenclature so += 2
+			# don't use the nomenclature so += 2
 			iteration += 2
 			fieldNumber += 1
 			
