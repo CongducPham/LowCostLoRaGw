@@ -146,7 +146,7 @@ then you are ready to use them without the additional steps.
 	bytearray(b'+~\x15\x16(\xae\xd2\xa6\xab\xf7\x15\x88\t\xcfO<')
 	>>> nwkskeylist=[]
 	>>> for i in range (0,len(nwkskey)):
-	...     nwkskeylist.append(netskey[i])
+	...     nwkskeylist.append(nwtskey[i])
 	... 
 	>>> nwkskeylist
 	[43, 126, 21, 22, 40, 174, 210, 166, 171, 247, 21, 136, 9, 207, 79, 60]
