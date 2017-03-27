@@ -30,7 +30,9 @@
 #include <math.h>
 
 /*  CHANGE LOGS by C. Pham
- *
+ *  Mar, 26th, 2017
+ *      - insert delay(100) befoe setting radio module to sleep mode. Remove unstability issue
+ *      - (proposed by escyes - https://github.com/CongducPham/LowCostLoRaGw/issues/53#issuecomment-289237532)
  *  Jan, 11th, 2017
  *      - fix bug in getRSSIpacket() when SNR < 0 thanks to John Rohde from Aarhus University
  *  Dec, 17th, 2016
@@ -6759,6 +6761,11 @@ int8_t SX1272::setSleepMode() {
     byte value;
 
     writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);
+    // proposed by escyes
+    // https://github.com/CongducPham/LowCostLoRaGw/issues/53#issuecomment-289237532
+    //
+    // inserted to avoid REG_OP_MODE stay = 0x40 (no sleep mode)
+    delay(100);
     writeRegister(REG_OP_MODE, LORA_SLEEP_MODE);    // LoRa sleep mode
 
     //delay(50);
