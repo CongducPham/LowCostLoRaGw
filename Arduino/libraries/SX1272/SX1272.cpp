@@ -31,7 +31,7 @@
 
 /*  CHANGE LOGS by C. Pham
  *  Mar, 26th, 2017
- *      - insert delay(100) befoe setting radio module to sleep mode. Remove unstability issue
+ *      - insert delay(100) before setting radio module to sleep mode. Remove unstability issue
  *      - (proposed by escyes - https://github.com/CongducPham/LowCostLoRaGw/issues/53#issuecomment-289237532)
  *  Jan, 11th, 2017
  *      - fix bug in getRSSIpacket() when SNR < 0 thanks to John Rohde from Aarhus University
@@ -4080,7 +4080,8 @@ uint8_t SX1272::receivePacketTimeout(uint16_t wait)
     }
     else
     {
-        state_f = 1;
+        // we need to conserve state_f=3 to indicate that no packet has been received after timeout
+        //state_f = 1;
     }
     return state_f;
 }

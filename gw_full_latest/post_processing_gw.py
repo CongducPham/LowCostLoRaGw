@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v2.3 - need to incorporate aux_radio features
+# v2.3 + status - need to incorporate aux_radio features
 #------------------------------------------------------------
 
 # IMPORTANT NOTE
@@ -323,6 +323,33 @@ def downlink_target():
 		time.sleep(_gw_downlink)
 		
 #------------------------------------------------------------
+#for sending periodic status
+#------------------------------------------------------------
+
+try:
+	_gw_status = json_array["gateway_conf"]["status"]
+except KeyError:
+	_gw_status = 0		
+
+if _gw_status:
+	try:
+		_gw_lat = json_array["gateway_conf"]["ref_latitude"]
+	except KeyError:
+		_gw_lat = "undef"
+	try:
+		_gw_long = json_array["gateway_conf"]["ref_longitude"]
+	except KeyError:
+		_gw_long = "undef"		
+					
+def status_target():
+	while True:
+		print datetime.datetime.now()
+		print 'post status: gw ON, lat '+_gw_lat+' long '+_gw_long
+		sys.stdout.flush()
+		global _gw_status
+		time.sleep(_gw_status)	
+		
+#------------------------------------------------------------
 #for handling images
 #------------------------------------------------------------
 #list of active nodes
@@ -507,9 +534,10 @@ if __name__ == "__main__":
 #gateway dht22
 if (_gw_dht22):
 	print "Starting thread to measure gateway temperature"
-	t = threading.Thread(target=dht22_target)
-	t.daemon = True
-	t.start()
+	sys.stdout.flush()
+	t_dht22 = threading.Thread(target=dht22_target)
+	t_dht22.daemon = True
+	t_dht22.start()
 
 #downlink feature
 if (_gw_downlink):
@@ -546,10 +574,20 @@ if (_gw_downlink):
 		print "post downlink: none existing downlink-post-queued.txt"			
 	
 	print "Starting thread to check for downlink requests"
-	t = threading.Thread(target=downlink_target)
-	t.daemon = True
-	t.start()
+	sys.stdout.flush()
+	t_downlink = threading.Thread(target=downlink_target)
+	t_downlink.daemon = True
+	t_downlink.start()
 	time.sleep(1)
+
+#status feature
+if (_gw_status):
+	print "Starting thread to report gw status"
+	sys.stdout.flush()
+	t_status = threading.Thread(target=status_target)
+	t_status.daemon = True
+	t_status.start()
+	time.sleep(1)	
 
 print ''	
 print "Current working directory: "+os.getcwd()

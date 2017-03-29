@@ -26,6 +26,9 @@
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
+// Include sensors
+#include "Sensor.h"
+#include "rawAnalog.h"
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -85,8 +88,6 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //#define WITH_ACK
-// uncomment if you have 2 humidity sensors
-#define TWO_SHU
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -101,25 +102,15 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE READ PIN AND THE POWER PIN FOR THE TEMP. SENSOR
-#define SHU1_PIN_READ  A0
-// use digital 8 to power the temperature sensor if needed
-#define SHU1_PIN_POWER 9
-///////////////////////////////////////////////////////////////////
-
-#ifdef TWO_SHU
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE READ PIN AND THE POWER PIN FOR THE TEMP. SENSOR
-#define SHU2_PIN_READ  A1
-// use digital 8 to power the temperature sensor if needed
-#define SHU2_PIN_POWER 8
-///////////////////////////////////////////////////////////////////
-#endif
-
-///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
 unsigned int idlePeriodInMin = 30;
 ///////////////////////////////////////////////////////////////////
+
+// SENSORS DEFINITION 
+//////////////////////////////////////////////////////////////////
+// CHANGE HERE THE NUMBER OF SENSORS, SOME CAN BE NOT CONNECTED
+const int number_of_sensors = 3;
+//////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
 ///////////////////////////////////////////////////////////////////
@@ -193,10 +184,6 @@ RTCZero rtc;
 unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
 
-double shu1;
-#ifdef TWO_SHU
-double shu2;
-#endif
 unsigned long nextTransmissionTime=0L;
 char float_str[20];
 uint8_t message[100];
@@ -214,33 +201,33 @@ struct sx1272config {
 sx1272config my_sx1272config;
 #endif
 
+// array containing sensors pointers
+Sensor* sensor_ptrs[number_of_sensors];
+
 void setup()
 {
   int e;
 
-  // for the sensor data
-  pinMode(SHU1_PIN_READ, INPUT);
-  // and to power the sensor
-  pinMode(SHU1_PIN_POWER,OUTPUT);
-
-#ifdef TWO_SHU
-  // for the sensor data
-  pinMode(SHU2_PIN_READ, INPUT);
-  // and to power sensor
-  pinMode(SHU2_PIN_POWER,OUTPUT);
-#endif    
-
 #ifdef LOW_POWER
+  bool low_power_status = IS_LOWPOWER;
 #ifdef __SAMD21G18A__
   rtc.begin();
 #endif  
 #else
-  digitalWrite(SHU1_PIN_POWER,HIGH);
-#ifdef TWO_SHU
-  digitalWrite(SHU2_PIN_POWER,HIGH);
-#endif  
+  bool low_power_status = IS_NOT_LOWPOWER;
 #endif
 
+//////////////////////////////////////////////////////////////////
+// ADD YOUR SENSORS HERE   
+// Sensor(nomenclature, is_analog, is_connected, is_low_power, pin_read, pin_power, pin_trigger=-1)
+  sensor_ptrs[0] = new rawAnalog("SM1", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 9);
+  sensor_ptrs[1] = new rawAnalog("SM2", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 8);
+  sensor_ptrs[2] = new rawAnalog("SM3", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7);
+
+  sensor_ptrs[0]->set_n_sample(10);
+  sensor_ptrs[1]->set_n_sample(10);   
+  sensor_ptrs[2]->set_n_sample(10);
+  
   delay(3000);
   // Open serial communications and wait for port to open:
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0 
@@ -358,48 +345,6 @@ void loop(void)
   if (millis() > nextTransmissionTime) {
 #endif
 
-#ifdef LOW_POWER
-      digitalWrite(SHU1_PIN_POWER,HIGH);
-      delay(100);
-#endif
-
-      shu1 = 0;
-      for (int k=0; k<10; k++) {
-        delay(100);    
-        shu1 += analogRead(SHU1_PIN_READ);
-      }
-
-      shu1 = shu1 / 10;
-      PRINT_CSTSTR("%s","SHU1 on 10 sample is ");
-      PRINT_VALUE("%f", shu1);
-      PRINTLN;
-
-#ifdef LOW_POWER
-      digitalWrite(SHU1_PIN_POWER,LOW);
-#endif
-      
-#ifdef TWO_SHU
-#ifdef LOW_POWER
-      digitalWrite(SHU2_PIN_POWER,HIGH);
-      delay(100);
-#endif
-
-      shu2 = 0;
-      for (int k=0; k<10; k++) {
-        delay(100);    
-        shu2 += analogRead(SHU2_PIN_READ);
-      }  
-
-      shu2 = shu2 / 10;
-      PRINT_CSTSTR("%s","SHU2 on 10 sample is ");
-      PRINT_VALUE("%f", shu2);
-      PRINTLN;    
-
-#ifdef LOW_POWER
-      digitalWrite(SHU2_PIN_POWER,LOW);
-#endif               
-#endif
-
 #ifdef WITH_APPKEY
       app_key_offset = sizeof(my_appKey);
       // set the app key in the payload
@@ -408,11 +353,32 @@ void loop(void)
 
       uint8_t r_size;
 
-#ifdef TWO_SHU
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#SHU1/%d/SHU2/%d", field_index, (int)shu1, (int)shu2);
-#else
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#SHU1/%d", field_index, (int)shu1);
-#endif      
+      char final_str[80] = "\\!";
+
+      // main loop for sensors, actually, you don't have to edit anything here
+      // just add a predefined sensor if needed or provide a new sensor class instance for a handle a new physical sensor
+      for (int i=0; i<number_of_sensors; i++) {
+
+          if (sensor_ptrs[i]->get_is_connected() || sensor_ptrs[i]->has_fake_data()) {
+
+              int value = (int)sensor_ptrs[i]->get_value();
+
+              PRINT_CSTSTR("%s","SM");
+              PRINT_VALUE("%d", i+1); 
+              PRINT_CSTSTR("%s", " on 10 sample is ");
+              PRINT_VALUE("%d", value);
+              PRINTLN;   
+      
+              if (i==0) {
+                  sprintf(final_str, "%s%s/%d", final_str, sensor_ptrs[i]->get_nomenclature(), value);
+              } 
+              else {
+                  sprintf(final_str, "%s/%s/%d", final_str, sensor_ptrs[i]->get_nomenclature(), value);
+              }
+          }
+      }
+      
+      r_size=sprintf((char*)message+app_key_offset, final_str);
 
       PRINT_CSTSTR("%s","Sending ");
       PRINT_STR("%s",(char*)(message+app_key_offset));

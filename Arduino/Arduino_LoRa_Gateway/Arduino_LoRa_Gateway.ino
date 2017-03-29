@@ -1,7 +1,7 @@
 /* 
- *  LoRa gateway to receive and send command
+ *  LoRa low-level gateway to receive and send command
  *
- *  Copyright (C) 2015-2016 Congduc Pham
+ *  Copyright (C) 2015-2017 Congduc Pham
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.6S
+ *  Version:                1.72
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -75,6 +75,17 @@
 */
 
 /*  Change logs
+ *  Mar, 29th, 2017. v1.72
+ *        Add periodic status (every 10 minutes) from the low-level gateway
+ *        Change receive windows from 1000ms, or 2500ms in mode 1, to 10000ms for all modes, reducing overheads of receive loop 
+ *  Mar, 2nd, 2017. v1.71
+ *        Add preamble length verification and correction to the default value of 8 if it is not the case    
+ *  Dec, 14st, 2016. v1.7   
+ *        Reduce dynamic memory usage for having a simple relay gateway running on an Arduino Pro Mini
+ *          - about 600B of free memory should be available
+ *        Add support for a simple relay gateway with an Arduino node, uncomment GW_RELAY
+ *          - the simple gateway has minimum output as it is not intended to be connected to a computer
+ *          - continously waits for packets then will re-sent the packet (destination is 1) by keeping the original packet header
  *  Oct, 21st, 2016. v1.6S
  *        Split the lora_gateway sketch into 2 parts:   
  *          - lora_gateway: for gateway, similar to previous IS_RCV_GATEWAY
@@ -211,6 +222,8 @@
 //#define BAND433
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// For a Raspberry-based gateway the distribution uses a radio.makefile file that can define MAX_DBM
+//
 #ifndef MAX_DBM
 #define MAX_DBM 14
 #endif
@@ -294,12 +307,13 @@ unsigned long lastDownlinkSendTime=0;
 unsigned long interDownlinkSendTime=20000L;
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-  
+
+//#define SHOW_FREEMEMORY
+//#define GW_RELAY
 //#define RECEIVE_ALL 
 //#define CAD_TEST
 //#define LORA_LAS
 //#define WINPUT
-//#define WITH_SEND_LED
 
 #ifdef BAND868
 #define MAX_NB_CHANNEL 15
@@ -329,11 +343,7 @@ uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_433,CH_01_433,CH_02_433,CH_03_4
 #endif
 
 // use the dynamic ACK feature of our modified SX1272 lib
-#define GW_AUTO_ACK 
-
-#ifdef WITH_SEND_LED
-#define SEND_LED  44
-#endif
+#define GW_AUTO_ACK
 
 ///////////////////////////////////////////////////////////////////
 // DEFAULT LORA MODE
@@ -373,9 +383,11 @@ char keyPressBuff[30];
 uint8_t keyIndex=0;
 int ch;
 #endif
- 
-char cmd[260]="****************";
-char sprintf_buf[100];
+
+// be careful, max command length is 60 characters
+#define MAX_CMD_LENGTH 60
+
+char cmd[MAX_CMD_LENGTH]="****************";
 int msg_sn=0;
 
 // number of retries to unlock remote configuration feature
@@ -391,7 +403,7 @@ bool RSSIonSend=true;
 uint8_t loraMode=LORAMODE;
 
 uint32_t loraChannel=loraChannelArray[loraChannelIndex];
-#if defined RADIO_RFM92_95 || defined RADIO_INAIR9B || defined RADIO_20DBM
+#if defined PABOOST || defined RADIO_RFM92_95 || defined RADIO_INAIR9B || defined RADIO_20DBM
 // HopeRF 92W/95W and inAir9B need the PA_BOOST
 // so 'x' set the PA_BOOST but then limit the power to +14dBm 
 char loraPower='x';
@@ -403,6 +415,7 @@ char loraPower='M';
 
 uint8_t loraAddr=LORA_ADDR;
 
+int status_counter=0;
 unsigned long startDoCad, endDoCad;
 bool extendedIFS=true;
 uint8_t SIFS_cad_number;
@@ -421,7 +434,7 @@ double optFQ=-1.0;
 uint8_t optSW=0x12;
 ///////////////////////////////////////////////////////////////////
 
-#if defined ARDUINO && not defined _VARIANT_ARDUINO_DUE_X_ && not defined __MK20DX256__
+#if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
 int freeMemory () {
   extern int __heap_start, *__brkval; 
   int v; 
@@ -551,14 +564,22 @@ void startConfig() {
   }  
   PRINT_VALUE("%d", e);
   PRINTLN; 
+
+  // Select amplifier line; PABOOST or RFO
+#ifdef PABOOST
+  sx1272._needPABOOST=true;
+  // previous way for setting output power
+  // loraPower='x';
+  PRINT_CSTSTR("%s","^$Use PA_BOOST amplifier line");
+  PRINTLN;   
+#else
+  // previous way for setting output power
+  // loraPower='M';  
+#endif
   
   // Select output power in dBm
   e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
-
-#ifdef PABOOST
-  PRINT_CSTSTR("%s","^$Use PA_BOOST amplifier line");
-  PRINTLN;  
-#endif  
+  
   PRINT_CSTSTR("%s","^$Set LoRa power dBm to ");
   PRINT_VALUE("%d",(uint8_t)MAX_DBM);  
   PRINTLN;
@@ -575,6 +596,18 @@ void startConfig() {
   PRINT_CSTSTR("%s","^$Preamble Length: ");
   PRINT_VALUE("%d", sx1272._preamblelength);
   PRINTLN;
+
+  if (sx1272._preamblelength != 8) {
+      PRINT_CSTSTR("%s","^$Bad Preamble Length: set back to 8");
+      sx1272.setPreambleLength(8);
+      e = sx1272.getPreambleLength();
+      PRINT_CSTSTR("%s","^$Get Preamble Length: state ");
+      PRINT_VALUE("%d", e);
+      PRINTLN;
+      PRINT_CSTSTR("%s","^$Preamble Length: ");
+      PRINT_VALUE("%d", sx1272._preamblelength);
+      PRINTLN;
+  }  
   
   // Set the node address and print the result
   //e = sx1272.setNodeAddress(loraAddr);
@@ -600,6 +633,9 @@ void startConfig() {
   // Print a success message
   PRINT_CSTSTR("%s","^$SX1272/76 configured ");
   PRINT_CSTSTR("%s","as LR-BS. Waiting RF input for transparent RF-serial bridge\n");
+#if defined ARDUINO && defined GW_RELAY
+  PRINT_CSTSTR("%s","^$Act as a simple relay gateway\n");
+#endif
 }
 
 void setup()
@@ -616,7 +652,7 @@ void setup()
   Serial.begin(38400);  
 #endif
 
-#if defined ARDUINO && not defined __MK20DX256__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
+#if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
     // Print a start message
   Serial.print(freeMemory());
   Serial.println(F(" bytes of free memory.")); 
@@ -675,6 +711,7 @@ void setup()
 #endif
 }
 
+
 // we could use the CarrierSense function added in the SX1272 library, but it is more convenient to duplicate it here
 // so that we could easily modify it for testing
 // 
@@ -683,6 +720,7 @@ void setup()
 // carrier sense function added in the SX1272 library
 //
 int CarrierSense(bool onlyOnce=false) {
+
   int e;
   bool carrierSenseRetry=false;
   
@@ -796,14 +834,15 @@ int CarrierSense(bool onlyOnce=false) {
       
     } while (carrierSenseRetry);  
   }
-  
+
   return 0;
 }
-
+  
 void loop(void)
 { 
   int i=0, e;
   int cmdValue;
+  
 /////////////////////////////////////////////////////////////////// 
 // ONLY FOR TESTING CAD
 #ifdef CAD_TEST
@@ -856,7 +895,7 @@ void loop(void)
   loraLAS.checkCycle();
 #endif
 
-#ifdef ARDUINO
+#if defined ARDUINO && not defined GW_RELAY
   // check if we received data from the input serial port
   if (Serial.available()) {
 
@@ -919,45 +958,60 @@ void loop(void)
 // THE MAIN PACKET RECEPTION LOOP
 //
   if (radioON && !receivedFromSerial) {
-
-      uint16_t w_timer=1000;
-      
-      if (loraMode==1)
-        w_timer=2500;
         
       e=1;
 #ifndef CAD_TEST
 
+      if (status_counter==60 || status_counter==0) {
+         PRINT_CSTSTR("%s","^$Low-level gw status ON");
+         PRINTLN;
+         FLUSHOUTPUT; 
+         status_counter=0;
+      }
+      
       // check if we received data from the receiving LoRa module
 #ifdef RECEIVE_ALL
-      e = sx1272.receiveAll(w_timer);
+      e = sx1272.receiveAll(10000);
 #else
 #ifdef GW_AUTO_ACK  
 
-      e = sx1272.receivePacketTimeout(w_timer);
+      e = sx1272.receivePacketTimeout(10000);
+
+      status_counter++;
+
+      if (e!=0 && e!=3) {
+         PRINT_CSTSTR("%s","^$Receive error ");
+         PRINT_VALUE("%d", e);
+         PRINTLN;           
+         FLUSHOUTPUT;         
+      }
       
       if (!e && sx1272._requestACK_indicator) {
-         sprintf(sprintf_buf,"^$ACK requested by %d\n", sx1272.packet_received.src);                   
-         PRINT_STR("%s",sprintf_buf);        
+         PRINT_CSTSTR("%s","^$ACK requested by ");
+         PRINT_VALUE("%d", sx1272.packet_received.src);
+         PRINTLN;
+         FLUSHOUTPUT;      
       }
 #else
+      // OBSOLETE normally we always use GW_AUTO_ACK
       // Receive message
       if (withAck)
-        e = sx1272.receivePacketTimeoutACK(w_timer);
+        e = sx1272.receivePacketTimeoutACK(10000);
       else      
-        e = sx1272.receivePacketTimeout(w_timer);
+        e = sx1272.receivePacketTimeout(10000);
 #endif          
 #endif
 #endif
 /////////////////////////////////////////////////////////////////// 
 
       if (!e) {
+        
          int a=0, b=0;
          uint8_t tmp_length;
 
          receivedFromLoRa=true;
 
-#ifdef DOWNLINK         
+#if not defined ARDUINO && defined DOWNLINK        
 		 // set timer, gw will check for downlink request (downlink.txt) after
 		 // interDownlinkCheckTime 			
          lastDownlinkCheckTime=millis();
@@ -970,7 +1024,7 @@ void loop(void)
 // for Linux-based gateway only
 // provide reception timestamp
 
-#ifndef ARDUINO
+#if not defined ARDUINO && not defined GW_RELAY
          char time_buffer[30];
          int millisec;
          struct tm* tm_info;
@@ -986,17 +1040,25 @@ void loop(void)
          }
         
          tm_info = localtime(&tv.tv_sec);
-#endif                  
-         sx1272.getSNR();
-         sx1272.getRSSIpacket();
+#endif       
 
          tmp_length=sx1272._payloadlength;
          
-         sprintf(sprintf_buf,"--- rxlora. dst=%d type=0x%.2X src=%d seq=%d len=%d SNR=%d RSSIpkt=%d BW=%d CR=4/%d SF=%d\n", 
+#if not defined GW_RELAY
+
+         sx1272.getSNR();
+         sx1272.getRSSIpacket();
+         
+         // we split in 2 parts to use a smaller buffer size
+         sprintf(cmd, "--- rxlora. dst=%d type=0x%.2X src=%d seq=%d", 
                    sx1272.packet_received.dst,
                    sx1272.packet_received.type, 
                    sx1272.packet_received.src,
-                   sx1272.packet_received.packnum,
+                   sx1272.packet_received.packnum);
+                   
+         PRINT_STR("%s", cmd);
+
+         sprintf(cmd, " len=%d SNR=%d RSSIpkt=%d BW=%d CR=4/%d SF=%d\n",
                    tmp_length, 
                    sx1272._SNR,
                    sx1272._RSSIpacket,
@@ -1004,11 +1066,11 @@ void loop(void)
                    sx1272._codingRate+4,
                    sx1272._spreadingFactor);
                    
-         PRINT_STR("%s",sprintf_buf);
+         PRINT_STR("%s", cmd);         
 
          // provide a short output for external program to have information about the received packet
          // ^psrc_id,seq,len,SNR,RSSI
-         sprintf(sprintf_buf,"^p%d,%d,%d,%d,%d,%d,%d\n",
+         sprintf(cmd, "^p%d,%d,%d,%d,%d,%d,%d\n",
                    sx1272.packet_received.dst,
                    sx1272.packet_received.type,                   
                    sx1272.packet_received.src,
@@ -1017,21 +1079,22 @@ void loop(void)
                    sx1272._SNR,
                    sx1272._RSSIpacket);
                    
-         PRINT_STR("%s",sprintf_buf);          
+         PRINT_STR("%s", cmd);          
 
          // ^rbw,cr,sf
-         sprintf(sprintf_buf,"^r%d,%d,%d\n", 
+         sprintf(cmd, "^r%d,%d,%d\n", 
                    (sx1272._bandwidth==BW_125)?125:((sx1272._bandwidth==BW_250)?250:500),
                    sx1272._codingRate+4,
                    sx1272._spreadingFactor);
                    
-         PRINT_STR("%s",sprintf_buf);  
+         PRINT_STR("%s", cmd);  
+#endif         
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ARDUINO        
+#if not defined ARDUINO && not defined GW_RELAY        
          strftime(time_buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);
-         sprintf(sprintf_buf, "^t%s.%03d\n", time_buffer, millisec);
-         PRINT_STR("%s",sprintf_buf);
+         sprintf(cmd, "^t%s.%03d\n", time_buffer, millisec);
+         PRINT_STR("%s", cmd);
 #endif
             
 #ifdef LORA_LAS        
@@ -1058,15 +1121,40 @@ void loop(void)
          else
            PRINT_CSTSTR("%s","No LAS header. Write raw data\n");
 #else
-#ifdef WITH_DATA_PREFIX
+#if defined WITH_DATA_PREFIX && not defined GW_RELAY
          PRINT_STR("%c",(char)DATA_PREFIX_0);        
          PRINT_STR("%c",(char)DATA_PREFIX_1);
 #endif
 #endif
+
+#if defined ARDUINO && defined GW_RELAY
+
+         // here we resend the received data to the next gateway
+         //
+         // set correct header information
+         sx1272._nodeAddress=sx1272.packet_received.src;
+         sx1272._packetNumber=sx1272.packet_received.packnum;
+         sx1272.setPacketType(sx1272.packet_received.type);
+
+         CarrierSense();
+               
+         e = sx1272.sendPacketTimeout(1, sx1272.packet_received.data, tmp_length, 10000);
+    
+         PRINT_CSTSTR("%s","Packet re-sent, state ");
+         PRINT_VALUE("%d",e);
+         PRINTLN;
+                  
+         // set back the gateway address
+         sx1272._nodeAddress=loraAddr;
+         
+#else
+         // print to stdout the content of the packet
+         //
          for ( ; a<tmp_length; a++,b++) {
            PRINT_STR("%c",(char)sx1272.packet_received.data[a]);
-           
-           cmd[b]=(char)sx1272.packet_received.data[a];
+
+           if (b<MAX_CMD_LENGTH)
+              cmd[b]=(char)sx1272.packet_received.data[a];
          }
          
          // strlen(cmd) will be correct as only the payload is copied
@@ -1082,8 +1170,8 @@ void loop(void)
               PRINT_STR("%s",keyPressBuff);
               PRINTLN;
         }
-
-#endif          
+#endif   
+#endif       
       }  
   }  
   
@@ -1550,8 +1638,8 @@ void loop(void)
 				e = sx1272.sendPacketTimeout(document["dst"].GetInt(), (uint8_t*)document["data"].GetString(), document["data"].GetStringLength(), 10000);
 				
 				PRINT_CSTSTR("%s","Packet sent, state ");
-	      		PRINT_VALUE("%d",e);
-	      		PRINTLN;
+	      PRINT_VALUE("%d",e);
+	      PRINTLN;
 				
 				if (!e)
 					document["status"].SetString("sent", document.GetAllocator());
@@ -1614,6 +1702,7 @@ void loop(void)
 #endif
 } 
 
+///////////////////////////////
 // for Linux-based gateway only
 ///////////////////////////////
 #ifndef ARDUINO
