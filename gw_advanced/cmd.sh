@@ -52,7 +52,7 @@ do
 echo "=======================================* Gateway $gatewayid *==="
 echo "0- sudo python start_gw.py & ; disown %1                             +"
 echo "1- sudo ./lora_gateway --mode 1                                      +"
-echo "2- sudo ./lora_gateway --mode 1|python post_processing_gw.py -t -m 2 +"
+echo "2- sudo ./lora_gateway --mode 1 | python post_processing_gw.py       +"
 echo "3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +"
 echo "4- tail --line=25 ../Dropbox/LoRa-test/post-processing_*.log         +"
 echo "5- tail --line=25 -f ../Dropbox/LoRa-test/post-processing_*.log      +"
@@ -65,6 +65,12 @@ echo "d- run: ps aux | grep rfcomm                                         +"
 echo "e- run: tail -f rfcomm.log                                           +"
 echo "---------------------------------------------------* Connectivity *--+"
 echo "f- test: ping www.univ-pau.fr                                        +"
+echo "--------------------------------------------------* Filtering msg *--+"
+echo "l- List LoRa reception indications                                   +"
+echo "m- List radio module reset indications                               +"
+echo "n- List boot indications                                             +"
+echo "o- List post-processing status                                       +"
+echo "p- List low-level gateway status                                     +"
 echo "--------------------------------------------------* Configuration *--+"
 echo "A- show global_conf.json                                             +"
 echo "B- show local_conf.json                                              +"
@@ -102,7 +108,7 @@ fi
 if [ "$choice" = "2" ] 
 	then
 		echo "Running lora_gateway with post-processing... CTRL-C to exit" 
-		sudo ./lora_gateway --mode 1 | python post_processing_gw.py -t -m 2
+		sudo ./lora_gateway --mode 1 | python post_processing_gw.py
 fi
 
 if [ "$choice" = "3" ] 
@@ -186,6 +192,36 @@ if [ "$choice" = "f" ]
 		echo "Test Internet connectivity. CTRL-C to return"
 		trap "echo" SIGINT
 		ping www.univ-pau.fr
+fi
+
+if [ "$choice" = "l" ] 
+	then
+		echo "List LoRa reception indications"
+		grep "rxlora" ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+fi
+
+if [ "$choice" = "m" ] 
+	then
+		echo "List radio module reset"
+		grep "Resetting radio module" ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+fi
+
+if [ "$choice" = "n" ] 
+	then
+		echo "List boot indications"
+		grep "**********Power ON" ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+fi
+
+if [ "$choice" = "o" ] 
+	then
+		echo "List post-processing status"
+		grep "post status: gw ON" ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+fi
+
+if [ "$choice" = "p" ] 
+	then
+		echo "List low-level gateway status"
+		grep "Low-level gw status ON" ../Dropbox/LoRa-test/post-processing_$gatewayid.log
 fi
 
 if [ "$choice" = "A" ] 

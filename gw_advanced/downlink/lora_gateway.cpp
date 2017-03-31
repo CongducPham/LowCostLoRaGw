@@ -77,6 +77,7 @@
 /*  Change logs
  *  Mar, 29th, 2017. v1.72
  *        Add periodic status (every 10 minutes) from the low-level gateway
+ *        Add reset of radio module when receive error from radio is detected
  *        Change receive windows from 1000ms, or 2500ms in mode 1, to 10000ms for all modes, reducing overheads of receive loop 
  *  Mar, 2nd, 2017. v1.71
  *        Add preamble length verification and correction to the default value of 8 if it is not the case    
@@ -982,7 +983,27 @@ void loop(void)
       if (e!=0 && e!=3) {
          PRINT_CSTSTR("%s","^$Receive error ");
          PRINT_VALUE("%d", e);
-         PRINTLN;           
+         PRINTLN;
+
+         if (e==2) {
+             // Power OFF the module
+             sx1272.OFF();
+             radioON=false;
+             PRINT_CSTSTR("%s","^$Resetting radio module");
+             PRINTLN;
+             e = sx1272.ON();
+             PRINT_CSTSTR("%s","^$Setting power ON: state ");
+             PRINT_VALUE("%d",e);
+             PRINTLN;
+
+             if (!e) {
+               radioON=true;
+               startConfig();
+             }
+             // to start over
+             status_counter=0;
+             e=1;
+         }
          FLUSHOUTPUT;         
       }
       

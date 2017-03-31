@@ -5,9 +5,17 @@
 	"ref_longitude" : "",
 	"dht22" : 0,
 	"dht22_mongo": false,
-	"downlink" : 60
+	"downlink" : 0,
+	"status" : 600,
+	"aux_radio" : 0,
 	},
 	"log_conf" : {
 		"log_weekly" : false
-	}
+	},
+	"alert_conf" : {
+		"use_mail" : true,
+		"contact_mail" : "Congduc.Pham@univ-pau.fr",
+		"use_sms" : false,
+		"contact_sms" : "+33625467074"
+		}
 }
