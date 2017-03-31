@@ -146,7 +146,7 @@ then you are ready to use them without the additional steps.
 	bytearray(b'+~\x15\x16(\xae\xd2\xa6\xab\xf7\x15\x88\t\xcfO<')
 	>>> nwkskeylist=[]
 	>>> for i in range (0,len(nwkskey)):
-	...     nwkskeylist.append(netskey[i])
+	...     nwkskeylist.append(nwkskey[i])
 	... 
 	>>> nwkskeylist
 	[43, 126, 21, 22, 40, 174, 210, 166, 171, 247, 21, 136, 9, 207, 79, 60]
@@ -281,7 +281,7 @@ We use the following settings for our temperature sensor:
 	  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
 	};
 	
-	unsigned char MwkSkey[16] = {
+	unsigned char NwkSkey[16] = {
 	  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
 	  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
 	};
@@ -407,7 +407,7 @@ We use the following settings for our temperature sensor:
 	  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
 	};
 	
-	unsigned char MwkSkey[16] = {
+	unsigned char NwkSkey[16] = {
 	  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
 	  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
 	};
