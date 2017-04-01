@@ -1,3 +1,11 @@
+<!--
+*
+* Copyright (C) 2016 Nicolas Bertuol, University of Pau, France
+*
+* nicolas.bertuol@etud.univ-pau.fr
+*
+-->
+
 <?php
 /*** set the content type header ***/
 /*** Without this header, it wont work ***/

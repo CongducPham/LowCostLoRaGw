@@ -21,17 +21,18 @@
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
 
+# Apr 1st, 2017. Restructured to used only gateway_conf.json file
+# Congduc.Pham@univ-pau.fr
+
 # Oct/2016. re-designed by C. Pham to use self-sufficient script per cloud
 # Congduc.Pham@univ-pau.fr
 
 import json
 import os
 
-global_conf_filename = "global_conf.json"
-local_conf_filename = "local_conf.json"
+gateway_conf_filename = "gateway_conf.json"
 
-global_json_array={}
-local_json_array={}
+gateway_json_array={}
 
 #recover each field different than 0 and call post_processing_gw.py with parameters
 call_string_cpp = "sudo ./lora_gateway"
@@ -40,7 +41,7 @@ call_string_log_gw = ""
 	
 def start_config_from_json() :
 	#open json file to recover values
-	f = open(os.path.expanduser(global_conf_filename),"r")
+	f = open(os.path.expanduser(gateway_conf_filename),"r")
 	lines = f.readlines()
 	f.close()
 	array = ""
@@ -48,81 +49,44 @@ def start_config_from_json() :
 	for line in lines :
 		array += line
 	
-	global global_json_array
+	global gateway_json_array
 	#change it into a python array
-	global_json_array = json.loads(array)
-	
-	f = open(os.path.expanduser(local_conf_filename),"r")
-	lines = f.readlines()
-	f.close()
-	array = ""
-	#get all the lines in a string
-	for line in lines :
-		array += line
-	
-	global local_json_array
-	#change it into a python array
-	local_json_array = json.loads(array)	
+	gateway_json_array = json.loads(array)
 	
 	global call_string_cpp
 	global call_string_python
-	global call_string_log_gw
+	global call_string_log_gw		
 	
 	try:		
-		if global_json_array["ignorecomment"] :
-			call_string_python += " --ignorecomment"
-	except KeyError:
-		pass		
-	
-	try:		
-		if global_json_array["loggw"] :
-			call_string_python += " --loggw"
-	except KeyError:
-		pass		
-	
-	try:		
-		if global_json_array["wappkey"] :
-			call_string_python += " --wappkey"
-	except KeyError:
-		pass		
-	
-	try:		
-		if global_json_array["raw"] :
-			call_string_python += " --raw"
+		if gateway_json_array["gateway_conf"]["raw"] :
 			call_string_cpp += " --raw"
 	except KeyError:
 		pass
 	
 	try:			
-		if global_json_array["aes"] :
-			call_string_python += " --aes"
-	except KeyError:
-		pass
-	
-	try:			
-		if global_json_array["log_post_processing"] :
+		if gateway_json_array["gateway_conf"]["log_post_processing"] :
 			call_string_log_gw = " | python log_gw.py"
 	except KeyError:
 		pass
 	
 	try:		
-		if global_json_array["mode"] != -1 :
-			call_string_cpp += " --mode %s" % str(global_json_array["mode"])
+		if gateway_json_array["radio_conf"]["mode"] != -1 :
+			call_string_cpp += " --mode %s" % str(gateway_json_array["radio_conf"]["mode"])
 		else :
-			call_string_cpp += " --bw %s --cr %s --sf %s" % (str(global_json_array["bw"]),str(global_json_array["cr"]),str(global_json_array["sf"]))
+			call_string_cpp += " --bw %s --cr %s --sf %s" % (str(gateway_json_array["radio_conf"]["bw"]),str(gateway_json_array["radio_conf"]["cr"]),str(gateway_json_array["radio_conf"]["sf"]))
 	except KeyError:
 		call_string_cpp += " --mode 1"
 	
 	try:		
-		if global_json_array["ch"] != -1 :
-			call_string_cpp += " --ch %s" % str(global_json_array["ch"])
-		elif global_json_array["freq"] != -1:
-			call_string_cpp += " --freq %s" % str(global_json_array["freq"])
+		if gateway_json_array["radio_conf"]["ch"] != -1 :
+			call_string_cpp += " --ch %s" % str(gateway_json_array["radio_conf"]["ch"])
+		elif gateway_json_array["radio_conf"]["freq"] != -1:
+			call_string_cpp += " --freq %s" % str(gateway_json_array["radio_conf"]["freq"])
 	except KeyError:
 		pass
 	
 	try:			
-		if local_json_array["gateway_conf"]["downlink"]==0 :
+		if gateway_json_array["gateway_conf"]["downlink"]==0 :
 			call_string_cpp += " --ndl"	
 	except KeyError:
 		pass

@@ -1,57 +1,24 @@
-Advanced features and configuration tools for the low-cost LoRa gateway with Raspberry
-======================================================================================
+Low-cost LoRa gateway features and configuration tools
+======================================================
 
-**IMPORTANT NOTICE**: We should start first with the simple gateway installation. Then follow the instruction here to have the advanced version.
+Configuration files and startup procedure
+-----------------------------------------
 
-**NEW**: new cloud management approach: simpler, more generic
-=============================================================
+A "gateway_conf.json" file defines gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Log file names will use the gateway ID. The config_gw.sh script can do it for you, see below.
 
-https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced/new_cloud_design
+In gateway_conf.json, you can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
 
-[README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md)
+A "start_gw.py" Python script runs the gateway, using the gateway configuration file to launch the low-level gateway with appropriate parameters and to log all outputs from the post-processing stage. As start_gw.py simply reads the configuration file to launch lora_gateway and the post_processing_gw.py script, it is just a simpler way to run the gateway. You can still use the corresponding command line. For instance, with the default configuration file:
 
-Install this upgrade **before** the downlink upgrade
+	> python start_gw.py
+	
+is equivalent to:
 
-**NEW**: new downlink features: to send from gateway to end-device
-==================================================================
+	> sudo ./lora_gateway --mode 1 | python ./post_processing_gw.py | python ./log_gw	
 
-https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced/downlink
+Cloud support is separated into different external Python script file. We provide examples for Firebase and ThingSpeak with FireBase.py and ThinkSpeak.py.
 
-[README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/README-downlink.md)
-
-Install this upgrade **after** the new cloud management upgrade
-
-**NEW**: Tutorial videos on YouTube
-===================================
-
-There are 2 tutorial videos on YouTube:
-
-- [Build your low-cost, long-range IoT device with WAZIUP](https://www.youtube.com/watch?v=YsKbJeeav_M)
-- [Build your low-cost LoRa gateway with WAZIUP](https://www.youtube.com/watch?v=peHkDhiH3lE)
-
-that show in images all the steps to build the whole framework from scratch.
-
-NEW: Zipped SD card image
-=========================
-
-[raspberrypi-jessie-WAZIUP-demo.dmg.zip](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
-
-- Based on Raspbian Jessie
-- Supports Raspberry 1B+, RPI2 and RPI3
-- Includes all the advanced features described in the gw_advanced github (have to update for new cloud management and downlink)
-- Get the zipped image, unzip it, install it on an 8GB SD card, see [this tutorial](https://www.raspberrypi.org/documentation/installation/installing-images/) from www.raspberrypi.org
-- Plug the SD card into your Raspberry
-- Connect a radio module (see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)
-- Power-on the Raspberry
-- pi user
-	- login: pi
-	- password: loragateway
-- The LoRa gateway starts automatically when RPI is powered on
-- With an RPI3, the Raspberry will automatically act as a WiFi access point
-	- SSID=WAZIUP_PI_GW_27EB27F90F
-	- password=loragateway
-- By default, incoming data are uploaded to the [WAZIUP ThingSpeak demo channel](https://thingspeak.com/channels/123986)
-- Works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
+A cmd.sh script can be used in an interactive way to launch various commands for the gateway.
 
 WiFi instructions on RPI1B+ and RPI2
 ------------------------------------
@@ -86,8 +53,8 @@ uncomment
 	
 save the file and see below to configure your new gateway.
 
-Configure your new gateway
---------------------------
+Connect to your new gateway
+---------------------------
 
 If you see the WiFi network WAZIUP_PI_GW_27EB27F90F then connect to this WiFi network. The address of the Raspberry is then 192.168.200.1. If you have no WiFi access point, then plug your Raspberry into a DHCP-enabled network to get an IP address or shared your laptop internet connection to make your laptop acting as a DHCP server. We will use in this example 192.168.200.1 for your gateway address (WiFi option)
 
@@ -106,88 +73,51 @@ go to lora_gateway folder
 
 	> cd lora_gateway
 	
-and follows instructions in section **"Install the advanced version/Configure your gateway with config_gw.sh"**.	
+and follows instructions below.
 
-What is added?
-==============
+Configure your gateway with config_gw.sh
+----------------------------------------
 
-A/ New configuration files and startup procedure
-------------------------------------------------
+The config_gw.sh in the scripts folder can help you for the gateway configuration, WiFi and Bluettoth configuration tasks (if you use our SD card image, otherwise, you need first to install some required packages). If you don't want some features, just skip them. You have to provide the last 5 hex-byte of your eth0 interface.
 
-A.1. A "global_conf.json" file defines the radio configuration of the gateway and the global features that will be enabled at the post-processing stage. A "local_conf.json" file defines the local configuration such as the gateway ID. This is inspired by the way Semtech's packet_forwarder is configured. The gateway ID is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Log file names will use the gateway ID.
+    > cd scripts
+    > ifconfig
+    eth0  Link encap:Ethernet  HWaddr b8:27:eb:be:da:21  
+          inet addr:192.168.2.8  Bcast:192.168.2.255  Mask:255.255.255.0
+          inet6 addr: fe80::ba27:ebff:febe:da21/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:16556 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:9206 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:6565141 (6.2 MiB)  TX bytes:1452497 (1.3 MiB)
+          
+In the example, we have "HWaddr b8:27:eb:be:da:21" then use "27EBBEDA21"
 
-A.2. A "start_gw.py" Python script now run the gateway, using the global and local configuration files. Actually, as start_gw.py simply reads the configuration files and launch lora_gateway and post_processing_gw.py with the appropriate arguments, it is just a simpler way to run the gateway. You can still use the corresponding command line. For instance, with the default configuration files:
+    > ./config_gw.sh 27EBBEDA21
+    
+**config_gw.sh takes care of:**
 
-	> python start_gw.py
-	
-is equivalent to
+- compiling the lora_gateway program, the Raspberry board version will be checked automatically
+- creating a "gateway_id.txt" file containing the gateway id (e.g. "00000027EBBEDA21")
+- setting in gateway_cong.json the gateway id: "gateway_ID" : "00000027EBBEDA21"
+- creating the /home/pi/Dropbox/LoRa-test folder for log files (if it does not exist) 
+- creating a "log" symbolic link in the lora_gateway folder pointing to /home/pi/Dropbox/LoRa-test folder
+- configuring /etc/hostapd/hostapd.conf for WiFi (step A)
+- configuring /etc/bluetooth/main.conf for Bluetooth (step B)
+- activating MongoDB storage (step F)
+- compiling DHT22 support (step H)
+- configuring the gateway to run the lora_gateway program at boot (step I)
 
-	> sudo ./lora_gateway --mode 1 | python ./post_processing_gw.py -t | python ./log_gw	
+Anyway, check steps A to I as described below and perform all needed tasks that config_gw.sh is is not addressing.
 
-A.3. Cloud support is now separated into different external Python script file. We provide examples for Firebase and ThingSpeak with FireBase.py and ThinkSpeak.py.
+**Even if you installed from the zipped SD card image config_gw.sh is still needed to personalize your gateway to:**
 
-A.4. A cmd.sh script can be used in an interactive way to launch various commands for the gateway.
+- compile the lora_gateway program for your the Raspberry board version
+- configure /etc/hostapd/hostapd.conf for to advertise a WiFi SSID corresponding to last 5 hex-byte of your eth0 interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
+- compile DHT22 support if you connected such a sensor to your Raspberry
 
-**If you just want to use the new configuration and startup procedure, you have nothing more to install**
-
-B/ New features
----------------
-
-B.1. We added the NoSQL MongoDB support. Received data can be saved in the local database if this feature is activated.
-
-B.2. We added an Apache web server with basic PHP forms to visualize graphically the received data of the MongoDB with any web browser.
-
-B.3. We added the WiFi access-point to the LoRa gateway. The SSID can be WAZIUP_PI_GW_XXXXXXXXXX where XXXXXXXXXX can be the last 5 hex bytes of gateway ID: WAZIUP_PI_GW_27EBBEDA21. It has IP address 192.168.200.1 and will lease IP addresses in the range of 192.168.200.100 and 192.168.200.120. Just connect to http://192.168.200.1 with a web brower (could be from a smartphone) to get the graphic visualization of the data stored in the gateway's MongoDB database.
-
-B.4. We added the support of Bluetooth connection. A simple Android App running on Android smartphone displays the data stored in the gateway's MongoDB database.
-
-B.5. We added the possibility to have a temperature/humidity sensor connected to the Raspberry gateway in order to periodically monitor the temperature/humidity level inside the gateway casing. These data are saved in the local MongoDB database and can therefore be visualized just like data coming from remote sensors. We currently support the DHT22 temperature/humidity sensor which is a digital (1-wire) sensor. Remember that the Raspberry has no analog input so an analog sensor such as the LM35 is not suitable.
-
-B.6. We added a configuration script (scripts/config_gw.sh) to help you configure the gateway with MongoDB, WiFi and Bluetooth features. It is highly recommended to use this script to set your gateway once all the files have been copied.
-
-
-Install the advanced version
-============================
-
-If you got the entire LowCostLoRaGw github repository you should have the LowCostLoRaGw/gw_advanced folder already on your Raspberry:
-
-	pi@raspberrypi:~ $ ls -l LowCostLoRaGw/
-	total 32
-	drwxr-xr-x 7 pi pi  4096 Jul 26 15:38 Arduino
-	drwxr-xr-x 5 pi pi  4096 Jul 26 15:38 gw_advanced
-	drwxr-xr-x 2 pi pi  4096 Jul 26 15:38 Raspberry
-	-rw-r--r-- 1 pi pi 15522 Jul 26 15:38 README.md
-	drwxr-xr-x 2 pi pi  4096 Jul 26 15:38 tutorials
-
-Otherwise, get the advanced version with:
-
-	> svn checkout https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_advanced
-
-Note that you may have to install svn before being able to use the svn command:
-
-	> sudo apt-get install subversion
-		
-Then, copy all the content (all the files including sub-folders) of gw_advanced into your lora_gateway folder:
-
-	> cp -R LowCostLoRaGw/gw_advanced/* lora_gateway
-
-or	
-
-	> cp -R gw_advanced/* lora_gateway
-	
-Some files will be overwritten but it is normal. If you previously run the basic version with some private cloud keys/credentials, you have to save them first. For instance, if you have a ThingSpeak channel write key, you have to put it back into ThingSpeak.py.
-
-global_conf.json and local_conf.json
-------------------------------------
-
-If you only want to use the new configuration and startup procedure, you can just stop here and edit both global_conf.json and local_conf.json. In global_conf.json, you either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
-
-In local_conf.json, it is important to set the gateway ID as indicated previously. The config_gw.sh script can do it for you, see below.
-
-**If you just want to use the new configuration and startup procedure, you have nothing more to install**
-
-Installing the new features
----------------------------
+If you install everything yourself, from a standard Jessie distribution
+=========================================================================
 
 You need to install some additional packages:
 
@@ -212,48 +142,6 @@ Web server, PHP and MongoDB link
     > sudo apt-get install php5 libapache2-mod-php5
     > sudo apt-get install php5-dev php5-cli php-pear
     > sudo pecl install mongo
-
-Configure your gateway with config_gw.sh
-----------------------------------------
-
-The config_gw.sh in the scripts folder can help you for the gateway configuration, WiFi and Bluettoth configuration tasks after you've performed all the apt-get commands. If you don't want some features, just skip them. You have to provide the last 5 hex-byte of your eth0 interface.
-
-    > cd scripts
-    > ifconfig
-    eth0  Link encap:Ethernet  HWaddr b8:27:eb:be:da:21  
-          inet addr:192.168.2.8  Bcast:192.168.2.255  Mask:255.255.255.0
-          inet6 addr: fe80::ba27:ebff:febe:da21/64 Scope:Link
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:16556 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:9206 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000 
-          RX bytes:6565141 (6.2 MiB)  TX bytes:1452497 (1.3 MiB)
-          
-In the example, we have "HWaddr b8:27:eb:be:da:21" then use "27EBBEDA21"
-
-    > ./config_gw.sh 27EBBEDA21
-    
-**config_gw.sh takes care of:**
-
-- compiling the lora_gateway program, the Raspberry board version will be checked automatically
-- creating a "gateway_id.txt" file containing the gateway id (e.g. "00000027EBBEDA21")
-- setting in local_cong.json the gateway id: "gateway_ID" : "00000027EBBEDA21"
-- creating the /home/pi/Dropbox/LoRa-test folder for log files (if it does not exist) 
-- creating a "log" symbolic link in the lora_gateway folder pointing to /home/pi/Dropbox/LoRa-test folder
-- configuring /etc/hostapd/hostapd.conf for WiFi (step A)
-- configuring /etc/bluetooth/main.conf for Bluetooth (step B)
-- activating MongoDB storage (step F)
-- compiling DHT22 support (step H)
-- configuring the gateway to run the lora_gateway program at boot (step I)
-
-Anyway, check steps A to I as described below and perform all needed tasks that config_gw.sh is is not addressing.
-
-**Even if you installed from the zipped SD card image config_gw.sh is still needed to personalize your gateway:**
-
-- compiling the lora_gateway program for your the Raspberry board version
-- configuring /etc/hostapd/hostapd.conf for to advertise a WiFi SSID corresponding to last 5 hex-byte of your eth0 interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
-- compiling DHT22 support if you connected such a sensor to your Raspberry
-
 
 A/ Install a WiFi access-point
 ==============================
@@ -395,12 +283,7 @@ F/ Python for MongoDB
 Install Python package for MongoDB
 
 	> sudo pip install pymongo
-	> sudo apt-get install build-essential python-dev
-	
-Then, to make the post_processing_gw_py script saving received data to the MongoDB, edit in global_conf.json the line:
-
-	"mongodb" : {
-		"is_used" : true,	
+	> sudo apt-get install build-essential python-dev	
 
 G/ PHP + MongoDB
 ================
@@ -447,7 +330,7 @@ Installing the Python-GPIO library
 	> make -j4
 	> sudo make install
 	
-If you want the gateway to periodically take the measure, edit in local_conf.json the line:
+If you want the gateway to periodically take the measure, edit in gateway_conf.json the line:
 
 	"dht22" : 0	
 
@@ -466,9 +349,118 @@ in the /etc/rc.local file, before the "exit 0" line
 
 If you use the config_gw.sh script, it can do it for you.
 
-**IMPORTANT NOTICE**: when the gateway is run at boot, it is run under root identity. In the post_processing_gw.py script, the folder path for log files is now hard coded as /home/pi/Dropbox/LoRa-test instead of ~/Dropbox/LoRa-test in previous versions. In this way, even if the gateway is run under root identity, the log files are stored in the pi user account.
+**IMPORTANT NOTICE**: when the gateway is run at boot, it is run under root identity. In the post_processing_gw.py script, the folder path for log files is hard coded as /home/pi/Dropbox/LoRa-test. In this way, even if the gateway is run under root identity, the log files are stored in the pi user account.
 
 **IMPORTANT NOTICE**: To run an operation gateway, it is better to reboot the gateway and let the LoRa gateway program start at boot. Manually lauching the gateway can be usefull for test purposes but we observed that redirections of LoRa gateway output to the post-processing stage can be broken thus leading to a not responding gateway.
+
+gateway_conf.json options
+=========================
+
+A typical gateway_conf.json is shown below:
+
+	{
+		"radio_conf" : {
+			"mode" : 1,
+			"bw" : 500,
+			"cr" : 5,
+			"sf" : 12,
+			"ch" : -1,
+			"freq" : -1
+		},
+		"gateway_conf" : {
+			"gateway_ID" : "00000027EB27F90F",
+			"ref_latitude" : "my_lat",
+			"ref_longitude" : "my_long",
+			"wappkey" : false,
+			"raw" : false,
+			"aes" : false,
+			"log_post_processing" : true,
+			"log_weekly" : false,				
+			"dht22" : 0,
+			"dht22_mongo": false,
+			"downlink" : 0,
+			"status" : 600,
+			"aux_radio" : 0
+		},
+		"alert_conf" : {
+			"use_mail" : false,
+			"contact_mail" : joejoejoe@gmail.com,jackjackjack@hotmail.com",
+			"mail_from" : "myorg.gmail.com",
+			"mail_server" : "smtp.gmail.com",
+			"mail_passwd" : "my_passwd",
+			"use_sms" : false,
+			"contact_sms" : "+33XXXXXXXXX"
+		}	
+	}
+	
+["radio_conf"] defines the LoRa radio parameters. This section is read by start_gw.py to launch the lora_gateway program with the appropriate parameters. You can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. To specify an ad-hoc frequency, use ["freq" : 433.3] for instance. If you want to use "ch", you have to modify lora_gateway.cpp to select the correct frequency band and then only you can use ["ch" : 10]. If BAND900 is selected in lora_gateway.cpp then the channel used will be CH_10_900 which is 924.68MHz (defined in SX1272.h).
+
+["gateway_conf"]["gateway_ID""] is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address.
+
+["gateway_conf"]["ref_latitude"] you can put the gateway latitude here. We plan to push this data to LoRaWAN network server in the future.
+
+["gateway_conf"]["ref_longitude"] you can put the gateway longitude here. We plan to push this data to LoRaWAN network server in the future.
+
+["gateway_conf"]["wappkey"] when set to true will enable app key enforcement in post_processing_gw.py. Add there the list of appkey that you want to enable.
+
+["gateway_conf"]["raw"] when set to true will make  the lora_gateway program to provide raw payload to the post-processing stage. Then, post_processing_gw.py will try to dissect the packet which will be in most case a LoRaWAN packet. However, you can use your own packet format and then modify post_processing_gw.py ccordingly.
+
+["gateway_conf"]["aes"] when set to true will enable local AES decryption in post_processing_gw.py. The AES AppSKey and NwkSKey are stored in loraWAN.py. They must match those used by the end-device. We only support ABP (activitation by personalization) method. Actually, AES is usefull to provide data privicy.
+
+["gateway_conf"]["log_post_processing"] when set to true will make start_gw.py to additionally launch log_gw.py script to log all the post_processing_gw.py's outputs.
+
+["gateway_conf"]["log_weekly"] when set to true will make log_gw.py to create a new log file every week, instead of every month.
+
+["gateway_conf"]["dht22"] indicates the time interval (in second) for post_processing_gw.py to trigger a temperature/humidity measure from the DHT22 sensor every N seconds (that you must connect and install, see step H). post_processing_gw.py will typically display the following information, that will be logged in the log file.
+
+	2017-03-31T23:42:52.703430> Getting gateway temperature
+	2017-03-31T23:42:52.703722> Gateway TC : 26.40 C | HU : 24.90 % at 2017-03-31 23:42:52.703074
+
+["gateway_conf"]["dht22_mongo"] when set to true will further store the temperature/humidity measure in the local MongDB. Then, these measures will be visible on the gateway's web page. You can check with this feature the condition inside the gateway's case in outdoor deployment.
+
+["gateway_conf"]["downlink"] indicates the time interval (in second) for post_processing_gw.py to check for a downlink-post.txt. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md).
+
+["gateway_conf"]["status"] indicates the time interval (in second) for post_processing_gw.py to display a status message to indicate that the script is correctly running in case you don't receive packet for a long time.
+
+	2017-03-31T23:44:00.479800> 2017-03-31 23:44:00.479397
+	2017-03-31T23:44:00.480088> post status: gw ON, lat my_lat long my_long 
+
+We plan in the future to send appropriate message to a LoRaWAN network server (such as TTN) in the same way the single_chan_pkt_fwd program works (and like most LoRaWAN gateways). 
+
+["gateway_conf"]["aux_radio"] indicates the time interval (in second) for post_processing_gw.py to check for a aux_radio_post.txt file with data received from other radio interfaces, e.g. IEEE802.15.4, etc. This feature is not currently distributed as it is still in the early stage of development.
+
+["alert_conf"]["use_mail"] when set to true indicates that post_processing_gw.py will sent an alerting mail on specific events. There are currently 2 events: when post_processing_gw.py is started (which usually means that the gateway has booted and is up) and when the radio module has been reset by the low-level lora_gateway program because of some receive errors.
+
+["alert_conf"]["contact_mail"] is the list of email address recipients: e.g. joejoejoe@gmail.com,jackjackjack@hotmail.com,...
+
+["alert_conf"]["mail_from"] is a valid address email with associated account
+
+["alert_conf"]["mail_server"] is an SMTP server name
+
+["alert_conf"]["mail_passwd"] is the passwd. It is not very secure but there is no other way to the best of my knowledge.
+
+["alert_conf"]["use_sms"] when set to true indicates that post_processing_gw.py will sent an alerting SMS on specific events. This feature will be integrated soon. We already tested the SMS transmission using gammu with a 3G dongle.
+
+["alert_conf"]["contact_sms"] is the phone number, with country prefix, for the SMS.	
+
+Adding new features
+===================
+
+The gateway architecture is flexible on purpose for adding or customizing your gateway by only modifying the post_processing_gw.py script. To add new options, you can either add new fields in one of the current sections in gateway_conf.json, or add a brand new section.
+
+New cloud platforms can be added by writing new cloud scripts and adding them to clouds.json. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md).
+
+More information on the gateway advanced features
+=================================================
+
+- cloud management approach
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
+- encryption and native LoRaWAN frame format
+	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md)
+	- end-device can send native LoRaWAN packets
+	- low-level gateway provides raw output for post_processing_gw.py to handle LoRaWAN packets
+- downlink features: to send from gateway to end-device
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
 
 USE cmd.sh to interact with the gateway
 =======================================
@@ -477,7 +469,7 @@ You can use cmd.sh as follows:
 
 	> ./cmd.sh
 	=======================================* Gateway 00000027EBBEDA21 *===
-	0- sudo python start_gw.py &                                         +
+	0- sudo python start_gw.py & ; disown %1                             +
 	1- sudo ./lora_gateway --mode 1                                      +
 	2- sudo ./lora_gateway --mode 1|python post_processing_gw.py -t -m 2 +
 	3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +
@@ -492,13 +484,17 @@ You can use cmd.sh as follows:
 	e- run: tail -f rfcomm.log                                           +
 	---------------------------------------------------* Connectivity *--+
 	f- test: ping www.univ-pau.fr                                        +
+	--------------------------------------------------* Filtering msg *--+
+	l- List LoRa reception indications                                   +
+	m- List radio module reset indications                               +
+	n- List boot indications                                             +
+	o- List post-processing status                                       +
+	p- List low-level gateway status                                     +	
 	--------------------------------------------------* Configuration *--+
-	A- show global_conf.json                                             +
-	B- show local_conf.json                                              +
+	A- show gateway_conf.json                                            +
+	B- edit gateway_conf.json                                            +
 	C- show clouds.json                                                  +
-	D- edit global_conf.json                                             +
-	E- edit local_conf.json                                              +
-	F- edit clouds.json                                                  +
+	D- edit clouds.json                                                  +
 	-----------------------------------------------------------* kill *--+
 	K- kill all gateway related processes                                +
 	k- kill rfcomm-server process                                        +
@@ -509,7 +505,7 @@ You can use cmd.sh as follows:
 	======================================================================
 	Enter your choice: 
 
-cmd.sh needs a file called gateway_id.txt that should contain the ID of your gateway. As indicated previously, the gateway ID is composed of 8 bytes in hexadecimal notation with the last 5 bytes being the last 5 bytes of the gateway eth0 interface MAC address. It is exactely the same ID that the one indicated in local_conf.json. If you start cmd.sh without this gateway_id.txt file, it will prompt you to create such file by entering the last 5 bytes of the gateway eth0 interface MAC address:
+cmd.sh needs a file called gateway_id.txt that should contain the ID of your gateway. As indicated previously, the gateway ID is composed of 8 bytes in hexadecimal notation with the last 5 bytes being the last 5 bytes of the gateway eth0 interface MAC address. It is exactely the same ID that the one indicated in gateway_conf.json. If you start cmd.sh without this gateway_id.txt file, it will prompt you to create such file by entering the last 5 bytes of the gateway eth0 interface MAC address:
 
 	ERROR: gateway_id.txt file not found
 	should create it by running echo "000000XXXXXXXXXX" > gateway_id.txt
@@ -528,7 +524,7 @@ If you enter 27EBBEDA21, cmd.sh will create the gateway_id.txt file with the fol
 	> cat gateway_id.txt
 	00000027EBBEDA21
 	
-cmd.sh will also set the gateway id in the local_conf.json file: "gateway_ID" : "00000027EBBEDA21". 
+cmd.sh will also set the gateway id in the gateway_conf.json file: "gateway_ID" : "00000027EBBEDA21". 
 
 Normally, the LoRa gateway starts automatically on boot. To verify that you have a running gateway, use option 3.
 

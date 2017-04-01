@@ -1,3 +1,0 @@
-{ "status" : "send_request", "dst" : 6, "data" : "for device 6" }
-{ "status" : "send_request", "dst" : 5, "data" : "for device 5" }
-{ "status" : "send_request", "dst" : 8, "data" : "for device 8" }

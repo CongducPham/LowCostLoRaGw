@@ -22,6 +22,9 @@
 # 
 # nicolas.bertuol@etud.univ-pau.fr
 
+# Apr 1st, 2017. Restructured to used only gateway_conf.json file
+# Congduc.Pham@univ-pau.fr
+
 import sys
 import os
 import shutil
@@ -33,7 +36,7 @@ import getopt
 _folder_path = "/home/pi/Dropbox/LoRa-test/"
 
 #open json file to recover gateway_address
-f = open(os.path.expanduser("local_conf.json"),"r")
+f = open(os.path.expanduser("gateway_conf.json"),"r")
 lines = f.readlines()
 f.close()
 array = ""
@@ -44,7 +47,7 @@ for line in lines :
 #change it into a python array
 json_array = json.loads(array)
 
-#set the gateway_address for having different log filenames
+#get the gateway ID
 _gwaddr = json_array["gateway_conf"]["gateway_ID"]
 
 #log files
@@ -52,7 +55,7 @@ _parselog_filename = _folder_path+"post-processing_"+str(_gwaddr)+".log"
 _prefix_filename = _folder_path+"post-processing_"+str(_gwaddr)+"_"
 
 #recovering if we use weekly logs and monthly logs or just monthly logs
-_use_weekly_log = json_array["log_conf"]["log_weekly"]
+_use_weekly_log = json_array["gateway_conf"]["log_weekly"]
 
 # create a folder and copy log files into
 def monthChanged(last_year, last_month) :
@@ -67,23 +70,6 @@ def monthChanged(last_year, last_month) :
 	for f in files:
 		if f.startswith("post-processing_"+str(_gwaddr)+"_"+str(last_year)+"-"+str(last_month)) :
 			shutil.move(os.path.expanduser(_folder_path+f), os.path.expanduser(_new_folder_name))
-
-def main(argv):
-	try:
-		opts, args = getopt.getopt(argv,'a:',['addr'])
-	except getopt.GetoptError:
-		print 'logParseGateway -a'
-		sys.exit(2)
-	
-	for opt, arg in opts:		
-		if opt in ("-a", "--addr"):
-			global _gwaddr
-			_gwaddr = arg
-			print "will use _"+str(_gwaddr)+" for post-processing log file"	
-
-		
-if __name__ == "__main__":
-	main(sys.argv[1:])
 
 the_line=sys.stdin.readline()
 	

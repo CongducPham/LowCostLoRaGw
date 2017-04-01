@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #------------------------------------------------------------
-# Copyright 2016 Congduc Pham, University of Pau, France.
+# Copyright 2016-2017 Congduc Pham, University of Pau, France.
 # 
 # Congduc.Pham@univ-pau.fr
 #
@@ -65,8 +65,8 @@ echo "Writing 000000$1"
 echo "000000$1" > ../gateway_id.txt
 echo "Done"
 
-echo "Replacing gw id in ../local_conf.json"
-sed -i -- 's/"000000.*"/"000000'"$1"'"/g' ../local_conf.json
+echo "Replacing gw id in ../gateway_conf.json"
+sed -i -- 's/"000000.*"/"000000'"$1"'"/g' ../gateway_conf.json
 echo "Done"
 
 if [ ! -d ~/Dropbox/LoRa-test ]
@@ -177,32 +177,61 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		sudo make install
 		echo "Done"
 		cd ../../scripts
-		echo "Change in local_conf.json the value in seconds between 2 readings"
+		echo "Change in gateway_conf.json the value in seconds between 2 readings."
 		echo "--> \"dht22\" : 3600"
-		echo "for one reading every hour"
+		echo "for one reading every hour. Set to 0 to disable DHT reading."
+		echo "***************************************"
+		echo "*** edit gateway_conf.json now? Y/N ***"
+		echo "***************************************"
+		read ouinon
+		if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
+			then
+				echo "Editing gateway_conf.json. CTRL-O to save, CTRL-X to return. Press any key to start editing."
+				read k 
+				nano ../gateway_conf.json	
+		fi			
+		
 fi
 
 echo ""
-echo "Current status for MongoDB is:"
-grep "is_used" ../global_conf.json
+echo "Current status for DHT22 MongoDB is:"
+grep "dht22_mongo" ../gateway_conf.json
 echo ""
-echo "*******************************"
-echo "*** activate MongoDB Y/N/Q  ***"
-echo "*******************************"
+echo "*************************************"
+echo "*** activate DHT22 MongoDB Y/N/Q  ***"
+echo "*************************************"
 read ouinon
 
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 	then
-		echo "Activating MongoDB in global_conf.json"
-		sed -i 's/"is_used".*:.*false/"is_used" : true/g' ../global_conf.json
+		echo "Activating DHT22 MongoDB in gateway_conf.json"
+		sed -i 's/"dht22_mongo".*:.*false/"dht22_mongo" : true/g' ../gateway_conf.json
 		echo "Done"
 fi
 
 if [ "$ouinon" = "n" ] || [ "$ouinon" = "N" ]
 	then
-		echo "Deactivating MongoDB in global_conf.json"
-		sed -i 's/"is_used".*:.*true/"is_used" : false/g' ../global_conf.json
+		echo "Deactivating DHT22 MongoDB in gateway_conf.json"
+		sed -i 's/"dht22_mongo".*:.*true/"dht22_mongo" : false/g' ../gateway_conf.json
 		echo "Done"
+fi
+
+echo "*********************************************************"
+echo "*** edit LoRa data MongoDB local storage option? Y/N  ***"
+echo "*********************************************************"
+read ouinon
+
+if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
+	then
+		echo "INSTRUCTIONS: set the local gateway MongoDB cloud enabled field to true or false."
+		echo "Editing clouds.json. CTRL-O to save, CTRL-X to return. Press any key to start editing."
+		read k 
+		nano ../clouds.json
+fi
+
+if [ "$ouinon" = "n" ] || [ "$ouinon" = "N" ]
+	then
+		echo "WARNING: LoRa data MongoDB local storage status is unknown"
 fi
 
 echo "*******************************"
@@ -234,14 +263,14 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		read k
 		less ../gateway_id.txt
 
-		echo "Displaying ../global_conf.json with less command. Press key to start. Scroll with Space, Q to quit."
+		echo "Displaying ../gateway_conf.json with less command. Press key to start. Scroll with Space, Q to quit."
 		read k
-		less ../global_conf.json
-			
-		echo "Displaying ../local_conf.json with less command. Press key to start. Scroll with Space, Q to quit."
+		less ../gateway_conf.json
+
+		echo "Displaying ../clouds.json with less command. Press key to start. Scroll with Space, Q to quit."
 		read k
-		less ../local_conf.json
-		
+		less ../clouds.json
+				
 		echo "Displaying /etc/hostapd/hostapd.conf with less command. Press key to start. Scroll with Space, Q to quit."
 		read k
 		sudo less /etc/hostapd/hostapd.conf
@@ -262,9 +291,9 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		read k
 		sudo less /lib/systemd/system/bluetooth.service
 
-                echo "Displaying /etc/rc.local with less command. Press key to start. Scroll with Space, Q to quit."
-                read k
-                sudo less /etc/rc.local
+		echo "Displaying /etc/rc.local with less command. Press key to start. Scroll with Space, Q to quit."
+		read k
+		sudo less /etc/rc.local
 fi
 
 echo "You should reboot your Raspberry"

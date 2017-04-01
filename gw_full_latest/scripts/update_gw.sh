@@ -14,7 +14,7 @@ if [ -d lora_gateway ]
 		echo "preserving your key files"
 		rm key_*
 		echo "preserving your configuration files"
-		rm global_conf.json local_conf.json clouds.json radio.makefile
+		rm gateway_conf.json clouds.json radio.makefile
 		echo "copying new distrib into /home/pi/lora_gateway"
 		cp -r * /home/pi/lora_gateway
 	else
@@ -42,4 +42,4 @@ else
 fi
 echo "update of gateway done."
 echo "if it is a new installation, go into lora_gateway/scripts folder"
-echo "and run ./new_config_gw.sh"
+echo "and run ./config_gw.sh"

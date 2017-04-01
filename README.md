@@ -1,27 +1,111 @@
 Low-cost LoRa gateway with Raspberry
 ====================================
 
-Please consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
+Please also consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html.
 
-**This is the description of the basic version of the low-cost gateway. There is an advanced version that will upgrade some files. Look at the [gw_advanced folder](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced) and follow instructions.** With the advanced version, you can then add new updates (such as new cloud management, downlink features, AES encryption and limited LoRaWAN features) in an incremental way if you want to do so. The update/upgrade steps are as follows: basic -> gw_advanced -> new cloud mngt -> downlink -> AES and LoRaWAN.
+2 tutorial videos on YouTube: video of all the steps to build the whole framework from scratch:
 
-- basic version -> gw_advanced: see [gw_advanced folder](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced)
-- gw_advanced -> new cloud management: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md#how-to-update-your-gateway) 
-- gw_advanced w/new cloud management -> downlink features: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/README-downlink.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/README-downlink.md#how-to-update-your-gateway)
-- gw_advanced w/new cloud management or gw_advanced w/downlink -> aes and LoRaWAN features: see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes_lorawan/README-aes_lorawan.md); [How to update](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes_lorawan/README-aes_lorawan.md#how-to-update-your-gateway)
+- [Build your low-cost, long-range IoT device with WAZIUP](https://www.youtube.com/watch?v=YsKbJeeav_M)
+- [Build your low-cost LoRa gateway with WAZIUP](https://www.youtube.com/watch?v=peHkDhiH3lE)
 
-Latest gateway version (recommended for new users)
---------------------------------------------------
+Features
+========
 
-The full, latest distribution of the low-cost gateway (i.e. the advanced version) is available in the gw_full_latest folder. It contains all the the gateway control and post-processing software. If you use our SD card image and update the gateway from it you don't need to install any additional packages. Otherwise you may need to install required Raspbian Jessie packages as explained in the README file of the various updates.
+- mail can be sent to a contact email address to notify when gateway is starting and when the radio module has been reset
+- periodic status report to monitor whether the gateway is up or not
+- encryption and native LoRaWAN frame format
+	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md)
+	- end-device can send native LoRaWAN packets
+	- low-level gateway provides raw output for post_processing_gw.py to handle LoRaWAN packets
+- downlink features: to send from gateway to end-device
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
+- simple, flexible and generic cloud management approach
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
+- support for an embedded DHT22 temperature/humidity sensor to monitor the condition inside the gateway case
+- there is a NoSQL MongoDB support and received data can be saved in the local database if this feature is activated
+- there is an Apache web server with basic PHP forms to visualize graphically the received data of the MongoDB with any web browser
+- the gateway acts as the WiFi access-point. The SSID is WAZIUP_PI_GW_XXXXXXXXXX where XXXXXXXXXX is the last 5 hex bytes of gateway ID: WAZIUP_PI_GW_27EB27F90F for instance. It has IP address 192.168.200.1 and will lease IP addresses in the range of 192.168.200.100 and 192.168.200.120. Just connect to http://192.168.200.1 with a web brower (could be from a smartphone) to get the graphic visualization of the data stored in the gateway's MongoDB database.	
+- there is the support of Bluetooth connection. A simple Android App running on Android smartphone displays the data stored in the gateway's MongoDB database.
+- a configuration script (scripts/config_gw.sh) helps you configure the gateway with MongoDB, WiFi and Bluetooth features. It is highly recommended to use this script to set your gateway once all the files have been copied.
+- Arduino code for gateway and interactive end-device
+	- code for gateway and interactive end-device are now separated in 2 sketches
+	- the old version is still in folder Arduino_LoRa_Gateway_1_4 and will not be maintained anymore. It will stay at v1.4
+	- Arduino_LoRa_Gateway now contains the gateway code. It is equivalent, in previous version v1.4, to compilation with IS_RCV_GATEWAY.
+	- Arduino_LoRa_InteractiveDevice contains the code for an interactive end-device.  It is equivalent, in previous version v1.4, to compilation with IS_SEND_GATEWAY
+- get the zipped SD card image (Raspbian Jessie)
+	- [raspberrypi-jessie-WAZIUP-demo.dmg.zip](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
+	- Based on Raspbian Jessie 
+	- Supports Raspberry 1B+, RPI2 and RPI3 (WiFi support is for RPI3. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-advanced.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles)
+	- Get the zipped image, unzip it, install it on an 8GB SD card, see [this tutorial](https://www.raspberrypi.org/documentation/installation/installing-images/) from www.raspberrypi.org
+	- Plug the SD card into your Raspberry
+	- Connect a radio module (see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)
+	- Power-on the Raspberry
+	- pi user
+		- login: pi
+		- password: loragateway
+		- **it is strongly advise to change the pi user's password**		
+	- The LoRa gateway starts automatically when RPI is powered on
+	- With an RPI3, the Raspberry will automatically act as a WiFi access point
+		- SSID=WAZIUP_PI_GW_27EB27F90F
+		- password=loragateway
+		- **it is strongly advise to change this WiFi password**
+	- Includes most of features described here but a full update with the latest version is **necessary, see below**	
+	- By default, incoming data are uploaded to our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794)
+	- Works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
+	
+Latest gateway version 
+======================
 
-To get directly to the full, latest gateway version, (i) simply download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or (ii) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. See the installation procedure described [below](https://github.com/CongducPham/LowCostLoRaGw#install-the-low-level-lora-gateway) to adapt them to the gw_full_latest folder.
+The full, latest distribution of the low-cost gateway is available in the gw_full_latest folder. It contains all the gateway control and post-processing software. If you use our SD card image and update the gateway from it you don't need to install any additional packages. Otherwise you may need to install required Raspbian Jessie packages as explained in the various README files.
 
-Then, in the script folder, run new_config_gw.sh to configure your gateway, as described [here](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced#configure-your-gateway-with-config_gwsh). After configuration, reboot your Raspberry. 
+To get directly to the full, latest gateway version, (i) simply download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or, (ii) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. 
+
+First option
+------------
+
+Get all the repository:
+
+	> git clone https://github.com/CongducPham/LowCostLoRaGw.git
+	
+You will get the entire repository:
+
+	pi@raspberrypi:~ $ ls -l LowCostLoRaGw/
+	total 32
+	drwxr-xr-x 7 pi pi  4096 Apr  1 15:38 Arduino
+	-rw-r--r-- 1 pi pi 15522 Apr  1 15:38 README.md	
+	drwxr-xr-x 2 pi pi  4096 Apr  1 15:38 gw_full_latest	
+	drwxr-xr-x 2 pi pi  4096 Apr  1 15:38 tutorials
+	
+Create a folder named "lora_gateway" for instance then copy all the files of the LowCostLoRaGw/gw_full_latest folder in it.
+
+    > mkdir lora_gateway
+    > cd lora_gateway
+    > cp -R ../LowCostLoRaGw/gw_full_latest/* .
+    
+Or if you want to "move" the LowCostLoRaGw/gw_full_latest folder, simply do (without creating the lora_gateway folder before):
+
+	> mv LowCostLoRaGw/gw_full_latest ./lora_gateway    
+
+Second option
+-------------
+
+Get only the gateway part:
+
+	> svn checkout https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_full_latest lora_gateway
+	
+That will create the lora_gateway folder and get all the file of (GitHub) LowCostLoRaGw/gw_full_latest in it. Then:
+
+	> cd lora_gateway
+
+Note that you may have to install svn before being able to use the svn command:
+
+	> sudo apt-get install subversion
+
+Then, in the script folder, run config_gw.sh to configure your gateway, as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-advanced.md#configure-your-gateway-with-config_gwsh). After configuration, reboot your Raspberry. 
 
 By default both local_conf.json and global_conf.json configure the gateway with a simple behavior: LoRa mode 1 (BW125SF12), no DHT sensor in gateway (so no MongoDB for DHT sensor), no downlink, no AES, no raw mode. clouds.json enables only the ThingSpeak demo channel (even the local MongiDB storage is disabled). You can customize your gateway later when you have more cloud accounts and when you know better what features you want to enable.
 
-The LoRa gateway starts automatically when RPI is powered on. Then use cmd.sh to execute the main operations on the gateway as described in the [gateway advanced README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/README.md#use-cmdsh-to-interact-with-the-gateway).	
+The LoRa gateway starts automatically when RPI is powered on. Then use cmd.sh to execute the main operations on the gateway as described in [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-advanced.md#use-cmdsh-to-interact-with-the-gateway).	
 
 With the latest gateway version on the github, you also have in lora_gateway/scripts an update_gw.sh script that updates your gateway with future latest versions. Simple go into lora_gateway/scripts and type:
 
@@ -29,42 +113,7 @@ With the latest gateway version on the github, you also have in lora_gateway/scr
 	
 If you have an existing /home/pi/lora_gateway folder, then it will preserve all you existing configuration files (i.e. key_*, global_conf.json, local_conf.json, clouds.json and radio.makefile). As the repository does not have a gateway_id.txt file, it will also preserve your gateway id.
 
-**Note that you can also use this script to install a completely new gateway with the latest gateway version** by downloading from the github the gw_advanced/scripts/update_gw.sh script (switch in raw mode and save the script on your computer), copy it on your Raspberry gateway (using scp for instance) in /home/pi and then simply run the script (you may need to add execution right with chmod +x update_gw.sh).
-
-**NEW** 
-=======
-
-- new encryption and native LoRaWAN frame format
-	- **needs at least the new cloud management version** and the latest [lora_gateway.cpp](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/lora_gateway.cpp)
-	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/aes_lorawan/README-aes_lorawan.md)
-	- end-device can send native LoRaWAN packets
-	- low-level gateway provides raw output for post_processing_gw.py to handle LoRaWAN packets
-- new Arduino code for gateway and interactive end-device
-	- code for gateway and interactive end-device are now separated in 2 sketches
-	- the old version is still in folder Arduino_LoRa_Gateway_1_4 and will not be maintained anymore. It will stay at v1.4
-	- Arduino_LoRa_Gateway now contains the gateway code. It is equivalent, in previous version v1.4, to compilation with IS_RCV_GATEWAY.
-	- Arduino_LoRa_InteractiveDevice contains the code for an interactive end-device.  It is equivalent, in previous version v1.4, to compilation with IS_SEND_GATEWAY
-- new cloud management approach: simpler, more generic
-	- https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced/new_cloud_design
-	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md)
-- new downlink features: to send from gateway to end-device
-	- https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced/downlink
-	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/downlink/README-downlink.md)
-- get the zipped SD card image (Raspbian Jessie) with all the advanced features (have to update for new cloud management and downlink) already installed and working out-of-the-box with the Arduino_LoRa_Simple_temp example on a demo ThingSpeak channel.
-	- [raspberrypi-jessie-WAZIUP-demo.dmg.zip](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
-	- Based on Raspbian Jessie 
-	- Supports Raspberry 1B+, RPI2 and RPI3 (WiFi support is for RPI3. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles)
-	- Get the zipped image, unzip it, install it on an 8GB SD card, see [this tutorial](https://www.raspberrypi.org/documentation/installation/installing-images/) from www.raspberrypi.org
-	- Plug the SD card into your Raspberry
-	- Connect a radio module (see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)
-	- Power-on the Raspberry
-	- The LoRa gateway starts automatically when RPI is powered on
-	- Includes all the advanced features described in the gw_advanced github but a full update with the latest version is recommended	
-	- By default, incoming data are uploaded to the [WAZIUP ThingSpeak demo channel](https://thingspeak.com/channels/123986)
-	- Works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
-- 2 tutorial videos on YouTube: video of all the steps to build the whole framework from scratch
-	- [Build your low-cost, long-range IoT device with WAZIUP](https://www.youtube.com/watch?v=YsKbJeeav_M)
-	- [Build your low-cost LoRa gateway with WAZIUP](https://www.youtube.com/watch?v=peHkDhiH3lE)
+**Note that you can also use this script to install a completely new gateway with the latest gateway version** by downloading from the github the gw_full_latest/scripts/update_gw.sh script (switch in raw mode and save the script on your computer), copy it on your Raspberry gateway (using scp for instance) in /home/pi and then simply run the script (you may need to add execution right with chmod +x update_gw.sh).
 
 Install Raspbian Wheezy or Jessie
 =================================
@@ -85,7 +134,7 @@ We recommend buying either RPI2 or RPI3. RPI3 with Jessie has built-in WiFi and 
 Connect a radio module to Raspberry
 ===================================
 
-You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the SPI pin (MOSI, MISO, CLK, CS) of the radio module to corresponding RPI's pin #19, #21, #23 and #24 respectively. Of course you also need to provide the power (3.3v) to the radio module. We use RPI's pin #17 (next to MOSI) for that purpose but any other 3.3v pin can do. It is advised to also connect the radio module RESET pin to RPI's pin #11. Note that we are referring to the RPI's physical pin number as shown [here](https://pinout.xyz/pinout/ground#). You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials) to see all these steps in image.
+You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). Of course you also need to provide the power (3.3v) to the radio module. You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
 
 Install the low-level LoRa gateway
 ==================================
@@ -157,27 +206,27 @@ You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutor
 Adding LoRa gateway's post-processing features
 ==============================================
 
-A data post-processing stage in added after the low-level LoRa gateway program. The post_processing_gw.py script can be customized to process sensor raw data from the low-level LoRa gateway. A typical processing task is to push received data to Internet servers or dedicated (public or private) IoT clouds. post_processing_gw.py is a template that already implement data uploading to various public IoT clouds.
+A data post-processing stage in added after the low-level LoRa gateway program. The post_processing_gw.py script can be customized to process sensor raw data from the low-level LoRa gateway. A typical processing task is to push received data to Internet servers or dedicated (public or private) IoT clouds. post_processing_gw.py is a template that already implement data uploading to various public IoT clouds. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md) to know how to configure the cloud definition.
 
-For instance, to push data to the provided ThingSpeak WAZIUP test channel
+Adding the post-processing stage is done as follows:
 
-	> sudo ./lora_gateway | python ./post_processing_gw.py -t
+	> sudo ./lora_gateway | python ./post_processing_gw.py
 
 To log processing output in a file (in ~/Dropbox/LoRa-test/post_processing.log)
 
-	> sudo ./lora_gateway | python ./post_processing_gw.py -t | python ./log_gw
+	> sudo ./lora_gateway | python ./post_processing_gw.py | python ./log_gw
 	
 **Note that if you want to run and test the above command now**, you have to create a "Dropbox" folder in your home directory with a subforder "LoRa-test" that will be used locally. Please put attention to the name of the folders: they must be "Dropbox/LoRa-test" because the "post_processing_gw.py" Python script uses these paths. You can mount Dropbox later on if you want: the local folders and contents will be unchanged. **Otherwise, just run the config_raspbian.sh configurarion script as it will be described later on (recommended)**.
 
     > mkdir -p Dropbox/LoRa-test 	
 	
-To additionally enforce application key at the gateway post-processing stage
+Actually, both lora_gateway can take additional parameters to configure the radio module. However, it is more convenient to use the start_gw.py script that will parse the gateway configuration file to launch the low-level gateway accordingly:
 
-	> sudo ./lora_gateway | python ./post_processing_gw.py -t --wappkey | python ./log_gw
+	> sudo python start_gw.py
 
-This is the command that we recommend. To test, just flash a temperature sensor and it should work out-of-the-box.
+This is the command that we recommend. To test, just flash a temperature sensor and it should work out-of-the-box on our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794).
 
-You can customize the post-processing stage (post_processing_gw.py) at your convenience later.
+You can also customize the post-processing stage (post_processing_gw.py) at your convenience later.
 
 You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
 
@@ -381,11 +430,6 @@ Tutorial materials
 Go to https://github.com/CongducPham/tutorials and look for the "Low-cost-LoRa-GW-step-by-step" tutorial.
 
 Look at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.pdf)!
-
-Get the advanced version of the gateway with many additional features
-==========================================================================
-
-Look at the [gw_advanced folder](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_advanced) and follow instructions.
 
 
 Enjoy!

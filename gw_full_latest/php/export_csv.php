@@ -1,3 +1,11 @@
+<!--
+*
+* Copyright (C) 2016 Nicolas Bertuol, University of Pau, France
+*
+* nicolas.bertuol@etud.univ-pau.fr
+*
+-->
+
 <?php 
 header('Content-Type: application/csv');
 header('Content-Disposition: attachment; filename=example.csv');

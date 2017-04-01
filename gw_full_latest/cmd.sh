@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #-------------------------------------------------------------------------------
-# Copyright 2016 Congduc Pham, University of Pau, France.
+# Copyright 2017 Congduc Pham, University of Pau, France.
 # 
 # Congduc.Pham@univ-pau.fr
 #
@@ -72,12 +72,10 @@ echo "n- List boot indications                                             +"
 echo "o- List post-processing status                                       +"
 echo "p- List low-level gateway status                                     +"
 echo "--------------------------------------------------* Configuration *--+"
-echo "A- show global_conf.json                                             +"
-echo "B- show local_conf.json                                              +"
+echo "A- show gateway_conf.json                                            +"
+echo "B- edit gateway_conf.json                                            +"
 echo "C- show clouds.json                                                  +"
-echo "D- edit global_conf.json                                             +"
-echo "E- edit local_conf.json                                              +"
-echo "F- edit clouds.json                                                  +"
+echo "D- edit clouds.json                                                  +"
 echo "-----------------------------------------------------------* kill *--+"
 echo "K- kill all gateway related processes                                +"
 echo "k- kill rfcomm-server process                                        +"
@@ -227,13 +225,18 @@ fi
 if [ "$choice" = "A" ] 
         then
                 echo "Showing global_conf.json"
-                cat global_conf.json
+                cat gateway_conf.json
 fi
 
 if [ "$choice" = "B" ] 
         then
-                echo "Showing local_conf.json"
-                cat local_conf.json
+        		if [ -f gateway_conf.json ]
+        			then
+                		echo "Editing gateway_conf.json. CTRL-O to save, CTRL-X to return"
+                		nano gateway_conf.json
+                	else
+                		echo "Error: gateway_conf.json does not exist"
+                fi	
 fi
 
 if [ "$choice" = "C" ] 
@@ -243,28 +246,6 @@ if [ "$choice" = "C" ]
 fi
 
 if [ "$choice" = "D" ] 
-        then
-        		if [ -f global_conf.json ]
-        			then
-                		echo "Editing global_conf.json. CTRL-O to save, CTRL-X to return"
-                		nano global_conf.json
-                	else
-                		echo "Error: global_conf.json does not exist"
-                fi	
-fi
-
-if [ "$choice" = "E" ] 
-        then
-        		if [ -f local_conf.json ]
-        			then
-                		echo "Editing local_conf.json. CTRL-O to save, CTRL-X to return"
-                		nano local_conf.json
-                	else
-                		echo "Error: local_conf.json does not exist"
-                fi	
-fi
-
-if [ "$choice" = "F" ] 
         then
         		if [ -f clouds.json ]
         			then

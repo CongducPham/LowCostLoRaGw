@@ -1,8 +1,6 @@
 Support for AES encryption and basic LoRaWAN with the low-cost LoRa platform
 ============================================================================
 
-**IMPORTANT**: You should have the **advanced** version of the gateway **updated** to the new cloud management approach.
-
 Decription 
 ----------
 
@@ -18,26 +16,16 @@ This module will add AES encryption as well as limited LoRaWAN support for both 
 - clouds.json has 2 additional cloud sections, "encrypted_clouds" and "lorawan_encrypted_clouds", to indicate scripts that will be called to decrypt respectively encapsulated and native LoRaWAN packets. In the provided examples, "python CloudFireBaseAES.py" will be used for "encrypted_clouds" and "python CloudFireBaseLWAES.py" will be used for "lorawan_encrypted_clouds".
 - the LoRaWAN encryption/decryption and MIC integrity functionalities at the gateway (post_processing_gw.py) are provided by the LoRaWAN python library by Jeroen Nijhof. See "How to update your gateway" section.
 - the LoRaWAN encryption and packet forging procedure use the AES library and examples provided by Gerben den Hartog at https://github.com/Ideetron/RFM95W_Nexus/tree/master/LoRaWAN_V31. Arduino_LoRa_temp.ino has been updated with these encryption and simple LoRaWAN capabilities. To enable payload encryption, uncomment #define WITH_AES. To further use only LoRaWAN packet format uncomment #define LORAWAN.
-- the lora_gateway program can provide raw data to post_processing_gw.py by using the --raw option. This is required to handle native LoRaWAN packets.
-- post_processing_gw.py can also detect, decode and handle LoRaWAN packet with the --raw option.
-- you can use --raw for both lora_gateway and post_processing_gw.py and still be able to use the non-LoRaWAN mode because post_processing_gw.py can distinguish between non-LoRaWAN packet format and LoRaWAN packet format. Therefore if you have mixed scenarios you can use the --raw options to be able to handle both cases: encapsulated and native LoRaWAN packet.
+- the lora_gateway program can provide raw data to post_processing_gw.py by using the --raw option (start_gw.py will use --raw for the lora_gateway program if ["gateway_conf"]["raw"] is true). This is required to handle native LoRaWAN packets. 
+- post_processing_gw.py can also detect, decode and handle LoRaWAN packet with the ["gateway_conf"]["raw"] option.
+- you can use raw format for both lora_gateway and post_processing_gw.py and still be able to use the non-LoRaWAN mode because post_processing_gw.py can distinguish between non-LoRaWAN packet format and LoRaWAN packet format. Therefore if you have mixed scenarios you can use the ["gateway_conf"]["raw"] to be able to handle both cases: encapsulated and native LoRaWAN packet.
 
 **Important**: when end-device is using encryption (#define WITH_AES) we use the LoRaWAN packet format and encryption procedure because we simply want to reuse the LoRaWAN python library for decryption. Therefore the 4-byte appkey is not used. Besides, with encryption this simple packet filtering mechanism becomes obsolete as MIC checking is better.
 
 How to update your gateway
 ==========================
-
-Copy all the files of the aes_lorawan folder into your lora_gateway folder (which normally is on your Raspberry). Use scp as follow if you want:
-
-	> cd aes_lorawan
-	> scp -r * pi@my_gw_ip_addr:/home/pi/lora_gateway
 	
-On the Raspberry, go into the /home/pi/lora_gateway/aes_lorawan folder and copy the aes-python-lib/LoRaWAN folder to /usr/lib/python2.7/dist-packages
-
-	> cd lora_gateway/aes_lorawan
-	> sudo cp -r aes-python-lib/LoRaWAN /usr/lib/python2.7/dist-packages
-	
-Then, you may need the python-crypto package
+You may need the python-crypto package
 
 	> sudo apt-get install python-crypto	
 	

@@ -1,5 +1,5 @@
 #------------------------------------------------------------
-# Copyright 2016 Congduc Pham, University of Pau, France.
+# Copyright 2017 Congduc Pham, University of Pau, France.
 # 
 # Congduc.Pham@univ-pau.fr 
 #
@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v2.3 + status - need to incorporate aux_radio features
+# v3.0 - need to incorporate aux_radio features
 #------------------------------------------------------------
 
 # IMPORTANT NOTE
@@ -67,6 +67,8 @@ app_key_list = [
 	'\x05\x06\x07\x08' 
 ]
 
+#////////////////////////////////////////////////////////////
+
 #------------------------------------------------------------
 #header packet information
 #------------------------------------------------------------
@@ -107,24 +109,7 @@ sf=0
 _ignoreComment=1
 
 #------------------------------------------------------------
-#mongoDB support for gateway internal usage (e.g. DHT22)?
-#------------------------------------------------------------
-_dht22_mongo = False
-
-#------------------------------------------------------------
-#log gateway message?
-#------------------------------------------------------------
-_logGateway=0
-
-#------------------------------------------------------------
-#raw output from gateway?
-#------------------------------------------------------------
-_rawFormat=0
-
-#------------------------------------------------------------
-#check for app key?
-#------------------------------------------------------------
-_wappkey=0
+#for appkey management
 #------------------------------------------------------------
 the_app_key = '\x00\x00\x00\x00'
 
@@ -134,16 +119,13 @@ _validappkey=1
 #------------------------------------------------------------
 #for local AES decrypting
 #------------------------------------------------------------
-#we set local_aes to true because we have knowledge of the AppSKey and NwkSKey
-#upload of encrypted data to a cloud (with json features) is still to be implemented
-#in this case, set _local_aes=0 and use the "aes" field of global_conf.json to set _local_aes to 1 if needed	
-_local_aes=0
 _hasClearData=0
 
 #------------------------------------------------------------
-#open local_conf.json file to recover gateway_address
+#open gateway_conf.json file 
 #------------------------------------------------------------
-f = open(os.path.expanduser("local_conf.json"),"r")
+
+f = open(os.path.expanduser("gateway_conf.json"),"r")
 lines = f.readlines()
 f.close()
 array = ""
@@ -154,32 +136,36 @@ for line in lines :
 #change it into a python array
 json_array = json.loads(array)
 
+#------------------------------------------------------------
+#get gateway ID
+#------------------------------------------------------------
+
 #set the gateway_address for having different log filenames
 _gwid = json_array["gateway_conf"]["gateway_ID"]
 
 #------------------------------------------------------------
-#open clouds.json file to get enabled clouds
+#raw format?
 #------------------------------------------------------------
-
-from clouds_parser import retrieve_enabled_clouds
-
-#get a copy of the list of enabled clouds
-_enabled_clouds=retrieve_enabled_clouds()
-
-print "post_processing_gw.py got cloud list: "
-print _enabled_clouds
-
+try:
+	_rawFormat = json_array["gateway_conf"]["raw"]
+except KeyError:
+	_rawFormat = 0
+	
 #------------------------------------------------------------
-#open clouds.json file to get clouds for encrypted data
+#local aes?
 #------------------------------------------------------------
-
-_cloud_for_encrypted_data=retrieve_enabled_clouds("encrypted_clouds")
-print "post_processing_gw.py got encrypted cloud list: "
-print _cloud_for_encrypted_data
-
-_cloud_for_lorawan_encrypted_data=retrieve_enabled_clouds("lorawan_encrypted_clouds")
-print "post_processing_gw.py got LoRaWAN encrypted cloud list: "
-print _cloud_for_lorawan_encrypted_data
+try:
+	_local_aes = json_array["gateway_conf"]["aes"]
+except KeyError:
+	_local_aes = 0	
+	
+#------------------------------------------------------------
+#with app key?
+#------------------------------------------------------------
+try:
+	_wappkey = json_array["gateway_conf"]["wappkey"]
+except KeyError:
+	_wappkey = 0		
 
 #------------------------------------------------------------
 #initialize gateway DHT22 sensor
@@ -347,7 +333,74 @@ def status_target():
 		print 'post status: gw ON, lat '+_gw_lat+' long '+_gw_long
 		sys.stdout.flush()
 		global _gw_status
-		time.sleep(_gw_status)	
+		time.sleep(_gw_status)
+
+#------------------------------------------------------------
+#check for alert_conf.json section
+#------------------------------------------------------------
+
+try:
+	alert_conf=json_array["alert_conf"]
+	_has_alert_conf = True
+	print "post_processing_gw.py found an alert_conf section"
+except KeyError:
+	_has_alert_conf = False
+		
+#------------------------------------------------------------
+#for mail alerting
+#------------------------------------------------------------			
+#got example from https://myhydropi.com/send-email-with-a-raspberry-pi-and-python
+
+_use_mail_alert = False
+
+if _has_alert_conf:
+	#global _use_mail_alert
+	_use_mail_alert = json_array["alert_conf"]["use_mail"]
+
+if _use_mail_alert:
+	import smtplib
+	from email.mime.multipart import MIMEMultipart
+	from email.mime.text import MIMEText	
+	print "Alert by mail is ON. Contact mail is "+json_array["alert_conf"]["contact_mail"]
+		
+def send_alert_mail(m):
+	fromaddr = json_array["alert_conf"]["mail_from"]
+	toaddr = json_array["alert_conf"]["contact_mail"]
+	#in case we have several contact mail separated by ','
+	alladdr=toaddr.split(",")
+
+	msg = MIMEMultipart()
+	msg['From'] = fromaddr
+	msg['To'] = toaddr
+	msg['Subject'] = m 
+	body = m
+	msg.attach(MIMEText(body, 'plain'))
+
+	server = smtplib.SMTP(json_array["alert_conf"]["mail_server"], 587)
+	server.starttls()
+	server.login(fromaddr, json_array["alert_conf"]["mail_passwd"])
+	text = msg.as_string()
+	server.sendmail(fromaddr, alladdr, text)
+	server.quit()
+
+if _use_mail_alert:
+	print "post_processing_gw.py sends mail indicating that gateway has started post-processing stage...",
+	send_alert_mail("Gateway "+_gwid+" has started post-processing stage")
+	print "Done"
+	sys.stdout.flush()		
+	
+#------------------------------------------------------------
+#for SMS alerting
+#------------------------------------------------------------			
+
+_use_sms_alert = False
+
+if _has_alert_conf:
+	#global _use_sms_alert
+	_use_sms_alert = json_array["alert_conf"]["use_sms"]
+	
+if _use_sms_alert:
+	print "Alert by SMS is ON. Contact SMS is "+json_array["alert_conf"]["contact_sms"]	
 		
 #------------------------------------------------------------
 #for handling images
@@ -450,82 +503,36 @@ def fillLinebuf(n):
 # CHANGE HERE THE VARIOUS PATHS FOR YOUR LOG FILES
 #////////////////////////////////////////////////////////////
 _folder_path = "/home/pi/Dropbox/LoRa-test/"
-_gwlog_filename = _folder_path+"gateway_"+str(_gwid)+".log"
 _telemetrylog_filename = _folder_path+"telemetry_"+str(_gwid)+".log"
 _imagelog_filename = _folder_path+"image_"+str(_gwid)+".log"
 
 # END
 #////////////////////////////////////////////////////////////
 
-#////////////////////////////////////////////////////////////
-# ADD HERE OPTIONS THAT YOU MAY WANT TO ADD
-# BE CAREFUL, IT IS NOT ADVISED TO REMOVE OPTIONS UNLESS YOU
-# REALLY KNOW WHAT YOU ARE DOING
-#////////////////////////////////////////////////////////////
 
 #------------------------------------------------------------
-#for parsing the options
+#open clouds.json file to get enabled clouds
 #------------------------------------------------------------
 
-def main(argv):
-	try:
-		opts, args = getopt.getopt(argv,'iLa:',[\
-		'ignorecomment',\
-		'loggw',\
-		'addr',\
-		'wappkey',\
-		'raw',\
-		'aes'])
-		
-	except getopt.GetoptError:
-		print 'post_processing_gw '+\
-		'-i/--ignorecomment '+\
-		'-L/--loggw '+\
-		'-a/--addr '+\
-		'--wappkey '+\
-		'--raw '+\
-		'--aes '
-		
-		sys.exit(2)
-	
-	for opt, arg in opts:
-		if opt in ("-i", "--ignorecomment"):
-			print "will ignore commented lines"
-			global _ignoreComment
-			_ignoreComment = 1
-															
-		elif opt in ("-L", "--loggw"):
-			print "will log gateway message prefixed by ^$"
-			global _logGateway
-			_logGateway = 1	
+from clouds_parser import retrieve_enabled_clouds
 
-		elif opt in ("-a", "--addr"):
-			global _gwid
-			_gwid = arg
-			print "overwrite: will use _"+str(_gwid)+" for gateway and telemetry log files"
-			
-		elif opt in ("--wappkey"):
-			global _wappkey
-			_wappkey = 1
-			global _validappkey
-			_validappkey=0
-			print "will check for correct app key"
+#get a copy of the list of enabled clouds
+_enabled_clouds=retrieve_enabled_clouds()
 
-		elif opt in ("--raw"):
-			global _rawFormat
-			_rawFormat = 1
-			print "raw output from gateway. post_processing_gw will handle packet format"
-			
-		elif opt in ("--aes"):
-			global _local_aes
-			_local_aes = 1
-			print "enable local AES decryption"
+print "post_processing_gw.py got cloud list: "
+print _enabled_clouds
 
-# END
-#////////////////////////////////////////////////////////////			
-					
-if __name__ == "__main__":
-	main(sys.argv[1:])
+#------------------------------------------------------------
+#open clouds.json file to get clouds for encrypted data
+#------------------------------------------------------------
+
+_cloud_for_encrypted_data=retrieve_enabled_clouds("encrypted_clouds")
+print "post_processing_gw.py got encrypted cloud list: "
+print _cloud_for_encrypted_data
+
+_cloud_for_lorawan_encrypted_data=retrieve_enabled_clouds("lorawan_encrypted_clouds")
+print "post_processing_gw.py got LoRaWAN encrypted cloud list: "
+print _cloud_for_lorawan_encrypted_data
 
 #------------------------------------------------------------
 #start various threads
@@ -725,13 +732,14 @@ while True:
 			#TODO: LAS service	
 			print "not implemented yet"
 			
-		if (ch=='$' and _logGateway==1):
+		if (ch=='$'):
+			
 			data = sys.stdin.readline()
-			print "rcv gw output to log (^$): "+data,
-			f=open(os.path.expanduser(_gwlog_filename),"a")
-			f.write(now.isoformat()+'> ')
-			f.write(data)
-			f.close()		
+			print data,
+			
+			#when the low-level gateway program reset the radio module then it is will send "^$Resetting the radio module"
+			if 'Resetting' in data:
+				send_alert_mail("Gateway "+_gwid+" has reset its radio module")	
 						
 		continue
 

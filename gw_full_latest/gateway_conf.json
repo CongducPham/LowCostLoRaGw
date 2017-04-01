@@ -1,0 +1,34 @@
+{
+	"radio_conf" : {
+		"mode" : 1,
+		"bw" : 500,
+		"cr" : 5,
+		"sf" : 12,
+		"ch" : -1,
+		"freq" : -1
+	},
+	"gateway_conf" : {
+		"gateway_ID" : "000000XXXXXXXXXX",
+		"ref_latitude" : "",
+		"ref_longitude" : "",
+		"wappkey" : false,
+		"raw" : false,
+		"aes" : false,
+		"log_post_processing" : true,
+		"log_weekly" : false,				
+		"dht22" : 0,
+		"dht22_mongo": false,
+		"downlink" : 0,
+		"status" : 600,
+		"aux_radio" : 0
+	},
+	"alert_conf" : {
+		"use_mail" : false,
+		"contact_mail" : "the_contact_mail_address,another_contact_mail_address_if_needed",
+		"mail_from" : "a_gmail_address",
+		"mail_server" : "smtp.gmail.com",
+		"mail_passwd" : "your_passwd",
+		"use_sms" : false,
+		"contact_sms" : "your_phone_with_country_prefix"
+	}	
+}

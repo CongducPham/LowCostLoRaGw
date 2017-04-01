@@ -1,3 +1,11 @@
+<!--
+*
+* Copyright (C) 2016 Nicolas Bertuol, University of Pau, France
+*
+* nicolas.bertuol@etud.univ-pau.fr
+*
+-->
+
 
 	<link href="flot.css" rel="stylesheet" type="text/css">
 	<script language="javascript" type="text/javascript" src="jquery.js"></script>
