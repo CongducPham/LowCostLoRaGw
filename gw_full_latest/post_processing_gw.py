@@ -44,6 +44,7 @@ import os.path
 import json
 import re
 import base64
+import requests
 
 #////////////////////////////////////////////////////////////
 # ADD HERE VARIABLES FOR YOUR OWN NEEDS  
@@ -101,6 +102,8 @@ RSSI=0
 bw=0
 cr=0
 sf=0
+
+_hasRadioData=False
 #------------------------------------------------------------
 
 #------------------------------------------------------------
@@ -336,6 +339,20 @@ def status_target():
 		time.sleep(_gw_status)
 
 #------------------------------------------------------------
+#check Internet connectivity
+#------------------------------------------------------------
+
+def checkNet():
+    print "post_processing_gw.py checks Interet connecitivity with www.google.com"
+    try:
+        response = requests.get("http://www.google.com")
+        print "response code: " + str(response.status_code)
+        return True
+    except requests.ConnectionError:
+        print "No Internet"
+        return False
+        
+#------------------------------------------------------------
 #check for alert_conf.json section
 #------------------------------------------------------------
 
@@ -383,10 +400,11 @@ def send_alert_mail(m):
 	server.sendmail(fromaddr, alladdr, text)
 	server.quit()
 
-if _use_mail_alert:
-	print "post_processing_gw.py sends mail indicating that gateway has started post-processing stage...",
-	send_alert_mail("Gateway "+_gwid+" has started post-processing stage")
-	print "Done"
+if _use_mail_alert :
+	print "post_processing_gw.py sends mail indicating that gateway has started post-processing stage..."
+	if checkNet():
+		send_alert_mail("Gateway "+_gwid+" has started post-processing stage")
+		print "Sending mail done"
 	sys.stdout.flush()		
 	
 #------------------------------------------------------------
@@ -739,7 +757,10 @@ while True:
 			
 			#when the low-level gateway program reset the radio module then it is will send "^$Resetting the radio module"
 			if 'Resetting' in data:
-				send_alert_mail("Gateway "+_gwid+" has reset its radio module")	
+				print "post_processing_gw.py sends mail indicating that gateway has reset radio module..."
+				if checkNet():
+					send_alert_mail("Gateway "+_gwid+" has reset its radio module")
+					print "Sending mail done"
 						
 		continue
 
@@ -748,7 +769,10 @@ while True:
 # '\' is reserved for message logging service
 #------------------------------------------------------------
 
-	if (ch=='\\'):
+	if (ch=='\\' and _hasRadioData==True):
+	
+		_hasRadioData=False
+		
 		now = datetime.datetime.now()
 		
 		if _validappkey==1:
@@ -757,11 +781,11 @@ while True:
 					
 			ch=getSingleChar()			
 					
-			if (ch=='$'): #log on Dropbox
+			if (ch=='$'): #log in a file
 				
 				data = getAllLine()
 				
-				print "rcv msg to log (\$) on dropbox: "+data,
+				print "rcv msg to log (\$) in log file: "+data,
 				f=open(os.path.expanduser(_telemetrylog_filename),"a")
 				f.write(info_str+' ')	
 				f.write(now.isoformat()+'> ')
@@ -822,18 +846,19 @@ while True:
 		continue
 	
 	#handle binary prefixes
-	if (ch == '\xFF' or ch == '+'):
-	#if (ch == '\xFF'):
+	#if (ch == '\xFF' or ch == '+'):
+	if (ch == '\xFF'):
 	
 		print "got first framing byte"
 		ch=getSingleChar()	
 		
 		#data prefix for non-encrypted data
-		if (ch == '\xFE' or ch == '+'):			
-		#if (ch == '\xFE'):
+		#if (ch == '\xFE' or ch == '+'):			
+		if (ch == '\xFE'):
 			#the data prefix is inserted by the gateway
 			#do not modify, unless you know what you are doing and that you modify lora_gateway (comment WITH_DATA_PREFIX)
 			print "--> got data prefix"
+			_hasRadioData=True
 			
 			#we actually need to use DATA_PREFIX in order to differentiate data from radio coming to the post-processing stage
 			#if _wappkey is set then we have to first indicate that _validappkey=0

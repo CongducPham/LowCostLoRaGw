@@ -40,8 +40,8 @@ then
 	echo "Will write 000000$macaddr into gateway_id.txt"
 	echo "000000$macaddr" > gateway_id.txt
 	echo "Done"
-	echo "Replacing gw id in local_conf.json"
-	sed -i -- 's/"000000.*"/"000000'"$macaddr"'"/g' local_conf.json
+	echo "Replacing gw id in gateway_conf.json"
+	sed -i -- 's/"000000.*"/"000000'"$macaddr"'"/g' gateway_conf.json
 	echo "Done"	
 fi
 
