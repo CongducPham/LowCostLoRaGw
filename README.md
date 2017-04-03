@@ -103,7 +103,7 @@ Note that you may have to install svn before being able to use the svn command:
 
 Then, in the script folder, run config_gw.sh to configure your gateway, as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#configure-your-gateway-with-config_gwsh). After configuration, reboot your Raspberry. 
 
-By default both local_conf.json and global_conf.json configure the gateway with a simple behavior: LoRa mode 1 (BW125SF12), no DHT sensor in gateway (so no MongoDB for DHT sensor), no downlink, no AES, no raw mode. clouds.json enables only the ThingSpeak demo channel (even the local MongiDB storage is disabled). You can customize your gateway later when you have more cloud accounts and when you know better what features you want to enable.
+By default gateway_conf.json configures the gateway with a simple behavior: LoRa mode 1 (BW125SF12), no DHT sensor in gateway (so no MongoDB for DHT sensor), no downlink, no AES, no raw mode. clouds.json enables only the ThingSpeak demo channel (even the local MongoDB storage is disabled). You can customize your gateway later when you have more cloud accounts and when you know better what features you want to enable.
 
 The LoRa gateway starts automatically when RPI is powered on. Then use cmd.sh to execute the main operations on the gateway as described in [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#use-cmdsh-to-interact-with-the-gateway).	
 
@@ -135,55 +135,9 @@ Connect a radio module to Raspberry
 ===================================
 
 You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). Of course you also need to provide the power (3.3v) to the radio module. You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
-
-Install the low-level LoRa gateway
-==================================
-
-Log as **pi** user on your Raspberry using ssh or connect a display and a keyboard. To get all the low-level LoRa gateway files you have 2 options.
-
-First option
-------------
-
-Get all the repository:
-
-	> git clone https://github.com/CongducPham/LowCostLoRaGw.git
-	
-You will get the entire repository:
-
-	pi@raspberrypi:~ $ ls -l LowCostLoRaGw/
-	total 32
-	drwxr-xr-x 7 pi pi  4096 Jul 26 15:38 Arduino
-	-rw-r--r-- 1 pi pi 15522 Jul 26 15:38 README.md	
-	drwxr-xr-x 2 pi pi  4096 Jul 26 15:38 Raspberry	
-	drwxr-xr-x 2 pi pi  4096 Jul 26 15:38 tutorials
-	
-Create a folder named "lora_gateway" for instance then copy all the files of the LowCostLoRaGw/Raspberry folder in it.
-
-    > mkdir lora_gateway
-    > cd lora_gateway
-    > cp -R ../LowCostLoRaGw/Raspberry/* .
-    
-Or if you want to "move" the LowCostLoRaGw/Raspberry folder, simply do (without creating the lora_gateway folder before):
-
-	> mv LowCostLoRaGw/Raspberry ./lora_gateway    
-
-Second option
--------------
-
-Get only the gateway part:
-
-	> svn checkout https://github.com/CongducPham/LowCostLoRaGw/trunk/Raspberry lora_gateway
-	
-That will create the lora_gateway folder and get all the file of (GitHub) LowCostLoRaGw/Raspberry in it. Then:
-
-	> cd lora_gateway
-
-Note that you may have to install svn before being able to use the svn command:
-
-	> sudo apt-get install subversion
 	
 Compiling the low-level gateway program
----------------------------------------	 	
+=======================================	 	
     
 DO NOT modify the lora_gateway.cpp file unless you know what you are doing. Check the radio.makefile file to indicate whether your radio module uses the PA_BOOST amplifier line or not (which means it uses the RFO line). HopeRF RFM92W/95W or inAir9B or NiceRF1276 or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it) need the -DPABOOST. Both Libelium SX1272 and inAir9 (not inAir9B) do not use PA_BOOST. You can also define a maximum output power to stay within transmission power regulations of your country. For instance, if you do not define anything, then the output power is set to 14dBm (ETSI european regulations), otherwise use -DMAX_DBM=10 for 10dBm. Then:
 
