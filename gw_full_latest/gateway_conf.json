@@ -9,8 +9,8 @@
 	},
 	"gateway_conf" : {
 		"gateway_ID" : "000000XXXXXXXXXX",
-		"ref_latitude" : "",
-		"ref_longitude" : "",
+		"ref_latitude" : "my_lat",
+		"ref_longitude" : "my_long",
 		"wappkey" : false,
 		"raw" : false,
 		"aes" : false,
@@ -29,6 +29,8 @@
 		"mail_server" : "smtp.gmail.com",
 		"mail_passwd" : "your_passwd",
 		"use_sms" : false,
-		"contact_sms" : "your_phone_with_country_prefix"
+		"pin":0,
+		"contact_sms":["+33XXXXXXXXX","+33XXXXXXXXX"],
+		"gammurc_file":"/home/pi/.gammurc"
 	}	
 }

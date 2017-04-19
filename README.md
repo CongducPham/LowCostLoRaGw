@@ -8,11 +8,16 @@ Please also consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway
 - [Build your low-cost, long-range IoT device with WAZIUP](https://www.youtube.com/watch?v=YsKbJeeav_M)
 - [Build your low-cost LoRa gateway with WAZIUP](https://www.youtube.com/watch?v=peHkDhiH3lE)
 
+Upgrade notice
+--------------
+
+Starting Apr 2nd 2017, the gateway configuration files have changed. There is now only one configuration file, gateway_conf.json, instead of two, global_conf.json and local_conf.json. If you have a gateway version prior to Apr 2nd, 2017, please read the "Upgrade notice" below.
+
 Features
 ========
 
-- mail can be sent to a contact email address to notify when gateway is starting and when the radio module has been reset
-- periodic status report to monitor whether the gateway is up or not
+- an alert mail can be sent to a list of contact email addresses to notify when gateway is starting and when the radio module has been reset
+- periodic status report to monitor whether the post-processing stage of the gateway is up or not
 - encryption and native LoRaWAN frame format
 	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md)
 	- end-device can send native LoRaWAN packets
@@ -46,7 +51,7 @@ Features
 		- **it is strongly advise to change the pi user's password**		
 	- The LoRa gateway starts automatically when RPI is powered on
 	- With an RPI3, the Raspberry will automatically act as a WiFi access point
-		- SSID=WAZIUP_PI_GW_27EB27F90F
+		- SSID=WAZIUP_PI_GW_27EB27F90F for instance
 		- password=loragateway
 		- **it is strongly advise to change this WiFi password**
 	- Includes most of features described here but a full update with the latest version is **necessary, see below**	
@@ -114,6 +119,84 @@ With the latest gateway version on the github, you also have in lora_gateway/scr
 If you have an existing /home/pi/lora_gateway folder, then it will preserve all you existing configuration files (i.e. key_*, global_conf.json, local_conf.json, clouds.json and radio.makefile). As the repository does not have a gateway_id.txt file, it will also preserve your gateway id.
 
 **Note that you can also use this script to install a completely new gateway with the latest gateway version** by downloading from the github the gw_full_latest/scripts/update_gw.sh script (switch in raw mode and save the script on your computer), copy it on your Raspberry gateway (using scp for instance) in /home/pi and then simply run the script (you may need to add execution right with chmod +x update_gw.sh).
+
+Upgrade notice
+--------------
+Starting Apr 2nd 2017, the gateway configuration files have changed. There is now only one configuration file, gateway_conf.json, instead of two, global_conf.json and local_conf.json. If you have a gateway version prior to Apr 2nd, 2017, then you can still use the update_gw_sh scripts but then you have to manually enter your gateway configuration setting, in global_conf.json and local_conf.json, into the new gateway_conf.json file.
+
+Your global_conf.json file may look like:
+
+	{
+		"mode" : 1,
+		"bw" : 500,
+		"cr" : 5,
+		"sf" : 12,
+		"ch" : -1,
+		"freq" : -1,
+		"ignorecomment" : false,
+		"loggw" : false,
+		"wappkey" : false,
+		"raw" : false,
+		"aes" : false,
+		"log_post_processing" : true
+	}
+
+and your local_conf.json may look like:
+
+	{
+		"gateway_conf" : {
+			"gateway_ID" : "00000027EB27F90F",
+			"ref_latitude" : "my_lat",
+			"ref_longitude" : "my_long",
+			"dht22" : 0,
+			"dht22_mongo": false,
+			"downlink" : 0,
+			"status" : 600,
+			"aux_radio" : 0
+		},
+		"log_conf" : {
+			"log_weekly" : false
+		}
+	}
+
+The format of the new gateway_conf.json file is as follows:
+
+	{
+		"radio_conf" : {
+			"mode" : 1,
+			"bw" : 500,
+			"cr" : 5,
+			"sf" : 12,
+			"ch" : -1,
+			"freq" : -1
+		},
+		"gateway_conf" : {
+			"gateway_ID" : "00000027EB27F90F",
+			"ref_latitude" : "my_lat",
+			"ref_longitude" : "my_long",
+			"wappkey" : false,
+			"raw" : false,
+			"aes" : false,
+			"log_post_processing" : true,
+			"log_weekly" : false,				
+			"dht22" : 0,
+			"dht22_mongo": false,
+			"downlink" : 0,
+			"status" : 600,
+			"aux_radio" : 0
+		},
+		"alert_conf" : {
+			"use_mail" : false,
+			"contact_mail" : joejoejoe@gmail.com,jackjackjack@hotmail.com",
+			"mail_from" : "myorg.gmail.com",
+			"mail_server" : "smtp.gmail.com",
+			"mail_passwd" : "my_passwd",
+			"use_sms" : false,
+			"contact_sms" : "+33XXXXXXXXX"
+		}	
+	}
+	
+Therefore, to upgrade, you have to (1) replace the whole "gateway_conf" section of gateway_conf.json by the "gateway_conf" section of local_conf_json, (2) report the first 6 fields of global_conf.json into the "radio_conf" section of gateway_conf.json, (3) report the last 4 fields of global_conf.json (thus omitting both "loggw" and "ignorecomment") into the "gateway_conf" section of gateway_conf.json and, (4) report the "log_weekly" field in the "log_conf" of local_conf.json into the "gateway_conf" section of gateway_conf.json.
 
 Install Raspbian Wheezy or Jessie
 =================================

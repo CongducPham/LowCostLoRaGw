@@ -352,10 +352,10 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	
 	#upload data to thingspeak
 	#JUST FOR UPLOAD A SINGLE DATA IN A SPECIFIC FIELD AND SECOND DATA				
-	thingspeak_uploadSingleData(data, second_data)   
+	#thingspeak_uploadSingleData(data, second_data)   
 
 	#to upload multiple data with nomenclature fields, comment the previous line and uncomment the following line
-	#thingspeak_uploadMultipleData(data_array)		
+	thingspeak_uploadMultipleData(data_array)		
 	
 if __name__ == "__main__":
 	main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
