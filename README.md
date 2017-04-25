@@ -116,7 +116,7 @@ With the latest gateway version on the github, you also have in lora_gateway/scr
 
 	> ./update_gw.sh
 	
-If you have an existing /home/pi/lora_gateway folder, then it will preserve all you existing configuration files (i.e. key_*, global_conf.json, local_conf.json, clouds.json and radio.makefile). As the repository does not have a gateway_id.txt file, it will also preserve your gateway id.
+If you have an existing /home/pi/lora_gateway folder, then it will preserve all you existing configuration files (i.e. key_*, gateway_conf.json, clouds.json and radio.makefile). As the repository does not have a gateway_id.txt file, it will also preserve your gateway id.
 
 **Note that you can also use this script to install a completely new gateway with the latest gateway version** by downloading from the github the gw_full_latest/scripts/update_gw.sh script (switch in raw mode and save the script on your computer), copy it on your Raspberry gateway (using scp for instance) in /home/pi and then simply run the script (you may need to add execution right with chmod +x update_gw.sh).
 
@@ -192,7 +192,9 @@ The format of the new gateway_conf.json file is as follows:
 			"mail_server" : "smtp.gmail.com",
 			"mail_passwd" : "my_passwd",
 			"use_sms" : false,
-			"contact_sms" : "+33XXXXXXXXX"
+			"pin":0,
+			"contact_sms":["+33XXXXXXXXX","+33XXXXXXXXX"],
+			"gammurc_file":"/home/pi/.gammurc"
 		}	
 	}
 	
@@ -322,7 +324,7 @@ Use a temperature sensor (e.g. LM35DZ) and plugged in pin A0 (analog 0). You can
 
 For low-power applications the Pro Mini from Sparkfun is certainly a good choice. This board can be either in the 5V or 3.3V version. With the Pro Mini, it is better to really use the 3.3V version running at 8MHz as power consumption will be reduced. Power for the radio module can be obtained from the VCC pin which is powered in 3.3v when USB power is used or when unregulated power is connected to the RAW pin. If you power your Pro Mini with the RAW pin you can use for instance 4 AA batteries to get 6V. If you use a rechargeable battery you can easily find 3.7V Li-Ion packs. In this case, you can inject directly into the VCC pin but make sure that you've unsoldered the power isolation jumper, see Pro Mini schematic on the Arduino web page. To save more power, you can remove the power led.
 
-The current low-power version for Arduino board use the RocketScream Low Power library (https://github.com/rocketscream/Low-Power) and can support most Arduino platforms although the Pro Mini platform will probably exhibit the best energy saving (we measured 124uA current in sleep mode with the power led removed). You can buid the low-power version by uncommenting the LOW_POWER compilation define statement. Then set "int idlePeriodInMin = 10;" to the number of minutes between 2 wake-up. By default it is 10 minutes.
+The current low-power version for Arduino board use the RocketScream Low Power library (https://github.com/rocketscream/Low-Power) and can support most Arduino platforms although the Pro Mini platform will probably exhibit the best energy saving (we measured 124uA current in sleep mode with the power led removed). You can buid the low-power version by uncommenting the LOW_POWER compilation define statement. Then set "int idlePeriodInMin = 10;" to the number of minutes between 2 wake-up. By default it is 10 minutes. There are good web site describing low-power optimization for the pro Mini: http://www.home-automation-community.com/arduino-low-power-how-to-run-atmega328p-for-a-year-on-coin-cell-battery/ or https://andreasrohner.at/posts/Electronics/How-to-modify-an-Arduino-Pro-Mini-clone-for-low-power-consumption/. 
 
 For the special case of Teensy boards (LC/31/32/35/36), the power saving mode uses the excellent work of Collin Duffy with the Snooze library included by the Teensyduino package. You can upgrade the Snooze library from the github (https://github.com/duff2013/Snooze) as version 6 is required to handle the new Teensy 35/36 boards. With the Teensy, you can further use the HIBERNATE mode by uncommenting LOW_POWER_HIBERNATE in the temperature example.
 

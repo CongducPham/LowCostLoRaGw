@@ -389,7 +389,9 @@ A typical gateway_conf.json is shown below:
 			"mail_server" : "smtp.gmail.com",
 			"mail_passwd" : "my_passwd",
 			"use_sms" : false,
-			"contact_sms" : "+33XXXXXXXXX"
+			"pin":0,
+			"contact_sms":["+33XXXXXXXXX","+33XXXXXXXXX"],
+			"gammurc_file":"/home/pi/.gammurc"
 		}	
 	}
 	

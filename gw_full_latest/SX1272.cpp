@@ -30,6 +30,8 @@
 #include <math.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  Apr, 21th, 2017
+ *      - change the way timeout are detected: exitTime=millis()+(unsigned long)wait; then millis() < exitTime;
  *  Mar, 26th, 2017
  *      - insert delay(100) before setting radio module to sleep mode. Remove unstability issue
  *      - (proposed by escyes - https://github.com/CongducPham/LowCostLoRaGw/issues/53#issuecomment-289237532)
@@ -4278,7 +4280,8 @@ boolean	SX1272::availableData(uint16_t wait)
     byte header = 0;
     boolean forme = false;
     boolean	_hreceived = false;
-    unsigned long previous;
+    //unsigned long previous;
+    unsigned long exitTime;
 
 
 #if (SX1272_debug_mode > 0)
@@ -4286,20 +4289,24 @@ boolean	SX1272::availableData(uint16_t wait)
     printf("Starting 'availableData'\n");
 #endif
 
-    previous = millis();
+    exitTime=millis()+(unsigned long)wait;
+
+    //previous = millis();
     if( _modem == LORA )
     { // LoRa mode
         value = readRegister(REG_IRQ_FLAGS);
         // Wait to ValidHeader interrupt
-        while( (bitRead(value, 4) == 0) && (millis() - previous < (unsigned long)wait) )
+        //while( (bitRead(value, 4) == 0) && (millis() - previous < (unsigned long)wait) )
+        while( (bitRead(value, 4) == 0) && (millis() < exitTime) )
         {
             value = readRegister(REG_IRQ_FLAGS);
             // Condition to avoid an overflow (DO NOT REMOVE)
-            if( millis() < previous )
-            {
-                previous = millis();
-            }
+            //if( millis() < previous )
+            //{
+            //    previous = millis();
+            //}
         } // end while (millis)
+
         if( bitRead(value, 4) == 1 )
         { // header received
 #if (SX1272_debug_mode > 0)
@@ -4308,18 +4315,21 @@ boolean	SX1272::availableData(uint16_t wait)
             _hreceived = true;
 #ifdef W_NET_KEY
             // actually, need to wait until 3 bytes have been received
-            while( (header < 3) && (millis() - previous < (unsigned long)wait) )
+            //while( (header < 3) && (millis() - previous < (unsigned long)wait) )
+            while( (header < 3) && (millis() < exitTime) )
 #else
-            while( (header == 0) && (millis() - previous < (unsigned long)wait) )
+            //while( (header == 0) && (millis() - previous < (unsigned long)wait) )
+            while( (header == 0) && (millis() < exitTime) )
 #endif
             { // Waiting to read first payload bytes from packet
                 header = readRegister(REG_FIFO_RX_BYTE_ADDR);
                 // Condition to avoid an overflow (DO NOT REMOVE)
-                if( millis() < previous )
-                {
-                    previous = millis();
-                }
+                //if( millis() < previous )
+                //{
+                //    previous = millis();
+                //}
             }
+
             if( header != 0 )
             { // Reading first byte of the received packet
 #ifdef W_NET_KEY
@@ -4346,15 +4356,17 @@ boolean	SX1272::availableData(uint16_t wait)
     { // FSK mode
         value = readRegister(REG_IRQ_FLAGS2);
         // Wait to Payload Ready interrupt
-        while( (bitRead(value, 2) == 0) && (millis() - previous < wait) )
+        //while( (bitRead(value, 2) == 0) && (millis() - previous < wait) )
+        while( (bitRead(value, 2) == 0) && (millis() < exitTime) )
         {
             value = readRegister(REG_IRQ_FLAGS2);
             // Condition to avoid an overflow (DO NOT REMOVE)
-            if( millis() < previous )
-            {
-                previous = millis();
-            }
+            //if( millis() < previous )
+            //{
+            //    previous = millis();
+            //}
         }// end while (millis)
+
         if( bitRead(value, 2) == 1 )	// something received
         {
             _hreceived = true;
@@ -4475,7 +4487,8 @@ int8_t SX1272::getPacket(uint16_t wait)
 {
     uint8_t state = 2;
     byte value = 0x00;
-    unsigned long previous;
+    //unsigned long previous;
+    unsigned long exitTime;
     boolean p_received = false;
 
 #if (SX1272_debug_mode > 0)
@@ -4483,19 +4496,21 @@ int8_t SX1272::getPacket(uint16_t wait)
     printf("Starting 'getPacket'\n");
 #endif
 
-    previous = millis();
+    //previous = millis();
+    exitTime = millis() + (unsigned long)wait;
     if( _modem == LORA )
     { // LoRa mode
         value = readRegister(REG_IRQ_FLAGS);
         // Wait until the packet is received (RxDone flag) or the timeout expires
-        while( (bitRead(value, 6) == 0) && (millis() - previous < (unsigned long)wait) )
+        //while( (bitRead(value, 6) == 0) && (millis() - previous < (unsigned long)wait) )
+        while( (bitRead(value, 6) == 0) && (millis() < exitTime) )
         {
             value = readRegister(REG_IRQ_FLAGS);
             // Condition to avoid an overflow (DO NOT REMOVE)
-            if( millis() < previous )
-            {
-                previous = millis();
-            }
+            //if( millis() < previous )
+            //{
+            //    previous = millis();
+            //}
         } // end while (millis)
 
         if( (bitRead(value, 6) == 1) && (bitRead(value, 5) == 0) )
@@ -4523,15 +4538,17 @@ int8_t SX1272::getPacket(uint16_t wait)
     else
     { // FSK mode
         value = readRegister(REG_IRQ_FLAGS2);
-        while( (bitRead(value, 2) == 0) && (millis() - previous < wait) )
+        //while( (bitRead(value, 2) == 0) && (millis() - previous < wait) )
+        while( (bitRead(value, 2) == 0) && (millis() < exitTime) )
         {
             value = readRegister(REG_IRQ_FLAGS2);
             // Condition to avoid an overflow (DO NOT REMOVE)
-            if( millis() < previous )
-            {
-                previous = millis();
-            }
+            //if( millis() < previous )
+            //{
+            //    previous = millis();
+            //}
         } // end while (millis)
+
         if( bitRead(value, 2) == 1 )
         { // packet received
             if( bitRead(value, 1) == 1 )
@@ -5487,7 +5504,8 @@ uint8_t SX1272::sendWithTimeout(uint16_t wait)
 {
     uint8_t state = 2;
     byte value = 0x00;
-    unsigned long previous;
+    //unsigned long previous;
+    unsigned long exitTime;
 
 #if (SX1272_debug_mode > 1)
     printf("\n");
@@ -5497,7 +5515,8 @@ uint8_t SX1272::sendWithTimeout(uint16_t wait)
     // clearFlags();	// Initializing flags
 
     // wait to TxDone flag
-    previous = millis();
+    //previous = millis();
+    exitTime = millis() + (unsigned long)wait;
     if( _modem == LORA )
     { // LoRa mode
         clearFlags();	// Initializing flags
@@ -5506,14 +5525,15 @@ uint8_t SX1272::sendWithTimeout(uint16_t wait)
 
         value = readRegister(REG_IRQ_FLAGS);
         // Wait until the packet is sent (TX Done flag) or the timeout expires
-        while ((bitRead(value, 3) == 0) && (millis() - previous < wait))
+        //while ((bitRead(value, 3) == 0) && (millis() - previous < wait))
+        while ((bitRead(value, 3) == 0) && (millis() < exitTime))
         {
             value = readRegister(REG_IRQ_FLAGS);
             // Condition to avoid an overflow (DO NOT REMOVE)
-            if( millis() < previous )
-            {
-                previous = millis();
-            }
+            //if( millis() < previous )
+            //{
+            //    previous = millis();
+            //}
         }
         state = 1;
     }
@@ -5523,14 +5543,15 @@ uint8_t SX1272::sendWithTimeout(uint16_t wait)
 
         value = readRegister(REG_IRQ_FLAGS2);
         // Wait until the packet is sent (Packet Sent flag) or the timeout expires
-        while ((bitRead(value, 3) == 0) && (millis() - previous < wait))
+        //while ((bitRead(value, 3) == 0) && (millis() - previous < wait))
+        while ((bitRead(value, 3) == 0) && (millis() < exitTime))
         {
             value = readRegister(REG_IRQ_FLAGS2);
             // Condition to avoid an overflow (DO NOT REMOVE)
-            if( millis() < previous )
-            {
-                previous = millis();
-            }
+            //if( millis() < previous )
+            //{
+            //    previous = millis();
+            //}
         }
         state = 1;
     }
@@ -5985,7 +6006,8 @@ uint8_t SX1272::getACK(uint16_t wait)
 {
     uint8_t state = 2;
     byte value = 0x00;
-    unsigned long previous;
+    //unsigned long previous;
+    unsigned long exitTime;
     boolean a_received = false;
 
 #if (SX1272_debug_mode > 1)
@@ -5993,19 +6015,21 @@ uint8_t SX1272::getACK(uint16_t wait)
     printf("Starting 'getACK'\n");
 #endif
 
-    previous = millis();
+    //previous = millis();
+    exitTime = millis()+(unsigned long)wait;
 
     if( _modem == LORA )
     { // LoRa mode
         value = readRegister(REG_IRQ_FLAGS);
         // Wait until the ACK is received (RxDone flag) or the timeout expires
-        while ((bitRead(value, 6) == 0) && (millis() - previous < wait))
+        //while ((bitRead(value, 6) == 0) && (millis() - previous < wait))
+        while ((bitRead(value, 6) == 0) && (millis() < exitTime))
         {
             value = readRegister(REG_IRQ_FLAGS);
-            if( millis() < previous )
-            {
-                previous = millis();
-            }
+            //if( millis() < previous )
+            //{
+            //    previous = millis();
+            //}
         }
         if( bitRead(value, 6) == 1 )
         { // ACK received
@@ -6018,13 +6042,14 @@ uint8_t SX1272::getACK(uint16_t wait)
     { // FSK mode
         value = readRegister(REG_IRQ_FLAGS2);
         // Wait until the packet is received (RxDone flag) or the timeout expires
-        while ((bitRead(value, 2) == 0) && (millis() - previous < wait))
+        //while ((bitRead(value, 2) == 0) && (millis() - previous < wait))
+        while ((bitRead(value, 2) == 0) && (millis() < exitTime))
         {
             value = readRegister(REG_IRQ_FLAGS2);
-            if( millis() < previous )
-            {
-                previous = millis();
-            }
+            //if( millis() < previous )
+            //{
+            //    previous = millis();
+            //}
         }
         if( bitRead(value, 2) == 1 )
         { // ACK received
@@ -6368,7 +6393,9 @@ uint8_t SX1272::doCAD(uint8_t counter)
 {
     uint8_t state = 2;
     byte value = 0x00;
-    unsigned long startCAD, endCAD, startDoCad, endDoCad, previous;
+    unsigned long startCAD, endCAD, startDoCad, endDoCad;
+    //unsigned long previous;
+    unsigned long exitTime;
     uint16_t wait = 100;
     bool failedCAD=false;
     uint8_t retryCAD = 3;
@@ -6392,7 +6419,9 @@ uint8_t SX1272::doCAD(uint8_t counter)
         do {
 
             // wait to CadDone flag
-            startCAD = previous = millis();
+            // previous = millis();
+            startCAD = millis();
+            exitTime = millis()+(unsigned long)wait;
 
             clearFlags();	// Initializing flags
 
@@ -6400,14 +6429,15 @@ uint8_t SX1272::doCAD(uint8_t counter)
 
             value = readRegister(REG_IRQ_FLAGS);
             // Wait until CAD ends (CAD Done flag) or the timeout expires
-            while ((bitRead(value, 2) == 0) && (millis() - previous < wait))
+            //while ((bitRead(value, 2) == 0) && (millis() - previous < wait))
+            while ((bitRead(value, 2) == 0) && (millis() < exitTime))
             {
                 value = readRegister(REG_IRQ_FLAGS);
                 // Condition to avoid an overflow (DO NOT REMOVE)
-                if( millis() < previous )
-                {
-                    previous = millis();
-                }
+                //if( millis() < previous )
+                //{
+                //    previous = millis();
+                //}
             }
             state = 1;
 

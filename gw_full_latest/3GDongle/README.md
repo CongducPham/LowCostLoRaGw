@@ -222,21 +222,23 @@ Configure the SMS service in clouds.json
 			"name":"SMS Service",
 			"script":"python CloudSMS.py",
 			"type":"smsservice",
-			"pin":0,   
+			"pin":"1234",   
 			"contacts":["+336XXXXXXXX","+336XXXXXXXX","+337XXXXXXXX"],
+			"source_list":[],
 			"gammurc_file":"/home/pi/.gammurc",
 			"enabled":true,
 			"always_enabled":true
 		}
 	
-|                |         												        |
+| fields         |description        									        |
 | -------------  |: ----------------------------------------------------------: |
-| pin       	 |your pin code, if it is not removed. For example 1234         |
+| pin       	 |your pin code, if it is not disabled. For example 1234        |
 | contacts       |expected phone numbers to receive sms                         |
+| source_list    |a list of device's address for the SMS service: ["6","3"]     |
 | gammurc_file   |.gammurc file location. By default : /home/pi/.gammurc        |
 | enabled        |always true, don't change it     								|
-| always_enabled |if true, sms will be sent whenever data is pushed.            |
-|				 |If false, sms will be sent only if internet not available.	|
+| always_enabled |if true, SMS will be sent whenever data is pushed.            |
+|				 |if false, SMS will be sent only if Internet is not available.	|
 
 Now the SMS service is operational.
 

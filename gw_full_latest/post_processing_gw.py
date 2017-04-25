@@ -343,7 +343,7 @@ def status_target():
 #------------------------------------------------------------
 
 def checkNet():
-    print "post_processing_gw.py checks Interet connecitivity with www.google.com"
+    print "post_processing_gw.py checks Internet connecitivity with www.google.com"
     try:
         response = requests.get("http://www.google.com")
         print "response code: " + str(response.status_code)
@@ -418,122 +418,38 @@ if _has_alert_conf:
 	_use_sms_alert = json_array["alert_conf"]["use_sms"]
 
 global PIN, contact_sms, gammurc_file, sm
-	
+
 if _use_sms_alert:
-	try:
-		import gammu		
-	except ImportError:
-		print "python-gammu must be installed"
+	#check Gammu configuration
+	if (not libSMS.gammuCheck()):
 		print "overriding use_sms to false"
 		_use_sms_alert = False
-			
+
 if _use_sms_alert:
 	PIN = json_array["alert_conf"]["pin"]
 	contact_sms = json_array["alert_conf"]["contact_sms"]
 	gammurc_file = json_array["alert_conf"]["gammurc_file"]
-	
-	if os.path.isfile(os.path.expanduser(gammurc_file)):
+
+	if (libSMS.gammurcCheck(gammurc_file)):
 		print "Alert by SMS is ON. Contact SMS is ",
 		print contact_sms
 		print "Initializing gammu for SMS"
-		# Create object for talking with phone
-		sm = gammu.StateMachine()
 	else:
-		print "missing .gammurc file"
 		print "overriding use_sms to false"
-		_use_sms_alert = False		
-		
-#==============================================================
-# Checking if the 3G dongle is detected
-def is_3G_dongle_detected():
-	connection = False
-	iteration = 0
+		_use_sms_alert = False	
 
-	# we try 4 times to connect to the phone.
-	while(not connection and iteration < 4) :
-		response = os.popen('gammu-detect')
-		#print response.read()
+if _use_sms_alert:
+	if (libSMS.phoneConnection() == None):
+		print "overriding use_sms to false"
+		_use_sms_alert = False
+	else:	
+		sm = libSMS.phoneConnection()
 
-		if(response.read()==''):
-			print('The 3G dongle is not recognized on the USB bus, retrying to connect soon...')
-			# wait before retrying
-			time.sleep(1)
-			iteration += 1
-		else:
-			#print response.read()
-			connection = True
-
-	if (iteration == 4):
-		print('The 3G dongle is still not recognized on the USB bus. Might be a driver issue.')
-
-	return connection
-
-#==============================================================
-# Connecting to the 3G dongle, after detection
-def connection():
-	# Read the configuration (~/.gammurc)
-	sm.ReadConfig(Filename=gammurc_file)
-	# Connect to the phone
-	sm.Init()
-    
-#==============================================================
-# Function to check if an operator is available
-def is_Operator_detected():	
-	operator = False
-	iteration = 0
-
-	# we try 4 times to connect to the phone.
-	while(not operator and iteration < 4) :
-		# Reads network information from phone
-		netinfo = sm.GetNetworkInfo()
-		if (netinfo['GPRS'] == 'Attached'):
-			operator = True
-		else:
-			print('Operator issue, retrying to connect soon...')
-			# wait before retrying
-			time.sleep(1)
-			iteration += 1
-    		
-	if (iteration == 4):
-		print('Operator issue still persists.')
-
-	return operator
-    
-#==============================================================
-# Function to send data via the SMS Service
-def send_sms(data):
-	
-	if (is_3G_dongle_detected()):
-		connection()
-		
-		if (is_Operator_detected()):
-			# Enter PIN code if requested
-			if (sm.GetSecurityStatus() == 'PIN'):
-				sm.EnterSecurityCode('PIN', PIN)
-        		
-			# Prepare SMS template : message data
-			# We tell that we want to use first SMSC number stored in phone
-			message = {
-					'Text': data,
-					'SMSC': {'Location': 1},
-			}
-
-			# Sending SMS to expected contacts
-			for number in contacts:
-				message['Number'] = number
-				try:
-					# Send SMS if all is OK
-					sm.SendSMS(message)
-					print('post_processing_gw.py sending SMS to %s successfully!' % (number))
-				except Exception, exc:
-					print('post_processing_gw.py sending to %s failed: %s' % (number, exc))	
-					
 if _use_sms_alert :
 	print "post_processing_gw.py sends SMS indicating that gateway has started post-processing stage..."
-	send_sms("Gateway "+_gwid+" has started post-processing stage")
+	libSMS.send_sms(sm, PIN, "Gateway "+_gwid+" has started post-processing stage", contact_sms)
 	print "Sending SMS done"
-	sys.stdout.flush()					
-		
+	sys.stdout.flush()	
 #------------------------------------------------------------
 #for handling images
 #------------------------------------------------------------
