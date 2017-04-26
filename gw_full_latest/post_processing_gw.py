@@ -439,17 +439,19 @@ if _use_sms_alert:
 		_use_sms_alert = False	
 
 if _use_sms_alert:
-	if (libSMS.phoneConnection() == None):
+	if (libSMS.phoneConnection(gammurc_file, PIN) == None):
 		print "overriding use_sms to false"
+		print "Sending SMS failed"
 		_use_sms_alert = False
 	else:	
-		sm = libSMS.phoneConnection()
+		sm = libSMS.phoneConnection(gammurc_file, PIN)
 
 if _use_sms_alert :
 	print "post_processing_gw.py sends SMS indicating that gateway has started post-processing stage..."
-	libSMS.send_sms(sm, PIN, "Gateway "+_gwid+" has started post-processing stage", contact_sms)
-	print "Sending SMS done"
-	sys.stdout.flush()	
+	success = libSMS.send_sms(sm, "Gateway "+_gwid+" has started post-processing stage", contact_sms)
+	if (success):
+		print "Sending SMS done"
+	sys.stdout.flush()
 #------------------------------------------------------------
 #for handling images
 #------------------------------------------------------------

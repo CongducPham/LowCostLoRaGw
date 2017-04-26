@@ -20,6 +20,7 @@
 #-------------------------------------------------------------------------------
 
 import os
+import re
 import sys
 import json
 import libSMS
@@ -79,10 +80,10 @@ else:
 	if (not libSMS.gammurcCheck(gammurc_file)):
 		sys.exit()
 
-if (libSMS.phoneConnection() == None):
+if (libSMS.phoneConnection(gammurc_file, PIN) == None):
 	sys.exit()
 else:	
-	sm = libSMS.phoneConnection()
+	sm = libSMS.phoneConnection(gammurc_file, PIN)
 		
 
 # main
@@ -180,16 +181,20 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	sms_data += " "+data_array[0]+" "+data_array[1]
 	
 	# Send data to expected contacts
+	success = False
 	if(not always_enabled):
 		if (libSMS.internet_ON()):
 			print('Internet is available, no need to use the SMS Service')
 			sys.exit()
 		else:
 			print("rcv msg to send via the WAZIUP SMS Service: "+sms_data)
-			libSMS.send_sms(sm, PIN, sms_data, contacts)
+			success = libSMS.send_sms(sm, sms_data, contacts)
 	else:
 		print("rcv msg to send via the WAZIUP SMS Service: "+sms_data)
-		libSMS.send_sms(sm, PIN, sms_data, contacts)
+		success = libSMS.send_sms(sm, sms_data, contacts)
+	
+	if (success):
+			print "Sending SMS done"	
 
 if __name__ == "__main__":
         main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
