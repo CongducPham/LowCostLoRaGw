@@ -192,7 +192,7 @@ The format of the new gateway_conf.json file is as follows:
 			"mail_server" : "smtp.gmail.com",
 			"mail_passwd" : "my_passwd",
 			"use_sms" : false,
-			"pin":0,
+			"pin": "0000",
 			"contact_sms":["+33XXXXXXXXX","+33XXXXXXXXX"],
 			"gammurc_file":"/home/pi/.gammurc"
 		}	
