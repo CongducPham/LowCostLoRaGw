@@ -38,6 +38,11 @@ import re
 # update of cloud script in the future
 import key_ThingSpeak
 
+try:
+	key_ThingSpeak.source_list
+except AttributeError:
+	key_ThingSpeak.source_list=[]
+
 # didn't get a response from thingspeak server?
 connection_failure = False
 
@@ -285,77 +290,81 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	SNR=arr[5]
 	RSSI=arr[6]
 
-	#this part depends on the syntax used by the end-device
-	#we use: thingspeak_channel#thingspeak_field#TC/22.4/HU/85... 
-	#ex: ##TC/22.4/HU/85... or TC/22.4/HU/85... or thingspeak_channel##TC/22.4/HU/85... 
-	#or #thingspeak_field#TC/22.4/HU/85... to use some default value
+	if (str(src) in key_ThingSpeak.source_list) or (len(key_ThingSpeak.source_list)==0):
+	
+		#this part depends on the syntax used by the end-device
+		#we use: thingspeak_channel#thingspeak_field#TC/22.4/HU/85... 
+		#ex: ##TC/22.4/HU/85... or TC/22.4/HU/85... or thingspeak_channel##TC/22.4/HU/85... 
+		#or #thingspeak_field#TC/22.4/HU/85... to use some default value
 				
-	# get number of '#' separator
-	nsharp = ldata.count('#')			
-	#no separator
-	if nsharp==0:
-		#will use default channel and field
-		data=['','']
+		# get number of '#' separator
+		nsharp = ldata.count('#')			
+		#no separator
+		if nsharp==0:
+			#will use default channel and field
+			data=['','']
 		
-		#contains ['', '', "s1", s1value, "s2", s2value, ...]
-		data_array = data + re.split("/", ldata)		
-	elif nsharp==1:
-		#only 1 separator
+			#contains ['', '', "s1", s1value, "s2", s2value, ...]
+			data_array = data + re.split("/", ldata)		
+		elif nsharp==1:
+			#only 1 separator
 		
-		data_array = re.split("#|/", ldata)
+			data_array = re.split("#|/", ldata)
 		
-		#if the first item has length > 1 then we assume that it is a channel write key
-		if len(data_array[0])>1:
-			#insert '' to indicate default field
-			data_array.insert(1,'');		
+			#if the first item has length > 1 then we assume that it is a channel write key
+			if len(data_array[0])>1:
+				#insert '' to indicate default field
+				data_array.insert(1,'');		
+			else:
+				#insert '' to indicate default channel
+				data_array.insert(0,'');		
 		else:
-			#insert '' to indicate default channel
-			data_array.insert(0,'');		
-	else:
-		#contains [channel, field, "s1", s1value, "s2", s2value, ...]
-		data_array = re.split("#|/", ldata)	
+			#contains [channel, field, "s1", s1value, "s2", s2value, ...]
+			data_array = re.split("#|/", ldata)	
 		
-	#just in case we have an ending CR or 0
-	data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\n', '')
-	data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\0', '')	
+		#just in case we have an ending CR or 0
+		data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\n', '')
+		data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\0', '')	
 	
-	#test if there are characters at the end of each value, then delete these characters
-	i = 3
-	while i < len(data_array) :
-		while not data_array[i][len(data_array[i])-1].isdigit() :
-			data_array[i] = data_array[i][:-1]
-		i += 2
+		#test if there are characters at the end of each value, then delete these characters
+		i = 3
+		while i < len(data_array) :
+			while not data_array[i][len(data_array[i])-1].isdigit() :
+				data_array[i] = data_array[i][:-1]
+			i += 2
 		
-	#get number of '/' separator
-	nslash = ldata.count('/')
+		#get number of '/' separator
+		nslash = ldata.count('/')
 	
-	index_first_data = 2
+		index_first_data = 2
 	
-	if nslash==0:
-		#old syntax without nomenclature key
-		index_first_data=2
-	else:
-		#new syntax with nomenclature key				
-		index_first_data=3
+		if nslash==0:
+			#old syntax without nomenclature key
+			index_first_data=2
+		else:
+			#new syntax with nomenclature key				
+			index_first_data=3
 																		
-	second_data=str(seq)
+		second_data=str(seq)
 
-	if (_thingspeaksnr):
-		second_data=str(SNR)
+		if (_thingspeaksnr):
+			second_data=str(SNR)
 	
-	#data to send to thingspeak
-	data = []
-	data.append(data_array[0]) #channel (if '' default)
-	data.append(data_array[1]) #field (if '' default)		
+		#data to send to thingspeak
+		data = []
+		data.append(data_array[0]) #channel (if '' default)
+		data.append(data_array[1]) #field (if '' default)		
 	
-	data.append(data_array[index_first_data]) #value to add (the first sensor value in data_array)
+		data.append(data_array[index_first_data]) #value to add (the first sensor value in data_array)
 	
-	#upload data to thingspeak
-	#JUST FOR UPLOAD A SINGLE DATA IN A SPECIFIC FIELD AND SECOND DATA				
-	#thingspeak_uploadSingleData(data, second_data)   
+		#upload data to thingspeak
+		#JUST FOR UPLOAD A SINGLE DATA IN A SPECIFIC FIELD AND SECOND DATA				
+		#thingspeak_uploadSingleData(data, second_data)   
 
-	#to upload multiple data with nomenclature fields, comment the previous line and uncomment the following line
-	thingspeak_uploadMultipleData(data_array)		
+		#to upload multiple data with nomenclature fields, comment the previous line and uncomment the following line
+		thingspeak_uploadMultipleData(data_array)
+	else:
+		print "Source is not is source list, not sending with CloudThingSpeak.py"				
 	
 if __name__ == "__main__":
 	main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])

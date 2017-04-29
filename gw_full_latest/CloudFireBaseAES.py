@@ -27,8 +27,14 @@ import ssl
 import sys
 import base64
 
-#change here for your own firebase url when you have one
-#firebase_database='https://XXXXXXXXXXX.firebaseio.com'
+# get key definition from external file to ease
+# update of cloud script in the future
+import key_FireBase
+
+try:
+	key_FireBase.source_list
+except AttributeError:
+	key_FireBase.source_list=[]
 
 # didn't get a response from firebase server?
 connection_failure = False
@@ -74,7 +80,7 @@ def test_network_available():
 def send_data(msg, path, msg_entry):
 	from firebase import firebase
 	global _db_firebase
-	_db_firebase = firebase.FirebaseApplication(firebase_database, None)
+	_db_firebase = firebase.FirebaseApplication(key_FireBase.firebase_database, None)
 				
 	try:
 		result = _db_firebase.put(path, msg_entry, msg)	
@@ -133,65 +139,69 @@ def main(ldata_b64, pdata, rdata, tdata, gwid):
 	cr=arr[1]
 	sf=arr[2]
 
-	ldata=base64.b64decode(ldata_b64)
+	if (str(src) in key_FireBase.source_list) or (len(key_FireBase.source_list)==0):
 	
-	ptypestr="N/A"
-	if ((ptype & 0xF0)==PKT_TYPE_DATA):
-		ptypestr="DATA"
-		if (ptype & PKT_FLAG_DATA_ISBINARY)==PKT_FLAG_DATA_ISBINARY:
-			ptypestr = ptypestr + " IS_BINARY"
-		if (ptype & PKT_FLAG_DATA_WAPPKEY)==PKT_FLAG_DATA_WAPPKEY:
-			ptypestr = ptypestr + " WAPPKEY"
-		if (ptype & PKT_FLAG_DATA_ENCRYPTED)==PKT_FLAG_DATA_ENCRYPTED:
-			ptypestr = ptypestr + " ENCRYPTED"
-		if (ptype & PKT_FLAG_ACK_REQ)==PKT_FLAG_ACK_REQ:
-			ptypestr = ptypestr + " ACK_REQ"														
-	if ((ptype & 0xF0)==PKT_TYPE_ACK):
-		ptypestr="ACK"		
+		ldata=base64.b64decode(ldata_b64)
+	
+		ptypestr="N/A"
+		if ((ptype & 0xF0)==PKT_TYPE_DATA):
+			ptypestr="DATA"
+			if (ptype & PKT_FLAG_DATA_ISBINARY)==PKT_FLAG_DATA_ISBINARY:
+				ptypestr = ptypestr + " IS_BINARY"
+			if (ptype & PKT_FLAG_DATA_WAPPKEY)==PKT_FLAG_DATA_WAPPKEY:
+				ptypestr = ptypestr + " WAPPKEY"
+			if (ptype & PKT_FLAG_DATA_ENCRYPTED)==PKT_FLAG_DATA_ENCRYPTED:
+				ptypestr = ptypestr + " ENCRYPTED"
+			if (ptype & PKT_FLAG_ACK_REQ)==PKT_FLAG_ACK_REQ:
+				ptypestr = ptypestr + " ACK_REQ"														
+		if ((ptype & 0xF0)==PKT_TYPE_ACK):
+			ptypestr="ACK"		
 		
-	ptype=str(hex(ptype))	
+		ptype=str(hex(ptype))	
 				
-	devaddr="0x"
-	for i in range(1,5):
-		devaddr+=ldata[5-i].encode('hex')
+		devaddr="0x"
+		for i in range(1,5):
+			devaddr+=ldata[5-i].encode('hex')
 
-	FCnt="0x"
-	for i in range(1,3):
-		FCnt+=ldata[8-i].encode('hex')	
+		FCnt="0x"
+		for i in range(1,3):
+			FCnt+=ldata[8-i].encode('hex')	
 
-	MIC="0x"
-	for i in range(len(ldata)-4,len(ldata)):
-		MIC+=ldata[i].encode('hex')
+		MIC="0x"
+		for i in range(len(ldata)-4,len(ldata)):
+			MIC+=ldata[i].encode('hex')
 	
-	data_b64=ldata[9:len(ldata)-4]
-	data_b64=base64.b64encode(data_b64)
+		data_b64=ldata[9:len(ldata)-4]
+		data_b64=base64.b64encode(data_b64)
 				
-	firebase_msg = {
-		'pdata':pdata.replace('\n',''),
-		'rdata':rdata.replace('\n',''),
-		'time':now.isoformat(),		
-		'ptype':ptype,
-		'ptypestr':ptypestr,
-		'gateway_eui' : gwid,
-		'src': src,					
-		'devAddr':devaddr,
-		'seq':seq,
-		'FCnt':FCnt,
-		'MIC':MIC,
-		'len':datalen,
-		'snr':SNR,
-		'rssi':RSSI,
-		'cr' : cr, 
-		'datarate' : "SF"+str(sf)+"BW"+str(bw),
-		'frame_b64':ldata_b64,
-		'data_b64':data_b64
-	}
+		firebase_msg = {
+			'pdata':pdata.replace('\n',''),
+			'rdata':rdata.replace('\n',''),
+			'time':now.isoformat(),		
+			'ptype':ptype,
+			'ptypestr':ptypestr,
+			'gateway_eui' : gwid,
+			'src': src,					
+			'devAddr':devaddr,
+			'seq':seq,
+			'FCnt':FCnt,
+			'MIC':MIC,
+			'len':datalen,
+			'snr':SNR,
+			'rssi':RSSI,
+			'cr' : cr, 
+			'datarate' : "SF"+str(sf)+"BW"+str(bw),
+			'frame_b64':ldata_b64,
+			'data_b64':data_b64
+		}
 	
-	sensor_entry='sensor%d'% (src)
-	msg_entry='msg%d' % (seq)	
+		sensor_entry='sensor%d'% (src)
+		msg_entry='msg%d' % (seq)	
 	
-	#upload data to firebase
-	firebase_uploadSingleData(firebase_msg, sensor_entry, msg_entry, now)
+		#upload data to firebase
+		firebase_uploadSingleData(firebase_msg, sensor_entry, msg_entry, now)
+	else:
+		print "Source is not is source list, not sending with CloudFireBaseAES.py"			
 
 if __name__ == "__main__":
 	main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])	

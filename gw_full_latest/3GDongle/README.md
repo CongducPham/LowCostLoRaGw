@@ -201,44 +201,55 @@ Copy command result into .gammurc:
 
 	> gammu-detect > .gammurc
 	
-This step is very important because the SMS Service uses this file for sending sms.
+This step is very important because the SMS Service uses this file for sending SMS. The path is typically /home/pi/.gammurc.
 
-Check 3g dongle characteristics:
+Check 3G dongle characteristics:
 
 	> gammu identity
-	Device               : /dev/ttyUSB0
-	Manufacturer         : Huawei
-	Model                : E220 (E220)
-	Firmware             : 11.117.10.00.00
-	IMEI                 : 3XX19301XXXXXX3
-	SIM IMSI 			 : 2XXXX923271XXX1
+	Device				: /dev/ttyUSB0
+	Manufacturer		: Huawei
+	Model				: E220 (E220)
+	Firmware			: 11.117.10.00.00
+	IMEI				: 3XX19301XXXXXX3
+	SIM IMSI			: 2XXXX923271XXX1
 
 Gateway's SMS Service 
 ---------------------
 
 Configure the SMS service in clouds.json
 	
-	>	{	
+		{	
 			"name":"SMS Service",
 			"script":"python CloudSMS.py",
 			"type":"smsservice",
-			"pin":"1234",   
-			"contacts":["+336XXXXXXXX","+336XXXXXXXX","+337XXXXXXXX"],
-			"source_list":[],
 			"gammurc_file":"/home/pi/.gammurc",
 			"enabled":true,
 			"always_enabled":true
 		}
 	
-| fields         |description        									        |
-| -------------  |: ----------------------------------------------------------: |
-| pin       	 |your pin code, if it is not disabled. For example 1234        |
-| contacts       |expected phone numbers to receive sms                         |
-| source_list    |a list of device's address for the SMS service: ["6","3"]     |
-| gammurc_file   |.gammurc file location. By default : /home/pi/.gammurc        |
-| enabled        |always true, don't change it     								|
-| always_enabled |if true, SMS will be sent whenever data is pushed.            |
-|				 |if false, SMS will be sent only if Internet is not available.	|
+| fields         | description        									        |
+| -------------- | ------------------------------------------------------------ |
+| gammurc_file   | .gammurc file location. By default : /home/pi/.gammurc       |
+| enabled        | if set to true, will enabled SMS cloud service				|
+| always_enabled | if true, SMS will be sent whenever data is pushed            |
+|				 | if false, SMS will be sent only if Internet is not available |
+
+Following the cloud philosophy for storing key or identification information (see [the new cloud README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md#good-practice-for-storing-keys)), a key_SMS.py file will store the SIM card pin number, the SMS number and a list of allowed source address as follows:
+
+	> cat key_SMS.py
+	PIN = "1234"
+	
+	contacts=["+1XXXXXXXXX"]
+	
+	source_list=[]
+	
+| fields         | description        									        |
+| -------------- | ------------------------------------------------------------ |
+| pin       	 | your pin code, if it is not disabled. For example 1234       |
+| contacts       | list of phone numbers to receive SMS		                    |
+| source_list    | list of device's address allowed for the SMS service         |
+|				 | Ex: ["6","3"]. If set to [], then all devices are accepted   |
+	
 
 Now the SMS service is operational.
 

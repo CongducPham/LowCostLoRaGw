@@ -44,6 +44,11 @@ import re
 # update of cloud script in the future
 import key_GroveStreams
 
+try:
+	key_GroveStreams.source_list
+except AttributeError:
+	key_GroveStreams.source_list=[]
+
 base_url = '/api/feed?'
 
 # didn't get a response from grovestreams server?
@@ -153,76 +158,80 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	datalen=arr[4]
 	SNR=arr[5]
 	RSSI=arr[6]
-	
-	# this part depends on the syntax used by the end-device
-	# we use: TC/22.4/HU/85...
-	#
-	# but we accept also a_str#b_str#TC/22.4/HU/85... for compatibility with ThingSpeak
-	# or simply 22.4 in which case, the nomemclature will be DEF
 
-	# get number of '#' separator
-	nsharp = ldata.count('#')		 		
-	nslash=0
+	if (str(src) in key_GroveStreams.source_list) or (len(key_GroveStreams.source_list)==0):
+		
+		# this part depends on the syntax used by the end-device
+		# we use: TC/22.4/HU/85...
+		#
+		# but we accept also a_str#b_str#TC/22.4/HU/85... for compatibility with ThingSpeak
+		# or simply 22.4 in which case, the nomemclature will be DEF
 
-	#will field delimited by '#' in the MongoDB
-	data=['','']
+		# get number of '#' separator
+		nsharp = ldata.count('#')		 		
+		nslash=0
+
+		#will field delimited by '#' in the MongoDB
+		data=['','']
 				
-	#no separator
-	if nsharp==0:
-		# get number of '/' separator on ldata
-		nslash = ldata.count('/')
+		#no separator
+		if nsharp==0:
+			# get number of '/' separator on ldata
+			nslash = ldata.count('/')
 				
-		#contains ['', '', "s1", s1value, "s2", s2value, ...]
-		data_array = data + re.split("/", ldata)		
-	else:				
-		data_array = re.split("#", ldata)
+			#contains ['', '', "s1", s1value, "s2", s2value, ...]
+			data_array = data + re.split("/", ldata)		
+		else:				
+			data_array = re.split("#", ldata)
 		
-		# only 1 separator
-		if nsharp==1:
-			# get number of '/' separator on data_array[1]
-			nslash = data_array[1].count('/')
+			# only 1 separator
+			if nsharp==1:
+				# get number of '/' separator on data_array[1]
+				nslash = data_array[1].count('/')
 		
-			# then reconstruct data_array
-			data_array=data + re.split("/", data_array[1])	
+				# then reconstruct data_array
+				data_array=data + re.split("/", data_array[1])	
 
-		# we have 2 separators
-		if nsharp==2:
-			# get number of '/' separator on data_array[2]
-			nslash = data_array[2].count('/')
+			# we have 2 separators
+			if nsharp==2:
+				# get number of '/' separator on data_array[2]
+				nslash = data_array[2].count('/')
 		
-			# then reconstruct data_array
-			data_array=data + re.split("/", data_array[2])
+				# then reconstruct data_array
+				data_array=data + re.split("/", data_array[2])
 		
-	#just in case we have an ending CR or 0
-	data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\n', '')
-	data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\0', '')	
+		#just in case we have an ending CR or 0
+		data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\n', '')
+		data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\0', '')	
 	
-	#test if there are characters at the end of each value, then delete these characters
-	i = 3
-	while i < len(data_array) :
-		while not data_array[i][len(data_array[i])-1].isdigit() :
-			data_array[i] = data_array[i][:-1]
-		i += 2
-																		
-	nomenclatures = []
-	# data to send	
-	data = []
-	
-	if nslash==0:
-		# old syntax without nomenclature key, so insert only one key
-		# we use DEF
-		nomenclatures.append("DEF")
-		data.append(data_array[2])
-	else:
-		#completing nomenclatures and data
-		i=2
-		while i < len(data_array)-1 :
-			nomenclatures.append(data_array[i])
-			data.append(data_array[i+1])
+		#test if there are characters at the end of each value, then delete these characters
+		i = 3
+		while i < len(data_array) :
+			while not data_array[i][len(data_array[i])-1].isdigit() :
+				data_array[i] = data_array[i][:-1]
 			i += 2
+																		
+		nomenclatures = []
+		# data to send	
+		data = []
 	
-	#upload data to grovestreams
-	grovestreams_uploadData(nomenclatures, data, str(src))		
+		if nslash==0:
+			# old syntax without nomenclature key, so insert only one key
+			# we use DEF
+			nomenclatures.append("DEF")
+			data.append(data_array[2])
+		else:
+			#completing nomenclatures and data
+			i=2
+			while i < len(data_array)-1 :
+				nomenclatures.append(data_array[i])
+				data.append(data_array[i+1])
+				i += 2
+	
+		#upload data to grovestreams
+		grovestreams_uploadData(nomenclatures, data, str(src))		
+	else:
+		print "Source is not is source list, not sending with CloudGroveStreams.py"			
 
 if __name__ == "__main__":
 	main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])

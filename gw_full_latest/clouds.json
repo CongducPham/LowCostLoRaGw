@@ -12,19 +12,14 @@
 			"name":"SMS Service",
 			"script":"python CloudSMS.py",
 			"type":"smsservice",
-			"pin":0,
-			"contacts":["+33XXXXXXXXX","+33XXXXXXXXX"],
-			"source_list":[],
 			"gammurc_file":"/home/pi/.gammurc",
 			"enabled":false,
 			"always_enabled":false
 		},	
 		{	
 			"name":"WAZIUP SMS Service ",
-			"script":"python CloudWAZIUP-SMS.py",
+			"script":"python CloudWAZIUP_SMS.py",
 			"type":"smsservice",
-			"pin":0,
-			"contacts":["+1XXXXXXXXX"],
 			"gammurc_file":"/home/pi/.gammurc",
 			"enabled":false,
 			"always_enabled":false

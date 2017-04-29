@@ -25,7 +25,14 @@ import sys
 import json
 import libSMS
 
-global sm, PIN, contacts, always_enabled, source_list, gammurc_file
+import key_SMS
+
+try:
+	key_SMS.source_list
+except AttributeError:
+	key_SMS.source_list=[]
+
+global sm, always_enabled, gammurc_file
 
 #------------------------------------------------------------
 # Open clouds.json file 
@@ -48,25 +55,12 @@ clouds = json_array["clouds"]
 #here we check for our own script entry
 for cloud in clouds:
 	if "CloudSMS.py" in cloud["script"]:
-		try:
-			PIN = cloud["pin"]
-		except KeyError:
-			print "pin undefined"
-		
-		try:
-			contacts = cloud["contacts"]
-		except KeyError:
-			print "contacts undefined"
-			
-		try:
-			source_list = cloud["source_list"]
-		except KeyError:
-			print "source_list undefined"
 			
 		try:
 			always_enabled = cloud["always_enabled"]
 		except KeyError:
 			print "always_enabled undefined"
+			always_enabled = False
 		
 		try:
 			gammurc_file = cloud["gammurc_file"]
@@ -81,10 +75,10 @@ else:
 	if (not libSMS.gammurcCheck(gammurc_file)):
 		sys.exit()
 
-if (libSMS.phoneConnection(gammurc_file, PIN) == None):
+if (libSMS.phoneConnection(gammurc_file, key_SMS.PIN) == None):
 	sys.exit()
 else:	
-	sm = libSMS.phoneConnection(gammurc_file, PIN)
+	sm = libSMS.phoneConnection(gammurc_file, key_SMS.PIN)
 		
 #------------------------------------------------------------
 # main
@@ -108,7 +102,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	cr=arr[1]
 	sf=arr[2]
 	
-	if (str(src) in source_list) or (len(source_list)==0): 
+	if (str(src) in key_SMS.source_list) or (len(key_SMS.source_list)==0): 
 	
 		#this part depends on the syntax used by the end-device
 		#we use: thingspeak_channel#thingspeak_field#TC/22.4/HU/85... 
@@ -191,10 +185,10 @@ def main(ldata, pdata, rdata, tdata, gwid):
 				sys.exit()
 			else:
 				print("rcv msg to send via the SMS Service: "+sms_data)
-				success = libSMS.send_sms(sm, sms_data, contacts)
+				success = libSMS.send_sms(sm, sms_data, key_SMS.contacts)
 		else:
 			print("rcv msg to send via the SMS Service: "+sms_data)
-			success = libSMS.send_sms(sm, sms_data, contacts)
+			success = libSMS.send_sms(sm, sms_data, key_SMS.contacts)
 		
 		if (success):
 			print "Sending SMS done"	

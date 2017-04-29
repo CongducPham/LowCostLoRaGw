@@ -36,6 +36,11 @@ import sys
 # update of cloud script in the future
 import key_FireBase
 
+try:
+	key_FireBase.source_list
+except AttributeError:
+	key_FireBase.source_list=[]
+
 # didn't get a response from firebase server?
 connection_failure = False
 
@@ -131,25 +136,29 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	cr=arr[1]
 	sf=arr[2]
 
-	firebase_msg = {
-		'time':now.isoformat(),		
-		'type':ptype,
-		'gateway_eui' : gwid,					
-		'node_eui':src,
-		'seq':seq,
-		'len':datalen,
-		'snr':SNR,
-		'rssi':RSSI,
-		'cr' : cr, 
-		'datarate' : "SF"+str(sf)+"BW"+str(bw),
-		'data':ldata
-	}
+	if (str(src) in key_FireBase.source_list) or (len(key_FireBase.source_list)==0):
 	
-	sensor_entry='sensor%d'% (src)
-	msg_entry='msg%d' % (seq)	
+		firebase_msg = {
+			'time':now.isoformat(),		
+			'type':ptype,
+			'gateway_eui' : gwid,					
+			'node_eui':src,
+			'seq':seq,
+			'len':datalen,
+			'snr':SNR,
+			'rssi':RSSI,
+			'cr' : cr, 
+			'datarate' : "SF"+str(sf)+"BW"+str(bw),
+			'data':ldata
+		}
 	
-	#upload data to firebase
-	firebase_uploadSingleData(firebase_msg, sensor_entry, msg_entry, now)
+		sensor_entry='sensor%d'% (src)
+		msg_entry='msg%d' % (seq)	
+	
+		#upload data to firebase
+		firebase_uploadSingleData(firebase_msg, sensor_entry, msg_entry, now)
+	else:
+		print "Source is not is source list, not sending with CloudFireBase.py"		
 
 if __name__ == "__main__":
 	main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])	
