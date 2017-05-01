@@ -389,7 +389,7 @@ A typical gateway_conf.json is shown below:
 			"mail_server" : "smtp.gmail.com",
 			"mail_passwd" : "my_passwd",
 			"use_sms" : false,
-			"pin":0,
+			"pin": "0000",
 			"contact_sms":["+33XXXXXXXXX","+33XXXXXXXXX"],
 			"gammurc_file":"/home/pi/.gammurc"
 		}	
@@ -443,7 +443,11 @@ We plan in the future to send appropriate message to a LoRaWAN network server (s
 
 ["alert_conf"]["use_sms"] when set to true indicates that post_processing_gw.py will sent an alerting SMS on specific events. This feature will be integrated soon. We already tested the SMS transmission using gammu with a 3G dongle (see this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/3GDongle/README.md) that explains how to use a 3G dongle for Internet connectivity).
 
+["alert_conf"]["pin"] is the SIM card pin number if this feature is enabled.
+
 ["alert_conf"]["contact_sms"] is the phone number, with country prefix, for the SMS.	
+
+["alert_conf"]["gammurc_file"] is the path to the GAMMU configuration file for the 3G dongle. See the [3G Dongle README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/3GDongle/README.md).
 
 Adding new features
 ===================
