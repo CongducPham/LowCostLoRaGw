@@ -16,7 +16,7 @@ if [ -d lora_gateway ]
 		echo "preserving your configuration files"
 		rm gateway_conf.json clouds.json radio.makefile
 		echo "copying new distrib into /home/pi/lora_gateway"
-		cp -r * /home/pi/lora_gateway
+		cp --preserve -r * /home/pi/lora_gateway
 	else
 		echo "new installation"
 		echo "simply renaming gw_full_latest in lora_gateway"
