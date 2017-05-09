@@ -20,6 +20,8 @@
 #------------------------------------------------------------
 
 import sys
+import re
+import string
 import base64
 import LoRaWAN
 from LoRaWAN.MHDR import MHDR
@@ -29,6 +31,12 @@ NwkSKey = '2B7E151628AED2A6ABF7158809CF4F3C'
 
 PKT_TYPE_DATA=0x10
 
+#to display non printable characters
+replchars = re.compile(r'[\x00-\x1f]')
+
+def replchars_to_hex(match):
+	return r'\x{0:02x}'.format(ord(match.group()))
+	
 def loraWAN_process_pkt(lorapkt):
 
 	appskey=bytearray.fromhex(AppSKey)
@@ -50,7 +58,7 @@ def loraWAN_process_pkt(lorapkt):
 		lorawan = LoRaWAN.new(appskeylist)
 		lorawan.read(lorapkt)	
 		plain_payload = ''.join(chr(x) for x in lorawan.get_payload())
-		print "?loraWAN: plain payload is "+plain_payload
+		print "?loraWAN: plain payload is "+replchars.sub(replchars_to_hex, plain_payload)
 		return plain_payload
 	else:
 		return "###BADMIC###"	

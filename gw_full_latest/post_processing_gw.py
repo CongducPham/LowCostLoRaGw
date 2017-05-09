@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v3.0 - need to incorporate aux_radio features
+# v3.1 - need to incorporate aux_radio features
 #------------------------------------------------------------
 
 # IMPORTANT NOTE
@@ -43,8 +43,10 @@ import os
 import os.path
 import json
 import re
+import string
 import base64
 import requests
+import libSMS
 
 #////////////////////////////////////////////////////////////
 # ADD HERE VARIABLES FOR YOUR OWN NEEDS  
@@ -61,9 +63,7 @@ import requests
 # using the appkey to retrieve information such as encryption key,...
 
 app_key_list = [
-	#for testing
-	'****',
-	#change here your application key
+	#change/add here your application keys
 	'\x01\x02\x03\x04',
 	'\x05\x06\x07\x08' 
 ]
@@ -106,6 +106,12 @@ sf=0
 _hasRadioData=False
 #------------------------------------------------------------
 
+#to display non printable characters
+replchars = re.compile(r'[\x00-\x1f]')
+
+def replchars_to_hex(match):
+	return r'\x{0:02x}'.format(ord(match.group()))
+	
 #------------------------------------------------------------
 #will ignore lines beginning with '?'
 #------------------------------------------------------------
@@ -154,6 +160,9 @@ try:
 except KeyError:
 	_rawFormat = 0
 	
+if _rawFormat:
+	print "raw output from low-level gateway. post_processing_gw will handle packet format"	
+	
 #------------------------------------------------------------
 #local aes?
 #------------------------------------------------------------
@@ -162,13 +171,19 @@ try:
 except KeyError:
 	_local_aes = 0	
 	
+if _local_aes:
+	print "enable local AES decryption"	
+	
 #------------------------------------------------------------
 #with app key?
 #------------------------------------------------------------
 try:
 	_wappkey = json_array["gateway_conf"]["wappkey"]
 except KeyError:
-	_wappkey = 0		
+	_wappkey = 0	
+	
+if _wappkey:
+	print "will enforce app key"		
 
 #------------------------------------------------------------
 #initialize gateway DHT22 sensor
@@ -956,7 +971,17 @@ while True:
 						if plain_payload=="###BADMIC###":
 							print plain_payload
 						else:	
-							print "plain payload is : "+plain_payload
+							print "plain payload is : ",
+							print(replchars.sub(replchars_to_hex, plain_payload))
+							#if ((ptype & PKT_FLAG_DATA_WAPPKEY)==PKT_FLAG_DATA_WAPPKEY):
+							#	the_app_key = plain_payload[0]
+							#	the_app_key = the_app_key + plain_payload[1]
+							#	the_app_key = the_app_key + plain_payload[2]
+							#	the_app_key = the_app_key + plain_payload[3]
+							#	print " ".join("0x{:02x}".format(ord(c)) for c in the_app_key),
+							#	print plain_payload[APPKEY_SIZE:] 
+							#else:
+							#	print plain_payload
 							_linebuf = plain_payload
 							_has_linebuf=1
 							_hasClearData=1
@@ -1010,7 +1035,18 @@ while True:
 						if plain_payload=="###BADMIC###":
 							print plain_payload
 						else:	
-							print "plain payload is : "+plain_payload
+							print "plain payload is : ",
+							print(replchars.sub(replchars_to_hex, plain_payload))
+							
+							#if ((ptype & PKT_FLAG_DATA_WAPPKEY)==PKT_FLAG_DATA_WAPPKEY):
+							#	the_app_key = plain_payload[0]
+							#	the_app_key = the_app_key + plain_payload[1]
+							#	the_app_key = the_app_key + plain_payload[2]
+							#	the_app_key = the_app_key + plain_payload[3]
+							#	print " ".join("0x{:02x}".format(ord(c)) for c in the_app_key),
+							#	print plain_payload[APPKEY_SIZE:] 
+							#else:
+							#	print plain_payload
 							_linebuf = plain_payload
 							_has_linebuf=1
 							_hasClearData=1						

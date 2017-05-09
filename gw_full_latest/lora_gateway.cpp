@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.72
+ *  Version:                1.73
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -63,11 +63,8 @@
  *    - the post-processing stage looks for this sequence to dissect the data, according to the format adopted by the sender 
  *    - if you use our LoRa_Temp example, then the packet format as expected by the post-processing script is as follows:
  *      - without application key and without encryption, payload starts immediately: [payload]
- *      - without application key and with encryption: original (clear) format is [size(1B)][payload]. 
- *        size is the real size of the clear payload
  *      - if application key is used, without encryption: [AppKey(4B)][payload]
- *      - if application key is used, with encryption: original (clear) format is [AppKey(4B)][size(1B)][payload]. 
- *        size is the real size of the clear payload
+ *      - with encryption: the payload is encrypted using LoRaWAN algorithm
  *    - for more details on the underlying packet format used by our modified SX1272 library
  *      - refer to the SX1272.h
  *      - see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
@@ -75,6 +72,8 @@
 */
 
 /*  Change logs
+ *  May, 8th, 2017. v1.73
+ *        Default behavior is to disable the remote configuration features
  *  Mar, 29th, 2017. v1.72
  *        Add periodic status (every 10 minutes) from the low-level gateway
  *        Add reset of radio module when receive error from radio is detected
@@ -979,7 +978,6 @@ void loop(void)
       e = sx1272.receivePacketTimeout(10000);
 
       status_counter++;
-
       if (e!=0 && e!=3) {
          PRINT_CSTSTR("%s","^$Receive error ");
          PRINT_VALUE("%d", e);
@@ -1217,8 +1215,8 @@ void loop(void)
       
       switch (cmd[i]) {
 
-//uncomment if you don't want your device to be remotely configured
-//#ifdef 0
+//comment if you want your device to be remotely configured for test purposes mainly
+#ifdef 0
             case 'U':
             
               if (unlocked_try) {
@@ -1241,8 +1239,8 @@ void loop(void)
                   PRINT_CSTSTR("%s","^$Bad pin\n");
               }
             break;
-//#endif
-
+//comment if you want your device to be remotely configured for test purposes mainly
+#endif
             case 'S': 
 
               if (cmd[i+1]=='F') {
