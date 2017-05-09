@@ -314,6 +314,7 @@ unsigned long interDownlinkSendTime=20000L;
 //#define CAD_TEST
 //#define LORA_LAS
 //#define WINPUT
+//#define ENABLE_REMOTE
 
 #ifdef BAND868
 #define MAX_NB_CHANNEL 15
@@ -1216,7 +1217,7 @@ void loop(void)
       switch (cmd[i]) {
 
 //comment if you want your device to be remotely configured for test purposes mainly
-#ifdef 0
+#ifdef ENABLE_REMOTE
             case 'U':
             
               if (unlocked_try) {
