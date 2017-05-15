@@ -17,9 +17,9 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- * last update: Dec. 7th by C. Pham
+ * last update: May 8th, 2017 by C. Pham
  * 
- *  Version:                1.6
+ *  Version:                1.7
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -63,6 +63,11 @@
  *    - the S command sends a string of arbitrary size
  *      - /@S50# sends a 50B user payload packet filled with '#'. The real size is 55B with the Libelium header 
  *
+ *  if compiled with WITH_AES
+ *    - add LoRaWAN-like AES encyption, with MIC which provide reliable bad data rejection mechanisms
+ *      - /@AES# toggles AES ON and OFF
+ *      - /@LW# toggles pure LoRaWAN format, without underlying data header
+ *      
  *  if compiled with LORA_LAS
  *    - add LAS support
  *      - sending message will use LAS service
@@ -83,6 +88,9 @@
 */
 
 /*  Change logs
+ *  May, 8th, 2017. v1.7 
+ *        Improve AES support
+ *        AppKey can now also be used with AES encryption, compile with WITH_APPKEY
  *  Dec, 7th, 2016. v1.6
  *        Improve CAD_TEST mode
  *          - will continously perform CAD, then will notify when channel activity has been detected.
@@ -210,8 +218,37 @@
 //
 // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-//#define PABOOST
+#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE FOR VARIOUS BEHAVIORS
+/////////////////////////////////////////////////////////////////// 
+//#define SHOW_FREEMEMORY
+//#define CAD_TEST
+//#define PERIODIC_SENDER 30000
+//#define LORA_LAS
+//#define WITH_SEND_LED
+#define WITH_AES
+//#define WITH_APPKEY
+///////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE LORA MODE, NODE ADDRESS 
+#define LORAMODE  1
+#define LORA_ADDR 6
+// the special mode to test BW=125MHz, CR=4/5, SF=12
+// on the 868.1MHz channel
+//#define LORAMODE 11
+///////////////////////////////////////////////////////////////////
+
+#ifdef WITH_APPKEY
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE APPKEY, BUT IF GW CHECKS FOR APPKEY, MUST BE
+// IN THE APPKEY LIST MAINTAINED BY GW.
+uint8_t my_appKey[4]={5, 6, 7, 8};
+///////////////////////////////////////////////////////////////////
+#endif
 
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
@@ -241,17 +278,6 @@
   #define DEBUG_STR(fmt,param)    
   #define DEBUG_VALUE(fmt,param)  
 #endif
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE FOR VARIOUS BEHAVIORS
-/////////////////////////////////////////////////////////////////// 
-//#define SHOW_FREEMEMORY
-//#define CAD_TEST
-//#define PERIODIC_SENDER 30000
-//#define LORA_LAS
-//#define WITH_SEND_LED
-//#define WITH_AES
-///////////////////////////////////////////////////////////////////
 
 #ifdef BAND868
 #define MAX_NB_CHANNEL 15
@@ -286,15 +312,6 @@ uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_433,CH_01_433,CH_02_433,CH_03_4
 #ifdef WITH_SEND_LED
 #define SEND_LED  44
 #endif
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE LORA MODE, NODE ADDRESS 
-#define LORAMODE  1
-#define LORA_ADDR 6
-// the special mode to test BW=125MHz, CR=4/5, SF=12
-// on the 868.1MHz channel
-//#define LORAMODE 11
-///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 // TO GATEWAY WHICH HAS ADDRESS 1
@@ -708,6 +725,8 @@ void loop(void)
 { 
   int i=0, e;
   int cmdValue;
+  uint8_t app_key_offset=0;
+    
 /////////////////////////////////////////////////////////////////// 
 // ONLY FOR TESTING CAD
 #ifdef CAD_TEST
@@ -976,13 +995,13 @@ void loop(void)
     boolean sendCmd=false;
     boolean withTmpAck=false;
     int forTmpDestAddr=-1;
-    
+
     i=0;
     
     if (cmd[i]=='/' && cmd[i+1]=='@') {
 
       PRINT_CSTSTR("%s","^$Parsing command\n");      
-      i=2;
+      i=i+2;
       
       PRINT_CSTSTR("%s","^$");
       PRINT_STR("%s",cmd);
@@ -1334,7 +1353,7 @@ void loop(void)
 
                 if (cmd[i+3]=='#') {
                   // point to the start of the message, skip /@ACK#
-                  i=6;
+                  i=i+4;
                   withTmpAck=true;
                   sendCmd=true;         
                 }
@@ -1508,14 +1527,6 @@ void loop(void)
       // only the DIFS/SIFS mechanism
       // we chose to have a complete control code insytead of using the implementation of the LAS class
       // for better debugging and tests features if needed.    
-      PRINT_CSTSTR("%s","Payload size is ");  
-      PRINT_VALUE("%d",pl);
-      PRINTLN;
-      
-      uint32_t toa = sx1272.getToA(pl+OFFSET_PAYLOADLENGTH);      
-      PRINT_CSTSTR("%s","ToA is w/4B header ");
-      PRINT_VALUE("%d",toa);
-      PRINTLN;
       
       long startSend, endSend;
       long startSendCad;
@@ -1532,34 +1543,60 @@ void loop(void)
       PRINT_VALUE("%d",sx1272._packetNumber);
       PRINTLN;
 
+      // buffer to store the message to be transmitted
+      unsigned char LORAWAN_Data[256];
+      unsigned char LORAWAN_Package_Length=9;
+           
+      uint8_t p_type=PKT_TYPE_DATA;
+
+#ifdef WITH_APPKEY
+      app_key_offset = (full_lorawan?0:sizeof(my_appKey));
+
+      if (app_key_offset) {
+        p_type = p_type | PKT_FLAG_DATA_WAPPKEY;
+      }
+#endif      
+          
 #ifdef WITH_AES
       if (with_aes) {
 
+          p_type = p_type | PKT_FLAG_DATA_ENCRYPTED;
+
+          //we use LORAWAN_Data buffer to store the intermediate message
+#ifdef WITH_APPKEY
+          //copy the appkey after the LoRaWAN packet header
+          memcpy(LORAWAN_Data+LORAWAN_Package_Length,my_appKey,app_key_offset);
+
+          pl+=app_key_offset;
+#endif
+          //copy the payload
+          memcpy(LORAWAN_Data+LORAWAN_Package_Length+app_key_offset,(uint8_t *)(&cmd[i]),pl);
+                    
           PRINT_CSTSTR("%s","plain payload hex\n");
           for (int j=i; j<i+pl;j++) {
-            if (cmd[j]<16)
+            if (LORAWAN_Data[LORAWAN_Package_Length+j]<16)
               PRINT_CSTSTR("%s","0");
-            PRINT_HEX("%X", cmd[j]);
+            PRINT_HEX("%X", LORAWAN_Data[LORAWAN_Package_Length+j]);
             PRINT_CSTSTR("%s"," ");
           }
           PRINTLN; 
     
           PRINT_CSTSTR("%s","Encrypting\n");     
           PRINT_CSTSTR("%s","encrypted payload\n");
-          Encrypt_Payload((unsigned char*)(&cmd[i]), pl, Frame_Counter_Up, Direction);
+
+          Encrypt_Payload(LORAWAN_Data+LORAWAN_Package_Length, pl, Frame_Counter_Up, Direction);
+          
           //Print encrypted message
           for (int j=i; j<i+pl;j++) {
-            if (cmd[j]<16)
+            if (LORAWAN_Data[LORAWAN_Package_Length+j]<16)
               PRINT_CSTSTR("%s","0");
-            PRINT_HEX("%X", cmd[j]);
+            PRINT_HEX("%X", LORAWAN_Data[LORAWAN_Package_Length+j]);
             PRINT_CSTSTR("%s"," ");
           }
           PRINTLN;   
     
           // with encryption, we use for the payload a LoRaWAN packet format to reuse available LoRaWAN encryption libraries
           //
-          unsigned char LORAWAN_Data[256];
-          unsigned char LORAWAN_Package_Length;
           unsigned char MIC[4];
           //Unconfirmed data up
           unsigned char Mac_Header = 0x40;
@@ -1584,17 +1621,7 @@ void loop(void)
         
           LORAWAN_Data[8] = Frame_Port;
         
-          //Set Current package length
-          LORAWAN_Package_Length = 9;
-          
-          //Load Data
-          for(int j = i; j < i+pl; j++)
-          {
-            // see that we don't take the appkey, just the encrypted data that starts that message[app_key_offset]
-            LORAWAN_Data[LORAWAN_Package_Length + j] = cmd[i+j];
-          }
-        
-          //Add data Lenth to package length
+          //Add data Length to package length
           LORAWAN_Package_Length = LORAWAN_Package_Length + pl;
         
           PRINT_CSTSTR("%s","calculate MIC with NwkSKey\n");
@@ -1609,6 +1636,9 @@ void loop(void)
         
           //Add MIC length to package length
           LORAWAN_Package_Length = LORAWAN_Package_Length + 4;
+
+          //introduce here an error for testing
+          //LORAWAN_Data[10]=0;
         
           PRINT_CSTSTR("%s","transmitted LoRaWAN-like packet:\n");
           PRINT_CSTSTR("%s","MHDR[1] | DevAddr[4] | FCtrl[1] | FCnt[2] | FPort[1] | EncryptedPayload | MIC[4]\n");
@@ -1622,8 +1652,6 @@ void loop(void)
           }
           PRINTLN;      
     
-          // copy back to cmd
-          memcpy((unsigned char *)(&cmd[i]),LORAWAN_Data,LORAWAN_Package_Length);
           pl = LORAWAN_Package_Length;     
 
           if (full_lorawan) {
@@ -1635,28 +1663,49 @@ void loop(void)
           
           // we increment Frame_Counter_Up
           // even if the transmission will not succeed
-          Frame_Counter_Up++;
-
-          // encrypted data
-          sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_ENCRYPTED);   
+          Frame_Counter_Up++;   
       }
-      else
-        sx1272.setPacketType(PKT_TYPE_DATA);
-#else     
-      sx1272.setPacketType(PKT_TYPE_DATA); 
+      else {
+#ifdef WITH_APPKEY
+          memcpy(LORAWAN_Data,my_appKey,app_key_offset);
+#endif          
+          memcpy(LORAWAN_Data+app_key_offset,(uint8_t *)(&cmd[i]),pl);
+
+          pl+=app_key_offset;
+      }
+#else
+      
+#ifdef WITH_APPKEY
+      memcpy(LORAWAN_Data,my_appKey,app_key_offset));
+#endif      
+
+      memcpy(LORAWAN_Data+app_key_offset,(uint8_t *)(&cmd[i]),pl);
+
+      pl+=app_key_offset;
 #endif
-        
+
+      sx1272.setPacketType(p_type);
+
+      PRINT_CSTSTR("%s","Payload size is ");  
+      PRINT_VALUE("%d",pl);
+      PRINTLN;
+      
+      uint32_t toa = sx1272.getToA(pl+(full_lorawan?0:OFFSET_PAYLOADLENGTH));      
+      PRINT_CSTSTR("%s","ToA is w/4B header ");
+      PRINT_VALUE("%d",toa);
+      PRINTLN;      
+                  
       if (forTmpDestAddr>=0) {
         if (withAck)
-          e = sx1272.sendPacketTimeoutACK(forTmpDestAddr, (uint8_t*)(&cmd[i]), pl, 10000);  
+          e = sx1272.sendPacketTimeoutACK(forTmpDestAddr, LORAWAN_Data, pl, 10000);  
         else    
-          e = sx1272.sendPacketTimeout(forTmpDestAddr, (uint8_t*)(&cmd[i]), pl, 10000);
+          e = sx1272.sendPacketTimeout(forTmpDestAddr, LORAWAN_Data, pl, 10000);
       }
       else {
         if (withAck || withTmpAck)   
-          e = sx1272.sendPacketTimeoutACK(dest_addr, (uint8_t*)(&cmd[i]), pl, 10000);    
+          e = sx1272.sendPacketTimeoutACK(dest_addr, LORAWAN_Data, pl, 10000);    
          else 
-          e = sx1272.sendPacketTimeout(dest_addr, (uint8_t*)(&cmd[i]), pl, 10000);
+          e = sx1272.sendPacketTimeout(dest_addr, LORAWAN_Data, pl, 10000);
       }
 
 #ifdef WITH_SEND_LED
