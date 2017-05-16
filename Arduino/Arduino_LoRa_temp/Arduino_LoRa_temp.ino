@@ -87,7 +87,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define LOW_POWER_HIBERNATE
 #define CUSTOM_CS
 //#define LORA_LAS
-#define WITH_AES
+//#define WITH_AES
 //#define LORAWAN
 //#define TO_LORAWAN_GW
 //#define WITH_ACK
