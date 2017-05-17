@@ -139,7 +139,10 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	#saving data in a JSON var
 	str_json_data = "{"
 	
-	# add here the RSSI
+	# add here the SNR
+	str_json_data += "\"SNR\" : "+str(SNR)+", "
+	
+	# and here the RSSI
 	str_json_data += "\"RSSI\" : "+str(RSSI)+", "
 	
 	#start from the first nomenclature
