@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v3.1 - need to incorporate aux_radio features
+# v3.2 - need to incorporate aux_radio features
 #------------------------------------------------------------
 
 # IMPORTANT NOTE
@@ -418,8 +418,12 @@ def send_alert_mail(m):
 if _use_mail_alert :
 	print "post_processing_gw.py sends mail indicating that gateway has started post-processing stage..."
 	if checkNet():
-		send_alert_mail("Gateway "+_gwid+" has started post-processing stage")
-		print "Sending mail done"
+		try:
+			send_alert_mail("Gateway "+_gwid+" has started post-processing stage")
+			print "Sending mail done"
+		except:
+			print "Unexpected error when sending mail"
+				
 	sys.stdout.flush()		
 	
 #------------------------------------------------------------
@@ -912,6 +916,12 @@ while True:
 			#the data prefix is inserted by the gateway
 			#do not modify, unless you know what you are doing and that you modify lora_gateway (comment WITH_DATA_PREFIX)
 			print "--> got data prefix"
+			
+			#if SNR < -20:
+			#	print "--> SNR too low, discarding data"
+			#	sys.stdin.readline()
+			#	continue	
+							
 			_hasRadioData=True
 			
 			#we actually need to use DATA_PREFIX in order to differentiate data from radio coming to the post-processing stage
@@ -966,7 +976,11 @@ while True:
 						#print [hex(x) for x in lorapkt]
 						
 						from loraWAN import loraWAN_process_pkt
-						plain_payload=loraWAN_process_pkt(lorapkt)
+						try:
+							plain_payload=loraWAN_process_pkt(lorapkt)
+						except:
+							print "### unexpected decryption error ###"
+							plain_payload="###BADMIC###"
 						
 						if plain_payload=="###BADMIC###":
 							print plain_payload
@@ -1000,15 +1014,23 @@ while True:
 							#
 							for cloud_index in range(0,len(_cloud_for_lorawan_encrypted_data)):
 								
-								print "--> LoRaWAN encrypted cloud[%d]" % cloud_index
-								cloud_script=_cloud_for_lorawan_encrypted_data[cloud_index]
-								print "uploading with "+cloud_script
-								sys.stdout.flush()
-								cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
-								print cmd_arg
-								os.system(cmd_arg) 
-							print "--> LoRaWAN encrypted cloud end"					
-						
+								try:
+									print "--> LoRaWAN encrypted cloud[%d]" % cloud_index
+									cloud_script=_cloud_for_lorawan_encrypted_data[cloud_index]
+									print "uploading with "+cloud_script
+									sys.stdout.flush()
+									cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
+								except UnicodeDecodeError, ude:
+									print ude
+								else:
+									print cmd_arg
+									try:
+										os.system(cmd_arg)
+									except:
+										print "Error when uploading data to LoRaWAN encrypted cloud"								
+								
+							print "--> LoRaWAN encrypted cloud end"		
+							
 					continue	
 					
 			else:								
@@ -1030,7 +1052,11 @@ while True:
 							lorapkt.append(ord(lorapktstr[i]))
 						
 						from loraWAN import loraWAN_process_pkt
-						plain_payload=loraWAN_process_pkt(lorapkt)
+						try:
+							plain_payload=loraWAN_process_pkt(lorapkt)
+						except:
+							print "### unexpected decryption error ###"
+							plain_payload="###BADMIC###"
 						
 						if plain_payload=="###BADMIC###":
 							print plain_payload
@@ -1069,13 +1095,21 @@ while True:
 							#							
 							for cloud_index in range(0,len(_cloud_for_encrypted_data)):
 								
-								print "--> encrypted cloud[%d]" % cloud_index
-								cloud_script=_cloud_for_encrypted_data[cloud_index]
-								print "uploading with "+cloud_script
-								sys.stdout.flush()
-								cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
-								print cmd_arg
-								os.system(cmd_arg) 
+								try:
+									print "--> encrypted cloud[%d]" % cloud_index
+									cloud_script=_cloud_for_encrypted_data[cloud_index]
+									print "uploading with "+cloud_script
+									sys.stdout.flush()
+									cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
+								except UnicodeDecodeError, ude:
+									print ude
+								else:
+									print cmd_arg
+									try:
+										os.system(cmd_arg)
+									except:
+										print "Error when uploading data to encrypted cloud"
+											
 							print "--> encrypted cloud end"	
 			else:
 				_hasClearData=1

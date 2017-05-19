@@ -67,7 +67,11 @@ for cloud in clouds:
 		except KeyError:
 			print "gammurc_file undefined"
 
-
+if not always_enabled:
+	if (libSMS.internet_ON()):
+		print('Internet is available, no need to use the SMS Service')
+		sys.exit()
+		
 #check Gammu configuration
 if (not libSMS.gammuCheck()):
 	sys.exit()
@@ -179,16 +183,9 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	
 		# Send data to expected contacts
 		success = False
-		if not always_enabled:
-			if (libSMS.internet_ON()):
-				print('Internet is available, no need to use the SMS Service')
-				sys.exit()
-			else:
-				print("rcv msg to send via the SMS Service: "+sms_data)
-				success = libSMS.send_sms(sm, sms_data, key_SMS.contacts)
-		else:
-			print("rcv msg to send via the SMS Service: "+sms_data)
-			success = libSMS.send_sms(sm, sms_data, key_SMS.contacts)
+
+		print("rcv msg to send via the SMS Service: "+sms_data)
+		success = libSMS.send_sms(sm, sms_data, key_SMS.contacts)
 		
 		if (success):
 			print "Sending SMS done"	
