@@ -154,7 +154,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		#sms_data = "SensorData Sensor"+str(src)
 	
 		#sms_data = "SRC#"+str(src)+"#RSSI#"+str(RSSI)+"#BW#"+str(bw)+"#CR#"+str(cr)+"#SF#"+str(sf)+"#GWID#"+gwid+"/"+data
-		sms_data = "SensorData Sensor"+str(src)+" RSSI "+str(RSSI)+" BW "+str(bw)+" CR "+str(cr)+" SF "+str(sf)+" GWID "+gwid
+		sms_data = "SensorData Sensor"+str(src)+" SNR "+str(SNR)+" RSSI "+str(RSSI)+" SN "+str(seq)+" BW "+str(bw)+" CR "+str(cr)+" SF "+str(sf)+" GWID "+gwid
 		
 		nomenclatures = []
 		# data to send
