@@ -16,6 +16,8 @@ Starting Apr 2nd 2017, the gateway configuration files have changed. There is no
 Features
 ========
 
+- a simple, user-friendly web admin interface to configure and update your gateway
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/gw_web_admin/README-web_admin.md)
 - an alert mail can be sent to a list of contact email addresses to notify when gateway is starting and when the radio module has been reset
 - periodic status report to monitor whether the post-processing stage of the gateway is up or not
 - encryption and native LoRaWAN frame format
@@ -41,7 +43,7 @@ Features
 	- [raspberrypi-jessie-WAZIUP-demo.dmg.zip](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
 	- Based on Raspbian Jessie 
 	- Supports Raspberry 1B+, RPI2 and RPI3 (WiFi support is for RPI3. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles)
-	- Get the zipped image, unzip it, install it on an 8GB SD card, see [this tutorial](https://www.raspberrypi.org/documentation/installation/installing-images/) from www.raspberrypi.org
+	- Get the zipped image, unzip it, install it on an **8GB** SD card, see [this tutorial](https://www.raspberrypi.org/documentation/installation/installing-images/) from www.raspberrypi.org
 	- Plug the SD card into your Raspberry
 	- Connect a radio module (see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)
 	- Power-on the Raspberry
@@ -54,7 +56,7 @@ Features
 		- SSID=WAZIUP_PI_GW_27EB27F90F for instance
 		- password=loragateway
 		- **it is strongly advise to change this WiFi password**
-	- Includes most of features described here but a full update with the latest version is **necessary, see below**	
+	- Includes most of features described here but a full update with the latest version is **highly recommended, see below**	
 	- By default, incoming data are uploaded to our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794)
 	- Works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
 	

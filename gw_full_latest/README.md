@@ -475,7 +475,7 @@ You can use cmd.sh as follows:
 
 	> ./cmd.sh
 	=======================================* Gateway 00000027EBBEDA21 *===
-	0- sudo python start_gw.py & ; disown %1                             +
+	0- sudo python start_gw.py                                           +
 	1- sudo ./lora_gateway --mode 1                                      +
 	2- sudo ./lora_gateway --mode 1|python post_processing_gw.py -t -m 2 +
 	3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +
@@ -501,6 +501,10 @@ You can use cmd.sh as follows:
 	B- edit gateway_conf.json                                            +
 	C- show clouds.json                                                  +
 	D- edit clouds.json                                                  +
+	---------------------------------------------------------* Update *--+
+	U- update to latest version on repository                            +
+	V- download and install a file                                       +
+	W- run a command                                                     +
 	-----------------------------------------------------------* kill *--+
 	K- kill all gateway related processes                                +
 	k- kill rfcomm-server process                                        +
@@ -552,14 +556,11 @@ To stop the gateway, use option K. This option can also kill the gateway process
 
 **IMPORTANT NOTICE**: Do not launch a new gateway instance with an existing one as there will be conflict on the SPI bus.
 
-You can start manually the gateway in background for test purposes with option 0. This option actually performs the following commands:
-
-	> sudo python ./start_gw.py &
-	> disown %1
+You can start manually the gateway for test purposes with option 0. 
 	
 **IMPORTANT NOTICE**: To run an operation gateway, it is better to reboot the gateway and let the LoRa gateway program start at boot. Manually lauching the gateway can be usefull for test purposes but we observed that redirections of LoRa gateway output to the post-processing stage can be broken thus leading to a not responding gateway.
 
-You can then use option 5 to see the logs in real time. To test the simple gateway, use option 1. You can ssh at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an ssh apps to log on 192.168.200.1 and launch cmd.sh from your smartphone.	
+You can then use option 5 to see the logs in real time. To test the simple low-level gateway, use option 1. You can ssh at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an ssh apps to log on 192.168.200.1 and launch cmd.sh from your smartphone.	
 
 You can easily add new useful commands to the cmd.sh shell script.
 	
