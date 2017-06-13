@@ -50,7 +50,7 @@ gatewayid=`cat gateway_id.txt`
 while [ "$choice" != "Q" ]
 do
 echo "=======================================* Gateway $gatewayid *==="
-echo "0- sudo python start_gw.py & ; disown %1                             +"
+echo "0- sudo python start_gw.py                                           +"
 echo "1- sudo ./lora_gateway --mode 1                                      +"
 echo "2- sudo ./lora_gateway --mode 1 | python post_processing_gw.py       +"
 echo "3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +"
@@ -95,10 +95,10 @@ echo "BEGIN OUTPUT"
 
 if [ "$choice" = "0" ]
 	then
-		echo "Running in background the full LoRa gateway" 
-		sudo python start_gw.py &
-		disown %1
-		echo "Check ../Dropbox/LoRa-test/post-processing_$gatewayid.log file (select command 5)"
+		echo "Running interactively the full LoRa gateway... CTRL-C to exit" 
+		sudo python start_gw.py
+		#disown %1
+		#echo "Check ../Dropbox/LoRa-test/post-processing_$gatewayid.log file (select command 5)"
 fi
 
 if [ "$choice" = "1" ] 
