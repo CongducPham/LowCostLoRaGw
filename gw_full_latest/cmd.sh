@@ -26,23 +26,16 @@ choice="Z"
 if [ ! -f gateway_id.txt ]
 then
 	echo "ERROR: gateway_id.txt file not found"
-	echo "should create it by running echo \"000000XXXXXXXXXX\" > gateway_id.txt"
-	echo "where XXXXXXXXXX is the last 5 bytes of your MAC Ethernet interface address"
-	echo "Example: echo \"00000027EBBEDA21\" > gateway_id.txt"
-	echo "Here is your MAC Ethernet interface address:"
-	echo "-------------------------------------------------------"
-	ifconfig | grep "eth0"
-    echo "-------------------------------------------------------"
-	echo "Enter the last 5 hex bytes of your MAC Ethernet interface address"
-	echo "in capital character and without the : separator"
-	echo "example: HWaddr b8:27:eb:be:da:21 then just enter 27EBBEDA21"
-	read macaddr
-	echo "Will write 000000$macaddr into gateway_id.txt"
-	echo "000000$macaddr" > gateway_id.txt
+	echo "Reading MAC address to get last 5 bytes for gateway id"
+	#get the last 5 bytes of the eth0 MAC addr
+	gwid=`ifconfig | grep 'eth0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
+	echo "Creating gateway_id.txt file"
+	echo "Writing 000000$gwid"
+	echo "000000$gwid" > gateway_id.txt
 	echo "Done"
 	echo "Replacing gw id in gateway_conf.json"
-	sed -i -- 's/"000000.*"/"000000'"$macaddr"'"/g' gateway_conf.json
-	echo "Done"	
+	sed -i -- 's/"000000.*"/"000000'"$gwid"'"/g' gateway_conf.json
+	echo "Done"
 fi
 
 gatewayid=`cat gateway_id.txt`
