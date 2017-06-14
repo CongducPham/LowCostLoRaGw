@@ -22,15 +22,9 @@
 #------------------------------------------------------------
 
 
-#provide to the script the last 5 hex number of your eth0 interface, i.e. 27EBBEDA21 
 #
-# example: ./config_raspbian.sh 27EBBEDA21
+# example: ./config_raspbian.sh
 
-if [ "$#" -ne 1 ]
-  then
-    echo "Usage: $0 last_fixe_hex_byte_of_eth0_iface"
-    exit
-fi
 
 board=`cat /proc/cpuinfo | grep "Revision" | cut -d ':' -f 2 | tr -d " \t\n\r"`
 
@@ -60,13 +54,16 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		cd scripts
 fi
 
+#get the last 5 bytes of the eth0 MAC addr
+gwid=`ifconfig | grep 'eth0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
+
 echo "Creating ../gateway_id.txt file"
-echo "Writing 000000$1"
+echo "Writing 000000$gwid"
 echo "000000$1" > ../gateway_id.txt
 echo "Done"
 
 echo "Replacing gw id in ../gateway_conf.json"
-sed -i -- 's/"000000.*"/"000000'"$1"'"/g' ../gateway_conf.json
+sed -i -- 's/"000000.*"/"000000'"$gwid"'"/g' ../gateway_conf.json
 echo "Done"
 
 if [ ! -d ~/Dropbox/LoRa-test ]
@@ -93,6 +90,7 @@ read ouinon
 
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 	then
+		rm ../log
 		echo "Creating log -> ~/Dropbox/LoRa-test"
 		ln -s ~/Dropbox/LoRa-test ../log
 		echo "Done"		
@@ -106,9 +104,9 @@ read ouinon
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 	then
 		echo "Replacing hot-spot ssid in /etc/hostapd/hostapd.conf"
-		sudo sed -i 's/^ssid.*/ssid=WAZIUP_PI_GW_'"$1"'/g' /etc/hostapd/hostapd.conf
+		sudo sed -i 's/^ssid.*/ssid=WAZIUP_PI_GW_'"$gwid"'/g' /etc/hostapd/hostapd.conf
 		echo "Done"
-		echo "Gateway WiFi ssid is WAZIUP_PI_GW_$1"
+		echo "Gateway WiFi ssid is WAZIUP_PI_GW_$gwid"
 		
 		echo "Setting wpa_passphrase in /etc/hostapd/hostapd.conf"
 		sudo sed -i 's/^wpa_passphrase.*/wpa_passphrase=loragateway/g' /etc/hostapd/hostapd.conf
@@ -152,11 +150,11 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		echo "Done"
 		echo "Renaming Bluetooth network name in /etc/bluetooth/main.conf"
 		# here we replace #Name to Name in case Name was commented
-		sudo sed -i 's/^#Name *=.*/Name=WAZIUP_PI_BT_GW_'"$1"'/g' /etc/bluetooth/main.conf
+		sudo sed -i 's/^#Name *=.*/Name=WAZIUP_PI_BT_GW_'"$gwid"'/g' /etc/bluetooth/main.conf
 		# then in all cases we replace Name so that if we already have an uncommented Name it will also work
-		sudo sed -i 's/^Name *=.*/Name=WAZIUP_PI_BT_GW_'"$1"'/g' /etc/bluetooth/main.conf
+		sudo sed -i 's/^Name *=.*/Name=WAZIUP_PI_BT_GW_'"$gwid"'/g' /etc/bluetooth/main.conf
 		echo "Done"
-		echo "Gateway Bluetooth network name is WAZIUP_PI_BT_GW_$1"
+		echo "Gateway Bluetooth network name is WAZIUP_PI_BT_GW_$gwid"
 fi
 
 ## TODO: /lib/systemd/system/bluetooth.service
