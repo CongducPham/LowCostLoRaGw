@@ -60,15 +60,24 @@ Features
 	- By default, incoming data are uploaded to our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794)
 	- Works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
 	
-Latest gateway version 
-======================
+Installing the latest gateway version 
+=====================================
 
-The full, latest distribution of the low-cost gateway is available in the gw_full_latest folder. It contains all the gateway control and post-processing software. If you use our SD card image and update the gateway from it you don't need to install any additional packages. Otherwise you may need to install required Raspbian Jessie packages as explained in the various README files.
+The full, latest distribution of the low-cost gateway is available in the gw_full_latest folder of the github. It contains all the gateway control and post-processing software. The **simplest and recommended way** to install a new gateway is to use [our zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip) and update the gateway from it. In this way you don't need to install any additional packages. Otherwise you may need to install required Raspbian Jessie packages as explained in the various README files.
 
-To get directly to the full, latest gateway version, (i) simply download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or, (ii) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. 
+Once you have your SD card flashed with our image, to get directly to the full, latest gateway version, you can either (i) use the provided update script, or (ii) download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or, (iii) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. Option (i) is preferable and basically automatizes option (iii).
 
 First option
 ------------
+
+The SD card image has a recent version of the gateway software and there is in the lora_gateway/scripts folder an update_gw.sh script that automatically updates your gateway to the latest version. Simply go into lora_gateway/scripts and type:
+
+	> ./update_gw.sh
+	
+If you have an existing /home/pi/lora_gateway folder, then it will preserve all you existing configuration files (i.e. key_*, gateway_conf.json, clouds.json and radio.makefile). As the repository does not have a gateway_id.txt file, it will also preserve your gateway id.
+
+Second option
+-------------
 
 Get all the repository:
 
@@ -83,7 +92,7 @@ You will get the entire repository:
 	drwxr-xr-x 2 pi pi  4096 Apr  1 15:38 gw_full_latest	
 	drwxr-xr-x 2 pi pi  4096 Apr  1 15:38 tutorials
 	
-Create a folder named "lora_gateway" for instance then copy all the files of the LowCostLoRaGw/gw_full_latest folder in it.
+Create a folder named "lora_gateway" (or if you already have one, then delete all its content) for instance then copy all the files of the LowCostLoRaGw/gw_full_latest folder in it.
 
     > mkdir lora_gateway
     > cd lora_gateway
@@ -93,8 +102,8 @@ Or if you want to "move" the LowCostLoRaGw/gw_full_latest folder, simply do (wit
 
 	> mv LowCostLoRaGw/gw_full_latest ./lora_gateway    
 
-Second option
--------------
+Third option
+------------
 
 Get only the gateway part:
 
@@ -103,27 +112,28 @@ Get only the gateway part:
 That will create the lora_gateway folder and get all the file of (GitHub) LowCostLoRaGw/gw_full_latest in it. Then:
 
 	> cd lora_gateway
+	
+Note that you may have to install svn before being able to use the svn command (if you installed from our SD card image, svn is already installed):
 
-Note that you may have to install svn before being able to use the svn command:
+	> sudo apt-get install subversion	
 
-	> sudo apt-get install subversion
+Configuring your gateway after update
+-------------------------------------
 
-Then, in the script folder, run config_gw.sh to configure your gateway, as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#configure-your-gateway-with-config_gwsh). After configuration, reboot your Raspberry. 
+After gateway update, you need to configure your new gateway, mainly by assigning the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will be the last 5 bytes of the Rapberry eth0 MAC address and the configuration script will extract this information for you. In the script folder, simply run basic_config_gw.sh to automatically configure your gateway. 
+
+	> ./basic_config_gw.sh
+	
+If you need more advanced configuration, then run config_gw.sh as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#configure-your-gateway-with-config_gwsh). However, basic_config_gw.sh should be sufficient for most of the cases. After configuration, reboot your Raspberry. 
 
 By default gateway_conf.json configures the gateway with a simple behavior: LoRa mode 1 (BW125SF12), no DHT sensor in gateway (so no MongoDB for DHT sensor), no downlink, no AES, no raw mode. clouds.json enables only the ThingSpeak demo channel (even the local MongoDB storage is disabled). You can customize your gateway later when you have more cloud accounts and when you know better what features you want to enable.
 
 The LoRa gateway starts automatically when RPI is powered on. Then use cmd.sh to execute the main operations on the gateway as described in [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#use-cmdsh-to-interact-with-the-gateway).	
 
-With the latest gateway version on the github, you also have in lora_gateway/scripts an update_gw.sh script that updates your gateway with future latest versions. Simple go into lora_gateway/scripts and type:
-
-	> ./update_gw.sh
-	
-If you have an existing /home/pi/lora_gateway folder, then it will preserve all you existing configuration files (i.e. key_*, gateway_conf.json, clouds.json and radio.makefile). As the repository does not have a gateway_id.txt file, it will also preserve your gateway id.
-
-**Note that you can also use this script to install a completely new gateway with the latest gateway version** by downloading from the github the gw_full_latest/scripts/update_gw.sh script (switch in raw mode and save the script on your computer), copy it on your Raspberry gateway (using scp for instance) in /home/pi and then simply run the script (you may need to add execution right with chmod +x update_gw.sh).
 
 Upgrade notice
 --------------
+
 Starting Apr 2nd 2017, the gateway configuration files have changed. There is now only one configuration file, gateway_conf.json, instead of two, global_conf.json and local_conf.json. If you have a gateway version prior to Apr 2nd, 2017, then you can still use the update_gw_sh scripts but then you have to manually enter your gateway configuration setting, in global_conf.json and local_conf.json, into the new gateway_conf.json file.
 
 Your global_conf.json file may look like:

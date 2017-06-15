@@ -4,13 +4,13 @@ Low-cost LoRa gateway features and configuration tools
 Configuration files and startup procedure
 -----------------------------------------
 
-A "gateway_conf.json" file defines gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Log file names will use the gateway ID. The config_gw.sh script can do it for you, see below.
+A "gateway_conf.json" file defines gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Log file names will use the gateway ID. The basic_config_gw.sh/config_gw.sh script can do it for you, see below.
 
 In gateway_conf.json, you can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
 
 A "start_gw.py" Python script runs the gateway, using the gateway configuration file to launch the low-level gateway with appropriate parameters and to log all outputs from the post-processing stage. As start_gw.py simply reads the configuration file to launch lora_gateway and the post_processing_gw.py script, it is just a simpler way to run the gateway. You can still use the corresponding command line. For instance, with the default configuration file:
 
-	> python start_gw.py
+	> sudo python start_gw.py
 	
 is equivalent to:
 
@@ -78,9 +78,8 @@ and follows instructions below.
 Configure your gateway with config_gw.sh
 ----------------------------------------
 
-The config_gw.sh in the scripts folder can help you for the gateway configuration, WiFi and Bluettoth configuration tasks (if you use our SD card image, otherwise, you need first to install some required packages). If you don't want some features, just skip them. You have to provide the last 5 hex-byte of your eth0 interface.
+The config_gw.sh in the scripts folder can help you for the gateway configuration, WiFi and Bluettoth configuration tasks (if you use our SD card image, otherwise, you need first to install some required packages). If you don't want some features, just skip them. The configuration script automatically determines the gateway id that will be derived from the Rapberry eth0 MAC address:
 
-    > cd scripts
     > ifconfig
     eth0  Link encap:Ethernet  HWaddr b8:27:eb:be:da:21  
           inet addr:192.168.2.8  Bcast:192.168.2.255  Mask:255.255.255.0
@@ -91,12 +90,11 @@ The config_gw.sh in the scripts folder can help you for the gateway configuratio
           collisions:0 txqueuelen:1000 
           RX bytes:6565141 (6.2 MiB)  TX bytes:1452497 (1.3 MiB)
           
-In the example, we have "HWaddr b8:27:eb:be:da:21" then use "27EBBEDA21"
-
-    > ./config_gw.sh 27EBBEDA21
+In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "27EBBEDA21"
     
 **config_gw.sh takes care of:**
 
+- determining the gateway id
 - compiling the lora_gateway program, the Raspberry board version will be checked automatically
 - creating a "gateway_id.txt" file containing the gateway id (e.g. "00000027EBBEDA21")
 - setting in gateway_cong.json the gateway id: "gateway_ID" : "00000027EBBEDA21"
@@ -515,21 +513,7 @@ You can use cmd.sh as follows:
 	======================================================================
 	Enter your choice: 
 
-cmd.sh needs a file called gateway_id.txt that should contain the ID of your gateway. As indicated previously, the gateway ID is composed of 8 bytes in hexadecimal notation with the last 5 bytes being the last 5 bytes of the gateway eth0 interface MAC address. It is exactely the same ID that the one indicated in gateway_conf.json. If you start cmd.sh without this gateway_id.txt file, it will prompt you to create such file by entering the last 5 bytes of the gateway eth0 interface MAC address:
-
-	ERROR: gateway_id.txt file not found
-	should create it by running echo "000000XXXXXXXXXX" > gateway_id.txt
-	where XXXXXXXXXX is the last 5 bytes of your MAC Ethernet interface address
-	Example: echo "00000027EBBEDA21" > gateway_id.txt
-	Here is your MAC Ethernet interface address:
-	-------------------------------------------------------
-	    eth0  Link encap:Ethernet  HWaddr b8:27:eb:be:da:21
-	-------------------------------------------------------
-	Enter the last 5 hex bytes of your MAC Ethernet interface address
-	in capital character and without the : separator
-	example: HWaddr b8:27:eb:be:da:21 then just enter 27EBBEDA21
-	
-If you enter 27EBBEDA21, cmd.sh will create the gateway_id.txt file with the following content:
+cmd.sh needs a file called gateway_id.txt that should contain the ID of your gateway. As indicated previously, the gateway ID is composed of 8 bytes in hexadecimal notation with the last 5 bytes being the last 5 bytes of the gateway eth0 interface MAC address. It is exactely the same ID that the one indicated in gateway_conf.json. If you start cmd.sh without this gateway_id.txt file, it will create such file by determining last 5 bytes of the gateway eth0 interface MAC address:
 
 	> cat gateway_id.txt
 	00000027EBBEDA21
