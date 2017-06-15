@@ -70,17 +70,22 @@ Once you have your SD card flashed with our image, to get directly to the full, 
 First option
 ------------
 
-The SD card image has a recent version of the gateway software and there is in the lora_gateway/scripts folder an update_gw.sh script that automatically updates your gateway to the latest version. Simply go into lora_gateway/scripts and type:
+The SD card image has a recent version of the gateway software and there is in the lora_gateway/scripts folder an update_gw.sh script that automatically updates your gateway to the latest version. Simply go into lora_gateway/scripts:
+
+	> cd /home/pi/lora_gateway/scripts
+
+and type:
 
 	> ./update_gw.sh
 	
-If you have an existing /home/pi/lora_gateway folder, then it will preserve all you existing configuration files (i.e. key_*, gateway_conf.json, clouds.json and radio.makefile). As the repository does not have a gateway_id.txt file, it will also preserve your gateway id.
+Note that if you have customized configuration files (i.e. key_*, gateway_conf.json, clouds.json and radio.makefile) in the existing /home/pi/lora_gateway folder, then update_gw.sh will preserve all these configuration files. As the repository does not have a gateway_id.txt file, it will also preserve your gateway id.
 
 Second option
 -------------
 
 Get all the repository:
 
+	> cd
 	> git clone https://github.com/CongducPham/LowCostLoRaGw.git
 	
 You will get the entire repository:
@@ -92,7 +97,7 @@ You will get the entire repository:
 	drwxr-xr-x 2 pi pi  4096 Apr  1 15:38 gw_full_latest	
 	drwxr-xr-x 2 pi pi  4096 Apr  1 15:38 tutorials
 	
-Create a folder named "lora_gateway" (or if you already have one, then delete all its content) for instance then copy all the files of the LowCostLoRaGw/gw_full_latest folder in it.
+Create a folder named "lora_gateway" (or if you already have one, then delete all its content) then copy all the files of the LowCostLoRaGw/gw_full_latest folder in it.
 
     > mkdir lora_gateway
     > cd lora_gateway
@@ -107,11 +112,10 @@ Third option
 
 Get only the gateway part:
 
+	> cd
 	> svn checkout https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_full_latest lora_gateway
 	
-That will create the lora_gateway folder and get all the file of (GitHub) LowCostLoRaGw/gw_full_latest in it. Then:
-
-	> cd lora_gateway
+That will create the lora_gateway folder and get all the file of (GitHub) LowCostLoRaGw/gw_full_latest in it. 
 	
 Note that you may have to install svn before being able to use the svn command (if you installed from our SD card image, svn is already installed):
 
@@ -122,6 +126,7 @@ Configuring your gateway after update
 
 After gateway update, you need to configure your new gateway, mainly by assigning the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will be the last 5 bytes of the Rapberry eth0 MAC address and the configuration script will extract this information for you. In the script folder, simply run basic_config_gw.sh to automatically configure your gateway. 
 
+	> cd /home/pi/lora_gateway/scripts
 	> ./basic_config_gw.sh
 	
 If you need more advanced configuration, then run config_gw.sh as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#configure-your-gateway-with-config_gwsh). However, basic_config_gw.sh should be sufficient for most of the cases. After configuration, reboot your Raspberry. 

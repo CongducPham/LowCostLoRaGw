@@ -42,4 +42,4 @@ else
 fi
 echo "update of gateway done."
 echo "if it is a new installation, go into lora_gateway/scripts folder"
-echo "and run ./config_gw.sh"
+echo "and run ./basic_config_gw.sh"
