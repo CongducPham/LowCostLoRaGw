@@ -14,6 +14,7 @@ This is a simple support for downlink transmission requests (only for Linux-base
 	- if downlink features are disabled then start_gw.py launches lora_gateway program with --ndl option (no downlink)
 - post_processing_gw.py reads downlink-post.txt	and generates a new downlink-post-queued.txt file containing all queued/pending requests
 - post_processing_gw.py then deletes downlink-post.txt
+- it means that if you want to send a message to a device, as the device will open a receive window only after its own data transmission, it is advised to request the downlink message in advance
 - when a LoRa packet from device i is processed by post_processing_gw.py, it will check if there is a pending request for device i
 - if it is the case, then post_processing_gw.py generates the corresponding downlink.txt file which will contain in most cases only 1 entry
 - post_processing_gw.py then remove the pending requests and generates a new downlink-post-queued.txt file containing all remaining queued/pending requests

@@ -7,7 +7,7 @@ This folder contains sketches for Arduino (and compatible) boards. The example s
 
 **Arduino_LoRa_Simple_temp** illustrates how a simple LoRa device with temperature data can be flashed to an Arduino board. The example illustrates in a simple manner how to implement most of the features of a real IoT device: periodic sensing, transmission to gateway, duty-cycle and low-power mode to run on battery for months.
  
-**Arduino_LoRa_temp** illustrates a more complex example by adding custom Carrier Sense mechanism that you can easily change, AES encryption and the possibility to send LoRaWAN packet. It can serve as a template for a more complex LoRa IoT device.
+**Arduino_LoRa_temp** illustrates a more complex example with AES encryption and the possibility to send LoRaWAN packet. It also opens a receive window after every transmission to wait for downlink message coming from the gateway. The template shows for instance how an '/@Ax#' command can be parsed to set the node's address to 'x'. It can serve as a template for a more complex LoRa IoT device.
 
 **Arduino_LoRa_Generic_Sensor** is a very generic sensor template where a large variety of new physical sensors can be added. All physical sensors must be derived from a base Sensor class (defined in Sensor.cpp and Sensor.h) and should provide a get_value() and get_nomenclature() function. All the periodic task loop with duty-cycle low-power management is already there as in previous examples. Some predefined physical sensors are also already defined:
 
@@ -229,6 +229,15 @@ AES encryption can be enabled in Arduino_LoRa_temp and Arduino_LoRa_Generic_Sens
 	#define WITH_AES
 
 Please refer to the README file in the gw_advanced/aes_lorawan folder.
+
+Receive window
+--------------
+
+A receive window can be enabled in Arduino_LoRa_temp with the following define statement:
+	
+	#define WITH_RCVW
+	
+A receive window is opened after every transmission to wait for downlink message coming from the gateway. The template shows for instance how an '/@Ax#' command can be parsed to set the node's address to 'x'.	Note that the node's address will be saved in EEPROM so that a reset of the board will keep the new address. For more information on how to perform downlink transmission from the gateway, please refer to the following [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md).
 
 LoRaWAN support
 ---------------
