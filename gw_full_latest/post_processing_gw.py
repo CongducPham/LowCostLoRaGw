@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v3.2 - need to incorporate aux_radio features
+# v3.2 - image modification and need to incorporate aux_radio features
 #------------------------------------------------------------
 
 # IMPORTANT NOTE
@@ -498,12 +498,14 @@ def image_timeout():
 	f.close()
 	del fileH[node_id]
 	print "decoding image "+os.path.expanduser(imageFilenameA[node_id])
+	sys.stdout.flush()
 	
 	cmd = '/home/pi/lora_gateway/ucam-images/decode_to_bmp -received '+os.path.expanduser(imageFilenameA[node_id])+\
 		' -SN '+str(imgsnA[node_id])+\
 		' -src '+str(node_id)+\
 		' -camid '+str(camidA[node_id])+\
 		' -Q '+str(qualityA[node_id])+\
+		' -vflip'+\
 		' /home/pi/lora_gateway/ucam-images/128x128-test.bmp'
 	
 	print "decoding with command"
@@ -511,21 +513,27 @@ def image_timeout():
 	args = cmd.split()
 
 	out = 'error'
-	
+		
 	try:
 		out = subprocess.check_output(args, stderr=None, shell=False)
 		
 		if (out=='error'):
 			print "decoding error"
 		else:
+        	# leave enough time for the decoding program to terminate
+			time.sleep(3)
+			out = out.replace('\r','')
+			out = out.replace('\n','')
 			print "producing file " + out 
-			print "moving decoded image file into " + os.path.expanduser(_folder_path+"images")
-			os.rename(out, os.path.expanduser(_folder_path+"images/"+out))  
+			print "moving decoded image file into " + os.path.expanduser(_web_folder_path+"images")
+			os.rename(os.path.expanduser("./"+out), os.path.expanduser(_web_folder_path+"images/"+out))
 			print "done"	
 
 	except subprocess.CalledProcessError:
 		print "launching image decoding failed!"
-
+		
+	sys.stdout.flush()
+	
 #------------------------------------------------------------
 #for managing the input data when we can have aes encryption
 #------------------------------------------------------------
@@ -572,6 +580,7 @@ def fillLinebuf(n):
 # CHANGE HERE THE VARIOUS PATHS FOR YOUR LOG FILES
 #////////////////////////////////////////////////////////////
 _folder_path = "/home/pi/Dropbox/LoRa-test/"
+_web_folder_path = "/var/www/html/"
 _telemetrylog_filename = _folder_path+"telemetry_"+str(_gwid)+".log"
 _imagelog_filename = _folder_path+"image_"+str(_gwid)+".log"
 
@@ -763,8 +772,12 @@ while True:
 			#
 			for downlink_request in pending_downlink_requests:
 				request_json=json.loads(downlink_request)
-				if src == request_json["dst"]:
+				if (request_json["dst"]==0) or (src == request_json["dst"]):
 					print "post downlink: receive from %d with pending request" % src
+					if (request_json["dst"]==0):
+						print "in broadcast mode"
+					else:
+						print "in unicast mode"	
 					print "post downlink: downlink data is \"%s\"" % request_json["data"]
 					print "post downlink: generate "+_gw_downlink_file
 					print downlink_request
@@ -1177,7 +1190,7 @@ while True:
 				qualityA.update({src_addr:Q})
 				camidA.update({src_addr:cam_id})
 				imgSN=imgSN+1
-				t = Timer(60, image_timeout)
+				t = Timer(90, image_timeout)
 				t.start()
 				#log only the first packet and the filename
 				f=open(os.path.expanduser(_imagelog_filename),"a")

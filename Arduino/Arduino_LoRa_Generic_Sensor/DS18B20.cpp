@@ -11,6 +11,9 @@ DS18B20::DS18B20(char* nomenclature, bool is_analog, bool is_connected, bool is_
     // start OneWire
     ds = new OneWire(get_pin_read());
 
+    // Pass our oneWire reference to Dallas Temperature 
+    sensors = new DallasTemperature(ds);
+    
     // to power the DS18B20
     pinMode(get_pin_power(),OUTPUT);
       
@@ -23,7 +26,9 @@ DS18B20::DS18B20(char* nomenclature, bool is_analog, bool is_connected, bool is_
   }
 }
 
-void DS18B20::update_data()
+
+ //First version DS18B20::update_data()
+/*void DS18B20::update_data()
 {	
   double temp;
   	
@@ -73,6 +78,43 @@ void DS18B20::update_data()
         digitalWrite(get_pin_power(),LOW);
         
 	set_data(temp);
+  }
+  else { 
+  	// if not connected, set a random value (for testing)  	
+  	if (has_fake_data())
+  		set_data((double)random(-20, 40));
+  }
+} */
+
+// New version based on DallasTemperature library
+void DS18B20::update_data()
+{		
+  double temp=-1.0;
+  
+  if (get_is_connected()) {
+  	
+    // if we use a digital pin to power the sensor...
+    if (get_is_low_power())
+    	digitalWrite(get_pin_power(),HIGH);  	
+
+    // wait
+    delay(get_wait_time());
+
+    // Start up the library 
+    sensors->begin(); 
+    
+    // call sensors.requestTemperatures() to issue a global temperature 
+ 	  // request to all devices on the bus 
+    sensors->requestTemperatures(); // Send the command to get temperature readings  
+    temp = sensors->getTempCByIndex(0); // Why "byIndex"?  
+    // You can have more than one DS18B20 on the same bus.  
+    // 0 refers to the first IC on the wire 
+    //delay(1000);  
+	
+    if (get_is_low_power())
+        digitalWrite(get_pin_power(),LOW);
+        
+	  set_data(temp);
   }
   else { 
   	// if not connected, set a random value (for testing)  	

@@ -9,6 +9,7 @@
 
 #include "Sensor.h"
 #include "OneWire.h"
+#include "DallasTemperature.h"
 
 #define DS18B20_addr 0x28
 
@@ -20,6 +21,7 @@ class DS18B20 : public Sensor {
     
   private:
     OneWire* ds = NULL;
+    DallasTemperature* sensors = NULL;
 };
 
 #endif

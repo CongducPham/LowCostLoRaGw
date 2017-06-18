@@ -1025,7 +1025,7 @@ void loop(void)
                       PRINT_VALUE("%d",cmdValue);  
                       PRINTLN;                    
                       // Set power dBm
-#if defined RADIO_RFM92_95 || defined RADIO_INAIR9B || defined RADIO_20DBM                      
+#ifdef PABOOST                     
                       e = sx1272.setPowerDBM((uint8_t)cmdValue, 1);
 #else
                       e = sx1272.setPowerDBM((uint8_t)cmdValue);

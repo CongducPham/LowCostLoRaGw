@@ -50,7 +50,7 @@ Example
 =======
 
 - interDownlinkCheckTime set to 10s
-- local_conf.json "downlink" : 60
+- gateway_conf.json: "downlink" : 60
 
 Start the gateway with post-processing features:
 
@@ -268,6 +268,26 @@ At device 6
 	^p6,16,1,0,13,7,-47
 	^r125,5,12
 	reply from gw	
+
+Use downlink feature to set the device's address
+================================================
+
+The downlink feature can be used as a simple way to change dynamically a device's address. The Arduino_LoRa_temp example shows how the device can set its address when receiving the '/@Ax#' command. For instance, sending '/@A10#' to a device will set its address to 10. As a device already has a hardcoded address (the default one indicated in the Arduino_LoRa_temp example is 6) it is possible to use the broadcast address, i.e. 0, to send to the device if you don't know its exact address. The procedure is as follows to set the device's address to 10:
+	
+1. start you gateway
+2. create a downlink-post.txt with a **single** entry
+	1. > cd lora_gateway/downlink
+	2. > echo "{\"status\":\"send_request\",\"dst\":0,\"data\":\"/@A10#\"}" > downlink-post.txt
+3. wait at least for the downlink timer declared in gateway_conf.json, e.g. "downlink" : 60	
+4. once the gateway has queued this downlink request, you can switch on your device
+5. when power on, the device will transmit a first sample, then will open a receive window
+6. as the downlink request specifies a broadcast address, the gateway will broadcast the downlink message
+7. as the message is broadcasted, the device will accept the incoming message
+8. as the message is "/@A10#", the device will set its address to 10
+9. this new address will be saved in EEPROM so that a reset of the board will keep the new address
+10. if you have several devices to configure, switch off the previous device and start again at step 2
+
+Note that, alternatively, if you don't want to use the downlink feature from the gateway to change a device's address, you can use an interactive device dedicated for this task. In this case, switch on your device (you can check if the gateway receives from the device) and then wait for about 10s (or about 15s if you are not checking reception on the gateway) before issuing the following command "/@D0#/@A10#" to the interactive device. This command means "broadcast /@A10#". To check if the new address has be taken into account, switch off and then switch on your device and check if the gateway receive a message from the device, indicating the new address as the source address.
 
 Impact on reception reliability
 ===============================
