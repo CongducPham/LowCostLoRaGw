@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.72
+ *  Version:                1.73
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -63,11 +63,8 @@
  *    - the post-processing stage looks for this sequence to dissect the data, according to the format adopted by the sender 
  *    - if you use our LoRa_Temp example, then the packet format as expected by the post-processing script is as follows:
  *      - without application key and without encryption, payload starts immediately: [payload]
- *      - without application key and with encryption: original (clear) format is [size(1B)][payload]. 
- *        size is the real size of the clear payload
  *      - if application key is used, without encryption: [AppKey(4B)][payload]
- *      - if application key is used, with encryption: original (clear) format is [AppKey(4B)][size(1B)][payload]. 
- *        size is the real size of the clear payload
+ *      - with encryption: the payload is encrypted using LoRaWAN algorithm
  *    - for more details on the underlying packet format used by our modified SX1272 library
  *      - refer to the SX1272.h
  *      - see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
@@ -75,8 +72,11 @@
 */
 
 /*  Change logs
+ *  May, 8th, 2017. v1.73
+ *        Default behavior is to disable the remote configuration features
  *  Mar, 29th, 2017. v1.72
  *        Add periodic status (every 10 minutes) from the low-level gateway
+ *        Add reset of radio module when receive error from radio is detected
  *        Change receive windows from 1000ms, or 2500ms in mode 1, to 10000ms for all modes, reducing overheads of receive loop 
  *  Mar, 2nd, 2017. v1.71
  *        Add preamble length verification and correction to the default value of 8 if it is not the case    
@@ -300,8 +300,7 @@ bool optNDL=false;
 unsigned long lastDownlinkCheckTime=0;
 // we set to 10s after the gw receives a lora packet
 // to give some time for the post-processing stage to generate a downlink.txt file if any
-unsigned long interDownlinkCheckTime=10000L;
-//unsigned long interDownlinkCheckTime=120000L;
+unsigned long interDownlinkCheckTime=5000L;
 unsigned long lastDownlinkSendTime=0;
 // 20s between 2 downlink transmissions when there are queued requests
 unsigned long interDownlinkSendTime=20000L;
@@ -978,11 +977,30 @@ void loop(void)
       e = sx1272.receivePacketTimeout(10000);
 
       status_counter++;
-
       if (e!=0 && e!=3) {
          PRINT_CSTSTR("%s","^$Receive error ");
          PRINT_VALUE("%d", e);
-         PRINTLN;           
+         PRINTLN;
+
+         if (e==2) {
+             // Power OFF the module
+             sx1272.OFF();
+             radioON=false;
+             PRINT_CSTSTR("%s","^$Resetting radio module");
+             PRINTLN;
+             e = sx1272.ON();
+             PRINT_CSTSTR("%s","^$Setting power ON: state ");
+             PRINT_VALUE("%d",e);
+             PRINTLN;
+
+             if (!e) {
+               radioON=true;
+               startConfig();
+             }
+             // to start over
+             status_counter=0;
+             e=1;
+         }
          FLUSHOUTPUT;         
       }
       
@@ -1196,8 +1214,8 @@ void loop(void)
       
       switch (cmd[i]) {
 
-//uncomment if you don't want your device to be remotely configured
-//#ifdef 0
+//comment if you want your device to be remotely configured for test purposes mainly
+#ifdef 0
             case 'U':
             
               if (unlocked_try) {
@@ -1220,8 +1238,8 @@ void loop(void)
                   PRINT_CSTSTR("%s","^$Bad pin\n");
               }
             break;
-//#endif
-
+//comment if you want your device to be remotely configured for test purposes mainly
+#endif
             case 'S': 
 
               if (cmd[i+1]=='F') {
@@ -1455,250 +1473,248 @@ void loop(void)
   // handle downlink request
   else {
   	
-  	// TODO change behavior so that the gw check for downlink when receivedFromLoRa
-  	//
-	bool triggerDownlinkCheck=false;
+	  bool triggerDownlinkCheck=false;
 				
-	// have we wrapped around?
-	if (millis()-lastDownlinkCheckTime < 0) {
-	        if (millis()+ULONG_MAX-lastDownlinkCheckTime > interDownlinkCheckTime)
-	                triggerDownlinkCheck=true;            
-	}  
+  	// have we wrapped around?
+  	if (millis()-lastDownlinkCheckTime < 0) {
+        if (millis()+ULONG_MAX-lastDownlinkCheckTime > interDownlinkCheckTime)
+                triggerDownlinkCheck=true;            
+	  }  
 	
     if ( (millis()-lastDownlinkCheckTime > interDownlinkCheckTime || triggerDownlinkCheck) && enableDownlinkCheck)  {	
     	
-		char time_buffer[30];
-		int millisec;
-		struct tm* tm_info;
-		struct timeval tv;
-		
-		gettimeofday(&tv, NULL);
-		tm_info = localtime(&tv.tv_sec);
-		strftime(time_buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);   	
-
-		// use rapidjson to parse all lines
-		// if there is a downlink.txt file then read all lines in memory for
-		// further processing
-		printf("^$-----------------------------------------------------\n");
-		printf("^$Check for downlink requests %s\n", time_buffer);
-		
-		fp = fopen("downlink/downlink.txt","r");
-		
-		if (fp) {
-			
-			fclose(fp);
-			
-			// remove any \r characters introduced by various OS and/or tools
-			system("sed -i 's/\r//g' downlink/downlink.txt");
-			// remove empty lines
-			system("sed -i '/^$/d' downlink/downlink.txt");
-			
-			fp = fopen("downlink/downlink.txt","r");
-			
-			dl_total_line=1;
-			hasDownlinkEntry=true;
-			
-			// read all lines
-			while(!feof(fp)) {
-				
-				json_entry[dl_total_line]=(char*)malloc(json_entry_size*sizeof(char));
-				
-				dl_line_size=getline(&json_entry[dl_total_line], &json_entry_size, fp);
-				
-				printf("^$Read downlink %d: %ld\n", dl_total_line, dl_line_size);
-				
-				if (dl_line_size>0)
-					dl_total_line++;
-			}
-			
-			fclose(fp);
-			
-			char tmp_c[100];
-			
-			sprintf(tmp_c, "mv downlink/downlink.txt downlink/downlink-backup-%s.txt", time_buffer);
-				
-			system(tmp_c);
-		}
-		else {
-			hasDownlinkEntry=false;
-			printf("^$NO NEW DOWNLINK ENTRY\n");
-		}	
-	
-		if (hasDownlinkEntry) {
-	
-			Document document;		
-	
-			printf("^$Queue all valid downlink requests\n");
-	
-			for (dl_line_index=1; dl_line_index < dl_total_line; dl_line_index++)
-			{
-				StringBuffer json_record_buffer;
-				Writer<StringBuffer> writer(json_record_buffer);
-			
-		        printf("^$Downlink entry %d: %s", dl_line_index, json_entry[dl_line_index]);
-				
-				document.Parse(json_entry[dl_line_index]);
-		
-				if (document["status"].IsString())
-					printf("^$status = %s\n", document["status"].GetString());
-				
-				if (document["dst"].IsInt())
-					printf("^$dst = %d\n", document["dst"].GetInt());
-		      	
-		      	if (document["data"].IsString())
-					printf("^$data = %s\n", document["data"].GetString());
-				
-				// check if it is a valid send request
-				if (document["status"]=="send_request" && document["dst"].IsInt()) {
-				
-					document["status"].SetString("queued", document.GetAllocator());
-					document.Accept(writer);
-					printf("^$JSON record: %s\n", json_record_buffer.GetString());
-					FLUSHOUTPUT;
-					
-					fp = fopen("downlink/downlink-queued.txt","a");
-					
-					if (fp) {
-						
-						gettimeofday(&tv, NULL);
-						
-						// Round to nearest millisec
-						millisec = lrint(tv.tv_usec/1000.0); 
-						
-						// Allow for rounding up to nearest second
-						if (millisec>=1000) { 
-							millisec -=1000;
-							tv.tv_sec++;
-						}
-						
-						tm_info = localtime(&tv.tv_sec);
-						strftime(time_buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);
-						
-						fprintf(fp, "%s.%03d %s\n", time_buffer, millisec, json_record_buffer.GetString());
-						
-						fclose(fp);
-					}
-				}
-				else
-					printf("^$DISCARDING: not valid send_request\n");
-			}
-			
-			// set to begining of downlink request for transmission
-			dl_line_index=1;
-		}
-		
-		//printf("^$Next downlink request check in %ld min\n", interDownlinkCheckTime/60000);
-		printf("^$-----------------------------------------------------\n");    
-		//lastDownlinkCheckTime=millis();
-		// so that we can start transmitting the first request immediately if any
-		lastDownlinkSendTime=0;
-		// disable downlink check because new request will only be indicated at the next lora packet reception 
-		enableDownlinkCheck=false;
-		FLUSHOUTPUT;	
+    		char time_buffer[30];
+    		int millisec;
+    		struct tm* tm_info;
+    		struct timeval tv;
+    		
+    		gettimeofday(&tv, NULL);
+    		tm_info = localtime(&tv.tv_sec);
+    		strftime(time_buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);   	
+    
+    		// use rapidjson to parse all lines
+    		// if there is a downlink.txt file then read all lines in memory for
+    		// further processing
+    		printf("^$-----------------------------------------------------\n");
+    		printf("^$Check for downlink requests %s\n", time_buffer);
+    		
+    		fp = fopen("downlink/downlink.txt","r");
+    		
+    		if (fp) {
+    			
+    			fclose(fp);
+    			
+    			// remove any \r characters introduced by various OS and/or tools
+    			system("sed -i 's/\r//g' downlink/downlink.txt");
+    			// remove empty lines
+    			system("sed -i '/^$/d' downlink/downlink.txt");
+    			
+    			fp = fopen("downlink/downlink.txt","r");
+    			
+    			dl_total_line=1;
+    			hasDownlinkEntry=true;
+    			
+    			// read all lines
+    			while(!feof(fp)) {
+    				
+    				json_entry[dl_total_line]=(char*)malloc(json_entry_size*sizeof(char));
+    				
+    				dl_line_size=getline(&json_entry[dl_total_line], &json_entry_size, fp);
+    				
+    				printf("^$Read downlink %d: %ld\n", dl_total_line, dl_line_size);
+    				
+    				if (dl_line_size>0)
+    					dl_total_line++;
+    			}
+    			
+    			fclose(fp);
+    			
+    			char tmp_c[100];
+    			
+    			sprintf(tmp_c, "mv downlink/downlink.txt downlink/downlink-backup-%s.txt", time_buffer);
+    				
+    			system(tmp_c);
+    		}
+    		else {
+    			hasDownlinkEntry=false;
+    			printf("^$NO NEW DOWNLINK ENTRY\n");
+    		}	
+    	
+    		if (hasDownlinkEntry) {
+    	
+    			Document document;		
+    	
+    			printf("^$Queue all valid downlink requests\n");
+    	
+    			for (dl_line_index=1; dl_line_index < dl_total_line; dl_line_index++)
+    			{
+    				StringBuffer json_record_buffer;
+    				Writer<StringBuffer> writer(json_record_buffer);
+    			
+    		        printf("^$Downlink entry %d: %s", dl_line_index, json_entry[dl_line_index]);
+    				
+    				document.Parse(json_entry[dl_line_index]);
+    		
+    				if (document["status"].IsString())
+    					printf("^$status = %s\n", document["status"].GetString());
+    				
+    				if (document["dst"].IsInt())
+    					printf("^$dst = %d\n", document["dst"].GetInt());
+    		      	
+    		      	if (document["data"].IsString())
+    					printf("^$data = %s\n", document["data"].GetString());
+    				
+    				// check if it is a valid send request
+    				if (document["status"]=="send_request" && document["dst"].IsInt()) {
+    				
+    					document["status"].SetString("queued", document.GetAllocator());
+    					document.Accept(writer);
+    					printf("^$JSON record: %s\n", json_record_buffer.GetString());
+    					FLUSHOUTPUT;
+    					
+    					fp = fopen("downlink/downlink-queued.txt","a");
+    					
+    					if (fp) {
+    						
+    						gettimeofday(&tv, NULL);
+    						
+    						// Round to nearest millisec
+    						millisec = lrint(tv.tv_usec/1000.0); 
+    						
+    						// Allow for rounding up to nearest second
+    						if (millisec>=1000) { 
+    							millisec -=1000;
+    							tv.tv_sec++;
+    						}
+    						
+    						tm_info = localtime(&tv.tv_sec);
+    						strftime(time_buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);
+    						
+    						fprintf(fp, "%s.%03d %s\n", time_buffer, millisec, json_record_buffer.GetString());
+    						
+    						fclose(fp);
+    					}
+    				}
+    				else
+    					printf("^$DISCARDING: not valid send_request\n");
+    			}
+    			
+    			// set to begining of downlink request for transmission
+    			dl_line_index=1;
+    		}
+    		
+    		//printf("^$Next downlink request check in %ld min\n", interDownlinkCheckTime/60000);
+    		printf("^$-----------------------------------------------------\n");    
+    		//lastDownlinkCheckTime=millis();
+    		// so that we can start transmitting the first request immediately if any
+    		lastDownlinkSendTime=0;
+    		// disable downlink check because new request will only be indicated at the next lora packet reception 
+    		enableDownlinkCheck=false;
+    		FLUSHOUTPUT;	
     }
     
     if (hasDownlinkEntry && (millis()-lastDownlinkSendTime>interDownlinkSendTime)) {
     	
-    	Document document;
+    	  Document document;
     	
-    	printf("^$-----------------------------------------------------\n");
-    	printf("^$Process downlink requests %d: %s\n", dl_line_index, json_entry[dl_line_index]);
+    	  printf("^$-----------------------------------------------------\n");
+    	  printf("^$Process downlink requests %d: %s\n", dl_line_index, json_entry[dl_line_index]);
     
-		StringBuffer json_record_buffer;
-		Writer<StringBuffer> writer(json_record_buffer);
+		    StringBuffer json_record_buffer;
+		    Writer<StringBuffer> writer(json_record_buffer);
 		
-		document.Parse(json_entry[dl_line_index]);
-
-		if (document["status"].IsString())
-			printf("^$status = %s\n", document["status"].GetString());
-		
-		if (document["dst"].IsInt())
-			printf("^$dst = %d\n", document["dst"].GetInt());
-      	
-      	if (document["data"].IsString())
-			printf("^$data = %s\n", document["data"].GetString());
-		
-		// check if it is a valid send request
-		if (document["status"]=="send_request" && document["dst"].IsInt()) {
-			
-			// disable extended IFS behavior, just a small number of CAD
-			extendedIFS=false;
-			
-			if (!CarrierSense(true)) {
-				
-				char time_buffer[30];
-				int millisec;
-				struct tm* tm_info;
-				struct timeval tv;
-						
-				gettimeofday(&tv, NULL);
-				
-				sx1272.setPacketType(PKT_TYPE_DATA);
-				
-				e = sx1272.sendPacketTimeout(document["dst"].GetInt(), (uint8_t*)document["data"].GetString(), document["data"].GetStringLength(), 10000);
-				
-				PRINT_CSTSTR("%s","Packet sent, state ");
-	      PRINT_VALUE("%d",e);
-	      PRINTLN;
-				
-				if (!e)
-					document["status"].SetString("sent", document.GetAllocator());
-				else
-					document["status"].SetString("sent_fail", document.GetAllocator());	
-					
-				document.Accept(writer);
-				printf("^$JSON record: %s\n", json_record_buffer.GetString());
-				FLUSHOUTPUT;
-			
-				// delete this request
-				// even if transmission is not successful
-				free(json_entry[dl_line_index]);
-				
-				fp = fopen("downlink/downlink-sent.txt","a");
-				
-				if (fp) {
-					
-					// Round to nearest millisec
-					millisec = lrint(tv.tv_usec/1000.0); 
-					
-					// Allow for rounding up to nearest second
-					if (millisec>=1000) { 
-						millisec -=1000;
-						tv.tv_sec++;
-					}
-					
-					tm_info = localtime(&tv.tv_sec);
-					strftime(time_buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);
-					
-					fprintf(fp, "%s.%03d %s\n", time_buffer, millisec, json_record_buffer.GetString());
-					
-					fclose(fp);
-				}
-				// skip it in all cases
-				dl_line_index++;
-			}
-			else {
-				printf("^$DELAYED: busy channel\n");	
-				// here we will retry later because of a busy channel
-			}
-			//set back extendedIFS
-			extendedIFS=true;
-		}
-		else {
-			printf("^$DISCARDING: not valid send_request\n");
-			// skip it
-			dl_line_index++;    	
-		}
-		
-    	if (dl_line_index==dl_total_line) {
-    		hasDownlinkEntry=false;
-    		printf("^$-----------------------------------------------------\n");
-    		printf("^$NO MORE PENDING send_request\n");
-    	}
-    	    	
-    	lastDownlinkSendTime=millis();
-    }
-  }	
+    		document.Parse(json_entry[dl_line_index]);
+    
+    		if (document["status"].IsString())
+    			printf("^$status = %s\n", document["status"].GetString());
+    		
+    		if (document["dst"].IsInt())
+    			printf("^$dst = %d\n", document["dst"].GetInt());
+          	
+          	if (document["data"].IsString())
+    			printf("^$data = %s\n", document["data"].GetString());
+    		
+    		// check if it is a valid send request
+    		if (document["status"]=="send_request" && document["dst"].IsInt()) {
+    			
+    			// disable extended IFS behavior, just a small number of CAD
+    			extendedIFS=false;
+    			
+    			if (!CarrierSense(true)) {
+    				
+    				char time_buffer[30];
+    				int millisec;
+    				struct tm* tm_info;
+    				struct timeval tv;
+    						
+    				gettimeofday(&tv, NULL);
+    				
+    				sx1272.setPacketType(PKT_TYPE_DATA);
+    				
+    				e = sx1272.sendPacketTimeout(document["dst"].GetInt(), (uint8_t*)document["data"].GetString(), document["data"].GetStringLength(), 10000);
+    				
+    				PRINT_CSTSTR("%s","Packet sent, state ");
+    	      PRINT_VALUE("%d",e);
+    	      PRINTLN;
+    				
+    				if (!e)
+    					document["status"].SetString("sent", document.GetAllocator());
+    				else
+    					document["status"].SetString("sent_fail", document.GetAllocator());	
+    					
+    				document.Accept(writer);
+    				printf("^$JSON record: %s\n", json_record_buffer.GetString());
+    				FLUSHOUTPUT;
+    			
+    				// delete this request
+    				// even if transmission is not successful
+    				free(json_entry[dl_line_index]);
+    				
+    				fp = fopen("downlink/downlink-sent.txt","a");
+    				
+    				if (fp) {
+    					
+    					// Round to nearest millisec
+    					millisec = lrint(tv.tv_usec/1000.0); 
+    					
+    					// Allow for rounding up to nearest second
+    					if (millisec>=1000) { 
+    						millisec -=1000;
+    						tv.tv_sec++;
+    					}
+    					
+    					tm_info = localtime(&tv.tv_sec);
+    					strftime(time_buffer, 30, "%Y-%m-%dT%H:%M:%S", tm_info);
+    					
+    					fprintf(fp, "%s.%03d %s\n", time_buffer, millisec, json_record_buffer.GetString());
+    					
+    					fclose(fp);
+    				}
+    				// skip it in all cases
+    				dl_line_index++;
+    			}
+    			else {
+    				printf("^$DELAYED: busy channel\n");	
+    				// here we will retry later because of a busy channel
+    			}
+    			//set back extendedIFS
+    			extendedIFS=true;
+    		}
+    		else {
+    			printf("^$DISCARDING: not valid send_request\n");
+    			// skip it
+    			dl_line_index++;    	
+    		}
+    		
+        	if (dl_line_index==dl_total_line) {
+        		hasDownlinkEntry=false;
+        		printf("^$-----------------------------------------------------\n");
+        		printf("^$NO MORE PENDING send_request\n");
+        	}
+        	    	
+        	lastDownlinkSendTime=millis();
+        }
+    }	
 #endif
 } 
 

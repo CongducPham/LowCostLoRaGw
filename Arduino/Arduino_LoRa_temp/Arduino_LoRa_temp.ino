@@ -89,13 +89,14 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 //#define LORAWAN
 //#define TO_LORAWAN_GW
 //#define WITH_ACK
-#define WITH_RCVW
+//#define WITH_RCVW
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE LORA MODE, NODE ADDRESS 
 #define LORAMODE  1
 uint8_t node_addr=6;
+#define FORCE_ADDR
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -232,6 +233,7 @@ struct sx1272config {
   uint8_t flag2;
   uint8_t seq;
   uint8_t addr;
+  uint8_t overwrite_addr;
   // can add other fields such as LoRa mode,...
 };
 
@@ -239,6 +241,9 @@ sx1272config my_sx1272config;
 #endif
 
 #ifdef WITH_RCVW
+
+// will wait for 5s before opening the rcv window
+#define DELAY_BEFORE_RCVW 5000
 
 long getCmdValue(int &i, char* strBuff=NULL) {
   
@@ -331,19 +336,27 @@ void setup()
     PRINT_VALUE("%d", sx1272._packetNumber);
     PRINTLN;
 
+#ifdef FORCE_ADDR 
+    PRINT_CSTSTR("%s","Forced to use default defined address\n");
+    my_sx1272config.overwrite_addr=0;
+    EEPROM.put(0, my_sx1272config);
+#else
     // get back the node_addr
-    if (my_sx1272config.addr!=0)
-        node_addr=my_sx1272config.addr;
+    if (my_sx1272config.addr!=0 && my_sx1272config.overwrite_addr==1) {
+      
+        PRINT_CSTSTR("%s","Used stored address\n");
+        node_addr=my_sx1272config.addr;        
+    }
     else
-        PRINT_CSTSTR("%s","Stored node addr is null");
-            
-    PRINT_CSTSTR("%s","Using node addr of ");
-    PRINT_VALUE("%d", node_addr);
-    PRINTLN;
+        PRINT_CSTSTR("%s","Stored node addr is null\n");         
+#endif  
 
 #ifdef WITH_AES
     DevAddr[3] = (unsigned char)node_addr;
-#endif    
+#endif            
+    PRINT_CSTSTR("%s","Using node addr of ");
+    PRINT_VALUE("%d", node_addr);
+    PRINTLN;   
   }
   else {
     // otherwise, write config and start over
@@ -351,6 +364,7 @@ void setup()
     my_sx1272config.flag2=0x35;
     my_sx1272config.seq=sx1272._packetNumber;
     my_sx1272config.addr=node_addr;
+    my_sx1272config.overwrite_addr=0;
   }
 #endif
   
@@ -705,9 +719,11 @@ void loop(void)
       PRINTLN;
 
 #ifdef WITH_RCVW
-      PRINT_CSTSTR("%s","Wait for 10s\n");
+      PRINT_CSTSTR("%s","Wait for ");
+      PRINT_VALUE("%d", DELAY_BEFORE_RCVW-1000);
+      PRINTLN;
       //wait a bit
-      delay(10000);
+      delay(DELAY_BEFORE_RCVW-1000);
 
       PRINT_CSTSTR("%s","Wait for incoming packet\n");
       // wait for incoming packets
@@ -766,8 +782,8 @@ void loop(void)
                       // cannot set addr greater than 255
                       if (cmdValue > 255)
                               cmdValue = 255;
-                      // cannot set addr lower than 1 since 0 is broadcast
-                      if (cmdValue < 1)
+                      // cannot set addr lower than 2 since 0 is broadcast and 1 is for gateway
+                      if (cmdValue < 2)
                               cmdValue = node_addr;
                       // set node addr        
                       node_addr=cmdValue; 
@@ -787,6 +803,7 @@ void loop(void)
 #ifdef WITH_EEPROM
                       // save new node_addr in case of reboot
                       my_sx1272config.addr=node_addr;
+                      my_sx1272config.overwrite_addr=1;
                       EEPROM.put(0, my_sx1272config);
 #endif
 
