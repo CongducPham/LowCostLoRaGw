@@ -81,7 +81,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
 #define WITH_APPKEY
 #define FLOAT_TEMP
-//#define NEW_DATA_FIELD
+#define NEW_DATA_FIELD
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //#define WITH_ACK
@@ -90,7 +90,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE LORA MODE, NODE ADDRESS 
 #define LORAMODE  1
-#define node_addr 10
+#define node_addr 8
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -354,25 +354,30 @@ void loop(void)
 #ifdef LOW_POWER
       digitalWrite(TEMP_PIN_POWER,HIGH);
       // security?
-      delay(200);    
-      int value = analogRead(TEMP_PIN_READ);
-      digitalWrite(TEMP_PIN_POWER,LOW);
-#else
-      int value = analogRead(TEMP_PIN_READ);
+      delay(200);   
 #endif
-      
-      // change here how the temperature should be computed depending on your sensor type
-      //  
-      temp = value*TEMP_SCALE/1024.0;
-    
-      PRINT_CSTSTR("%s","Reading ");
-      PRINT_VALUE("%d", value);
-      PRINTLN;
-      
-      //temp = temp - 0.5;
-      temp = temp / 10.0;
 
-      PRINT_CSTSTR("%s","Temp is ");
+      temp = 0;
+      int value;
+      
+      for (int i=0; i<10; i++) {
+          // change here how the temperature should be computed depending on your sensor type
+          // 
+           value = analogRead(TEMP_PIN_READ);
+          temp += (value*TEMP_SCALE/1024.0)/10;
+        
+          PRINT_CSTSTR("%s","Reading ");
+          PRINT_VALUE("%d", value);
+          PRINTLN;   
+          delay(100);
+      }
+      
+#ifdef LOW_POWER
+      digitalWrite(TEMP_PIN_POWER,LOW);
+#endif
+
+      PRINT_CSTSTR("%s","Mean temp is ");
+      temp = temp/10;
       PRINT_VALUE("%f", temp);
       PRINTLN;
       
