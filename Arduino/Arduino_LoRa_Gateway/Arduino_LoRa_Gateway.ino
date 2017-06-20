@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.73
+ *  Version:                1.74
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -72,6 +72,8 @@
 */
 
 /*  Change logs
+ *  June, 19th, 2017. v1.74
+ *        interDownlinkCheckTime is set to 5s
  *  May, 8th, 2017. v1.73
  *        Default behavior is to disable the remote configuration features
  *  Mar, 29th, 2017. v1.72
@@ -298,7 +300,7 @@ bool enableDownlinkCheck=false;
 bool optNDL=false;
 
 unsigned long lastDownlinkCheckTime=0;
-// we set to 10s after the gw receives a lora packet
+// we set to 5s after the gw receives a lora packet
 // to give some time for the post-processing stage to generate a downlink.txt file if any
 unsigned long interDownlinkCheckTime=5000L;
 unsigned long lastDownlinkSendTime=0;
@@ -313,6 +315,7 @@ unsigned long interDownlinkSendTime=20000L;
 //#define CAD_TEST
 //#define LORA_LAS
 //#define WINPUT
+//#define ENABLE_REMOTE
 
 #ifdef BAND868
 #define MAX_NB_CHANNEL 15
@@ -1215,7 +1218,7 @@ void loop(void)
       switch (cmd[i]) {
 
 //comment if you want your device to be remotely configured for test purposes mainly
-#ifdef 0
+#ifdef ENABLE_REMOTE
             case 'U':
             
               if (unlocked_try) {
