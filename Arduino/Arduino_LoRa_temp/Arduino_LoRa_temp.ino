@@ -80,7 +80,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #if not defined _VARIANT_ARDUINO_DUE_X_ && not defined __SAMD21G18A__
 #define WITH_EEPROM
 #endif
-//#define WITH_APPKEY
+#define WITH_APPKEY
 #define FLOAT_TEMP
 #define NEW_DATA_FIELD
 #define LOW_POWER
@@ -89,14 +89,14 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 //#define LORAWAN
 //#define TO_LORAWAN_GW
 //#define WITH_ACK
-//#define WITH_RCVW
+//this will enable a receive window after every transmission
+#define WITH_RCVW
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE LORA MODE, NODE ADDRESS 
 #define LORAMODE  1
 uint8_t node_addr=6;
-#define FORCE_ADDR
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -114,6 +114,26 @@ uint8_t node_addr=6;
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
 unsigned int idlePeriodInMin = 5;
+///////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// COMMENT THIS LINE IF YOU WANT TO DYNAMICALLY SET THE NODE'S ADDR 
+// OR SOME OTHER PARAMETERS BY REMOTE RADIO COMMANDS (WITH_RCVW)
+// LEAVE THIS LINE UNCOMMENTED IF YOU WANT TO USE THE DEFAULT VALUE
+// AND CONFIGURE YOUR DEVICE BY CHANGING MANUALLY THESE VALUES IN 
+// THE SKETCH.
+//
+// ONCE YOU HAVE FLASHED A BOARD WITHOUT FORCE_DEFAULT_VALUE, YOU 
+// WILL BE ABLE TO DYNAMICALLY CONFIGURE IT AND SAVE THIS CONFIGU-
+// RATION INTO EEPROM. ON RESET, THE BOARD WILL USE THE SAVED CON-
+// FIGURATION.
+
+// IF YOU WANT TO REINITIALIZE A BOARD, YOU HAVE TO FIRST FLASH IT 
+// WITH FORCE_DEFAULT_VALUE, WAIT FOR ABOUT 10s SO THAT IT CAN BOOT
+// AND FLASH IT AGAIN WITHOUT FORCE_DEFAULT_VALUE. THE BOARD WILL 
+// THEN USE THE DEFAULT CONFIGURATION UNTIL NEXT CONFIGURATION.
+
+#define FORCE_DEFAULT_VALUE
 ///////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
@@ -233,7 +253,8 @@ struct sx1272config {
   uint8_t flag2;
   uint8_t seq;
   uint8_t addr;
-  uint8_t overwrite_addr;
+  unsigned int idle_period;  
+  uint8_t overwrite;
   // can add other fields such as LoRa mode,...
 };
 
@@ -336,19 +357,33 @@ void setup()
     PRINT_VALUE("%d", sx1272._packetNumber);
     PRINTLN;
 
-#ifdef FORCE_ADDR 
-    PRINT_CSTSTR("%s","Forced to use default defined address\n");
-    my_sx1272config.overwrite_addr=0;
+#ifdef FORCE_DEFAULT_VALUE
+    PRINT_CSTSTR("%s","Forced to use default parameters\n");
+    my_sx1272config.flag1=0x12;
+    my_sx1272config.flag2=0x35;
+    my_sx1272config.seq=sx1272._packetNumber;
+    my_sx1272config.addr=node_addr;
+    my_sx1272config.idle_period=idlePeriodInMin;    
+    my_sx1272config.overwrite=0;
     EEPROM.put(0, my_sx1272config);
 #else
     // get back the node_addr
-    if (my_sx1272config.addr!=0 && my_sx1272config.overwrite_addr==1) {
+    if (my_sx1272config.addr!=0 && my_sx1272config.overwrite==1) {
       
         PRINT_CSTSTR("%s","Used stored address\n");
         node_addr=my_sx1272config.addr;        
     }
     else
-        PRINT_CSTSTR("%s","Stored node addr is null\n");         
+        PRINT_CSTSTR("%s","Stored node addr is null\n"); 
+
+    // get back the idle period
+    if (my_sx1272config.idle_period!=0 && my_sx1272config.overwrite==1) {
+      
+        PRINT_CSTSTR("%s","Used stored idle period\n");
+        idlePeriodInMin=my_sx1272config.idle_period;        
+    }
+    else
+        PRINT_CSTSTR("%s","Stored idle period is null\n");                 
 #endif  
 
 #ifdef WITH_AES
@@ -357,6 +392,10 @@ void setup()
     PRINT_CSTSTR("%s","Using node addr of ");
     PRINT_VALUE("%d", node_addr);
     PRINTLN;   
+
+    PRINT_CSTSTR("%s","Using idle period of ");
+    PRINT_VALUE("%d", idlePeriodInMin);
+    PRINTLN;     
   }
   else {
     // otherwise, write config and start over
@@ -364,7 +403,8 @@ void setup()
     my_sx1272config.flag2=0x35;
     my_sx1272config.seq=sx1272._packetNumber;
     my_sx1272config.addr=node_addr;
-    my_sx1272config.overwrite_addr=0;
+    my_sx1272config.idle_period=idlePeriodInMin;
+    my_sx1272config.overwrite=0;
   }
 #endif
   
@@ -739,18 +779,15 @@ void loop(void)
          
          tmp_length=sx1272._payloadlength;
 
-         sprintf((char*)message,"rxlora. dst=%d type=0x%.2X src=%d seq=%d len=%d SNR=%d RSSIpkt=%d BW=%d CR=4/%d SF=%d\n", 
+         sprintf((char*)message, "^p%d,%d,%d,%d,%d,%d,%d\n",
                    sx1272.packet_received.dst,
-                   sx1272.packet_received.type, 
+                   sx1272.packet_received.type,                   
                    sx1272.packet_received.src,
-                   sx1272.packet_received.packnum,
-                   tmp_length, 
+                   sx1272.packet_received.packnum, 
+                   tmp_length,
                    sx1272._SNR,
-                   sx1272._RSSIpacket,
-                   (sx1272._bandwidth==BW_125)?125:((sx1272._bandwidth==BW_250)?250:500),
-                   sx1272._codingRate+4,
-                   sx1272._spreadingFactor);
-                   
+                   sx1272._RSSIpacket);
+                                   
          PRINT_STR("%s",(char*)message);         
          
          for ( ; i<tmp_length; i++) {
@@ -773,7 +810,8 @@ void loop(void)
             i=i+2;   
 
             switch ((char)message[i]) {
-      
+
+                  // set the node's address
                   case 'A': 
 
                       i++;
@@ -803,12 +841,37 @@ void loop(void)
 #ifdef WITH_EEPROM
                       // save new node_addr in case of reboot
                       my_sx1272config.addr=node_addr;
-                      my_sx1272config.overwrite_addr=1;
+                      my_sx1272config.overwrite=1;
                       EEPROM.put(0, my_sx1272config);
 #endif
 
                       break;        
-      
+
+                  // set the time between 2 transmissions
+                  case 'I': 
+
+                      i++;
+                      cmdValue=getCmdValue(i);
+
+                      // cannot set addr lower than 1 minute
+                      if (cmdValue < 1)
+                              cmdValue = idlePeriodInMin;
+                      // idlePeriodInMin      
+                      idlePeriodInMin=cmdValue; 
+                      
+                      PRINT_CSTSTR("%s","Set duty-cycle to ");
+                      PRINT_VALUE("%d", idlePeriodInMin);  
+                      PRINTLN;         
+
+#ifdef WITH_EEPROM
+                      // save new node_addr in case of reboot
+                      my_sx1272config.idle_period=idlePeriodInMin;
+                      my_sx1272config.overwrite=1;
+                      EEPROM.put(0, my_sx1272config);
+#endif
+
+                      break;  
+                            
                   /////////////////////////////////////////////////////////////////////////////////////////////////////////////
                   // add here new commands
                   //  
@@ -816,7 +879,6 @@ void loop(void)
                   //
                   /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-      
                   default:
       
                     PRINT_CSTSTR("%s","Unrecognized cmd\n");       

@@ -239,7 +239,9 @@ A receive window can be enabled in Arduino_LoRa_temp with the following define s
 	
 A receive window is opened after every transmission to wait for downlink message coming from the gateway. The template shows for instance how an '/@Ax#' command can be parsed to set the node's address to 'x'.	Note that the node's address can be saved in EEPROM so that a reset of the board will keep the new address. To do so, you have to comment the line:
 
-	//#define FORCE_ADDR
+	//#define FORCE_DEFAULT_VALUE
+	
+For more information on dynamic configuration of end-device, please read carefully the information in the Arduino_LoRa_temp template.	
 	
 For more information on how to perform downlink transmission from the gateway, please refer to the following [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md).
 
