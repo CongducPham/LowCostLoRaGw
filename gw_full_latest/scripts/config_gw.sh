@@ -23,7 +23,7 @@
 
 
 #
-# example: ./config_raspbian.sh
+# example: ./config_gw.sh
 
 
 board=`cat /proc/cpuinfo | grep "Revision" | cut -d ':' -f 2 | tr -d " \t\n\r"`
@@ -59,7 +59,7 @@ gwid=`ifconfig | grep 'eth0' | awk '{print $NF}' | sed 's/://g' | awk '{ print t
 
 echo "Creating ../gateway_id.txt file"
 echo "Writing 000000$gwid"
-echo "000000$1" > ../gateway_id.txt
+echo "000000$gwid" > ../gateway_id.txt
 echo "Done"
 
 echo "Replacing gw id in ../gateway_conf.json"

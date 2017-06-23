@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- * last update: May 8th, 2017 by C. Pham
+ * last update: June 22nd, 2017 by C. Pham
  * 
  *  Version:                1.7
  *  Design:                 C. Pham
@@ -218,7 +218,7 @@
 //
 // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-#define PABOOST
+//#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////
@@ -226,7 +226,7 @@
 /////////////////////////////////////////////////////////////////// 
 //#define SHOW_FREEMEMORY
 //#define CAD_TEST
-//#define PERIODIC_SENDER 30000
+//#define PERIODIC_SENDER 15000
 //#define LORA_LAS
 //#define WITH_SEND_LED
 #define WITH_AES
@@ -364,7 +364,7 @@ unsigned int random_inter_pkt_time=0;
 unsigned long next_periodic_sendtime=0L;
 
 // packet size for periodic sending
-uint8_t MSS=40;
+uint8_t MSS=240;
 
 #ifdef WITH_AES
 #include "AES-128_V10.h"
@@ -390,8 +390,10 @@ uint16_t Frame_Counter_Up = 0x0000;
 unsigned char Direction = 0x00;
 
 boolean with_aes=false;
-boolean full_lorawan=false;
 #endif
+
+boolean full_lorawan=false;
+
 ///////////////////////////////////////////////////////////////////
 
 #if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
@@ -792,8 +794,8 @@ void loop(void)
       //  PRINT_CSTSTR("%s","###");
       
       //PRINTLN;
-        
-      delay(200);
+       //delay(200);  
+      delay(1000);
   }
 #endif
 // ONLY FOR TESTING CAD
@@ -1025,11 +1027,7 @@ void loop(void)
                       PRINT_VALUE("%d",cmdValue);  
                       PRINTLN;                    
                       // Set power dBm
-#ifdef PABOOST                     
-                      e = sx1272.setPowerDBM((uint8_t)cmdValue, 1);
-#else
                       e = sx1272.setPowerDBM((uint8_t)cmdValue);
-#endif
                       PRINT_CSTSTR("%s","^$set power dBm: state ");
                       PRINT_VALUE("%d",e);  
                       PRINTLN;   

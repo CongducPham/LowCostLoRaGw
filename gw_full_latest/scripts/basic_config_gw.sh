@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #------------------------------------------------------------
-# Copyright 2016-2017 Congduc Pham, University of Pau, France.
+# Copyright 2017 Congduc Pham, University of Pau, France.
 # 
 # Congduc.Pham@univ-pau.fr
 #
@@ -22,7 +22,7 @@
 #------------------------------------------------------------
 
 #
-# example: ./basic_config_raspbian.sh
+# example: ./basic_config_gw.sh
 
 board=`cat /proc/cpuinfo | grep "Revision" | cut -d ':' -f 2 | tr -d " \t\n\r"`
 
