@@ -60,9 +60,9 @@ if [ $new_install = 1 ]
 		sudo cp /etc/sudoers /tmp/sudoers.bak
 		sudo echo "www-data ALL=(ALL) NOPASSWD: /sbin/reboot, /sbin/shutdown" >> /tmp/sudoers.bak
 		sudo echo "www-data ALL=(ALL) NOPASSWD: /etc/hostapd/hostapd.conf, /var/www/html/admin/libs/sh/wifi.sh" >> /tmp/sudoers.bak
-		sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin//libs/sh/thingspeak_key.sh, /var/www/html/admin//libs/sh/waziup_key.sh" >> /tmp/sudoers.bak
-		sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/update_gw.sh, /var/www/html/admin//libs/sh/install_gw.sh, /var/www/html/admin//libs/sh/update_gw_file.sh" >> /tmp/sudoers.bak
-		sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/gateway_conf.sh, /var/www/html/admin//libs/sh/waziup_conf.sh, /var/www/html/admin//libs/sh/thingspeak_conf.sh" >> /tmp/sudoers.bak
+		sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/thingspeak_key.sh, /var/www/html/admin/libs/sh/waziup_key.sh" >> /tmp/sudoers.bak
+		sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/update_gw.sh, /var/www/html/admin/libs/sh/install_gw.sh, /var/www/html/admin/libs/sh/update_gw_file.sh" >> /tmp/sudoers.bak
+		sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/gateway_conf.sh, /var/www/html/admin/libs/sh/waziup_conf.sh, /var/www/html/admin/libs/sh/thingspeak_conf.sh" >> /tmp/sudoers.bak
 		# Check syntax of the backup file to make sure it is correct.
 		sudo visudo -cf /tmp/sudoers.bak
 		if [ $? -eq 0 ]; then

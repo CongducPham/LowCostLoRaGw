@@ -17,7 +17,7 @@ Features
 ========
 
 - a simple, user-friendly web admin interface to configure and update your gateway
-	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/gw_web_admin/README-web_admin.md)
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/gw_web_admin/README.md)
 - an alert mail can be sent to a list of contact email addresses to notify when gateway is starting and when the radio module has been reset
 - periodic status report to monitor whether the post-processing stage of the gateway is up or not
 - encryption and native LoRaWAN frame format
