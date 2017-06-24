@@ -19,7 +19,7 @@
  ***************************************************************************** 
  * last update: June 22nd, 2017 by C. Pham
  * 
- *  Version:                1.7
+ *  Version:                1.8
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -88,6 +88,11 @@
 */
 
 /*  Change logs
+ *  June, 22nd, 2017. v1.8
+ *        Add CarrierSense selection method to perform tests
+ *          - CarrierSense1 is the inital proposed carrier sense mechanism
+ *          - CarrierSense2 is an alternative carrier sense mechanism
+ *          - /@CS1# or /@CS2# can dynamically choose between those
  *  May, 8th, 2017. v1.7 
  *        Improve AES support
  *        AppKey can now also be used with AES encryption, compile with WITH_APPKEY
@@ -229,7 +234,7 @@
 //#define PERIODIC_SENDER 15000
 //#define LORA_LAS
 //#define WITH_SEND_LED
-#define WITH_AES
+//#define WITH_AES
 //#define WITH_APPKEY
 ///////////////////////////////////////////////////////////////////
 
@@ -346,25 +351,25 @@ bool radioON=false;
 bool RSSIonSend=true;
 
 uint8_t loraMode=LORAMODE;
-
 uint32_t loraChannel=loraChannelArray[loraChannelIndex];
-
 uint8_t loraAddr=LORA_ADDR;
 
 unsigned long startDoCad, endDoCad;
 bool extendedIFS=true;
 uint8_t SIFS_cad_number;
 // set to 0 to disable carrier sense based on CAD
-uint8_t send_cad_number=3;
+uint8_t send_cad_number=9;
 uint8_t SIFS_value[11]={0, 183, 94, 44, 47, 23, 24, 12, 12, 7, 4};
 uint8_t CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
+uint8_t carrier_sense_method=1;
 
 unsigned int inter_pkt_time=0;
 unsigned int random_inter_pkt_time=0;
 unsigned long next_periodic_sendtime=0L;
 
 // packet size for periodic sending
-uint8_t MSS=240;
+uint8_t MSS=40;
+//uint8_t MSS=240;
 
 #ifdef WITH_AES
 #include "AES-128_V10.h"
@@ -619,10 +624,10 @@ void setup()
 
 // we could use the CarrierSense function added in the SX1272 library, but it is more convenient to duplicate it here
 // so that we could easily modify it for testing
-void CarrierSense() {
+void CarrierSense1() {
   int e;
   bool carrierSenseRetry=false;
-  
+
   if (send_cad_number) {
     do { 
       do {
@@ -723,6 +728,54 @@ void CarrierSense() {
   }
 }
 
+void CarrierSense2() {
+  int e;
+  bool carrierSenseRetry=false;
+
+  uint32_t max_toa = sx1272.getToA(255);
+
+  unsigned long end_carrier_sense=millis()+max_toa;
+
+  PRINT_CSTSTR("%s","--> CarrierSense2: do CAD for ");
+  PRINT_VALUE("%ld", max_toa);
+  PRINTLN;  
+  
+  if (send_cad_number) {
+    do { 
+      do {
+        
+        // check for free channel (SIFS/DIFS)        
+        startDoCad=millis();
+        e = sx1272.doCAD(1);
+        endDoCad=millis();
+
+        if (!e) {
+          PRINT_VALUE("%ld", endDoCad);
+          PRINT_CSTSTR("%s"," 0 ");
+          PRINT_VALUE("%d", sx1272._RSSI);
+          PRINT_CSTSTR("%s"," ");
+          PRINT_VALUE("%ld", endDoCad-startDoCad);
+          PRINTLN;
+        }
+
+        delay(1000);
+
+      } while (millis()<end_carrier_sense && !e);
+
+      if (e) {
+        PRINT_CSTSTR("%s","CAD detected. Wait for ");
+        PRINT_VALUE("%ld", max_toa);
+        PRINTLN;        
+        delay(max_toa);
+        carrierSenseRetry=true;
+      }
+      else
+        carrierSenseRetry=false;
+      
+    } while (carrierSenseRetry);  
+  }
+}
+
 void loop(void)
 { 
   int i=0, e;
@@ -739,7 +792,7 @@ void loop(void)
   while (1) {
   
       startDoCad=millis();
-      e = sx1272.doCAD(6);
+      e = sx1272.doCAD(1);
       endDoCad=millis();
       
       //PRINT_CSTSTR("%s","--> SIFS duration ");
@@ -773,8 +826,10 @@ void loop(void)
         
       if (e) {
         PRINT_VALUE("%ld", endDoCad);
-        PRINT_CSTSTR("%s"," ## ");
+        PRINT_CSTSTR("%s"," 1 ");
         PRINT_VALUE("%d", sx1272._RSSI);
+        PRINT_CSTSTR("%s"," ");
+        PRINT_VALUE("%ld", endDoCad-startDoCad);
         PRINTLN;
       }
       
@@ -794,7 +849,7 @@ void loop(void)
       //  PRINT_CSTSTR("%s","###");
       
       //PRINTLN;
-       //delay(200);  
+      //delay(100);  
       delay(1000);
   }
 #endif
@@ -856,12 +911,25 @@ void loop(void)
           PRINT_STR("%s",cmd);  
           PRINTLN;
           
-          CarrierSense();
+          if (carrier_sense_method==1)
+              CarrierSense1();
+    
+          if (carrier_sense_method==2)
+              CarrierSense2();
           
           PRINT_CSTSTR("%s","Packet number ");
           PRINT_VALUE("%d",sx1272._packetNumber);
           PRINTLN;
+
+          PRINT_CSTSTR("%s","Payload size is ");  
+          PRINT_VALUE("%d",strlen(cmd));
+          PRINTLN;
           
+          uint32_t toa = sx1272.getToA(strlen(cmd)+(full_lorawan?0:OFFSET_PAYLOADLENGTH));      
+          PRINT_CSTSTR("%s","ToA is w/4B header ");
+          PRINT_VALUE("%d",toa);
+          PRINTLN;     
+                    
           long startSend=millis();
           
 #ifdef WITH_SEND_LED
@@ -878,6 +946,7 @@ void loop(void)
           PRINT_CSTSTR("%s","Packet sent, state ");
           PRINT_VALUE("%d",e);
           PRINTLN;
+            
           //Serial.flush();
           
           if (random_inter_pkt_time) {                
@@ -1300,6 +1369,21 @@ void loop(void)
                     
                   PRINTLN;
               }
+              else if (cmd[i+1]=='S') {
+                  i=i+2;
+                  cmdValue=getCmdValue(i);
+
+                  if (cmdValue!=1 && cmdValue!=2) {
+                    PRINT_CSTSTR("%s","^$Carrier Sense method must be 1 or 2.\n");
+                    cmdValue=1;    
+                  }
+
+                  carrier_sense_method=cmdValue;
+
+                  PRINT_CSTSTR("%s","^$Selected carrier Sense method is ");  
+                  PRINT_VALUE("%d",carrier_sense_method);
+                  PRINTLN;
+              }
               else {      
                   i++;
                   cmdValue=getCmdValue(i);
@@ -1522,16 +1606,6 @@ void loop(void)
           PRINT_CSTSTR("%s","Send error\n");  
       }      
 #else  
-      // only the DIFS/SIFS mechanism
-      // we chose to have a complete control code insytead of using the implementation of the LAS class
-      // for better debugging and tests features if needed.    
-      
-      long startSend, endSend;
-      long startSendCad;
-      
-      startSendCad=millis();
-      CarrierSense();
-      startSend=millis();
 
 #ifdef WITH_SEND_LED
       digitalWrite(SEND_LED, HIGH);
@@ -1692,7 +1766,24 @@ void loop(void)
       PRINT_CSTSTR("%s","ToA is w/4B header ");
       PRINT_VALUE("%d",toa);
       PRINTLN;      
-                  
+
+      // only the DIFS/SIFS mechanism
+      // we chose to have a complete control code instead of using the implementation of the LAS class
+      // for better debugging and tests features if needed.    
+      
+      long startSend, endSend;
+      long startSendCad;
+      
+      startSendCad=millis();
+
+      if (carrier_sense_method==1)
+          CarrierSense1();
+
+      if (carrier_sense_method==2)
+          CarrierSense2();
+                    
+      startSend=millis();
+                        
       if (forTmpDestAddr>=0) {
         if (withAck)
           e = sx1272.sendPacketTimeoutACK(forTmpDestAddr, LORAWAN_Data, pl, 10000);  

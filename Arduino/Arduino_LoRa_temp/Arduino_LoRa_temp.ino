@@ -85,12 +85,12 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define NEW_DATA_FIELD
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
-#define WITH_AES
+//#define WITH_AES
 //#define LORAWAN
 //#define TO_LORAWAN_GW
 //#define WITH_ACK
 //this will enable a receive window after every transmission
-#define WITH_RCVW
+//#define WITH_RCVW
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -811,7 +811,7 @@ void loop(void)
 
             switch ((char)message[i]) {
 
-                  // set the node's address
+                  // set the node's address, /@A10# to set the address to 10 for instance
                   case 'A': 
 
                       i++;
@@ -847,7 +847,7 @@ void loop(void)
 
                       break;        
 
-                  // set the time between 2 transmissions
+                  // set the time between 2 transmissions, /@I10# to set to 10 minutes for instance
                   case 'I': 
 
                       i++;
