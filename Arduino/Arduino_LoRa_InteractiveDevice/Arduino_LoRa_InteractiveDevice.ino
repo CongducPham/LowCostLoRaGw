@@ -17,7 +17,6 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- * last update: June 22nd, 2017 by C. Pham
  * 
  *  Version:                1.8
  *  Design:                 C. Pham
@@ -88,11 +87,13 @@
 */
 
 /*  Change logs
- *  June, 22nd, 2017. v1.8
+ *  June, 29th, 2017. v1.8
  *        Add CarrierSense selection method to perform tests
- *          - CarrierSense1 is the inital proposed carrier sense mechanism
- *          - CarrierSense2 is an alternative carrier sense mechanism
- *          - /@CS1# or /@CS2# can dynamically choose between those
+ *          - CarrierSense0 does nothing -> pure ALOHA
+ *          - CarrierSense1 is the inital proposed carrier sense mechanism described in TOS LAS paper
+ *          - CarrierSense2 is an alternative carrier sense mechanism derived from 802.11
+ *          - CarrierSense3 is the proposed carrier sense mechanism 
+ *          - /@CS0#, /@CS1# or /@CS2# or /@CS3# can dynamically choose between those
  *  May, 8th, 2017. v1.7 
  *        Improve AES support
  *        AppKey can now also be used with AES encryption, compile with WITH_APPKEY
@@ -348,7 +349,6 @@ boolean receivedFromLoRa=false;
 boolean withAck=false;
 
 bool radioON=false;
-bool RSSIonSend=true;
 
 uint8_t loraMode=LORAMODE;
 uint32_t loraChannel=loraChannelArray[loraChannelIndex];
@@ -361,7 +361,8 @@ uint8_t SIFS_cad_number;
 uint8_t send_cad_number=9;
 uint8_t SIFS_value[11]={0, 183, 94, 44, 47, 23, 24, 12, 12, 7, 4};
 uint8_t CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
-uint8_t carrier_sense_method=1;
+uint8_t carrier_sense_method=2;
+bool RSSIonSend=false;
 
 unsigned int inter_pkt_time=0;
 unsigned int random_inter_pkt_time=0;
@@ -622,11 +623,19 @@ void setup()
 #endif
 }
 
+void CarrierSense0() {
+  // this carrier sense perform nothing -> pure ALOHA
+}
+
 // we could use the CarrierSense function added in the SX1272 library, but it is more convenient to duplicate it here
 // so that we could easily modify it for testing
 void CarrierSense1() {
   int e;
   bool carrierSenseRetry=false;
+  uint8_t n_collision=0;
+  
+  PRINT_CSTSTR("%s","--> CarrierSense1: do CAD for DIFS=9CAD");
+  PRINTLN;  
 
   if (send_cad_number) {
     do { 
@@ -637,18 +646,20 @@ void CarrierSense1() {
         e = sx1272.doCAD(send_cad_number);
         endDoCad=millis();
         
-        PRINT_CSTSTR("%s","--> CAD duration ");
+        PRINT_CSTSTR("%s","--> SIFS/DIFS duration ");
         PRINT_VALUE("%ld",endDoCad-startDoCad);
         PRINTLN;
         
         if (!e) {
           PRINT_CSTSTR("%s","OK1\n");
+
+          extendedIFS=true;
           
           if (extendedIFS)  {          
             // wait for random number of CAD         
             uint8_t w = random(1,8);
 
-            PRINT_CSTSTR("%s","--> waiting for ");
+            PRINT_CSTSTR("%s","--> extended wait for ");
             PRINT_VALUE("%d",w);
             PRINT_CSTSTR("%s"," CAD = ");
             PRINT_VALUE("%d",CAD_value[loraMode]*w);
@@ -661,7 +672,7 @@ void CarrierSense1() {
             e = sx1272.doCAD(send_cad_number);
             endDoCad=millis();
  
-            PRINT_CSTSTR("%s","--> CAD duration ");
+            PRINT_CSTSTR("%s","--> SIFS/DIFS duration ");
             PRINT_VALUE("%ld",endDoCad-startDoCad);
             PRINTLN;
         
@@ -674,12 +685,15 @@ void CarrierSense1() {
           }              
         }
         else {
-          PRINT_CSTSTR("%s","###1\n");  
+          n_collision++;
+          PRINT_CSTSTR("%s","###");  
+          PRINT_VALUE("%d",n_collision);
+          PRINTLN;
 
           // wait for random number of DIFS               
           uint8_t w = random(1,8);
        
-          PRINT_CSTSTR("%s","--> waiting for ");
+          PRINT_CSTSTR("%s","--> Channel busy. Wait for ");
           PRINT_VALUE("%d",w);
           PRINT_CSTSTR("%s"," DIFS (DIFS=3SIFS) = ");
           PRINT_VALUE("%d",SIFS_value[loraMode]*3*w);
@@ -687,6 +701,7 @@ void CarrierSense1() {
           
           delay(SIFS_value[loraMode]*3*w);
           
+          // to perform a new DIFS          
           PRINT_CSTSTR("%s","--> retry\n");
         }
 
@@ -730,14 +745,10 @@ void CarrierSense1() {
 
 void CarrierSense2() {
   int e;
-  bool carrierSenseRetry=false;
+  bool carrierSenseRetry=false;  
+  uint8_t n_collision=0;
 
-  uint32_t max_toa = sx1272.getToA(255);
-
-  unsigned long end_carrier_sense=millis()+max_toa;
-
-  PRINT_CSTSTR("%s","--> CarrierSense2: do CAD for ");
-  PRINT_VALUE("%ld", max_toa);
+  PRINT_CSTSTR("%s","--> CarrierSense2: do CAD for DIFS=9CAD");
   PRINTLN;  
   
   if (send_cad_number) {
@@ -745,6 +756,199 @@ void CarrierSense2() {
       do {
         
         // check for free channel (SIFS/DIFS)        
+        startDoCad=millis();
+        e = sx1272.doCAD(send_cad_number);
+        endDoCad=millis();
+        
+        PRINT_CSTSTR("%s","--> DIFS duration ");
+        PRINT_VALUE("%ld",endDoCad-startDoCad);
+        PRINTLN;
+
+        // successull SIFS/DIFS
+        if (!e) {
+
+          // previous collision detected
+          if (n_collision) {
+                
+              PRINT_CSTSTR("%s","--> counting for ");
+              // count for random number of CAD/SIFS/DIFS?   
+              // SIFS=3CAD
+              // DIFS=9CAD            
+              uint8_t w = random(3,24);
+
+              PRINT_VALUE("%d", w);
+              PRINTLN;              
+
+              int busyCount=0;
+              bool nowBusy=false;
+              
+              do {
+
+                  if (nowBusy)
+                    e = sx1272.doCAD(send_cad_number);
+                  else
+                    e = sx1272.doCAD(1);
+
+                  if (nowBusy && e) {
+                    PRINT_CSTSTR("%s","#");
+                    busyCount++;                    
+                  }
+                  else
+                  if (nowBusy && !e) {
+                    PRINT_CSTSTR("%s","|");
+                    nowBusy=false;                    
+                  }                  
+                  else
+                  if (!e) {
+                    w--;
+                    PRINT_CSTSTR("%s","-");
+                  }  
+                  else {
+                    PRINT_CSTSTR("%s","*");
+                    nowBusy=true;
+                    busyCount++;  
+                  }
+                  
+              } while (w);      
+
+              // if w==0 then we exit and 
+              // the packet will be sent  
+              PRINTLN;
+              PRINT_CSTSTR("%s","--> found busy during ");
+              PRINT_VALUE("%d", busyCount);
+              PRINTLN; 
+          }
+          else {
+              PRINT_CSTSTR("%s","OK1\n");
+    
+              extendedIFS=false;
+              
+              if (extendedIFS)  {          
+                // wait for random number of CAD         
+                uint8_t w = random(1,8);
+    
+                PRINT_CSTSTR("%s","--> extended waiting for ");
+                PRINT_VALUE("%d",w);
+                PRINT_CSTSTR("%s"," CAD = ");
+                PRINT_VALUE("%d",CAD_value[loraMode]*w);
+                PRINTLN;
+                
+                delay(CAD_value[loraMode]*w);
+                
+                // check for free channel (SIFS/DIFS) once again
+                startDoCad=millis();
+                e = sx1272.doCAD(send_cad_number);
+                endDoCad=millis();
+     
+                PRINT_CSTSTR("%s","--> CAD duration ");
+                PRINT_VALUE("%ld",endDoCad-startDoCad);
+                PRINTLN;
+            
+                if (!e)
+                  PRINT_CSTSTR("%s","OK2");            
+                else
+                  PRINT_CSTSTR("%s","###2");
+                
+                PRINTLN;
+              }          
+          }    
+        }
+        else {
+          n_collision++;
+          PRINT_CSTSTR("%s","###");  
+          PRINT_VALUE("%d",n_collision);
+          PRINTLN;
+          
+          PRINT_CSTSTR("%s","--> Channel busy. Retry CAD until free channel\n");
+
+          int busyCount=0;
+              
+          startDoCad=millis();
+          do {
+            
+            e = sx1272.doCAD(1);
+
+            if (e) {
+                PRINT_CSTSTR("%s","R");
+                busyCount++;              
+            }
+                         
+          } while (e);
+
+          endDoCad=millis();
+
+          PRINTLN;
+
+          PRINT_CSTSTR("%s","--> found busy during ");
+          PRINT_VALUE("%d", busyCount);
+          PRINTLN;
+                        
+          PRINT_CSTSTR("%s","--> wait duration ");
+          PRINT_VALUE("%ld",endDoCad-startDoCad);
+          PRINTLN;
+
+          // to perform a new DIFS
+          PRINT_CSTSTR("%s","--> retry\n");
+          e=1;
+        }
+
+      } while (e);
+    
+      // CAD is OK, but need to check RSSI
+      if (RSSIonSend) {
+    
+          e=sx1272.getRSSI();
+          
+          uint8_t rssi_retry_count=10;
+          
+          if (!e) {
+          
+            PRINT_CSTSTR("%s","--> RSSI ");
+            PRINT_VALUE("%d", sx1272._RSSI);
+            PRINTLN;
+            
+            while (sx1272._RSSI > -90 && rssi_retry_count) {
+              
+              delay(1);
+              sx1272.getRSSI();
+              PRINT_CSTSTR("%s","--> RSSI ");
+              PRINT_VALUE("%d",  sx1272._RSSI);       
+              PRINTLN; 
+              rssi_retry_count--;
+            }
+          }
+          else
+            PRINT_CSTSTR("%s","--> RSSI error\n"); 
+        
+          if (!rssi_retry_count)
+            carrierSenseRetry=true;  
+          else
+      carrierSenseRetry=false;            
+      }
+      
+    } while (carrierSenseRetry);  
+  }
+}
+
+void CarrierSense3() {
+  int e;
+  bool carrierSenseRetry=false;
+  uint8_t n_collision=0;
+  
+  uint32_t max_toa = sx1272.getToA(255);
+
+  unsigned long end_carrier_sense=0;
+  
+  if (send_cad_number) {
+    do { 
+
+      PRINT_CSTSTR("%s","--> CarrierSense3: do CAD for MaxToa=");
+      PRINT_VALUE("%ld", max_toa);
+      PRINTLN;  
+        
+      end_carrier_sense=millis()+max_toa;
+      
+      do {      
         startDoCad=millis();
         e = sx1272.doCAD(1);
         endDoCad=millis();
@@ -758,15 +962,22 @@ void CarrierSense2() {
           PRINTLN;
         }
 
-        delay(1000);
+        delay(500);
 
       } while (millis()<end_carrier_sense && !e);
 
       if (e) {
-        PRINT_CSTSTR("%s","CAD detected. Wait for ");
+        n_collision++;
+        PRINT_CSTSTR("%s","###");  
+        PRINT_VALUE("%d",n_collision);
+        PRINTLN;
+                  
+        PRINT_CSTSTR("%s","Channel busy. Wait for MaxToA=");
         PRINT_VALUE("%ld", max_toa);
         PRINTLN;        
         delay(max_toa);
+        // to perform a new max_toa waiting
+        PRINT_CSTSTR("%s","--> retry\n");        
         carrierSenseRetry=true;
       }
       else
@@ -792,17 +1003,10 @@ void loop(void)
   while (1) {
   
       startDoCad=millis();
+      // for energy testing, use 100
+      //e = sx1272.doCAD(100);      
       e = sx1272.doCAD(1);
       endDoCad=millis();
-      
-      //PRINT_CSTSTR("%s","--> SIFS duration ");
-      //PRINT_VALUE("%ld", endDoCad-startDoCad);
-      //PRINTLN;
-    
-      //if (!e) 
-      //  PRINT_CSTSTR("%s","OK");
-      //else
-      //  PRINT_CSTSTR("%s","###");
 
       if (e && !CadDetected) {
         PRINT_CSTSTR("%s","#########\n");
@@ -832,25 +1036,12 @@ void loop(void)
         PRINT_VALUE("%ld", endDoCad-startDoCad);
         PRINTLN;
       }
-      
-      //delay(200);
-      
-      //startDoCad=millis();
-      //e = sx1272.doCAD(SIFS_cad_number*3);
-      //endDoCad=millis();
-      
-      //PRINT_CSTSTR("%s","--> DIFS duration ");
-      //PRINT_VALUE("%ld", endDoCad-startDoCad);
-      //PRINTLN;
-    
-      //if (!e) 
-      //  PRINT_CSTSTR("%s","OK");
-      //else
-      //  PRINT_CSTSTR("%s","###");
-      
-      //PRINTLN;
-      //delay(100);  
-      delay(1000);
+
+      // for energy testing, use 12000
+      //delay(12000);
+      // you can also use 100ms to test CAD frequency impact
+      //delay(100);      
+      delay(1000);      
   }
 #endif
 // ONLY FOR TESTING CAD
@@ -888,7 +1079,7 @@ void loop(void)
   }
 
 /////////////////////////////////////////////////////////////////// 
-// THE MAIN LOOP FOR AN INETRACTIVE END-DEVICE
+// THE MAIN LOOP FOR AN INTERACTIVE END-DEVICE
 //
   if (radioON && !receivedFromSerial) {
  
@@ -910,12 +1101,18 @@ void loop(void)
           PRINT_CSTSTR("%s","Sending : ");
           PRINT_STR("%s",cmd);  
           PRINTLN;
-          
+
+          if (carrier_sense_method==0)
+              CarrierSense0();
+                        
           if (carrier_sense_method==1)
               CarrierSense1();
     
           if (carrier_sense_method==2)
               CarrierSense2();
+
+          if (carrier_sense_method==3)
+              CarrierSense3();              
           
           PRINT_CSTSTR("%s","Packet number ");
           PRINT_VALUE("%d",sx1272._packetNumber);
@@ -1373,9 +1570,9 @@ void loop(void)
                   i=i+2;
                   cmdValue=getCmdValue(i);
 
-                  if (cmdValue!=1 && cmdValue!=2) {
-                    PRINT_CSTSTR("%s","^$Carrier Sense method must be 1 or 2.\n");
-                    cmdValue=1;    
+                  if (cmdValue > 3) {
+                    PRINT_CSTSTR("%s","^$Carrier Sense method must be 0, 1, 2 or 3.\n");
+                    cmdValue=2;    
                   }
 
                   carrier_sense_method=cmdValue;
@@ -1775,12 +1972,18 @@ void loop(void)
       long startSendCad;
       
       startSendCad=millis();
-
+      
+      if (carrier_sense_method==0)
+          CarrierSense0();
+              
       if (carrier_sense_method==1)
           CarrierSense1();
 
       if (carrier_sense_method==2)
           CarrierSense2();
+
+      if (carrier_sense_method==3)
+          CarrierSense3();            
                     
       startSend=millis();
                         

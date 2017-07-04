@@ -30,6 +30,8 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  June, 22th, 2017
+ *      - setPowerDBM(uint8_t dbm) calls setPower('X') when dbm is set to 20
  *  Apr, 21th, 2017
  *      - change the way timeout are detected: exitTime=millis()+(unsigned long)wait; then millis() < exitTime;
  *  Mar, 26th, 2017
@@ -6974,11 +6976,15 @@ int8_t SX1272::setPowerDBM(uint8_t dbm) {
         writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);
     }
 
+	if (dbm == 20) {
+		return setPower('X');
+	}
+	
     if (dbm > 14)
         return state;
-
-    // disable high power output in all other cases
-    writeRegister(RegPaDacReg, 0x84);
+      	
+	// disable high power output in all other cases
+	writeRegister(RegPaDacReg, 0x84);
 
     if (dbm > 10)
         // set RegOcp for OcpOn and OcpTrim

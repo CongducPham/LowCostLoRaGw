@@ -347,7 +347,7 @@ const uint8_t OFFSET_PAYLOADLENGTH = 4;
 const uint8_t OFFSET_RSSI = 139;
 const uint8_t NOISE_FIGURE = 6.0;
 const uint8_t NOISE_ABSOLUTE_ZERO = 174.0;
-const uint16_t MAX_TIMEOUT = 8000;		//8000 msec = 8.0 sec
+const uint16_t MAX_TIMEOUT = 10000;		//10000 msec = 10.0 sec
 const uint16_t MAX_WAIT = 12000;		//12000 msec = 12.0 sec
 const uint8_t MAX_RETRIES = 5;
 const uint8_t CORRECT_PACKET = 0;

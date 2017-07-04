@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.74
+ *  Version:                1.75
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -72,6 +72,8 @@
 */
 
 /*  Change logs
+ *  July, 4th, 2017. v1.75 
+ *        receive window set to MAX_TIMEOUT (10000ms defined in SX1272.h)
  *  June, 19th, 2017. v1.74
  *        interDownlinkCheckTime is set to 5s
  *  May, 8th, 2017. v1.73
@@ -973,11 +975,11 @@ void loop(void)
       
       // check if we received data from the receiving LoRa module
 #ifdef RECEIVE_ALL
-      e = sx1272.receiveAll(10000);
+      e = sx1272.receiveAll(MAX_TIMEOUT);
 #else
 #ifdef GW_AUTO_ACK  
 
-      e = sx1272.receivePacketTimeout(10000);
+      e = sx1272.receivePacketTimeout(MAX_TIMEOUT);
 
       status_counter++;
       if (e!=0 && e!=3) {
@@ -1017,9 +1019,9 @@ void loop(void)
       // OBSOLETE normally we always use GW_AUTO_ACK
       // Receive message
       if (withAck)
-        e = sx1272.receivePacketTimeoutACK(10000);
+        e = sx1272.receivePacketTimeoutACK(MAX_TIMEOUT);
       else      
-        e = sx1272.receivePacketTimeout(10000);
+        e = sx1272.receivePacketTimeout(MAX_TIMEOUT);
 #endif          
 #endif
 #endif
