@@ -309,7 +309,7 @@ Uncomment PABOOST if you have a HopeRF RFM92W or RFM95W, or a Modtronix inAir9B 
 First try: a simple Ping-Pong program example
 =============================================
 
-As suggested by some people, we provide here a simple Ping-Pong program to upload on an Arduino board. First, install the Arduino IDE 1.6.6. Check that the AVR board library is not above 1.6.9 as there might be some compilation issue otherwise. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
+As suggested by some people, we provide here a simple Ping-Pong program to upload on an Arduino board. First, install the Arduino IDE. You can use the latest one (we tested with 1.8.3). But then, check (see the board manager) that the Arduino AVR board library is not above 1.6.11 as there might be some compilation issues because of the change of the GCC AVR compiler. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
 
 Run the gateway with:
 
@@ -329,7 +329,7 @@ A simple end-device example that periodically sends temperature to the gateway
 
 See the [video here](https://www.youtube.com/watch?v=YsKbJeeav_M).
 
-First, install the Arduino IDE 1.6.6. Check that the AVR board library is not above 1.6.9 as there might be some compilation issue otherwise. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
+First, install the Arduino IDE. You can use the latest one (we tested with 1.8.3). But then, check (see the board manager) that the Arduino AVR board library is not above 1.6.11 as there might be some compilation issues because of the change of the GCC AVR compiler. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
 
 With the Arduino IDE, open the Arduino_LoRa_Simple_temp sketch, compile it and upload to an Arduino board. Check your radio module first, see "Connect a radio module to your end-device" above.
 
