@@ -136,7 +136,7 @@ require 'header.php';
                                    
                                    		<p>
                                    			<button id="btn_update_web_admin" type="button" class="btn btn-primary" href="process.php?update_web_admin=true">   <span class="fa fa-upload"></button>
-                                   			Updating to latest version of gateway web admin interface.
+                                   			Updating to latest version of gateway web admin interface. May take 30s, wait for finish notification.
                                    		</p>                             	
                         		</div>
                         </div>
