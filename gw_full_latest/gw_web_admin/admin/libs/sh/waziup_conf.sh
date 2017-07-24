@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###################################
-# Configure Waziup Orion
+# Configure Orion
 ###################################
 
 #For example to update write_key for ThingSpeak cloud: 
@@ -10,7 +10,7 @@
 tmp=$(mktemp)
 if [ $# == 2 ] 
 then
-        jq '.clouds=([.clouds[]  | select(.script == "python CloudWAZIUP.py") .'$1' = '$2'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
-	sudo chown -R pi:pi /home/pi/lora_gateway/
-        sudo chmod +r /home/pi/lora_gateway/clouds.json
+        jq '.clouds=([.clouds[]  | select(.script == "python CloudOrion.py") .'$1' = '$2'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
+		sudo chown -R pi:pi /home/pi/lora_gateway/
+		sudo chmod +r /home/pi/lora_gateway/clouds.json
 fi

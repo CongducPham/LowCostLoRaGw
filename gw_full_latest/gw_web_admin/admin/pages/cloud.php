@@ -1,8 +1,23 @@
 <?php
 include_once '../libs/php/functions.php';
 
-$clouds = null; $encrypted_clouds= null; $lorawan_encrypted_clouds = null;
+// begin our session
+session_start();
+
+// check if the user is logged out
+if(!isset($_SESSION['username'])){
+                header('Location: login.php');
+                exit();
+}
+
+$clouds = null; $encrypted_clouds= null; $lorawan_encrypted_clouds = null; $key_clouds = null;
+
 process_clouds_json($clouds, $encrypted_clouds, $lorawan_encrypted_clouds);
+
+$key_clouds = process_key_clouds();
+
+$key_orion_file = "/home/pi/lora_gateway/key_Orion.py";	
+$orion = is_file($key_orion_file);
 
 require 'header.php';
 ?>
@@ -15,13 +30,13 @@ require 'header.php';
                         </br>
                         
                         <li>
-                            <a href="gateway_config.php"><i class="fa fa-dashboard fa-fw"></i> Gateway Configuration</a>
+                            <a href="gateway_config.php"><i class="fa fa-edit"></i> Gateway Configuration</a>
                         </li>
                         <li>
-                            <a href="gateway_update.php"><i class="fa fa-dashboard fa-fw"></i> Gateway Update</a>
+                            <a href="gateway_update.php"><i class="fa fa-upload"></i> Gateway Update</a>
                         </li>
                         <li>
-                            <a href="system.php"><i class="fa fa-dashboard fa-fw"></i> System</a>
+                            <a href="system.php"><i class="fa fa-linux"></i> System</a>
                         </li>
                     </ul>
                 </div>
@@ -40,7 +55,7 @@ require 'header.php';
           
             <div class="panel panel-default">
                         <div class="panel-heading">
-                           
+                          	<div id="cloud_msg"></div>
                         </div>
                         <!-- /.panel-heading -->
                         <div class="panel-body">
@@ -48,8 +63,11 @@ require 'header.php';
                             <ul class="nav nav-pills">
                                 <li class="active"><a href="#thingSpeak-pills" data-toggle="tab">ThingSpeak</a>
                                 </li>
-                                <li><a href="#waziup-pills" data-toggle="tab">Waziup Orion</a>
-                                </li>
+				<?php
+					if($orion){	
+                                		echo '<li><a href="#waziup-pills" data-toggle="tab">Waziup Orion</a></li>';
+					}
+				?>
                             </ul>
 
                             <!-- Tab panes -->
@@ -77,7 +95,7 @@ require 'header.php';
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="thingspeak_false" value="false" checked>False
+                                                    		<input type="radio" name="optionsRadios" id="thingspeak_false" value="false" >False
                                                 		</label>
                                             		</div>
                                         		</div>
@@ -86,69 +104,19 @@ require 'header.php';
    										    		<button id="btn_thingspeak_status_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
    										   </tr>
-										 </tbody>
-    								    </table>
-    							      </div>
-    							    </div>
-    							    
-                                	</br>
-                                	
-                                	</br>
-                                	
-                                    <div class="col-md-8 col-md-offset-1"> 
-                    						<div class="panel-body">
-                        						<form id="thingspeak_form" role="form">
-                            						<fieldset>
-                                						<div class="form-group">
-                                							<label>Write Key</label>
-                                							<input class="form-control" placeholder="Write key" name="write_key" type="text" value="" autofocus>
-                                						</div>
-
-                                						<center>
-                                							<button  type="submit" class="btn btn-primary">Submit</button>
-                                							<button  id="btn_thingspeak_form_reset" type="reset" class="btn btn-primary">Clear</button>
-                                						</center> 
-                            						</fieldset>
-                        						</form>
-                    						</div>
-            						</div>	
-            						</br>
-            					
-            						<div id="thingspeak_form_msg"></div>
-            						
-                                </div>
-                                
-                                <!-- tab-pane -->
-                                
-                                <div class="tab-pane fade" id="waziup-pills">
-                                    </br>
-                                    <div id="waziup_status_msg"></div>
-            						
-            						<div class="col-md-10 col-md-offset-0">
-                                      <div class="table-responsive">
-										<table class="table table-striped table-bordered table-hover">
-   										  <thead></thead>
-										 <tbody>
-										   <tr>
-    									    <td>Enabled</td>
-    										<td id="waziup_status_value"><?php cloud_status($clouds, "python CloudWAZIUP.py"); ?></td>
-    										<td align="right"><button id="btn_edit_waziup_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
-   										   	<td id="td_edit_waziup_status">
-   										    	<div id="div_waziup_status_options" class="form-group">
-                                            		
-                                           			<div class="radio">
-                                                		<label>
-                                                    		<input type="radio" name="optionsRadios" id="waziup_true" value="true" checked>True
-                                                		</label>
-                                                		</br>
-                                                		<label>
-                                                    		<input type="radio" name="optionsRadios" id="waziup_false" value="false" checked>False
-                                                		</label>
-                                            		</div>
+   										   
+   										   <tr>
+    									    <td>Write Key</td>
+    										<td id="write_key_value"><?php echo $key_clouds['thingspeak_channel_key']; ?></td>
+    										<td align="right"><button id="btn_edit_write_key" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_write_key">
+   										    	<div id="div_update_write_key" class="form-group">
+                                            		<label>Write Key</label>
+                                					<input id="write_key_input" class="form-control" placeholder="Write key" name="write_key" type="text" value="" autofocus>
                                         		</div>
                                         	</td> 
-   										    <td id="td_waziup_status_submit" align="right">
-   										    		<button id="btn_waziup_status_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    <td id="td_write_key_submit" align="right">
+   										    		<button id="write_key_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
    										   </tr>
 										 </tbody>
@@ -156,38 +124,16 @@ require 'header.php';
     							      </div>
     							    </div>
     							    
-                                	</br>
-                                	
-                                	</br>
-                                    
-                                    <div class="col-md-8 col-md-offset-1"> 
-                    						<div class="panel-body">
-                        						<form id="waziup_form" role="form">
-                            						<fieldset>
-                                						<div class="form-group">
-                                							<label>Project</label>
-                                							<input class="form-control" placeholder="project name" name="project_name" type="text" value="" autofocus>
-                                						</div>
-                                						<div class="form-group">
-                                							<label>Organization</label>
-                                							<input class="form-control" placeholder="Organization name" name="organization_name" type="text" value="" autofocus>
-                                						</div>
-                                						<div class="form-group">
-                                							<label>Service tree</label>
-                                							<input class="form-control" placeholder="Service tree" name="service_tree" type="text" value="" autofocus>
-                                						</div>
-
-                                						<center>
-                                							<button  type="submit" class="btn btn-primary">Submit</button>
-                                							<button  id="btn_waziup_form_reset" type="reset" class="btn btn-primary">Clear</button>
-                                						</center> 
-                            						</fieldset>
-                        						</form>
-                    						</div>
-            						</div>	
-            						</br>
-            						<div id="waziup_form_msg"></div>
-                                	
+                                </div>
+                                
+                                <!-- tab-pane -->
+                               
+				<?php 
+					if($orion){
+                                		require 'orion.php';
+					}
+				?>
+    				
                                 </div>
                                 <!-- tab-pane --> 
                                 

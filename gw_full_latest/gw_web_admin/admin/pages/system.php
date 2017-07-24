@@ -1,6 +1,15 @@
 <?php
 include_once '../libs/php/functions.php';
 
+// begin our session
+session_start();
+
+// check if the user is logged out
+if(!isset($_SESSION['username'])){
+                header('Location: login.php');
+                exit();
+}
+
 require 'header.php';
 ?>
 
@@ -11,13 +20,13 @@ require 'header.php';
                         </br>
                         
                         <li>
-                            <a href="cloud.php"><i class="fa fa-dashboard fa-fw"></i> Cloud</a>
+                            <a href="cloud.php"><i class="fa fa-cloud"></i> Clouds</a>
                         </li>
                         <li>
-                            <a href="gateway_config.php"><i class="fa fa-dashboard fa-fw"></i> Gateway Configuration</a>
+                            <a href="gateway_config.php"><i class="fa fa-edit"></i> Gateway Configuration</a>
                         </li>
                         <li>
-                            <a href="gateway_update.php"><i class="fa fa-dashboard fa-fw"></i> Gateway Update</a>
+                            <a href="gateway_update.php"><i class="fa fa-upload"></i> Gateway Update</a>
                         </li>
                     </ul>
                 </div>
@@ -36,7 +45,7 @@ require 'header.php';
           
             <div class="panel panel-default">
                         <div class="panel-heading">
-                           
+                           <div id="system_msg"></div>
                         </div>
                          
                         <div class="panel-body">
@@ -44,10 +53,13 @@ require 'header.php';
                             <ul class="nav nav-pills">
                                 <li class="active"><a href="#hostapd-pills" data-toggle="tab">Access Point</a>
                                 </li>
+				<li><a href="#profile-pills" data-toggle="tab">Web admin login settings</a>
+         			</li>
                             </ul>
-
+                            
                             <!-- Tab panes -->
                             <div class="tab-content">
+				
                             	<div class="tab-pane fade in active" id="hostapd-pills">
                                    </br>
                                     <div class="col-md-8 col-md-offset-1"> 
@@ -75,7 +87,48 @@ require 'header.php';
             						</br>
             						<div id="form_msg"></div>	
                                 </div> 
+                           
+                            
+                            <!-- Tab panes -->
+                            	<div class="tab-pane fade" id="profile-pills">
+                                   </br>
+                                    <div class="col-md-8 col-md-offset-1"> 
+                    						<div class="panel-body">
+                        						<form id="profile_form" role="form">
+                            						<fieldset>
+                                						<div class="form-group">
+                                							<label>Current Username</label>
+                                							<input id="current_username" class="form-control" placeholder="username" name="current_username" type="text" value="" autofocus>
+                                			                        	</div>
+
+									<div class="form-group">
+                                							<label>New Username</label>
+                                							<input id="new_username" class="form-control" placeholder="username" name="new_username" type="text" value="" autofocus>
+                                			                        	</div>
+
+                                						<div class="form-group">
+                                							<label>Current Password</label>
+                                    						<input id="current_pwd" class="form-control" placeholder="Current password"  name="current_pwd" type="password" value="">
+                                						</div>
+									
+									<div class="form-group">
+                                							<label>New Password</label>
+                                    						<input id="new_pwd" class="form-control" placeholder="New password" name="new_pwd" type="password" value="">
+                                						</div>
+
+                                						<center>
+                                							<button  type="submit" class="btn btn-primary">Submit</button>
+                                							<button  id="btn_profile_form_reset" type="reset" class="btn btn-primary">Clear</button>
+                                						</center> 
+                            						</fieldset>
+                        						</form>
+                    						</div>
+            						</div>	
+            						</br>
+            						<div id="profile_msg"></div>	
+                                </div> 
                             </div>
+
                         </div>
                         <!-- /.panel-body -->
                 </div>

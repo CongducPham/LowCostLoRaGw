@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v3.2 - image modification and need to incorporate aux_radio features
+# v3.3 - image modification and need to incorporate aux_radio features
 #------------------------------------------------------------
 
 # IMPORTANT NOTE
@@ -524,9 +524,14 @@ def image_timeout():
 			time.sleep(3)
 			out = out.replace('\r','')
 			out = out.replace('\n','')
-			print "producing file " + out 
-			print "moving decoded image file into " + os.path.expanduser(_web_folder_path+"images")
-			os.rename(os.path.expanduser("./"+out), os.path.expanduser(_web_folder_path+"images/"+out))
+			print "producing file " + out
+			print "creating if needed the uploads/node_"+str(node_id)+" folder"
+			try:
+				os.mkdir(os.path.expanduser(_web_folder_path+"images/uploads/node_"+str(node_id)))
+			except OSError:
+				print "folder already exist"				 	 
+			print "moving decoded image file into " + os.path.expanduser(_web_folder_path+"images/uploads/node_"+str(node_id))
+			os.rename(os.path.expanduser("./"+out), os.path.expanduser(_web_folder_path+"images/uploads/node_"+str(node_id)+"/"+out))
 			print "done"	
 
 	except subprocess.CalledProcessError:
@@ -1178,7 +1183,7 @@ while True:
 			else:
 				#new image packet from this node
 				nodeL.append(src_addr)
-				filename =(_folder_path+"images/ucam_%d-node#%.4d-cam#%d-Q%d.dat" % (imgSN,src_addr,cam_id,Q))
+				filename =(_folder_path+"images/ucam_%d-node_%.4d-cam_%d-Q%d.dat" % (imgSN,src_addr,cam_id,Q))
 				print "first pkt from node %d" % src_addr
 				print "creating file %s" % filename
 				theFile=open(os.path.expanduser(filename),"w")

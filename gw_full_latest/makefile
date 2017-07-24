@@ -26,22 +26,22 @@ lora_gateway_downlink: lora_gateway_downlink.o arduPi.o SX1272.o
 lora_gateway_pi2_downlink: lora_gateway_pi2_downlink.o arduPi_pi2.o SX1272_pi2.o
 	g++ -lrt -lpthread lora_gateway_pi2_downlink.o arduPi_pi2.o SX1272_pi2.o -o lora_gateway_pi2_downlink
 
-lora_gateway.o: lora_gateway.cpp
+lora_gateway.o: lora_gateway.cpp radio.makefile
 	g++ $(CFLAGS) -DRASPBERRY -DIS_RCV_GATEWAY -c lora_gateway.cpp -o lora_gateway.o
 
-lora_gateway_pi2.o: lora_gateway.cpp
+lora_gateway_pi2.o: lora_gateway.cpp radio.makefile
 	g++ $(CFLAGS) -DRASPBERRY -DRASPBERRY2 -DIS_RCV_GATEWAY -c lora_gateway.cpp -o lora_gateway_pi2.o
 
-lora_gateway_winput.o: lora_gateway.cpp
+lora_gateway_winput.o: lora_gateway.cpp radio.makefile
 	g++ $(CFLAGS) -DRASPBERRY -DIS_RCV_GATEWAY -DWINPUT -c lora_gateway.cpp -o lora_gateway_winput.o
 
-lora_gateway_pi2_winput.o: lora_gateway.cpp
+lora_gateway_pi2_winput.o: lora_gateway.cpp radio.makefile
 	g++ $(CFLAGS) -DRASPBERRY -DRASPBERRY2 -DIS_RCV_GATEWAY -DWINPUT -c lora_gateway.cpp -o lora_gateway_pi2_winput.o
 
-lora_gateway_downlink.o: lora_gateway.cpp
+lora_gateway_downlink.o: lora_gateway.cpp radio.makefile
 	g++ $(CFLAGS) -DRASPBERRY -DIS_RCV_GATEWAY -DDOWNLINK -c lora_gateway.cpp -o lora_gateway_downlink.o
 
-lora_gateway_pi2_downlink.o: lora_gateway.cpp
+lora_gateway_pi2_downlink.o: lora_gateway.cpp radio.makefile
 	g++ $(CFLAGS) -DRASPBERRY -DRASPBERRY2 -DIS_RCV_GATEWAY -DDOWNLINK -c lora_gateway.cpp -o lora_gateway_pi2_downlink.o
 
 arduPi.o: arduPi.cpp arduPi.h

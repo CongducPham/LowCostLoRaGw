@@ -1,6 +1,15 @@
 <?php
 include_once '../libs/php/functions.php';
 
+// begin our session
+session_start();
+
+// check if the user is logged out
+if(!isset($_SESSION['username'])){
+                header('Location: login.php');
+                exit();
+}
+
 $radio_conf= null; $gw_conf= null; $alert_conf = null;
 process_gw_conf_json($radio_conf, $gw_conf, $alert_conf);
 
@@ -15,13 +24,13 @@ require 'header.php';
                         </br>
                         
                         <li>
-                            <a href="cloud.php"><i class="fa fa-dashboard fa-fw"></i> Cloud</a>
+                            <a href="cloud.php"><i class="fa fa-cloud"></i> Clouds</a>
                         </li>
                         <li>
-                            <a href="gateway_update.php"><i class="fa fa-dashboard fa-fw"></i> Gateway Update</a>
+                            <a href="gateway_update.php"><i class="fa fa-upload"></i> Gateway Update</a>
                         </li>
                         <li>
-                            <a href="system.php"><i class="fa fa-dashboard fa-fw"></i> System</a>
+                            <a href="system.php"><i class="fa fa-linux"></i> System</a>
                         </li>
                     </ul>
                 </div>
@@ -40,7 +49,7 @@ require 'header.php';
           
             <div class="panel panel-default">
                         <div class="panel-heading">
-                           Configuration
+                           <div id="gw_config_msg"></div>
                         </div>
                         <!-- /.panel-heading -->
                         <div class="panel-body">
@@ -50,7 +59,11 @@ require 'header.php';
                                 </li>
                                 <li><a href="#gw_conf-pills" data-toggle="tab">Gateway</a>
                                 </li>
-                                <li><a href="#alert_conf-pills" data-toggle="tab">Alert</a>
+                                <li><a href="#alert_mail-pills" data-toggle="tab">Alert Mail</a>
+                                </li>
+                                <li><a href="#alert_sms-pills" data-toggle="tab">Alert SMS</a>
+                                </li>
+                                <li><a href="#downlink-pills" data-toggle="tab">Downlink Request</a>
                                 </li>
                             </ul>
 
@@ -184,10 +197,10 @@ require 'header.php';
                                 </div>
                                 <!-- tab-pane -->
                                 
-                                <div class="tab-pane fade" id="alert_conf-pills">
+                                <div class="tab-pane fade" id="alert_mail-pills">
                                     </br>
-                                    <div id="alert_msg"></div>
-                                 <div class="col-md-7 col-md-offset-0">
+                                    <div id="alert_mail_msg"></div>
+                                 <div class="col-md-10 col-md-offset-0">
                                     
                                     <div class="table-responsive">
 										<table class="table table-striped table-bordered table-hover">
@@ -196,7 +209,7 @@ require 'header.php';
     									 </thead>
 										<tbody>
 										   <tr>
-    									    <td>Mail</td>
+    									    <td>Enabled</td>
     										<!-- <td id="use_mail_value"><?php echo $alert_conf['use_mail']; ?></td> -->
     										<td id="use_mail_value">
     											<?php
@@ -219,7 +232,7 @@ require 'header.php';
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="use_mail_false" value="false" checked>False
+                                                    		<input type="radio" name="optionsRadios" id="use_mail_false" value="false" >False
                                                 		</label>
                                             		</div>
                                         		</div>
@@ -228,8 +241,91 @@ require 'header.php';
    										    		<button id="btn_use_mail_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
    										   </tr>
+   										   
    										   <tr>
-    									    <td>SMS</td>
+    									    <td>Mail Account</td>
+    										<td id="mail_from_value"><?php  echo $alert_conf['mail_from']; ?></td>
+    										<td align="right"><button id="btn_edit_mail_from" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_mail_from">
+   										    	<div id="div_update_mail_from" class="form-group">
+                                            		<label>Mail Account</label>
+                                					<input id="mail_from_input" class="form-control" placeholder="mail account" name="mail_from" type="email" value="" autofocus>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_mail_from_submit" align="right">
+   										    		<button id="btn_mail_from_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>
+   										   
+   										   <tr>
+    									    <td>Mail Password</td>
+    										<td id="mail_passwd_value"><?php echo md5($alert_conf['mail_passwd']); ?></td>
+    										<td align="right"><button id="btn_edit_mail_passwd" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_mail_passwd">
+   										    	<div id="div_update_mail_passwd" class="form-group">
+                                            		<label>Mail Password</label>
+                                					<input id="mail_passwd_input" class="form-control" placeholder="mail passwd" name="mail_passwd" type="text" value="" autofocus>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_mail_passwd_submit" align="right">
+   										    		<button id="btn_mail_passwd_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>
+   										   
+   										   <tr>
+    									    <td>Mail Server</td>
+    										<td id="mail_server_value"><?php echo $alert_conf['mail_server']; ?></td>
+    										<td align="right"><button id="btn_edit_mail_server" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_mail_server">
+   										    	<div id="div_update_mail_server" class="form-group">
+                                            		<label>Mail Server</label>
+                                					<input id="mail_server_input" class="form-control" placeholder="smtp.gmail.com for example" name="mail_server" type="email" value="" autofocus>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_mail_server_submit" align="right">
+   										    		<button id="btn_mail_server_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>
+   										   
+   										   <tr>
+    									    <td>Contacts</td>
+    										<td id="contact_mail_value"><?php echo $alert_conf['contact_mail']; ?></td>
+    										<td align="right"><button id="btn_edit_contact_mail" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_contact_mail">
+   										    	<div id="div_update_contact_mail" class="form-group">
+                                            		<label>Contacts</label>
+                                					<input id="contact_mail_input" class="form-control" placeholder="mail_1,mail_2,mail_3" name="contact_mail" type="text" value="<?php echo $alert_conf['contact_mail']; ?>" autofocus>
+                                        			<p><font color="green">Mail addresses must be separated by commas, and without spaces.</font></p>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_contact_mail_submit" align="right">
+   										    		<button id="btn_contact_mail_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>
+   										   
+										</tbody>
+    								 </table>
+    							  </div>
+                                
+                                </div>  
+                      		
+                            </div>  
+                             
+                            <!-- tab-pane -->
+                                
+                                <div class="tab-pane fade" id="alert_sms-pills">
+                                    </br>
+                                    <div id="alert_sms_msg"></div>
+                                 <div class="col-md-10 col-md-offset-0">
+                                    
+                                    <div class="table-responsive">
+										<table class="table table-striped table-bordered table-hover">
+   										  <thead>
+    								       
+    									 </thead>
+										<tbody>
+   										   <tr>
+    									    <td>Enabled</td>
     										<!-- <td id="use_sms_value"><?php echo $alert_conf['use_sms']; ?></td> -->
     										<td id="use_sms_value">
     											<?php
@@ -248,7 +344,7 @@ require 'header.php';
                                             		<label></label>
                                            			<div class="radio">
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="use_sms_true" value="true" checked>True
+                                                    		<input type="radio" name="optionsRadios" id="use_sms_true" value="true" >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
@@ -261,14 +357,73 @@ require 'header.php';
    										    		<button id="btn_use_sms_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
    										   </tr>
+   										   
+   										   <tr>
+    									    <td>Pin code</td>
+    										<td id="sms_pin_value"><?php echo $alert_conf['pin']; ?></td>
+    										<td align="right"><button id="btn_edit_sms_pin" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_sms_pin">
+   										    	<div id="div_update_sms_pin" class="form-group">
+                                            		<label>Pin code</label>
+                                					<input id="sms_pin_input" class="form-control" placeholder="0000" name="sms_pin" type="text" pattern="[0-9]{4}" value="" autofocus>
+                                        			<p><font color="red">Be sure that you can access to the sim card and thus change the pin code using telephone/smartphone.</font></p>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_sms_pin_submit" align="right">
+   										    		<button id="btn_sms_pin_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>
+   										   
+   										   <tr>
+    									    <td>Contacts</td>
+    										<td id="contact_sms_value"><?php  display_array($alert_conf['contact_sms']); ?></td>
+    										<td align="right"><button id="btn_edit_contact_sms" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_contact_sms">
+   										    	<div id="div_update_contact_sms" class="form-group">
+                                            		<label>Contacts</label>
+                                					<input id="contact_sms_input" class="form-control" placeholder="+number_1,+number_2,+number_3" name="contact_sms" type="text" value="<?php  display_array($alert_conf['contact_sms']); ?>" autofocus>
+                                        			<p><font color="green">Phone numbers must be separated by commas, and without spaces.</font></p>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_contact_sms_submit" align="right">
+   										    		<button id="btn_contact_sms_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>
 										</tbody>
     								 </table>
     							  </div>
                                 
                                 </div>  
+                               </div>
+                                 <!-- tab-pane -->
+                                 
+                                <div class="tab-pane fade" id="downlink-pills">
+                                    </br>
+                                    <div id="downlink_form_msg"></div>
+                                    
+                                    <div class="col-md-8 col-md-offset-1"> 
+                    						<div class="panel-body">
+                        						<form id="downlink_form" role="form">
+                            						<fieldset>
+                                						<div class="form-group">
+                                							<label>Destination</label>
+                                							<input class="form-control" placeholder="Between 2 and 255" name="destination" type="number" value="" min="2" max="255" autofocus>
+                                						</div>
+                                						<div class="form-group">
+                                							<label>Message</label>
+                                							<input class="form-control" placeholder="message" name="message" type="text" value="" autofocus>
+                                						</div>
+                                						
+                                						<center>
+                                							<button  type="submit" class="btn btn-primary">Submit</button>
+                                							<button  id="btn_downlink_form_reset" type="reset" class="btn btn-primary">Clear</button>
+                                						</center> 
+                            						</fieldset>
+                        						</form>
+                    						</div>
+            						</div>	
                                     
                             </div>    
-                                
                         <!-- /.panel-body -->
                         
                 </div>
