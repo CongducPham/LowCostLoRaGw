@@ -71,7 +71,7 @@ require 'header.php';
                                    
                                    		<p>
                                    			<button id="btn_gw_new_install" type="button" class="btn btn-primary" href="process.php?gw_new_install=true">   <span class="fa fa-upload"></button>
-                                   			Installing latest version of gateway.
+                                   			Installing latest version of gateway. May take 1 minute, wait for finish notification.
                                    		</p>
                                    	
             						<div id="gw_new_install_msg"></div>	
@@ -84,7 +84,7 @@ require 'header.php';
                                    
                                    		<p>
                                    			<button id="btn_gw_full_update" type="button" class="btn btn-primary" href="process.php?gw_full_update=true">   <span class="fa fa-upload"></button>
-                                   			Updating to latest version of gateway, preserving your local configuration files.
+                                   			Updating to latest version of gateway, preserving your local configuration files. May take 1 minute, wait for finish notification.
                                    		</p>
                                    	
             						<div id="gw_full_update_msg"></div>	
@@ -98,7 +98,7 @@ require 'header.php';
                                    
                                    		<p>
                                    			<button id="btn_gw_basic_conf" type="button" class="btn btn-primary" href="process.php?gw_basic_conf=true">   <span class="fa fa-edit"></button>
-                                   			Configuring your gateway after update.
+                                   			Configuring your gateway after new installation or update.
                                    		</p>
                                    	
             						<div id="gw_basic_conf_msg"></div>	
