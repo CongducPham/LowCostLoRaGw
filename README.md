@@ -1,12 +1,23 @@
 Low-cost LoRa gateway with Raspberry
 ====================================
 
+Tutorial materials
+------------------
+
 Please also consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html.
 
 2 tutorial videos on YouTube: video of all the steps to build the whole framework from scratch:
 
 - [Build your low-cost, long-range IoT device with WAZIUP](https://www.youtube.com/watch?v=YsKbJeeav_M)
 - [Build your low-cost LoRa gateway with WAZIUP](https://www.youtube.com/watch?v=peHkDhiH3lE)
+
+Go to [https://github.com/CongducPham/tutorials](https://github.com/CongducPham/tutorials) for all tutorials and particularly look for:
+
+- [Low-cost-LoRa-IoT-step-by-step tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-step-by-step.pdf) 
+- [Low-cost-LoRa-GW-step-by-step tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-step-by-step.pdf)
+- [Low-cost-LoRa-IoT-antennaCable tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-antennaCable.pdf)
+
+Look also at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.pdf)!
 
 Upgrade notice
 --------------
@@ -18,6 +29,7 @@ Features
 
 - a simple, user-friendly web admin interface to configure and update your gateway
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/gw_web_admin/README.md)
+	- [Tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf)
 - an alert mail can be sent to a list of contact email addresses to notify when gateway is starting and when the radio module has been reset
 - periodic status report to monitor whether the post-processing stage of the gateway is up or not
 - encryption and native LoRaWAN frame format
@@ -378,15 +390,23 @@ Use an Arduino as a LoRa gateway
 
 The gateway can also be based on an Arduino board, as described in the web page. With the Arduino IDE, open the Arduino_LoRa_Gateway sketch, compile the code and upload to an Arduino board. Then follow instructions on how to use the Arduino board as a gateway. It is better to use a more powerful (and with more RAM memory such as the MEGA) Arduino platform for building the gateway.
 
-Running in 433MHz band
-======================
+Running in 433MHz and 900MHz band
+==================================
 
 When your radio module can run in the 433MHz band (for instance when the radio is based on SX1276 or SX1278 chip, such as the inAir4 from Modtronics) then you can test running at 433MHz as follows:
 
 - select line "#define BAND433" in Arduino_LoRa_temp or Arduino_LoRa_Simple_temp
 - compile the lora_gateway.cpp with "#define BAND433"
 - or simply run your gateway with "lora_gateway --mode 1 --freq 433.3" to be on the same setting than Arduino_LoRa_temp and Arduino_LoRa_Simple_temp
-- there are 4 channels in the 433MHz band: 433.3MHz as CH_00_433, 433.6MHz as CH_01_433, 433.9MHz as CH_02_433 and 434.3MHz as CH_03_433 
+- there are 4 channels in the 433MHz band: 433.3MHz as CH_00_433, 433.6MHz as CH_01_433, 433.9MHz as CH_02_433 and 434.3MHz as CH_03_433. CH_00_433=433.3MHz is the default channel in the 433MHz band.
+
+For 900MHz band the procedure is similar:
+
+- select line "#define BAND900" in Arduino_LoRa_temp or Arduino_LoRa_Simple_temp
+- compile the lora_gateway.cpp with "#define BAND900"
+- or simply run your gateway with "lora_gateway --mode 1 --freq 913.88" to be on the same setting than Arduino_LoRa_temp and Arduino_LoRa_Simple_temp
+- there are 13 channels in the 900MHz band: from CH_00_900 to CH_12_900. CH_05_900=913.88MHz is the default channel in the 900MHz band. 
+
 
 Mounting your Dropbox folder
 ============================
@@ -424,17 +444,17 @@ Pre-defined LoRa modes (from initial Libelium SX1272.h)
 | 9    | 500|  7 |
 | 10   | 500|  8 |
 
-Pre-defined channels in 868MHz, 915MHz and 433MHz band (most of them from initial Libelium SX1272.h, except those marked with *)
+Pre-defined channels in 868MHz, 915MHz and 433MHz band (most of them from initial Libelium SX1272.h, except those marked with *). Frequencies in bold are those used by default in each band.
 
 | ch | F(MHz) | ch | F(MHz) | ch | F(MHz) |
 |----|--------|----|--------|----|--------|
-| 04 | 863.2* | 00 | 903.08 | 00 | 433.3* |
+| 04 | 863.2* | 00 | 903.08 | **00** | **433.3*** |
 | 05 | 863.5* | 01 | 905.24 | 01 | 433.6* |
 | 06 | 863.8* | 02 | 907.40 | 02 | 433.9* |
 | 07 | 864.1* | 03 | 909.56 | 03 | 434.3* |
 | 08 | 864.4* | 04 | 911.72 |  - |   -    |
-| 09 | 864.7* | 05 | 913.88 |  - |   -    |
-| 10 | 865.2  | 06 | 916.04 |  - |   -    |
+| 09 | 864.7* | **05** | **913.88** |  - |   -    |
+| **10** | **865.2**  | 06 | 916.04 |  - |   -    |
 | 11 | 865.5  | 07 | 918.20 |  - |   -    |
 | 12 | 865.8  | 08 | 920.36 |  - |   -    |
 | 13 | 866.1  | 09 | 922.52 |  - |   -    |
@@ -478,14 +498,6 @@ WARNING
 - There is currently no control on the transmit time for both gateway and end-device. When using the library to create devices, you have to ensure that the transmit time of your device is not exceeding the legal maximum transmit time defined in the regulation of your country (for instance ETSI define 1% duty-cycle, i.e. 36s/hour).
 
 - Although 900MHz band is supported (mostly for the US ISM band), the library does not implement the frequency hopping mechanism nor the limited dwell time (e.g. 400ms per transmission).
-
-
-Tutorial materials
-=======================
-
-Go to https://github.com/CongducPham/tutorials and look for the "Low-cost-LoRa-GW-step-by-step" tutorial.
-
-Look at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.pdf)!
 
 
 Enjoy!
