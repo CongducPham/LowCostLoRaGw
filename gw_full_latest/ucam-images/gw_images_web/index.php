@@ -33,7 +33,6 @@
 
 <h2><a href="./index_bak.php">Display content of image/bak folder</a></h2>
 <br>
-<br>
 
   <div id="div_last_capture">
   	<h2>Last capture for all video nodes</h2>
@@ -42,5 +41,11 @@
 	?>
   </div>
   <div><a href="video_node.php"><h3>Captures per video node</h3></a></div>
+
+<h3><a id="a_mv_img" href="#">Move images from uploads to bak folder</a></h3>
+	<div id="mv_img_msg"></div>
+
+<br>
+  
 </body>
 </html>

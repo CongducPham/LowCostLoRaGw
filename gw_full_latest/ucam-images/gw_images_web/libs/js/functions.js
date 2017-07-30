@@ -17,11 +17,22 @@ $(function () {
         	});
 	});	
     
+    
     $('#select_time_interval').on('change', function() {	
     	time_interval = $('#select_time_interval').val();
 
     	$.get("process.php", {node: the_node, time_interval: time_interval}, function(data){
             	$('#div_pic_by_node').html(data);
+        });
+    });
+    
+    
+    $('#a_mv_img').click(function() {	
+    	$.get("process.php", {mv: "true"}, function(data){
+            $('#mv_img_msg').html(data);
+            setTimeout(function() {
+  				$('#mv_img_msg').html("");
+	    	},5000);
         });
     });
 
