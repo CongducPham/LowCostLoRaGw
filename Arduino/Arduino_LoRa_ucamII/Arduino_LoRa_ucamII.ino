@@ -40,7 +40,7 @@
  *  "CO3#" -> sets the number of cover-sets to 3
  *  "CL8#" -> sets the criticality level to 0.8
  *  "CM8#" -> sets the maximum number of cover-sets to 8
- *  "CS#" -> starts the criticality-based scheduling
+ *  "CB#" -> starts the criticality-based scheduling
  *  "CT10#" -> sets the high-criticality period after intrusion detection
  *  "C1#" -> select camera 1 for next T/S/I command
  *  "F30000#" -> sets inter-snapshot time to 30000ms, i.e. 30s, fps is then 1/30 
@@ -65,14 +65,16 @@
  *  
  *  packet structure : 0xFF 0x50-0x54 src_addr(16b) SN(8b) Q(8b) len (8b)
  *
- *  put a red led on pin 44 (Teensy: 17) and a green led on pin 45 (Teensy: 18)
+ *  put a red led on pin 44 (Teensy: 18) and a green led on pin 45 (Teensy: 19)
  *  when ucam is capturing the red led is ON, and blink when encoding/transmitting each packet
  *  when ucam is receiving a command, the red led will blink 5 times
  *  the green led is ON to show that the ucam has syncked. 
- *  If the green led is not ON, it means that the ucam is not ready, try to reset the board.
+ *  On startup, if the red led blocks on ON, it means that the ucam is not ready: 
+ *    reset the board by unplugging and plugging again the VCC wire; 
+ *    repeat the process until the green led blinks
  *  If you issue a command to start capturing and transmitting, the red led should blink to indicate that
  *  the command has been received. Normally, you should see the red led ON after some second. If not, it means that something goes wrong
- *  sometimes, the ucam lost synchronization and cannot respond to the INITIAL sequence command. In this case, reset the board.
+ *  sometimes, the ucam lost synchronization and cannot respond to the INITIAL sequence command. In this case, reset the board (see above).
  *
  *  a led for each camera can be switched on each time the camera is active
  *    - pin 30 for camera 0
@@ -278,6 +280,7 @@
 
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
+// the 4 following define statements are for test purposes only
 //#define RANDOM_NODE_ID
 //#define RANDOM_CAM_ID
 //#define ENERGY_TEST
@@ -286,8 +289,10 @@
 // or set useRefImage to false so that only the initial images are sent
 //#define CAM_3
 //#define CAM_2
+// it is better to use the 4D system software on a Window machine to set focus of the ucamII camera
 //#define TEST_FOCUS_CAM0
 #define USEREFIMAGE
+// use the new image encoding scheme, DO NOT CHANGE
 #define CRAN_NEW_CODING
 //#define QUALITY_TEST
 #define DISPLAY_PKT
@@ -309,7 +314,7 @@
 #define GET_PICTURE_ON_SETUP
 // take into account light change between snapshot, recommended.
 #define LUM_HISTO
-// with periodic sync
+// with periodic sync, not compatible with LOW_POWER
 //#define PERIODIC_SYNC
 // uses an additional LCD display for more information
 //#define WITH_LCD
@@ -318,7 +323,7 @@
 // criticality-based scheduling, for tests mainly because difficult to have large-scale test-beds
 //#define CRITICALITY_SCHEDULING
 // will insert the source addr in the image packet
-#define WITH_SRC_ADDR
+#define WITH_SRC_ADDR, DO NOT CHANGE
 
 // FOR XBEE
 #ifdef XBEE_UCAM
@@ -632,7 +637,7 @@ boolean useRefImage=false;
 int capture_led = 18;
 int cam_sync_led = 19;
 // change your pin assignment if necessary
-// pin 30 for ucam0, pin 31 for ucam1 and pin 32 for ucam2
+// pin 15 for ucam0, pin 16 for ucam1 and pin 17 for ucam2
 uint8_t ucamLedArray[MAX_NB_UCAM]={15, 16, 17};
 #else
 // change your pin assignment if necessary
