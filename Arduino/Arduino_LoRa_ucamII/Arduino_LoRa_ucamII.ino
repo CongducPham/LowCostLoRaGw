@@ -66,17 +66,26 @@
  *  packet structure : 0xFF 0x50-0x54 src_addr(16b) SN(8b) Q(8b) len (8b)
  *
  *  put a red led on pin 44 (Teensy: 18) and a green led on pin 45 (Teensy: 19)
- *  when ucam is capturing the red led is ON, and blink when encoding/transmitting each packet
- *  when ucam is receiving a command, the red led will blink 5 times
- *  the green led is ON to show that the ucam has syncked. 
- *  On startup, if the red led blocks on ON, it means that the ucam is not ready: 
- *    reset the board by unplugging and plugging again the VCC wire; 
- *    repeat the process until the green led blinks
- *  If you issue a command to start capturing and transmitting, the red led should blink to indicate that
- *  the command has been received. Normally, you should see the red led ON after some second. If not, it means that something goes wrong
- *  sometimes, the ucam lost synchronization and cannot respond to the INITIAL sequence command. In this case, reset the board (see above).
+ *  
+ * Sync led (green led)
+ *    - The green led shows that the ucam has successfully syncked
+ * Capture led (red led)
+ *    - When device is initiating an image capture the red led is ON
+ *    - The red led will blink once when transmitting each packet
+ *    - When device is receiving a command, the red led will blink 5 times
+ * On startup
+ *    - The green led will blink 5 times then the red led will be ON during the sync attempts
+ *    - When ucam has synched, green led will be ON for 1s
+ *    - If the red led stays ON, it means that the ucam is not ready, 
+ *      - reset the board by unplugging and plugging again the VCC wire; 
+ *      - repeat the process until the green led turns to ON
+ * Taking first reference image
+ *    - The red led will blink 5 times then the green led will blink 3 times to indicate that raw image is encoded and for each transmitted image packet the red led will blink
+ * Waking-up for image change detection
+ *    - The red led will be ON and once camera has synched the green led will blink 3 times
+ *    - The red led will then be OFF and if there have been changes, will blink for each image packet transmission
  *
- *  a led for each camera can be switched on each time the camera is active
+ *  if connected, a led for each camera can be switched on each time the camera is active
  *    - pin 30 for camera 0
  *    - pin 31 for camera 1
  *    - pin 32 for camera 2
@@ -1077,10 +1086,11 @@ void CarrierSense3() {
   int e;
   bool carrierSenseRetry=false;
   uint8_t n_collision=0;
+  uint8_t n_cad=9;
   
   uint32_t max_toa = sx1272.getToA(255);
 
-  unsigned long end_carrier_sense=0;
+  //unsigned long end_carrier_sense=0;
   
   if (send_cad_number) {
     do { 
@@ -1089,9 +1099,9 @@ void CarrierSense3() {
       PRINT_VALUE("%ld", max_toa);
       PRINTLN;  
         
-      end_carrier_sense=millis()+max_toa;
+      //end_carrier_sense=millis()+(max_toa/n_cad)*(n_cad-1);
       
-      do {      
+      for (int i=0; i<n_cad; i++) {      
         startDoCad=millis();
         e = sx1272.doCAD(1);
         endDoCad=millis();
@@ -1104,10 +1114,12 @@ void CarrierSense3() {
           PRINT_VALUE("%ld", endDoCad-startDoCad);
           PRINTLN;
         }
-
-        delay(500);
-
-      } while (millis()<end_carrier_sense && !e);
+        else
+          continue;
+          
+        // wait in order to have n_cad CAD operations during max_toa
+        delay(max_toa/(n_cad-1)-(millis()-startDoCad));
+      }
 
       if (e) {
         n_collision++;
@@ -3598,9 +3610,10 @@ void setup() {
                 delay(1000);
                 digitalWrite(ucamLedArray[cam], LOW);
         }        
-        
-        // all cams have sync
-        digitalWrite(cam_sync_led, HIGH);
+
+        if (NB_UCAM>1)
+            // indicates that all cams have sync
+            digitalWrite(cam_sync_led, HIGH);
 
         Serial.println(F("Cams have synched"));
         
