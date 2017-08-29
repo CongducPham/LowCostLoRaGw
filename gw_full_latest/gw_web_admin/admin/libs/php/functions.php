@@ -36,6 +36,7 @@ function gw_update_file($filename_url){
 }
 
 function update_web_admin_interface(){
+	//echo "<p><center><font color="green">Updating web admin interface. Please wait for completion...</font></center></p>";
 	return shell_exec("sudo ".LORA_GATEWAY."/gw_web_admin/install.sh");
 }
 

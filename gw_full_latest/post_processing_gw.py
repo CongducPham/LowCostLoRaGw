@@ -19,6 +19,7 @@
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # v3.3 - image modification and need to incorporate aux_radio features
+# + copy post-processing feature
 #------------------------------------------------------------
 
 # IMPORTANT NOTE
@@ -251,6 +252,36 @@ def dht22_target():
 		global _gw_dht22
 		time.sleep(_gw_dht22)
 
+
+#------------------------------------------------------------
+#copy post-processing.log into /var/www/html/admin/log folder
+#------------------------------------------------------------
+
+_gw_copy_post_processing=True
+
+def copy_post_processing():
+	print "extract last 500 lines of post-processing_"+_gwid+".log into /var/www/html/admin/log/post-processing-500L.log"
+	cmd="sudo tail -n 500 log/post-processing_"+_gwid+".log > /var/www/html/admin/log/post-processing-500L.log"
+	
+	try:
+		os.system(cmd)
+	except:
+		print "Error when extracting lines from post-processing_"+_gwid+".log"
+		
+	cmd="sudo chown -R pi:www-data /var/www/html/admin/log"
+	
+	try:
+		os.system(cmd)
+	except:
+		print "Error when setting file ownership to pi:www-data"
+	
+
+def copy_post_processing_target():
+	while True:
+		copy_post_processing()
+		sys.stdout.flush()	
+		time.sleep(1800)
+	
 #------------------------------------------------------------
 #for downlink features
 #------------------------------------------------------------
@@ -678,6 +709,16 @@ if (_gw_status):
 	t_status.daemon = True
 	t_status.start()
 	time.sleep(1)	
+	
+#copy post_processing feature
+	
+if (_gw_copy_post_processing):
+	print "Starting thread to copy post_processing.log"
+	sys.stdout.flush()
+	t_status = threading.Thread(target=copy_post_processing_target)
+	t_status.daemon = True
+	t_status.start()
+	time.sleep(1)
 
 print ''	
 print "Current working directory: "+os.getcwd()

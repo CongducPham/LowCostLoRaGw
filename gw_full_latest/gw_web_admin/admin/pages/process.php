@@ -83,11 +83,11 @@ if (isset($_GET['gw_new_install']) && $_GET['gw_new_install'] == "true"){
 	$output = gw_new_install(); 
 	if($output == 0){
 		//echo "Success";
-		echo '<p><center><font color="green">Update of gateway done.</font></center></p>';
+		echo '<p><center><font color="green">New install of gateway done.</font></center></p>';
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="green">Issue to install a new version of gateway</font></center></p>';	
+		echo '<p><center><font color="green">Failed to install a new version of gateway</font></center></p>';	
 	}
 }
 
@@ -103,7 +103,7 @@ if (isset($_GET['gw_full_update']) && $_GET['gw_full_update'] == "true"){
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="red">Issue to update gateway</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update gateway</font></center></p>';	
 	}
 }
 
@@ -119,7 +119,7 @@ if (isset($_GET['gw_basic_conf']) && $_GET['gw_basic_conf'] == "true"){
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="red">Issue to run basic configuration.</font></center></p>';	
+		echo '<p><center><font color="red">Failed to run basic configuration.</font></center></p>';	
 	}
 }
 
@@ -143,11 +143,11 @@ if (isset($_POST['file_name_url'])){
 	
 			if($output == 0){
 				//echo "Success";
-				echo '<p><center><font color="green">Gateway updated.</font></center></p>';
+				echo '<p><center><font color="green">File has been downloaded and installed.</font></center></p>';
 			}
 			else{
 				//echo "Failure";
-				echo '<p><center><font color="red">Issue to update gateway</font></center></p>';	
+				echo '<p><center><font color="red">Failed to install file</font></center></p>';	
 			}
 		}
 	}
@@ -165,7 +165,7 @@ if (isset($_GET['update_web_admin']) && $_GET['update_web_admin'] == "true"){
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="red">Issue to update web admin interface.</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update web admin interface.</font></center></p>';	
 	}
 }
 
@@ -183,7 +183,7 @@ if (isset($_GET["mode"]) && (! empty($_GET["mode"]))) {
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="red">Issue to update mode.</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update mode.</font></center></p>';	
 	}
 }
 
@@ -206,7 +206,7 @@ if (isset($_GET["band"]) && isset($_GET["freq"])) {
 		}
 		else{
 			//echo "Failure";
-			echo '<p><center><font color="red">Issue to update frequency.</font></center></p>';	
+			echo '<p><center><font color="red">Failed to update frequency.</font></center></p>';	
 		}
 	}
 }
@@ -230,7 +230,7 @@ if (isset($_GET["gateway_ID"])) {
 		}
 		else{
 			//echo "Failure";
-			echo '<p><center><font color="red">Issue to update gateway ID.</font></center></p>';	
+			echo '<p><center><font color="red">Failed to update gateway ID.</font></center></p>';	
 		}
 	}
 }
@@ -245,11 +245,11 @@ if (isset($_GET["aes"]) && (! empty($_GET["aes"]))) {
 	
 	if($output == 0){
 		//echo "Success";
-		echo '<p><center><font color="green">AES updated.</font></center></p>';
+		echo '<p><center><font color="green">AES option updated.</font></center></p>';
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="red">Issue to update AES.</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update AES option.</font></center></p>';	
 	}
 }
 
@@ -268,7 +268,7 @@ if (isset($_GET["thingspeak_status"]) && (! empty($_GET["thingspeak_status"]))) 
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="red">Issue to update ThingSpeak status.</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update ThingSpeak status.</font></center></p>';	
 	}
 }
 
@@ -287,7 +287,7 @@ if (isset($_GET["waziup_status"]) && (! empty($_GET["waziup_status"]))) {
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="red">Issue to update Waziup Orion status.</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update Waziup Orion status.</font></center></p>';	
 	}
 }
 
@@ -302,11 +302,11 @@ if (isset($_GET["use_mail"]) && (! empty($_GET["use_mail"]))) {
 	
 	if($output == 0){
 		//echo "Success";
-		echo '<p><center><font color="green">Alert mail updated.</font></center></p>';
+		echo '<p><center><font color="green">Alert mail info updated.</font></center></p>';
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="red">Issue to update alert mail.</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update alert mail info.</font></center></p>';	
 	}
 }
 
@@ -328,7 +328,7 @@ if (isset($_GET["mail_from"]) && (! empty($_GET["mail_from"]))) {
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="red">Issue to update mail account.</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update mail account.</font></center></p>';	
 	}
     }
 }
@@ -351,7 +351,7 @@ if (isset($_GET["mail_passwd"]) ) {
 		}
 		else{
 			//echo "Failure";
-			echo '<p><center><font color="red">Issue to update mail password.</font></center></p>';	
+			echo '<p><center><font color="red">Failed to update mail password.</font></center></p>';	
 		}
 	}
 	
@@ -375,7 +375,7 @@ if (isset($_GET["mail_server"])) {
 		}
 		else{
 			//echo "Failure";
-			echo '<p><center><font color="red">Issue to update mail server.</font></center></p>';	
+			echo '<p><center><font color="red">Failed to update mail server.</font></center></p>';	
 		}
 	}	
 }
@@ -402,7 +402,7 @@ if (isset($_GET["contact_mail"]) && (! empty($_GET["contact_mail"]))) {
 		echo '<p><center><font color="green">Mail contacts updated.</font></center></p>';
 	}
 	else{
-		echo '<p><center><font color="red">Issue to update mail contacts.</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update mail contacts.</font></center></p>';	
 	}
 }
 
@@ -420,7 +420,7 @@ if (isset($_GET["use_sms"]) && (! empty($_GET["use_sms"]))) {
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="red">Issue to update alert sms.</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update alert sms.</font></center></p>';	
 	}
 }
 
@@ -438,7 +438,7 @@ if (isset($_GET["sms_pin"]) && (! empty($_GET["sms_pin"]))) {
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="red">Issue to update pin code.</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update pin code.</font></center></p>';	
 	}
 }
 
@@ -464,11 +464,11 @@ if (isset($_GET["contact_sms"]) && (! empty($_GET["contact_sms"]))) {
 	
 	if($output == 0){
 		//echo "Success";
-		echo '<p><center><font color="green">sms contacts updated.</font></center></p>';
+		echo '<p><center><font color="green">SMS contacts updated.</font></center></p>';
 	}
 	else{
 		//echo "Failure";
-		echo '<p><center><font color="red">Issue to update sms contacts.</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update SMS contacts.</font></center></p>';	
 	}
 }
 
@@ -493,10 +493,10 @@ if(isset($_POST['ssid']) && isset($_POST['wpa_phrasepass'])){
 	
 		if($output == 0){
 			//echo "Success";
-			echo '<p><center><font color="green">Access point updated.</font></center></p>';
+			echo '<p><center><font color="green">WiFi access point configuration updated.</font></center></p>';
 		}
 		else{
-			echo '<p><center><font color="red">Issue to update the access point.</font></center></p>';
+			echo '<p><center><font color="red">Failed to update WiFi access point configuration.</font></center></p>';
 		}
 	}
 }
@@ -520,7 +520,7 @@ if(isset($_GET['write_key'])){
 			echo '<p><center><font color="green">Write key saved.</font></center></p>';
 		}
 		else{
-			echo '<p><center><font color="red">Issue to save write key.</font></center></p>';
+			echo '<p><center><font color="red">Failed to save write key.</font></center></p>';
 		}
 	}
 }
@@ -545,7 +545,7 @@ if(isset($_GET['project_name'])){
 			echo '<p><center><font color="green">Project name saved.</font></center></p>';
 		}
 		else{
-			echo '<p><center><font color="red">Issue to save project name.</font></center></p>';
+			echo '<p><center><font color="red">Failed to save project name.</font></center></p>';
 		}
 	}
 }
@@ -569,7 +569,7 @@ if(isset($_GET['organization_name'])){
 			echo '<p><center><font color="green">Organization name saved.</font></center></p>';
 		}
 		else{
-			echo '<p><center><font color="red">Issue to save organization name.</font></center></p>';
+			echo '<p><center><font color="red">Failed to save organization name.</font></center></p>';
 		}
 	}
 }
@@ -594,7 +594,7 @@ if(isset($_GET['service_tree'])){
 			echo '<p><center><font color="green">Service tree saved.</font></center></p>';
 		}
 		else{
-			echo '<p><center><font color="red">Issue to save service tree.</font></center></p>';
+			echo '<p><center><font color="red">Failed to save service tree.</font></center></p>';
 		}
 	}
 }
@@ -623,7 +623,7 @@ if(isset($_POST['destination']) && isset($_POST['message'])){
 			echo '<p><center><font color="green">Downlink request saved.</font></center></p>';
 		}
 		else{
-			echo '<p><center><font color="red">Issue to save downlink request.</font></center></p>';
+			echo '<p><center><font color="red">Failed to save downlink request.</font></center></p>';
 		}
 	}
 }
@@ -661,7 +661,7 @@ if(isset($_POST['current_username'], $_POST['new_username'], $_POST['current_pwd
 				echo '<p><center><font color="green">Please logout then login again using new connection settings.</font></center></p>';
 			}
 			else{
-				echo '<p><center><font color="red">Issue to set profile.</font></center></p>';
+				echo '<p><center><font color="red">Failed to set profile.</font></center></p>';
 			}
 		}
 	}

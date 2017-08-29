@@ -222,6 +222,120 @@ As indicated previously, local storage of incoming data in the local MongoDB dat
 	MongoDB: saving the document in the collection...
 	MongoDB: saving done
 	
+The local MongoDB database is structured as follows: the database is "messages" and the collection is "ReceivedData". You can look at MongoDB.py for more details. CloudMongoDB.py is then the script that post_processing_gw.py will call to insert received data into the "ReceivedData" collection of "messages" database. 
+
+It is assumed that your data is formatted as follows, with a nomenclature code followed by the associated value:
+
+	TC/22.5/HU/85...
+	
+CloudMongoDB.py will create a json array with your received data as follows:
+
+	{ "TC":22.5, "HU":85 }
+
+but will also add the SNR and the RSSI of the received radio messages to have the following json array:
+
+	{ "SNR":8, "RSSI": -56, "TC":22.5, "HU":85 } 
+
+Then, the json document that will be inserted into the "ReceivedData" collection is as follows:
+
+	"type" : ptype,
+	"gateway_eui" : gwid, 
+	"node_eui" : src,
+	"snr" : SNR, 
+	"rssi" : RSSI, 
+	"cr" : cr, 
+	"datarate" : "SF"+str(sf)+"BW"+str(bw),
+	"time" : now,
+	"data" : json.dumps(json.loads(str_json_data))
+	
+A typical document would then be:
+
+	"type" : 18,
+	"gateway_eui" : "00000027EBBEDA21", 
+	"node_eui" : 10,
+	"snr" : 8, 
+	"rssi" : -56, 
+	"cr" : 5, 
+	"datarate" : "SF12BW125",
+	"time" : "2017-03-24T20:28:55.446Z",
+	"data" : { "SNR":8, "RSSI": -56, "TC":22.5, "HU":85 }
+
+In the collection, the entry would look like:	
+		
+	{ "_id" : ObjectId("58d5818774fece07013e4f39"), "node_eui" : 10, "snr" : 8, "datarate" : "SF12BW125", "gateway_eui" : "00000027EBBEDA21", "rssi" : -56, "time" : ISODate("2017-03-24T20:28:55.446Z"), "type" : 18, "cr" : 5, "data" : "{\"SNR\": 8, \"RSSI\": -36, \"TC\": 22.5, \"HU\": 85}" }	
+	
+The local MongoDB database is directly linked with the embedded web server. Use a web browser to connect to the gateway	(e.g. http://192.168.200.1) to graphically visualize the received data. The web server will show all available nomenclature codes (e.g. TC, HU, ...) as well as the SNR and RSSI as these values have been inserted into the data json array. You will be able to select which nomenclature you want to visualize as well as selecting a set of sensors.
+
+You can also interact with the MongoDB database using the command line as follows:
+
+	pi@raspberrypi:~/lora_gateway $ mongo
+	MongoDB shell version: 2.4.10
+	connecting to: test
+	Server has startup warnings: 
+	Tue Jul 25 08:07:49.513 [initandlisten] 
+	Tue Jul 25 08:07:49.513 [initandlisten] ** NOTE: This is a 32 bit MongoDB binary.
+	Tue Jul 25 08:07:49.513 [initandlisten] **       32 bit builds are limited to less than 2GB of data (or less with --journal).
+	Tue Jul 25 08:07:49.513 [initandlisten] **       See http://dochub.mongodb.org/core/32bit
+	Tue Jul 25 08:07:49.513 [initandlisten] 
+	> show dbs
+	local	0.03125GB
+	messages	0.0625GB
+	> use messages
+	switched to db messages
+	> show collections
+	ReceivedData
+	system.indexes
+	> db.ReceivedData.find().pretty()
+	{
+		"_id" : ObjectId("58d5718274fece0472bf60e5"),
+		"node_eui" : 10,
+		"snr" : 8,
+		"datarate" : "SF12BW125",
+		"gateway_eui" : "00000027EBBEDA21",
+		"rssi" : -65,
+		"time" : ISODate("2017-03-24T19:20:34.715Z"),
+		"type" : 18,
+		"cr" : 5,
+		"data" : "{\"SNR\": 8, \"RSSI\": -65, \"SHU\": 1004}"
+	}
+	{
+		"_id" : ObjectId("58d57fef74fece068e221277"),
+		"node_eui" : 10,
+		"snr" : 8,
+		"datarate" : "SF12BW125",
+		"gateway_eui" : "00000027EBBEDA21",
+		"rssi" : -61,
+		"time" : ISODate("2017-03-24T20:22:07.690Z"),
+		"type" : 18,
+		"cr" : 5,
+		"data" : "{\"SNR\": 8, \"RSSI\": -61, \"SHU\": 991}"
+	}
+	{
+		"_id" : ObjectId("58d580ae74fece069a795276"),
+		"node_eui" : 10,
+		"snr" : 8,
+		"datarate" : "SF12BW125",
+		"gateway_eui" : "00000027EBBEDA21",
+		"rssi" : -66,
+		"time" : ISODate("2017-03-24T20:25:18.439Z"),
+		"type" : 18,
+		"cr" : 5,
+		"data" : "{\"SNR\": 8, \"RSSI\": -66, \"SHU\": 993}"
+	}
+	...
+	
+You can list all data from sensor 10 with:
+
+	> db.ReceivedData.find({node_eui:10})
+	{ "_id" : ObjectId("58d5718274fece0472bf60e5"), "node_eui" : 10, "snr" : 8, "datarate" : "SF12BW125", "gateway_eui" : "00000027EBBEDA21", "rssi" : -65, "time" : ISODate("2017-03-24T19:20:34.715Z"), "type" : 18, "cr" : 5, "data" : "{\"SNR\": 8, \"RSSI\": -65, \"SHU\": 1004}" }
+	{ "_id" : ObjectId("58d57fef74fece068e221277"), "node_eui" : 10, "snr" : 8, "datarate" : "SF12BW125", "gateway_eui" : "00000027EBBEDA21", "rssi" : -61, "time" : ISODate("2017-03-24T20:22:07.690Z"), "type" : 18, "cr" : 5, "data" : "{\"SNR\": 8, \"RSSI\": -61, \"SHU\": 991}" }
+	{ "_id" : ObjectId("58d580ae74fece069a795276"), "node_eui" : 10, "snr" : 8, "datarate" : "SF12BW125", "gateway_eui" : "00000027EBBEDA21", "rssi" : -66, "time" : ISODate("2017-03-24T20:25:18.439Z"), "type" : 18, "cr" : 5, "data" : "{\"SNR\": 8, \"RSSI\": -66, \"SHU\": 993}" }
+	
+If you want to delete all entries of the "ReceivedData" collection, you can issue the following command:
+
+	> db.ReceivedData.remove({})
+
+	
 Enjoy!
 C. Pham	
 	

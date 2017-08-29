@@ -71,7 +71,7 @@ require 'header.php';
                                    
                                    		<p>
                                    			<button id="btn_gw_new_install" type="button" class="btn btn-primary" href="process.php?gw_new_install=true">   <span class="fa fa-upload"></button>
-                                   			Installing latest version of gateway. May take 1 minute, wait for finish notification.
+                                   			Installing latest version of gateway, erasing existing configuration. May take 1 minute, wait for finish notification.
                                    		</p>
                                    	
             						<div id="gw_new_install_msg"></div>	
