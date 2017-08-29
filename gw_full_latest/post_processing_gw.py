@@ -257,7 +257,9 @@ def dht22_target():
 #copy post-processing.log into /var/www/html/admin/log folder
 #------------------------------------------------------------
 
-_gw_copy_post_processing=True
+#you can enable periodic copy of post-processing.log file by setting to True
+#but you need to install the web admin interface in order to have the /var/www/html/admin/log/ folder
+_gw_copy_post_processing=False
 
 def copy_post_processing():
 	print "extract last 500 lines of post-processing_"+_gwid+".log into /var/www/html/admin/log/post-processing-500L.log"
