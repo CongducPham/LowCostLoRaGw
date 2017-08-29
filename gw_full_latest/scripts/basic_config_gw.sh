@@ -35,17 +35,17 @@ echo "000000$gwid" > /home/pi/lora_gateway/gateway_id.txt
 echo "Done"
 
 echo "Replacing gw id in /home/pi/lora_gateway/gateway_conf.json"
-sed -i -- 's/"000000.*"/"000000'"$gwid"'"/g' /home/pi/lora_gateway//gateway_conf.json
+sed -i -- 's/"000000.*"/"000000'"$gwid"'"/g' /home/pi/lora_gateway/gateway_conf.json
 echo "Done"
 
-echo "Creating ~/Dropbox/LoRa-test"
-mkdir -p ~/Dropbox/LoRa-test
+echo "Creating /home/pi/Dropbox/LoRa-test"
+mkdir -p /home/pi/Dropbox/LoRa-test
 echo "Done"
 
 rm /home/pi/lora_gateway/log
-echo "Creating log -> ~/Dropbox/LoRa-test"
-ln -s ~/Dropbox/LoRa-test /home/pi/lora_gateway/log
-echo "Done"		
+echo "Creating log -> /home/pi/Dropbox/LoRa-test"
+ln -s /home/pi/Dropbox/LoRa-test /home/pi/lora_gateway/log
+echo "Done"
 
 echo "Replacing hot-spot ssid in /etc/hostapd/hostapd.conf"
 sudo sed -i 's/^ssid.*/ssid=WAZIUP_PI_GW_'"$gwid"'/g' /etc/hostapd/hostapd.conf
@@ -85,6 +85,8 @@ else
 	echo "Compiling for Raspberry 1"
 	make lora_gateway
 fi
+		
+sudo chown -R pi:pi /home/pi/lora_gateway/
 		
 popd
 
