@@ -170,6 +170,22 @@ if (isset($_GET['update_web_admin']) && $_GET['update_web_admin'] == "true"){
 }
 
 /*************************
+ * Copy post-processing.log
+ *************************/
+if (isset($_GET['copy_log_file']) && $_GET['copy_log_file'] == "true"){ 
+	
+	$output = copy_log_file();
+	if($output == 0){
+		//echo "Success";
+		echo '<p><center><font color="green">post-processing.log has been copied and 500 lines have also been extracted. Links are now consistent.</font></center></p>';
+	}
+	else{
+		//echo "Failure";
+		echo '<p><center><font color="red">Failed to copy post-processing.log file.</font></center></p>';	
+	}
+}
+
+/*************************
  * Setting mode
  *************************/
 if (isset($_GET["mode"]) && (! empty($_GET["mode"]))) {

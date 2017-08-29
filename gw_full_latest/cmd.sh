@@ -47,9 +47,9 @@ echo "0- sudo python start_gw.py                                           +"
 echo "1- sudo ./lora_gateway --mode 1                                      +"
 echo "2- sudo ./lora_gateway --mode 1 | python post_processing_gw.py       +"
 echo "3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +"
-echo "4- tail --line=25 ../Dropbox/LoRa-test/post-processing_*.log         +"
-echo "5- tail --line=25 -f ../Dropbox/LoRa-test/post-processing_*.log      +"
-echo "6- less ../Dropbox/LoRa-test/post-processing_*.log                   +"
+echo "4- tail --line=25 ../Dropbox/LoRa-test/post-processing.log         +"
+echo "5- tail --line=25 -f ../Dropbox/LoRa-test/post-processing.log      +"
+echo "6- less ../Dropbox/LoRa-test/post-processing.log                   +"
 echo "------------------------------------------------------* Bluetooth *--+"
 echo "a- run: sudo hciconfig hci0 piscan                                   +"
 echo "b- run: sudo python rfcomm-server.py                                 +"
@@ -118,28 +118,28 @@ fi
 
 if [ "$choice" = "4" ] 
 	then
-		echo "Displaying last 25 lines of ../Dropbox/LoRa-test/post-processing_$gatewayid.log"
+		echo "Displaying last 25 lines of ../Dropbox/LoRa-test/post-processing.log"
 		echo "Current UTC date is"
 		date --utc
-		tail --line=25 ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+		tail --line=25 ../Dropbox/LoRa-test/post-processing.log
 fi
 
 if [ "$choice" = "5" ] 
 	then
-		echo "Following last lines of ../Dropbox/LoRa-test/post-processing_$gatewayid.log. CTRL-C to return"
+		echo "Following last lines of ../Dropbox/LoRa-test/post-processing.log. CTRL-C to return"
 		echo "Current UTC date is"
 		date --utc
 		trap "echo" SIGINT
-		tail --line=25 -f ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+		tail --line=25 -f ../Dropbox/LoRa-test/post-processing.log
 fi
 
 if [ "$choice" = "6" ] 
 	then
-		echo "Display ../Dropbox/LoRa-test/post-processing_$gatewayid.log. Q to return"
+		echo "Display ../Dropbox/LoRa-test/post-processing.log. Q to return"
 		echo "Current UTC date is"
 		date --utc
 		trap "echo" SIGINT
-		less ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+		less ../Dropbox/LoRa-test/post-processing.log
 fi
 
 if [ "$choice" = "a" ] 
@@ -192,31 +192,31 @@ fi
 if [ "$choice" = "l" ] 
 	then
 		echo "List LoRa reception indications"
-		grep -a "rxlora" ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+		grep -a "rxlora" ../Dropbox/LoRa-test/post-processing.log
 fi
 
 if [ "$choice" = "m" ] 
 	then
 		echo "List radio module reset"
-		grep -a "Resetting radio module" ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+		grep -a "Resetting radio module" ../Dropbox/LoRa-test/post-processing.log
 fi
 
 if [ "$choice" = "n" ] 
 	then
 		echo "List boot indications"
-		grep -a "**********Power ON" ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+		grep -a "**********Power ON" ../Dropbox/LoRa-test/post-processing.log
 fi
 
 if [ "$choice" = "o" ] 
 	then
 		echo "List post-processing status"
-		grep -a "post status: gw ON" ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+		grep -a "post status: gw ON" ../Dropbox/LoRa-test/post-processing.log
 fi
 
 if [ "$choice" = "p" ] 
 	then
 		echo "List low-level gateway status"
-		grep -a "Low-level gw status ON" ../Dropbox/LoRa-test/post-processing_$gatewayid.log
+		grep -a "Low-level gw status ON" ../Dropbox/LoRa-test/post-processing.log
 fi
 
 if [ "$choice" = "A" ] 

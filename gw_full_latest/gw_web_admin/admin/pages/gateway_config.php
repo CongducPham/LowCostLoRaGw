@@ -65,6 +65,8 @@ require 'header.php';
                                 </li>
                                 <li><a href="#downlink-pills" data-toggle="tab">Downlink Request</a>
                                 </li>
+                                <li><a href="#copy-log-pills" data-toggle="tab">Get post-processing.log file</a>
+                                </li>                                
                             </ul>
 
                             <!-- Tab panes -->
@@ -423,7 +425,38 @@ require 'header.php';
                     						</div>
             						</div>	
                                     
-                            </div>    
+                            </div>
+                            
+                            
+                        		<div class="tab-pane fade" id="copy-log-pills">
+                                   	</br></br>
+                                   
+                                   		<p>
+                                   			<button id="btn_copy_log_file" type="button" class="btn btn-primary" href="process.php?copy_log_file=true">   <span class="fa fa-upload"></button>
+                                   			Copy the current post-processing.log file, extract last 500 lines in a separate file and make links below available (right click to download).
+                                   		</p>
+
+										<table class="table table-striped table-bordered table-hover">
+   										  <thead>
+    								       
+    									 </thead>
+										<tbody>
+										   <tr>
+    									    <td>The entire content of post-processing.log</td>
+    									    <td><a href="../log/post-processing.log">click here</a></td>
+   										   </tr>
+   					
+   										   <tr>
+    									    <td>Last 500 lines of post-processing.log</td>
+    									    <td><a href="../log/post-processing-500L.log">click here</a></td>
+   										   </tr>
+										</tbody>
+    								  </table>
+                                   	
+            						<div id="copy_log_file_msg"></div>	
+                                	
+                        		</div>                            
+                                
                         <!-- /.panel-body -->
                         
                 </div>

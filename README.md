@@ -41,7 +41,7 @@ Features
 - simple, flexible and generic cloud management approach
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
 - support for an embedded DHT22 temperature/humidity sensor to monitor the condition inside the gateway case
-- there is a NoSQL MongoDB support and received data can be saved in the local database if this feature is activated
+- there is a NoSQL MongoDB support and received data can be saved in the local database if this feature is activated. See [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md#support-of-mongodb-as-a-cloud-declaration) for more information on the local MongoDB structure.
 - there is an Apache web server with basic PHP forms to visualize graphically the received data of the MongoDB with any web browser
 - the gateway acts as the WiFi access-point. The SSID is WAZIUP_PI_GW_XXXXXXXXXX where XXXXXXXXXX is the last 5 hex bytes of gateway ID: WAZIUP_PI_GW_27EB27F90F for instance. It has IP address 192.168.200.1 and will lease IP addresses in the range of 192.168.200.100 and 192.168.200.120. Just connect to http://192.168.200.1 with a web brower (could be from a smartphone) to get the graphic visualization of the data stored in the gateway's MongoDB database.	
 - there is the support of Bluetooth connection. A simple Android App running on Android smartphone displays the data stored in the gateway's MongoDB database.
@@ -284,7 +284,7 @@ To log processing output in a file (in ~/Dropbox/LoRa-test/post_processing.log)
 
 	> sudo ./lora_gateway | python ./post_processing_gw.py | python ./log_gw
 	
-**Note that if you want to run and test the above command now**, you have to create a "Dropbox" folder in your home directory with a subforder "LoRa-test" that will be used locally. Please put attention to the name of the folders: they must be "Dropbox/LoRa-test" because the "post_processing_gw.py" Python script uses these paths. You can mount Dropbox later on if you want: the local folders and contents will be unchanged. **Otherwise, just run the config_raspbian.sh configurarion script as it will be described later on (recommended)**.
+**Note that if you want to run and test the above command now**, you have to create a "Dropbox" folder in your home directory with a subforder "LoRa-test" that will be used locally. Please put attention to the name of the folders: they must be "Dropbox/LoRa-test" because the "post_processing_gw.py" Python script uses these paths. You can mount Dropbox later on if you want: the local folders and contents will be unchanged. **Otherwise, just run the basic_config_gw.sh configurarion script as described [previously](https://github.com/CongducPham/LowCostLoRaGw#configuring-your-gateway-after-update) (recommended)**.
 
     > mkdir -p Dropbox/LoRa-test 	
 	

@@ -196,6 +196,20 @@ $(function () {
         });
     });
 
+//######################
+//#  Copy log file
+//######################
+	$('#btn_copy_log_file').click(function() {
+        $.post($(this).attr('href'), function (res) { 
+            // handle the response (*) by storing the message into the DIV#message
+            //$('#gw_full_update_msg').html(res);
+	     $('#gw_config_msg').html(res);
+	    //erase message after 5 seconds
+	    setTimeout(function() {
+  		$('#gw_config_msg').html("");
+	    },5000);
+        });
+    });
 
 //#######################
 //# Setting ThingSpeak

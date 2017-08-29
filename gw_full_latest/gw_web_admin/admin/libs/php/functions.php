@@ -40,6 +40,10 @@ function update_web_admin_interface(){
 	return shell_exec("sudo ".LORA_GATEWAY."/gw_web_admin/install.sh");
 }
 
+function copy_log_file(){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/copy_log_file.sh");
+}
+
 function hostapd_conf($ssid, $wpa_passphrase){
 	//echo shell_exec("sudo /var/www/html/admin/sh/wifi.sh ".$ssid." ".$wpa_passphrase." 2>&1");
 	return shell_exec("sudo /var/www/html/admin/libs/sh/wifi.sh ".$ssid." ".$wpa_passphrase);

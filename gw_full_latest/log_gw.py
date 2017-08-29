@@ -51,8 +51,11 @@ json_array = json.loads(array)
 _gwaddr = json_array["gateway_conf"]["gateway_ID"]
 
 #log files
-_parselog_filename = _folder_path+"post-processing_"+str(_gwaddr)+".log"
-_prefix_filename = _folder_path+"post-processing_"+str(_gwaddr)+"_"
+#_parselog_filename = _folder_path+"post-processing_"+str(_gwaddr)+".log"
+#_prefix_filename = _folder_path+"post-processing_"+str(_gwaddr)+"_"
+_parselog_filename = _folder_path+"post-processing.log"
+_prefix_filename = _folder_path+"post-processing_"
+
 
 #recovering if we use weekly logs and monthly logs or just monthly logs
 _use_weekly_log = json_array["gateway_conf"]["log_weekly"]
@@ -68,7 +71,7 @@ def monthChanged(last_year, last_month) :
 	#move the log files in the folder
 	files = os.listdir(os.path.expanduser(_folder_path))
 	for f in files:
-		if f.startswith("post-processing_"+str(_gwaddr)+"_"+str(last_year)+"-"+str(last_month)) :
+		if f.startswith("post-processing_"+str(last_year)+"-"+str(last_month)) :
 			shutil.move(os.path.expanduser(_folder_path+f), os.path.expanduser(_new_folder_name))
 
 the_line=sys.stdin.readline()

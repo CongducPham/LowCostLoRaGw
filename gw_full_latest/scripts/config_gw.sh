@@ -66,33 +66,33 @@ echo "Replacing gw id in ../gateway_conf.json"
 sed -i -- 's/"000000.*"/"000000'"$gwid"'"/g' ../gateway_conf.json
 echo "Done"
 
-if [ ! -d ~/Dropbox/LoRa-test ]
+if [ ! -d /home/pi/Dropbox/LoRa-test ]
 	then
-		echo "*****************************************************"
-		echo "*** create ~/Dropbox/LoRa-test (recommended) Y/N  ***"
-		echo "*****************************************************"
+		echo "************************************************************"
+		echo "*** create /home/pi/Dropbox/LoRa-test (recommended) Y/N  ***"
+		echo "************************************************************"
 		read ouinon
 
 		if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 			then
-				echo "Creating ~/Dropbox/LoRa-test"
-				mkdir -p ~/Dropbox/LoRa-test
+				echo "Creating /home/pi/Dropbox/LoRa-test"
+				mkdir -p /home/pi/Dropbox/LoRa-test
 				echo "Done"
 		fi
 	else
-		echo "~/Dropbox/LoRa-test already exist. OK."
+		echo "/home/pi/Dropbox/LoRa-test already exist. OK."
 fi
 				
-echo "********************************************************"
-echo "*** create log symb link to ~/Dropbox/LoRa-test Y/N  ***"
-echo "********************************************************"
+echo "***************************************************************"
+echo "*** create log symb link to /home/pi/Dropbox/LoRa-test Y/N  ***"
+echo "***************************************************************"
 read ouinon
 
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 	then
-		rm ../log
-		echo "Creating log -> ~/Dropbox/LoRa-test"
-		ln -s ~/Dropbox/LoRa-test ../log
+		rm /home/pi/lora_gateway/log
+		echo "Creating log -> /home/pi/Dropbox/LoRa-test"
+		ln -s /home/pi/Dropbox/LoRa-test /home/pi/lora_gateway/log
 		echo "Done"		
 fi	
 	

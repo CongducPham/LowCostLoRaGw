@@ -51,6 +51,7 @@ sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/set_profile.
 sudo echo "www-data ALL=(ALL) NOPASSWD: /usr/bin/python, /var/www/html/admin/libs/python/key_clouds.py" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/basic_config_gw.sh" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/gw_web_admin/install.sh" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/copy_log_file.sh" >> /tmp/sudoers.bak
 		
 # Check syntax of the backup file to make sure it is correct.
 sudo visudo -cf /tmp/sudoers.bak
