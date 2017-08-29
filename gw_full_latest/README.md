@@ -477,9 +477,9 @@ You can use cmd.sh as follows:
 	1- sudo ./lora_gateway --mode 1                                      +
 	2- sudo ./lora_gateway --mode 1|python post_processing_gw.py -t -m 2 +
 	3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +
-	4- tail --line=15 ../Dropbox/LoRa-test/post-processing_*.log         +
-	5- tail -f ../Dropbox/LoRa-test/post-processing_*.log                +
-	6- less ../Dropbox/LoRa-test/post-processing_*.log                   +
+	4- tail --line=15 ../Dropbox/LoRa-test/post-processing.log           +
+	5- tail -f ../Dropbox/LoRa-test/post-processing.log                  +
+	6- less ../Dropbox/LoRa-test/post-processing.log                     +
 	------------------------------------------------------* Bluetooth *--+
 	a- run: sudo hciconfig hci0 piscan                                   +
 	b- run: sudo python rfcomm-server.py                                 +
