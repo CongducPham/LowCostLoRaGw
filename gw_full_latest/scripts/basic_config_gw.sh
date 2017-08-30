@@ -29,6 +29,18 @@ board=`cat /proc/cpuinfo | grep "Revision" | cut -d ':' -f 2 | tr -d " \t\n\r"`
 #get the last 5 bytes of the eth0 MAC addr
 gwid=`ifconfig | grep 'eth0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
 
+#get the last 5 bytes of the wlan0 MAC addr
+if [ "$gwid" = "" ]
+	then
+		gwid=`ifconfig | grep 'wlan0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
+fi
+
+#set a default value
+if [ "$gwid" = "" ]
+	then
+		gwid="XXXXXXDEF0"
+fi
+
 echo "Creating /home/pi/lora_gateway/gateway_id.txt file"
 echo "Writing 000000$gwid"
 echo "000000$gwid" > /home/pi/lora_gateway/gateway_id.txt
@@ -70,7 +82,8 @@ echo "Done"
 echo "Compile lora_gateway executable"
 
 pushd /home/pi/lora_gateway/
-if [ "$board" = "a01041" ] || [ "$board" = "a21041" ]
+
+if [ "$board" = "a01041" ] || [ "$board" = "a21041" ] || [ "$board" = "a22042" ]
 	then
 		echo "You have a Raspberry 2"
 		echo "Compiling for Raspberry 2 and 3"
@@ -80,6 +93,11 @@ elif [ "$board" = "a02082" ] || [ "$board" = "a22082" ]
 		echo "You have a Raspberry 3"
 		echo "Compiling for Raspberry 2 and 3"
 		make lora_gateway_pi2
+elif [ "$board" = "900092" ] || [ "$board" = "900093" ] || [ "$board" = "9000C1" ]
+	then
+		echo "You have a Raspberry Zero"
+		echo "Compiling for Raspberry 1"
+		make lora_gateway
 else
 	echo "You have a Raspberry 1"		
 	echo "Compiling for Raspberry 1"

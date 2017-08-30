@@ -29,6 +29,19 @@ then
 	echo "Reading MAC address to get last 5 bytes for gateway id"
 	#get the last 5 bytes of the eth0 MAC addr
 	gwid=`ifconfig | grep 'eth0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
+	
+	#get the last 5 bytes of the wlan0 MAC addr
+	if [ "$gwid" = "" ]
+		then
+			gwid=`ifconfig | grep 'wlan0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
+	fi
+
+	#set a default value
+	if [ "$gwid" = "" ]
+		then
+			gwid="XXXXXXDEF0"
+	fi
+	
 	echo "Creating gateway_id.txt file"
 	echo "Writing 000000$gwid"
 	echo "000000$gwid" > gateway_id.txt
