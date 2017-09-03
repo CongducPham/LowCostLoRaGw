@@ -41,17 +41,21 @@ echo "Edit /etc/sudoers to obtain root privileges for www-data"
 sudo cp /etc/sudoers /tmp/sudoers.bak
 # delete existing files
 sudo sed -i '/www-data/d' /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD: /sbin/reboot, /sbin/shutdown" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD: /etc/hostapd/hostapd.conf, /var/www/html/admin/libs/sh/wifi.sh" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/thingspeak_key.sh, /var/www/html/admin/libs/sh/waziup_key.sh" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/update_gw.sh, /var/www/html/admin/libs/sh/install_gw.sh, /var/www/html/admin/libs/sh/update_gw_file.sh" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/gateway_conf.sh, /var/www/html/admin/libs/sh/waziup_conf.sh, /var/www/html/admin/libs/sh/thingspeak_conf.sh" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/contact_mail.sh, /var/www/html/admin/libs/sh/contact_sms.sh" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/set_profile.sh, /var/www/html/admin/libs/sh/low_level_gw_status.sh, /var/www/html/admin/libs/sh/downlink_request.sh" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD: /usr/bin/python, /var/www/html/admin/libs/python/key_clouds.py" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD: /sbin/reboot, /sbin/shutdown, /etc/hostapd/hostapd.conf" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/web_shell_script.sh" >> /tmp/sudoers.bak
+
+#sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/thingspeak_key.sh, /var/www/html/admin/libs/sh/waziup_key.sh" >> /tmp/sudoers.bak
+#sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/update_gw.sh, /var/www/html/admin/libs/sh/install_gw.sh, /var/www/html/admin/libs/sh/update_gw_file.sh" >> /tmp/sudoers.bak
+#sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/gateway_conf.sh, /var/www/html/admin/libs/sh/waziup_conf.sh, /var/www/html/admin/libs/sh/thingspeak_conf.sh" >> /tmp/sudoers.bak
+#sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/contact_mail.sh, /var/www/html/admin/libs/sh/contact_sms.sh" >> /tmp/sudoers.bak
+#sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/set_profile.sh, /var/www/html/admin/libs/sh/low_level_gw_status.sh, /var/www/html/admin/libs/sh/downlink_request.sh" >> /tmp/sudoers.bak
+#sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/copy_log_file.sh" >> /tmp/sudoers.bak
+
+sudo echo "www-data ALL=(ALL) NOPASSWD: /usr/bin/python" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/python/key_clouds.py, /var/www/html/admin/libs/python/key_thingspeak.py" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/basic_config_gw.sh" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/gw_web_admin/install.sh" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/copy_log_file.sh" >> /tmp/sudoers.bak
+
 		
 # Check syntax of the backup file to make sure it is correct.
 sudo visudo -cf /tmp/sudoers.bak

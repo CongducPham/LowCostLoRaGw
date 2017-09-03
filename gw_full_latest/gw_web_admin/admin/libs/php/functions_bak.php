@@ -14,11 +14,13 @@ function is_connected(){
 }
 
 function low_level_gw_status(){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh low_level_gw_status");
+	return shell_exec("sudo /var/www/html/admin/libs/sh/low_level_gw_status.sh");
+	//$sys = system ("grep 'set of color names' *.php ");
+	//echo "sys =(($sys))"
 }
 
 function gw_new_install(){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh install_gw");
+	return shell_exec("sudo /var/www/html/admin/libs/sh/install_gw.sh");
 }
 
 function gw_full_update(){
@@ -30,33 +32,36 @@ function gw_basic_conf(){
 }
 
 function gw_update_file($filename_url){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh update_gw_file ".$filename_url);
+	return shell_exec("sudo /var/www/html/admin/libs/sh/update_gw_file.sh ".$filename_url);
 }
 
 function update_web_admin_interface(){
+	//echo "<p><center><font color="green">Updating web admin interface. Please wait for completion...</font></center></p>";
 	return shell_exec("sudo ".LORA_GATEWAY."/gw_web_admin/install.sh");
 }
 
 function copy_log_file(){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh copy_log_file");
+	return shell_exec("sudo /var/www/html/admin/libs/sh/copy_log_file.sh");
 }
 
 function hostapd_conf($ssid, $wpa_passphrase){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh wifi ".$ssid." ".$wpa_passphrase);
+	//echo shell_exec("sudo /var/www/html/admin/sh/wifi.sh ".$ssid." ".$wpa_passphrase." 2>&1");
+	return shell_exec("sudo /var/www/html/admin/libs/sh/wifi.sh ".$ssid." ".$wpa_passphrase);
 }
 
 //module => Key => value 
 //radio_conf => ch => -1
 function update_gw_conf($module, $key, $value){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh gateway_conf ".$module." ".$key." ".$value);
+	//echo shell_exec("sudo /var/www/html/admin/sh/gateway_conf.sh ".$module." ".$key." ".$value." 2>&1");
+	return shell_exec("sudo /var/www/html/admin/libs/sh/gateway_conf.sh ".$module." ".$key." ".$value);
 }
 
 function update_contact_sms($contacts){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh contact_sms ".$contacts);
+	return shell_exec("sudo /var/www/html/admin/libs/sh/contact_sms.sh ".$contacts);
 }
 
 function update_contact_mail($contacts){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh contact_mail ".$contacts);
+	return shell_exec("sudo /var/www/html/admin/libs/sh/contact_mail.sh ".$contacts);
 }
 
 function waziup_key($key_name, $key_value){
@@ -69,19 +74,19 @@ function waziup_key($key_name, $key_value){
 		}
 		$key_value = addslashes($key_value);
 	}
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh waziup_key ".$key_name." ".$key_value);
+	return shell_exec("sudo /var/www/html/admin/libs/sh/waziup_key.sh ".$key_name." ".$key_value);
 }
 
 function waziup_conf($key, $value){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh waziup_conf ".$key." ".$value);	
+	return shell_exec("sudo /var/www/html/admin/libs/sh/waziup_conf.sh ".$key." ".$value);	
 }
 
 function thingspeak_key($write_key){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh thingspeak_key ".$write_key);
+	return shell_exec("sudo /var/www/html/admin/libs/sh/thingspeak_key.sh ".$write_key);
 }
 
 function thingspeak_conf($key, $value){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh thingspeak_conf ".$key." ".$value);
+	return shell_exec("sudo /var/www/html/admin/libs/sh/thingspeak_conf.sh ".$key." ".$value);
 }
 
 function read_gw_conf_json(){
@@ -131,6 +136,8 @@ function process_key_clouds(){
 	else{
 		return json_decode(exec('python /var/www/html/admin/libs/python/key_thingspeak.py'), true);
 	}
+	//$result = json_decode(exec('python /var/www/html/admin/libs/python/key_clouds.py'), true);
+	//echo $result['project_name'];
 }
 
 # Enabled field : true or false
@@ -150,7 +157,7 @@ function cloud_status($clouds_arr, $cloud_script){
 }
 
 function send_downlink($dst, $msg){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh downlink_request ".$dst." ".$msg);
+	return shell_exec("sudo /var/www/html/admin/libs/sh/downlink_request.sh ".$dst." ".$msg);
 }
 
 function display_array($arr){
@@ -167,7 +174,7 @@ function check_login($db_log, $db_pwd, $form_log, $form_pwd){
 }
 
 function set_profile($new_username, $new_password){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh set_profile ".$new_username." ".$new_password);
+	return shell_exec("sudo /var/www/html/admin/libs/sh/set_profile.sh ".$new_username." ".$new_password);
 }
 
 ?>
