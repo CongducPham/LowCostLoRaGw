@@ -54,7 +54,7 @@ Features
 - get the zipped SD card image (Raspbian Jessie)
 	- [raspberrypi-jessie-WAZIUP-demo.dmg.zip](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
 	- Based on Raspbian Jessie 
-	- Supports Raspberry 1B+, RPI2 and RPI3 (WiFi support is for RPI3. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles)
+	- Supports Raspberry 1B+, RPI2, RPI3, RPI0 and RPI0W (out-of-box WiFi support is for RPI3 and RPI0W. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles)
 	- Get the zipped image, unzip it, install it on an **8GB** SD card, see [this tutorial](https://www.raspberrypi.org/documentation/installation/installing-images/) from www.raspberrypi.org
 	- Plug the SD card into your Raspberry
 	- Connect a radio module (see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)
@@ -64,7 +64,7 @@ Features
 		- password: loragateway
 		- **it is strongly advise to change the pi user's password**		
 	- The LoRa gateway starts automatically when RPI is powered on
-	- With an RPI3, the Raspberry will automatically act as a WiFi access point
+	- With an RPI3 and RPI0W, the Raspberry will automatically act as a WiFi access point
 		- SSID=WAZIUP_PI_GW_27EB27F90F for instance
 		- password=loragateway
 		- **it is strongly advise to change this WiFi password**
@@ -284,7 +284,7 @@ To log processing output in a file (in ~/Dropbox/LoRa-test/post_processing.log)
 
 	> sudo ./lora_gateway | python ./post_processing_gw.py | python ./log_gw
 	
-**Note that if you want to run and test the above command now**, you have to create a "Dropbox" folder in your home directory with a subforder "LoRa-test" that will be used locally. Please put attention to the name of the folders: they must be "Dropbox/LoRa-test" because the "post_processing_gw.py" Python script uses these paths. You can mount Dropbox later on if you want: the local folders and contents will be unchanged. **Otherwise, just run the basic_config_gw.sh configurarion script as described [previously](https://github.com/CongducPham/LowCostLoRaGw#configuring-your-gateway-after-update) (recommended)**.
+**Note that if you want to run and test the above command now**, you have to create a "Dropbox" folder in your home directory with a subfolder "LoRa-test" that will be used locally. Please put attention to the name of the folders: they must be "Dropbox/LoRa-test" because the "post_processing_gw.py" Python script uses these paths. You can mount Dropbox later on if you want: the local folders and contents will be unchanged. **Otherwise, just run the basic_config_gw.sh configuration script as described [previously](https://github.com/CongducPham/LowCostLoRaGw#configuring-your-gateway-after-update) (recommended)**.
 
     > mkdir -p Dropbox/LoRa-test 	
 	
