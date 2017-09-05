@@ -27,13 +27,21 @@ if [ ! -f gateway_id.txt ]
 then
 	echo "ERROR: gateway_id.txt file not found"
 	echo "Reading MAC address to get last 5 bytes for gateway id"
+	
 	#get the last 5 bytes of the eth0 MAC addr
 	gwid=`ifconfig | grep 'eth0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
-	
+
 	#get the last 5 bytes of the wlan0 MAC addr
 	if [ "$gwid" = "" ]
 		then
 			gwid=`ifconfig | grep 'wlan0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
+			
+			#it means that the wlan0 interface works in access point mode or has no IP address assigned
+			#so get the address from the ether field
+			if [ "$gwid" = "00" ]
+			then
+				gwid=`ifconfig | grep 'ether' | awk '{print $2}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
+			fi
 	fi
 
 	#set a default value

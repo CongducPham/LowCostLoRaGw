@@ -75,11 +75,39 @@ fi
 
 if [ "$1" = "install_gw" ]
 then
-	cd /home/pi
-	cp lora_gateway/scripts/update_gw.sh .
-	rm -r lora_gateway
-	./update_gw.sh
-	rm update_gw.sh
+
+	wget -q --spider http://google.com
+
+	if [ $? -eq 0 ]; then
+		#online
+		cd /home/pi
+		
+		if [ -f lora_gateway/scripts/update_gw.sh ]
+		then
+			cp lora_gateway/scripts/update_gw.sh .
+		elif [ -f scripts/update_gw.sh ]
+			cp scripts/update_gw.sh .
+		else
+			wget https://raw.githubusercontent.com/CongducPham/LowCostLoRaGw/master/gw_full_latest/scripts/update_gw.sh	
+		fi
+		
+		chmod +x update_gw.sh
+			
+		mv lora_gateway lora_gateway_bak
+		./update_gw.sh
+		
+		#test if a lora_gateway folder has been created
+		if [ -d lora_gateway ]
+		then
+			rm -rf lora_gateway_bak
+		else
+			mv lora_gateway_bak lora_gateway	
+		
+		rm update_gw.sh
+	else
+		#offline
+		#do nothing
+	fi
 fi
 
 if [ "$1" = "low_level_gw_status" ]

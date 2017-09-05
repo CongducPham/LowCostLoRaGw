@@ -25,6 +25,7 @@
 #
 # example: ./config_gw.sh
 
+cd /home/pi/lora_gateway/scripts
 
 board=`cat /proc/cpuinfo | grep "Revision" | cut -d ':' -f 2 | tr -d " \t\n\r"`
 
@@ -93,13 +94,18 @@ else
 	fi
 fi
 
-echo "Creating ../gateway_id.txt file"
-echo "Writing 000000$gwid"
-echo "000000$gwid" > ../gateway_id.txt
+echo "Keep a copy of /home/pi/lora_gateway/scripts/update_gw.sh"
+mkdir /home/pi/scripts
+cp /home/pi/lora_gateway/scripts/update_gw.sh /home/pi/scripts
 echo "Done"
 
-echo "Replacing gw id in ../gateway_conf.json"
-sed -i -- 's/"000000.*"/"000000'"$gwid"'"/g' ../gateway_conf.json
+echo "Creating /home/pi/lora_gateway/gateway_id.txt file"
+echo "Writing 000000$gwid"
+echo "000000$gwid" > /home/pi/lora_gateway/gateway_id.txt
+echo "Done"
+
+echo "Replacing gw id in /home/pi/lora_gateway/gateway_conf.json"
+sed -i -- 's/"000000.*"/"000000'"$gwid"'"/g' /home/pi/lora_gateway/gateway_conf.json
 echo "Done"
 
 if [ ! -d /home/pi/Dropbox/LoRa-test ]
@@ -203,14 +209,14 @@ read ouinon
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 	then
 		echo "Compiling the DHT22 library"
-		cd ../sensors_in_raspi
+		cd /home/pi/lora_gateway/sensors_in_raspi
 		cd PIGPIO
 		make -j4
 		echo "Done"
 		echo "Installing the DHT22 library"
 		sudo make install
 		echo "Done"
-		cd ../../scripts
+		
 		echo "Change in gateway_conf.json the value in seconds between 2 readings."
 		echo "--> \"dht22\" : 3600"
 		echo "for one reading every hour. Set to 0 to disable DHT reading."
@@ -222,14 +228,14 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 			then
 				echo "Editing gateway_conf.json. CTRL-O to save, CTRL-X to return. Press any key to start editing."
 				read k 
-				nano ../gateway_conf.json	
+				nano /home/pi/lora_gateway/gateway_conf.json	
 		fi			
 		
 fi
 
 echo ""
 echo "Current status for DHT22 MongoDB is:"
-grep "dht22_mongo" ../gateway_conf.json
+grep "dht22_mongo" /home/pi/lora_gateway/gateway_conf.json
 echo ""
 echo "*************************************"
 echo "*** activate DHT22 MongoDB Y/N/Q  ***"
@@ -239,14 +245,14 @@ read ouinon
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 	then
 		echo "Activating DHT22 MongoDB in gateway_conf.json"
-		sed -i 's/"dht22_mongo".*:.*false/"dht22_mongo" : true/g' ../gateway_conf.json
+		sed -i 's/"dht22_mongo".*:.*false/"dht22_mongo" : true/g' /home/pi/lora_gateway/gateway_conf.json
 		echo "Done"
 fi
 
 if [ "$ouinon" = "n" ] || [ "$ouinon" = "N" ]
 	then
 		echo "Deactivating DHT22 MongoDB in gateway_conf.json"
-		sed -i 's/"dht22_mongo".*:.*true/"dht22_mongo" : false/g' ../gateway_conf.json
+		sed -i 's/"dht22_mongo".*:.*true/"dht22_mongo" : false/g' /home/pi/lora_gateway/gateway_conf.json
 		echo "Done"
 fi
 
@@ -260,7 +266,7 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		echo "INSTRUCTIONS: set the local gateway MongoDB cloud enabled field to true or false."
 		echo "Editing clouds.json. CTRL-O to save, CTRL-X to return. Press any key to start editing."
 		read k 
-		nano ../clouds.json
+		nano /home/pi/lora_gateway/clouds.json
 fi
 
 if [ "$ouinon" = "n" ] || [ "$ouinon" = "N" ]
@@ -293,17 +299,17 @@ read ouinon
 
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 	then
-		echo "Displaying ../gateway_id.txt with less command. Press key to start. Scroll with Space, Q to quit."
+		echo "Displaying /home/pi/lora_gateway/gateway_id.txt with less command. Press key to start. Scroll with Space, Q to quit."
 		read k
-		less ../gateway_id.txt
+		less /home/pi/lora_gateway/gateway_id.txt
 
-		echo "Displaying ../gateway_conf.json with less command. Press key to start. Scroll with Space, Q to quit."
+		echo "Displaying /home/pi/lora_gateway/gateway_conf.json with less command. Press key to start. Scroll with Space, Q to quit."
 		read k
-		less ../gateway_conf.json
+		less /home/pi/lora_gateway/gateway_conf.json
 
-		echo "Displaying ../clouds.json with less command. Press key to start. Scroll with Space, Q to quit."
+		echo "Displaying /home/pi/lora_gateway/clouds.json with less command. Press key to start. Scroll with Space, Q to quit."
 		read k
-		less ../clouds.json
+		less /home/pi/lora_gateway/clouds.json
 				
 		echo "Displaying /etc/hostapd/hostapd.conf with less command. Press key to start. Scroll with Space, Q to quit."
 		read k

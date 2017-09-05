@@ -22,25 +22,40 @@ if [ -d lora_gateway ]
 		echo "simply renaming gw_full_latest in lora_gateway"
 		mv gw_full_latest lora_gateway	
 fi	
+
 cd /home/pi/lora_gateway
+
 echo "compiling the gateway program"
+
 board=`cat /proc/cpuinfo | grep "Revision" | cut -d ':' -f 2 | tr -d " \t\n\r"`
-if [ "$board" = "a01041" ] || [ "$board" = "a21041" ]
-        then
-                echo "You have a Raspberry 2"
-                echo "Compiling for Raspberry 2 and 3"
-                make lora_gateway_pi2
+
+if [ "$board" = "a01041" ] || [ "$board" = "a21041" ] || [ "$board" = "a22042" ]
+	then
+		echo "You have a Raspberry 2"
+		echo "Compiling for Raspberry 2 and 3"
+		make lora_gateway_pi2
 elif [ "$board" = "a02082" ] || [ "$board" = "a22082" ]
-        then
-                echo "You have a Raspberry 3"
-                echo "Compiling for Raspberry 2 and 3"
-                make lora_gateway_pi2
+	then
+		echo "You have a Raspberry 3"
+		echo "Compiling for Raspberry 2 and 3"
+		make lora_gateway_pi2
+elif [ "$board" = "900092" ] || [ "$board" = "900093" ]
+	then
+		echo "You have a Raspberry Zero"
+		echo "Compiling for Raspberry 1"
+		make lora_gateway
+elif [ "$board" = "9000c1" ]
+	then
+		echo "You have a Raspberry Zero W"
+		echo "Compiling for Raspberry 1"
+		make lora_gateway
 else
-        echo "You have a Raspberry 1"
-        echo "Compiling for Raspberry 1"
-        make lora_gateway
+	echo "You have a Raspberry 1"		
+	echo "Compiling for Raspberry 1"
+	make lora_gateway
 fi
+
 echo "update of gateway done."
 sudo chown -R pi:pi /home/pi/lora_gateway/
-echo "if it is a new installation, go into lora_gateway/scripts folder"
+echo "if it is a new installation, go into lora_gateway/scripts  folder"
 echo "and run ./basic_config_gw.sh"
