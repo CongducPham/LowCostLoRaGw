@@ -78,7 +78,8 @@ then
 
 	wget -q --spider http://google.com
 
-	if [ $? -eq 0 ]; then
+	if [ $? -eq 0 ]
+	then
 		#online
 		cd /home/pi
 		
@@ -86,6 +87,7 @@ then
 		then
 			cp lora_gateway/scripts/update_gw.sh .
 		elif [ -f scripts/update_gw.sh ]
+		then
 			cp scripts/update_gw.sh .
 		else
 			wget https://raw.githubusercontent.com/CongducPham/LowCostLoRaGw/master/gw_full_latest/scripts/update_gw.sh	
@@ -101,12 +103,10 @@ then
 		then
 			rm -rf lora_gateway_bak
 		else
-			mv lora_gateway_bak lora_gateway	
+			mv lora_gateway_bak lora_gateway
+		fi		
 		
 		rm update_gw.sh
-	else
-		#offline
-		#do nothing
 	fi
 fi
 
