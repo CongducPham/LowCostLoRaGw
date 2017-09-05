@@ -4,7 +4,7 @@ Low-cost LoRa gateway features and configuration tools
 Configuration files and startup procedure
 -----------------------------------------
 
-A "gateway_conf.json" file defines gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Log file names will use the gateway ID. The basic_config_gw.sh/config_gw.sh script can do it for you, see below.
+A "gateway_conf.json" file defines gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Log file names will use the gateway ID. Both basic_config_gw.sh and config_gw.sh script can do it for you, see below.
 
 In gateway_conf.json, you can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
 
@@ -33,7 +33,11 @@ If your dongle cannot set up an access-point, then you probably need to install 
 	> sudo rm hostapd
 	> sudo ln -s hostapd.tplink725.realtek hostapd
 
-Then edit /etc/hostapd/hostapd.conf
+Then edit /etc/hostapd/hostapd.conf. If you don't have the /etc/hostapd/hostapd.conf file then you may need to run:
+
+	> zcat /usr/share/doc/hostapd/examples/hostapd.conf.gz | sudo tee -a /etc/hostapd/hostapd.conf
+	
+Then
 
 	> cd /etc/hostapd
 	> sudo nano hostapd.conf
@@ -45,6 +49,7 @@ Then edit /etc/hostapd/hostapd.conf
 	### For instance TP-Link TL-WN725 dongles need the driver line
 	#driver=rtl871xdrv
 	ssid=WAZIUP_PI_GW_27EB27F90F
+	wpa_passphrase=loragateway
 	...
 
 uncomment 
@@ -118,6 +123,14 @@ If you install everything yourself, from a standard Jessie distribution
 =========================================================================
 
 You need to install some additional packages:
+
+Python pip installer
+
+	> sudo apt-get install python-pip
+	
+Python requests package
+
+	> sudo pip install requests	
 
 WiFi access-point
 
@@ -252,7 +265,7 @@ Look at https://www.raspberrypi.org/documentation/remote-access/web-server/apach
 
 Give rights to the Apache folder in order to easily administer the website
 
-	> sudo chown -R www-data:pi /var/www
+	> sudo chown -R pi:www-data /var/www
 	> sudo chmod -R 770 /var/www
 	
 Check if the server works by connecting to the IP address of the gateway with a web browser, or
@@ -280,6 +293,7 @@ F/ Python for MongoDB
 
 Install Python package for MongoDB
 
+	> sudo apt-get install python-pip
 	> sudo pip install pymongo
 	> sudo apt-get install build-essential python-dev	
 
@@ -300,7 +314,7 @@ Check if PHP works by connecting to the IP address of the gateway with a web bro
 	> sudo wget -O verif_apache.html http://127.0.0.1
 	> cat ./verif_apache.html
 	
-Remember that with Jessie, the web pages are in /var/www/html instead of /var/www, so change accordingly
+Remember that starting with Jessie, the web pages are in /var/www/html instead of /var/www, so change accordingly
 
 	> sudo apt-get install php5-dev php5-cli php-pear
 	> sudo pecl install mongo
@@ -317,6 +331,8 @@ Copy all files in the php folder into /var/www/html or /var/www depending on whe
 
 	> cd php
 	> sudo cp * /var/www/html
+	> sudo chown -R pi:www-data /var/www
+	
 	
 H/ Add the DHT22 sensor for the gateway
 =======================================
