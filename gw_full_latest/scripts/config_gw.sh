@@ -46,9 +46,14 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 				echo "You have a Raspberry 3"
 				echo "Compiling for Raspberry 2 and 3"
 				make lora_gateway_pi2
-		elif [ "$board" = "900092" ] || [ "$board" = "900093" ] || [ "$board" = "9000C1" ]
+		elif [ "$board" = "900092" ] || [ "$board" = "900093" ]
 			then
 				echo "You have a Raspberry Zero"
+				echo "Compiling for Raspberry 1"
+				make lora_gateway
+		elif [ "$board" = "9000c1" ]
+			then
+				echo "You have a Raspberry Zero W"
 				echo "Compiling for Raspberry 1"
 				make lora_gateway
 		else
@@ -59,19 +64,33 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		cd scripts
 fi
 
-#get the last 5 bytes of the eth0 MAC addr
-gwid=`ifconfig | grep 'eth0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
+if [ $# == 1 ]
+then
+	echo "Taking provided address: $1"
+	gwid="$1"
+else	
 
-#get the last 5 bytes of the wlan0 MAC addr
-if [ "$gwid" = "" ]
-	then
-		gwid=`ifconfig | grep 'wlan0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
-fi
+	#get the last 5 bytes of the eth0 MAC addr
+	gwid=`ifconfig | grep 'eth0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
 
-#set a default value
-if [ "$gwid" = "" ]
-	then
-		gwid="XXXXXXDEF0"
+	#get the last 5 bytes of the wlan0 MAC addr
+	if [ "$gwid" = "" ]
+		then
+			gwid=`ifconfig | grep 'wlan0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
+			
+			#it means that the wlan0 interface works in access point mode or has no IP address assigned
+			#so get the address from the ether field
+			if [ "$gwid" = "00" ]
+			then
+				gwid=`ifconfig | grep 'ether' | awk '{print $2}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
+			fi
+	fi
+
+	#set a default value
+	if [ "$gwid" = "" ]
+		then
+			gwid="XXXXXXDEF0"
+	fi
 fi
 
 echo "Creating ../gateway_id.txt file"
