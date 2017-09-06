@@ -57,5 +57,5 @@ fi
 
 echo "update of gateway done."
 sudo chown -R pi:pi /home/pi/lora_gateway/
-echo "if it is a new installation, go into lora_gateway/scripts  folder"
+echo "if it is a new installation, go into lora_gateway/scripts folder"
 echo "and run ./basic_config_gw.sh"

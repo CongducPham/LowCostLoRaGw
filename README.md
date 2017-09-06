@@ -150,7 +150,7 @@ Or if you want to "move" the LowCostLoRaGw/gw_full_latest folder, simply do (wit
 
 	> mv LowCostLoRaGw/gw_full_latest ./lora_gateway  
 	
-If you download the repository from your laptop, then rename gw_full_latest into lora_gateway and copy the entire gw_full_latest folder into the Raspberry using scp for instance. In the example below, the laptop has wired Internet connectivity and use the gateway's advertised WiFi to connect to the gateway. Therefore the IP address of the gateway is 192.168.200.1.
+If you download the repository from your laptop, then rename gw_full_latest into lora_gateway and copy the entire lora_gateway folder into the Raspberry using scp for instance. In the example below, the laptop has wired Internet connectivity and use the gateway's advertised WiFi to connect to the gateway. Therefore the IP address of the gateway is 192.168.200.1.
 
 	> scp -r lora_gateway pi@192.168.200.1:/home/pi
 	
