@@ -22,7 +22,9 @@ Look also at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.
 Get our SD card image
 ---------------------
 
-Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip). It is not a MacOS X DMG package as the extension may be misleading, simply unzip the file and burn the dmg file to an SD card. You can look at various tutorials on how to burn an image to an SD card. There is one [here from raspberrypi.org](https://www.raspberrypi.org/documentation/installation/installing-images/) and [here from elinux.org](http://elinux.org/RPi_Easy_SD_Card_Setup). I use a Mac to do so and [this is my preferred solution](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md). The [Linux version](https://www.raspberrypi.org/documentation/installation/installing-images/linux.md) is not very different.
+Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip). It is not a MacOS X DMG package as the extension may be misleading, simply unzip the file and burn the dmg file to an SD card. Use an SD card of a minimum of 8GB. Take also a class 10. If you have bigger SD card, e.g. 16GB, then after boot, use raspi-config (see [tutorial here](https://www.raspberrypi.org/documentation/configuration/raspi-config.md)) to resize the partition in order to use the extra space available (you will need to reboot but raspi-config will ask you for that). You can use "df -h" to verify that you have more space after reboot.  
+
+You can look at various tutorials on how to burn an image to an SD card. There is one [here from raspberrypi.org](https://www.raspberrypi.org/documentation/installation/installing-images/) and [here from elinux.org](http://elinux.org/RPi_Easy_SD_Card_Setup). I use a Mac to do so and [this is my preferred solution](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md). The [Linux version](https://www.raspberrypi.org/documentation/installation/installing-images/linux.md) is not very different.
 
 Upgrade notice
 --------------
@@ -60,7 +62,7 @@ Features
 	- [raspberrypi-jessie-WAZIUP-demo.dmg.zip](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
 	- Based on Raspbian Jessie 
 	- Supports Raspberry 1B+, RPI2, RPI3, RPI0 and RPI0W (out-of-box WiFi support is for RPI3 and RPI0W. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles)
-	- Get the zipped image, unzip it, install it on an **8GB** SD card, see [this tutorial](https://www.raspberrypi.org/documentation/installation/installing-images/) from www.raspberrypi.org
+	- Get the zipped image, unzip it, install it on an **8GB** SD card (or bigger), see [this tutorial](https://www.raspberrypi.org/documentation/installation/installing-images/) from www.raspberrypi.org
 	- Plug the SD card into your Raspberry
 	- Connect a radio module (see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)
 	- Power-on the Raspberry
