@@ -27,5 +27,5 @@ else
 	fi
 fi
 
-echo "Writing 000000$gwid"
+echo "Detecting gw id as 000000$gwid"
 

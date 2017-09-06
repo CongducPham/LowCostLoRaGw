@@ -20,6 +20,30 @@ Cloud support is separated into different external Python script file. We provid
 
 A cmd.sh script can be used in an interactive way to launch various commands for the gateway.
 
+Connect to your new gateway
+---------------------------
+
+If you see the WiFi network WAZIUP_PI_GW_XXXXXXXXXX then connect to this WiFi network. The address of the Raspberry is then 192.168.200.1. If you see no WiFi access point (e.g. RP1/RPI2/RPI0 without WiFi dongle), then plug your Raspberry into a DHCP-enabled box/router/network to get an IP address or shared your laptop internet connection to make your laptop acting as a DHCP server. On a Mac, there is a very simple solution [here](https://mycyberuniverse.com/mac-os/connect-to-raspberry-pi-from-a-mac-using-ethernet.html). For Windows, you can follow [this tutorial](http://www.instructables.com/id/Direct-Network-Connection-between-Windows-PC-and-R/) or [this one](https://electrosome.com/raspberry-pi-ethernet-direct-windows-pc/). You can then use [Angry IP Scanner](http://angryip.org/) to determine the assigned IP address for the Raspberry.
+
+We will use in this example 192.168.2.8 for the gateway address (DHCP option in order to have Internet access from the Raspberry)
+
+	> ssh pi@192.168.2.8
+	pi@192.168.200.1's password: 
+	
+	The programs included with the Debian GNU/Linux system are free software;
+	the exact distribution terms for each program are described in the
+	individual files in /usr/share/doc/*/copyright.
+	
+	Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+	permitted by applicable law.
+	Last login: Thu Aug  4 18:04:41 2016
+
+go to lora_gateway folder
+
+	> cd lora_gateway
+	
+and follows instructions below.
+
 WiFi instructions on RPI1B+ and RPI2
 ------------------------------------
 
@@ -58,32 +82,10 @@ uncomment
 	
 save the file and see below to configure your new gateway.
 
-Connect to your new gateway
----------------------------
+Configure your gateway with basic_config_gw.sh or config_gw.sh
+--------------------------------------------------------------
 
-If you see the WiFi network WAZIUP_PI_GW_27EB27F90F then connect to this WiFi network. The address of the Raspberry is then 192.168.200.1. If you have no WiFi access point, then plug your Raspberry into a DHCP-enabled network to get an IP address or shared your laptop internet connection to make your laptop acting as a DHCP server. We will use in this example 192.168.200.1 for your gateway address (WiFi option)
-
-	> ssh pi@192.168.200.1
-	pi@192.168.200.1's password: 
-	
-	The programs included with the Debian GNU/Linux system are free software;
-	the exact distribution terms for each program are described in the
-	individual files in /usr/share/doc/*/copyright.
-	
-	Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-	permitted by applicable law.
-	Last login: Thu Aug  4 18:04:41 2016
-
-go to lora_gateway folder
-
-	> cd lora_gateway
-	
-and follows instructions below.
-
-Configure your gateway with config_gw.sh
-----------------------------------------
-
-The config_gw.sh in the scripts folder can help you for the gateway configuration, WiFi and Bluettoth configuration tasks (if you use our SD card image, otherwise, you need first to install some required packages). If you don't want some features, just skip them. The configuration script automatically determines the gateway id that will be derived from the Rapberry eth0 MAC address:
+basic_config_gw.sh should be sufficient for most of the cases. The configuration script mainly assign the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will be the last 5 bytes of the Rapberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you.  
 
     > ifconfig
     eth0  Link encap:Ethernet  HWaddr b8:27:eb:be:da:21  
@@ -95,9 +97,12 @@ The config_gw.sh in the scripts folder can help you for the gateway configuratio
           collisions:0 txqueuelen:1000 
           RX bytes:6565141 (6.2 MiB)  TX bytes:1452497 (1.3 MiB)
           
-In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "27EBBEDA21"
-    
-**config_gw.sh takes care of:**
+In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "27EBBEDA21". In the script folder, simply run basic_config_gw.sh to automatically configure your gateway.
+
+	> cd /home/pi/lora_gateway/scripts
+	> ./basic_config_gw.sh
+	
+**basic_config_gw.sh takes care of:**
 
 - determining the gateway id
 - compiling the lora_gateway program, the Raspberry board version will be checked automatically
@@ -106,21 +111,24 @@ In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "
 - creating the /home/pi/Dropbox/LoRa-test folder for log files (if it does not exist) 
 - creating a "log" symbolic link in the lora_gateway folder pointing to /home/pi/Dropbox/LoRa-test folder
 - configuring /etc/hostapd/hostapd.conf for WiFi (step A)
+- configuring the gateway to run the lora_gateway program at boot (step I)
+
+If you need more advanced configuration, then run config_gw.sh. for advanced WiFi and Bluettoth configuration tasks (if you use our SD card image, otherwise, you need first to install some required packages). If you don't want some features, just skip them. The configuration script also automatically determines the gateway id like previously. **config_gw.sh takes care of:**
+
+- everything that basic_config_gw.sh is doing, **plus**
 - configuring /etc/bluetooth/main.conf for Bluetooth (step B)
 - activating MongoDB storage (step F)
 - compiling DHT22 support (step H)
-- configuring the gateway to run the lora_gateway program at boot (step I)
 
-Anyway, check steps A to I as described below and perform all needed tasks that config_gw.sh is is not addressing.
+Anyway, check steps A to I as described below and perform all needed tasks that config_gw.sh is not addressing.
 
-**Even if you installed from the zipped SD card image config_gw.sh is still needed to personalize your gateway to:**
+**Even if you installed from the zipped SD card image basic_config_gw.sh or config_gw.sh is still needed to personalize your gateway to:**
 
 - compile the lora_gateway program for your the Raspberry board version
 - configure /etc/hostapd/hostapd.conf for to advertise a WiFi SSID corresponding to last 5 hex-byte of your eth0 interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
-- compile DHT22 support if you connected such a sensor to your Raspberry
 
-If you install everything yourself, from a standard Jessie distribution
-=========================================================================
+If you install everything yourself, from a standard Jessie (or newer) distribution
+==================================================================================
 
 You need to install some additional packages:
 

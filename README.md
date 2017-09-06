@@ -19,6 +19,11 @@ Go to [https://github.com/CongducPham/tutorials](https://github.com/CongducPham/
 
 Look also at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.pdf)!
 
+Get our SD card image
+---------------------
+
+Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip). It is not a MacOS X DMG package as the extension may be misleading, simply unzip the file and burn the dmg file to an SD card. You can look at various tutorials on how to burn an image to an SD card. There is one [here from raspberrypi.org](https://www.raspberrypi.org/documentation/installation/installing-images/) and [here from elinux.org](http://elinux.org/RPi_Easy_SD_Card_Setup). I use a Mac to do so and [this is my preferred solution](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md). The [Linux version](https://www.raspberrypi.org/documentation/installation/installing-images/linux.md) is not very different.
+
 Upgrade notice
 --------------
 
@@ -71,33 +76,59 @@ Features
 	- Includes most of features described here but a full update with the latest version is **highly recommended, see below**	
 	- By default, incoming data are uploaded to our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794)
 	- Works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
-	
+
+		
 Installing the latest gateway version 
 =====================================
 
-The full, latest distribution of the low-cost gateway is available in the gw_full_latest folder of the github. It contains all the gateway control and post-processing software. The **simplest and recommended way** to install a new gateway is to use [our zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip) and update the gateway from it. In this way you don't need to install any additional packages. Otherwise you may need to install required Raspbian Jessie packages as explained in the various README files.
+The full, latest distribution of the low-cost gateway is available in the gw_full_latest folder of the github. It contains all the gateway control and post-processing software. The **simplest and recommended way** to install a new gateway is to use [our zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip) and perform a new install of the gateway from this image. In this way you don't need to install the various additional packages that are required (as explained in the various README files). Once you have burnt the SD image on a 8GB (minimum) SD card, insert it in your Raspberry and power it. 
 
-Once you have your SD card flashed with our image, to get directly to the full, latest gateway version, you can either (i) use the provided update script, or (ii) download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or, (iii) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. Option (i) is preferable and basically automatizes option (iii).
+Connect to your new gateway
+---------------------------
+
+If you see the WiFi network WAZIUP_PI_GW_XXXXXXXXXX then connect to this WiFi network. The address of the Raspberry is then 192.168.200.1. If you see no WiFi access point (e.g. RP1/RPI2/RPI0 without WiFi dongle), then plug your Raspberry into a DHCP-enabled box/router/network to get an IP address or shared your laptop internet connection to make your laptop acting as a DHCP server. On a Mac, there is a very simple solution [here](https://mycyberuniverse.com/mac-os/connect-to-raspberry-pi-from-a-mac-using-ethernet.html). For Windows, you can follow [this tutorial](http://www.instructables.com/id/Direct-Network-Connection-between-Windows-PC-and-R/) or [this one](https://electrosome.com/raspberry-pi-ethernet-direct-windows-pc/). You can then use [Angry IP Scanner](http://angryip.org/) to determine the assigned IP address for the Raspberry.
+
+We will use in this example 192.168.2.8 for the gateway address (DHCP option in order to have Internet access from the Raspberry)
+
+	> ssh pi@192.168.2.8
+	pi@192.168.200.1's password: 
+	
+	The programs included with the Debian GNU/Linux system are free software;
+	the exact distribution terms for each program are described in the
+	individual files in /usr/share/doc/*/copyright.
+	
+	Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+	permitted by applicable law.
+	Last login: Thu Aug  4 18:04:41 2016
+
+Upgrade to the latest gateway version	
+-------------------------------------
+
+Once you have your SD card flashed with our image, to get directly to the full, latest gateway version, you can either (i) use the provided update script to be run from the gateway, or (ii) download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or, (iii) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. Option (i) is preferable and is basically an automatization of option (iii), however it needs Internet connectivity on the gateway.
 
 First option
 ------------
 
-The SD card image has a recent version of the gateway software and there is in the lora_gateway/scripts folder an update_gw.sh script that automatically updates your gateway to the latest version. Simply go into lora_gateway/scripts:
+If your gateway has Internet connectivity (DHCP with Internet sharing for instance), you can use our update_gw.sh script. Even if the SD card image has a recent version of the gateway software the update_gw.sh script in the lora_gateway/scripts folder it is safer to get the latest version of this script. Simply do:
 
-	> cd /home/pi/lora_gateway/scripts
-
-and type:
-
+	> cd /home/pi
+	> wget https://raw.githubusercontent.com/CongducPham/LowCostLoRaGw/master/gw_full_latest/scripts/update_gw.sh
+	> chmod +x update_gw.sh
 	> ./update_gw.sh
 	
 Note that if you have customized configuration files (i.e. key_*, gateway_conf.json, clouds.json and radio.makefile) in the existing /home/pi/lora_gateway folder, then update_gw.sh will preserve all these configuration files. As the repository does not have a gateway_id.txt file, it will also preserve your gateway id.
 
+Otherwise, if it is really the first time you install the gateway, then you can delete the lora_gateway folder before running the script:
+
+	> rm -rf lora_gateway
+	> ./update_gw.sh
+
 Second option
 -------------
 
-Get all the repository:
+This upgrade solution can be done on the Raspberry if it has Internet connectivity or on your laptop which is assumed to have Internet connectivity. If you don't have git installed on your laptop, you have to install it first. Then get all the repository:
 
-	> cd
+	> cd /home/pi
 	> git clone https://github.com/CongducPham/LowCostLoRaGw.git
 	
 You will get the entire repository:
@@ -117,31 +148,39 @@ Create a folder named "lora_gateway" (or if you already have one, then delete al
     
 Or if you want to "move" the LowCostLoRaGw/gw_full_latest folder, simply do (without creating the lora_gateway folder before):
 
-	> mv LowCostLoRaGw/gw_full_latest ./lora_gateway    
+	> mv LowCostLoRaGw/gw_full_latest ./lora_gateway  
+	
+If you download the repository from your laptop, then rename gw_full_latest into lora_gateway and copy the entire gw_full_latest folder into the Raspberry using scp for instance. In the example below, the laptop has wired Internet connectivity and use the gateway's advertised WiFi to connect to the gateway. Therefore the IP address of the gateway is 192.168.200.1.
+
+	> scp -r lora_gateway pi@192.168.200.1:/home/pi
+	
+If you don't want to use/install git, use your laptop to get the .zip file of the [entire github](https://github.com/CongducPham/LowCostLoRaGw) with the "Clone or download", unzip the package, rename the gw_full_latest folder as lora_gateway and perform the scp command.		  
 
 Third option
 ------------
 
-Get only the gateway part:
+This upgrade solution can be done on the Raspberry if it has Internet connectivity or on your laptop which is assumed to have Internet connectivity. If you don't have svn installed on your laptop, you have to install it first. Then get only the gateway part:
 
-	> cd
+	> cd /home/pi
 	> svn checkout https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_full_latest lora_gateway
 	
 That will create the lora_gateway folder and get all the file of (GitHub) LowCostLoRaGw/gw_full_latest in it. 
 	
-Note that you may have to install svn before being able to use the svn command (if you installed from our SD card image, svn is already installed):
+To install svn on the Raspberry:
 
 	> sudo apt-get install subversion	
+	
+Here, again, you can do all these steps on your laptop and then use scp to copy to the Raspberry.	
 
 Configuring your gateway after update
 -------------------------------------
 
-After gateway update, you need to configure your new gateway, mainly by assigning the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will be the last 5 bytes of the Rapberry eth0 MAC address and the configuration script will extract this information for you. In the script folder, simply run basic_config_gw.sh to automatically configure your gateway. 
+After gateway update, you need to configure your new gateway, mainly by assigning the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will be the last 5 bytes of the Rapberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you. In the script folder, simply run basic_config_gw.sh to automatically configure your gateway. 
 
 	> cd /home/pi/lora_gateway/scripts
 	> ./basic_config_gw.sh
 	
-If you need more advanced configuration, then run config_gw.sh as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#configure-your-gateway-with-config_gwsh). However, basic_config_gw.sh should be sufficient for most of the cases. After configuration, reboot your Raspberry. 
+If you need more advanced configuration, then run config_gw.sh as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#configure-your-gateway-with-config_gwsh). However, basic_config_gw.sh should be sufficient for most of the cases. The script also compile the gateway program. After configuration, reboot your Raspberry. 
 
 By default gateway_conf.json configures the gateway with a simple behavior: LoRa mode 1 (BW125SF12), no DHT sensor in gateway (so no MongoDB for DHT sensor), no downlink, no AES, no raw mode. clouds.json enables only the ThingSpeak demo channel (even the local MongoDB storage is disabled). You can customize your gateway later when you have more cloud accounts and when you know better what features you want to enable.
 
