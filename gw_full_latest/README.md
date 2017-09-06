@@ -97,10 +97,20 @@ basic_config_gw.sh should be sufficient for most of the cases. The configuration
           collisions:0 txqueuelen:1000 
           RX bytes:6565141 (6.2 MiB)  TX bytes:1452497 (1.3 MiB)
           
-In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "27EBBEDA21". In the script folder, simply run basic_config_gw.sh to automatically configure your gateway.
+In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "27EBBEDA21". There is an additional script called test_gwid.sh in the script folder to test whether the gateway id can be easily determined. In the script folder, simply run test_gwid.sh:
+
+	> cd /home/pi/lora_gateway/scripts
+	> ./test_gwid.sh
+	Detecting gw id as 00000027EBBEDA21
+	
+If you don't see something similar to 00000027EBBEDA21 (8 bytes in hex format) then you have to explicitly provide the **last 5 bytes**	of the gw id to basic_config_gw.sh. Otherwise, in the script folder, simply run basic_config_gw.sh to automatically configure your gateway. 
 
 	> cd /home/pi/lora_gateway/scripts
 	> ./basic_config_gw.sh
+	
+or
+
+	> ./basic_config_gw.sh 27EBBEDA21
 	
 **basic_config_gw.sh takes care of:**
 

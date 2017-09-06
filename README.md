@@ -175,11 +175,21 @@ Here, again, you can do all these steps on your laptop and then use scp to copy 
 Configuring your gateway after update
 -------------------------------------
 
-After gateway update, you need to configure your new gateway, mainly by assigning the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will be the last 5 bytes of the Rapberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you. In the script folder, simply run basic_config_gw.sh to automatically configure your gateway. 
+After gateway update, you need to configure your new gateway with basic_config_gw.sh, that mainly assigns the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will be the last 5 bytes of the Rapberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you. There is an additional script called test_gwid.sh in the script folder to test whether the gateway id can be easily determined. In the script folder, simply run test_gwid.sh:
+
+	> cd /home/pi/lora_gateway/scripts
+	> ./test_gwid.sh
+	Detecting gw id as 00000027EBBEDA21
+	
+If you don't see something similar to 00000027EBBEDA21 (8 bytes in hex format) then you have to explicitly provide the **last 5 bytes**	of the gw id to basic_config_gw.sh. Otherwise, in the script folder, simply run basic_config_gw.sh to automatically configure your gateway. 
 
 	> cd /home/pi/lora_gateway/scripts
 	> ./basic_config_gw.sh
 	
+or
+
+	> ./basic_config_gw.sh 27EBBEDA21
+
 If you need more advanced configuration, then run config_gw.sh as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#configure-your-gateway-with-config_gwsh). However, basic_config_gw.sh should be sufficient for most of the cases. The script also compile the gateway program. After configuration, reboot your Raspberry. 
 
 By default gateway_conf.json configures the gateway with a simple behavior: LoRa mode 1 (BW125SF12), no DHT sensor in gateway (so no MongoDB for DHT sensor), no downlink, no AES, no raw mode. clouds.json enables only the ThingSpeak demo channel (even the local MongoDB storage is disabled). You can customize your gateway later when you have more cloud accounts and when you know better what features you want to enable.
