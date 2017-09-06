@@ -111,36 +111,58 @@ $(function () {
 //# Gateway: install
 //###########################
 	$('#btn_gw_new_install').click(function() {
-        $.post($(this).attr('href'), function (res) { 
-            // handle the response (*) by storing the message into the DIV#message
-            //$('#gw_new_install_msg').html(res);
-	    $('#gw_update_msg').html(res);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#gw_update_msg').html("");
-	    },5000);
-	 });
+      // Confirm
+		var response = confirm('Do you want to perform a new install with latest version of gateway?');
+		if (response == true){ // OK clicked
+			msg = '<p><center><font color="green">New installation in progress, wait for finish notification.</font></center></p>';
+			$('#gw_update_msg').html(msg);
+
+			$.post($(this).attr('href'), function (res) { 
+            	// handle the response (*) by storing the message into the DIV#message
+	   			//$('#gw_update_msg').html("");
+	    		$('#gw_update_msg').html(res);
+	    		//erase message after 5 seconds
+	    		setTimeout(function() {
+  					$('#gw_update_msg').html("");
+	     		},5000);
+	 		});
+		}
+		else{ 
+			// Cancel clicked
+		}
     });
 
 //######################
 //# Gateway: full update
 //######################
 	$('#btn_gw_full_update').click(function() {
-        $.post($(this).attr('href'), function (res) { 
-            // handle the response (*) by storing the message into the DIV#message
-            //$('#gw_full_update_msg').html(res);
-	     $('#gw_update_msg').html(res);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#gw_update_msg').html("");
-	    },5000);
-        });
+        //confirm        
+		var response = confirm('Do you want to perform a full update to latest version of gateway?');
+		if (response == true){ // OK clicked
+			msg = '<p><center><font color="green">Full update in progress, wait for finish notification.</font></center></p>';
+			$('#gw_update_msg').html(msg);
+
+			$.post($(this).attr('href'), function (res) { 
+            	// handle the response (*) by storing the message into the DIV#message
+             	//$('#gw_update_msg').html("");
+	    		$('#gw_update_msg').html(res);
+	    		//erase message after 5 seconds
+	   		 	setTimeout(function() {
+  					$('#gw_update_msg').html("");
+	    		},5000);
+        	})
+		}
+		else{ 
+			// Cancel clicked
+		}
     });
 
 //#######################
 //# Gateway: basic config
 //#######################
 	$('#btn_gw_basic_conf').click(function() {
+        msg = '<p><center><font color="green">Basic gateway configuration in progress, wait for finish notification.</font></center></p>';
+        $('#gw_update_msg').html(msg);	
         $.post($(this).attr('href'), function (res) { 
             // handle the response (*) by storing the message into the DIV#message
             //$('#gw_basic_conf_msg').html(res);
@@ -185,6 +207,8 @@ $(function () {
 //#  Update web admin interface
 //######################
 	$('#btn_update_web_admin').click(function() {
+        msg = '<p><center><font color="green">Web admin interface update in progress, wait for finish notification.</font></center></p>';
+        $('#gw_update_msg').html(msg);	
         $.post($(this).attr('href'), function (res) { 
             // handle the response (*) by storing the message into the DIV#message
             //$('#gw_full_update_msg').html(res);

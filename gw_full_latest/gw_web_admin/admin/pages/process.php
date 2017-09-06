@@ -80,14 +80,21 @@ if (isset($_GET['logout']) && $_GET['logout'] == "true"){
  *************************/
 if (isset($_GET['gw_new_install']) && $_GET['gw_new_install'] == "true"){ 
 	
-	$output = gw_new_install(); 
-	if($output == 0){
-		//echo "Success";
-		echo '<p><center><font color="green">New install of gateway done.</font></center></p>';
+	// Check internet connection
+	if(! is_connected()){
+		echo '<p><center><font color="red">No internet connection.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
-		echo '<p><center><font color="green">Failed to install a new version of gateway</font></center></p>';	
+		$output = gw_new_install();
+		
+		if($output == 0){
+			//echo "Success";
+			echo '<p><center><font color="green">New install of gateway done.</font></center></p>';
+		}
+		else{
+			//echo "Failure";
+			echo '<p><center><font color="red">Failed to install a new version of gateway</font></center></p>';	
+		}
 	}
 }
 
@@ -96,15 +103,21 @@ if (isset($_GET['gw_new_install']) && $_GET['gw_new_install'] == "true"){
  *************************/
 if (isset($_GET['gw_full_update']) && $_GET['gw_full_update'] == "true"){ 
 	
-	$output = gw_full_update();
-	if($output == 0){
-		//echo "Success";
-		echo '<p><center><font color="green">Gateway updated.</font></center></p>';
+	// Check internet connection
+	if(! is_connected()){
+		echo '<p><center><font color="red">No internet connection.</font></center></p>';
 	}
-	else{
-		//echo "Failure";
-		echo '<p><center><font color="red">Failed to update gateway</font></center></p>';	
-	}
+	else{	
+		$output = gw_full_update(); 
+		if($output == 0){
+			//echo "Success";
+			echo '<p><center><font color="green">Gateway updated.</font></center></p>';
+		}
+		else{
+			//echo "Failure";
+			echo '<p><center><font color="red">Failed to update gateway</font></center></p>';	
+		}
+	}	
 }
 
 /*************************
