@@ -1,11 +1,25 @@
 #!/bin/sh
 
 echo "updating gateway"
-cd /home/pi
+cd /home/pi/
+
 echo "removing any existing gw_full_latest folder (from previous update)"
 rm -rf gw_full_latest
-echo "getting new gw_full_latest from github"
-svn checkout https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_full_latest
+
+if [ -d local_gw_full_latest ]
+then
+	echo "Installing from local_gw_full_latest folder"
+	mv local_gw_full_latest gw_full_latest
+else
+	echo "getting new gw_full_latest from github"
+	svn checkout https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_full_latest
+fi
+
+if [ ! -d gw_full_latest ]
+then
+	echo "Failed to find a valid gw_full_latest folder for installation, exiting"
+	exit
+fi
 
 if [ -d lora_gateway ]
 	then

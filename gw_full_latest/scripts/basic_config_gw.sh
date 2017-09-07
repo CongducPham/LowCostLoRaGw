@@ -72,7 +72,7 @@ echo "Done"
 
 echo "Creating /home/pi/Dropbox/LoRa-test"
 mkdir -p /home/pi/Dropbox/LoRa-test
-sudo chown -R pi:pi /home/Dropbox
+sudo chown -R pi:pi /home/pi/Dropbox
 echo "Done"
 
 rm /home/pi/lora_gateway/log

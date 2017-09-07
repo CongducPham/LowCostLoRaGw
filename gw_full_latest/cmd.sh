@@ -241,63 +241,63 @@ if [ "$choice" = "p" ]
 fi
 
 if [ "$choice" = "A" ] 
-        then
-                echo "Showing global_conf.json"
-                cat gateway_conf.json
+    then
+    	echo "Showing global_conf.json"
+		cat gateway_conf.json
 fi
 
 if [ "$choice" = "B" ] 
-        then
-        		if [ -f gateway_conf.json ]
-        			then
-                		echo "Editing gateway_conf.json. CTRL-O to save, CTRL-X to return"
-                		nano gateway_conf.json
-                	else
-                		echo "Error: gateway_conf.json does not exist"
-                fi	
+    then
+    	if [ -f gateway_conf.json ]
+        	then
+            	echo "Editing gateway_conf.json. CTRL-O to save, CTRL-X to return"
+                nano gateway_conf.json
+            else
+                echo "Error: gateway_conf.json does not exist"
+        fi	
 fi
 
 if [ "$choice" = "C" ] 
-        then
-                echo "Showing clouds.json"
-                cat clouds.json
+    then
+    	echo "Showing clouds.json"
+        cat clouds.json
 fi
 
 if [ "$choice" = "D" ] 
-        then
-        		if [ -f clouds.json ]
-        			then
-                		echo "Editing clouds.json. CTRL-O to save, CTRL-X to return"
-                		nano clouds.json
-                	else
-                		echo "Error: clouds.json does not exist"
-                fi	
+    then
+        if [ -f clouds.json ]
+        	then
+                echo "Editing clouds.json. CTRL-O to save, CTRL-X to return"
+                nano clouds.json
+            else
+                echo "Error: clouds.json does not exist"
+        fi	
 fi
 
 if [ "$choice" = "U" ]
-		then
-			echo "Updating to latest version of gateway, preserving your local configuration file"
-			pushd scripts
-			./update_gw.sh
-			popd
+	then
+		echo "Updating to latest version of gateway, preserving your local configuration file"
+		cd /home/pi/lora_gateway/scripts
+		./update_gw.sh
+		cd /home/pi/lora_gateway
 fi
 
 if [ "$choice" = "V" ]
-		then
-			echo "Download and install a file"
-			echo "Enter the URL of the file:"
-			read filename_url			
-			wget --backups=1 $filename_url
-			echo "Done"
+	then
+		echo "Download and install a file"
+		echo "Enter the URL of the file:"
+		read filename_url			
+		wget --backups=1 $filename_url
+		echo "Done"
 fi
 
 if [ "$choice" = "W" ]
-		then
-			echo "Run a command"
-			echo "Enter the command to run:"
-			read command_line			
-			eval $command_line
-			echo "Done"
+	then
+		echo "Run a command"
+		echo "Enter the command to run:"
+		read command_line			
+		eval $command_line
+		echo "Done"
 fi
 
 
@@ -308,21 +308,37 @@ if [ "$choice" = "K" ]
 fi
 
 if [ "$choice" = "k" ] 
-        then
+    then
 		echo "Killing rfcomm-server process"
 		sudo kill $(ps aux | grep -e rfcomm-server | awk '{print $2}')
 fi
 
 if [ "$choice" = "R" ] 
-        then
-		echo "Reboot gateway"
-		sudo shutdown -r now
+    then
+		echo "*******************"
+		echo "*** reboot Y/N  ***"
+		echo "*******************"
+		read ouinon
+
+		if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
+			then    
+				echo "Reboot gateway"
+				sudo shutdown -r now
+		fi		
 fi
 
 if [ "$choice" = "S" ] 
-        then
-		echo "Shutdown gateway"
-		sudo shutdown -h now
+    then
+		echo "*********************"
+		echo "*** shutdown Y/N  ***"
+		echo "*********************"
+		read ouinon
+
+		if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
+			then    
+				echo "Shutdown gateway"
+				sudo shutdown -h now
+		fi		
 fi
 
 echo "END OUTPUT"
