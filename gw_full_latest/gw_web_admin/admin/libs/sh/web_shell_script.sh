@@ -64,9 +64,9 @@ then
 	then
 		if [ $3 == "gateway_ID" ] || [ $3 == "contact_mail" ] || [ $3 == "mail_from" ] || [ $3 == "mail_passwd" ] || [ $3 == "mail_server" ] || [ $3 == "pin" ]
 		then
-				jq '.'"$2"'.'"$3"' = "'$4'" ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+			jq '.'"$2"'.'"$3"' = "'$4'" ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
 		else
-				jq '.'"$2"'.'"$3"' = '$4' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+			jq '.'"$2"'.'"$3"' = '$4' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
 		fi
 		sudo chown -R pi:pi /home/pi/lora_gateway/
 		sudo chmod +r /home/pi/lora_gateway/gateway_conf.json
@@ -165,9 +165,9 @@ then
 	tmp=$(mktemp)
 	if [ $# == 3 ] 
 	then
-			jq '.clouds=([.clouds[]  | select(.script == "python CloudOrion.py") .'$2' = '$3'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
-			sudo chown -R pi:pi /home/pi/lora_gateway/
-			sudo chmod +r /home/pi/lora_gateway/clouds.json
+		jq '.clouds=([.clouds[]  | select(.script == "python CloudOrion.py") .'$2' = '$3'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
+		sudo chown -R pi:pi /home/pi/lora_gateway/
+		sudo chmod +r /home/pi/lora_gateway/clouds.json
 	fi
 fi
 

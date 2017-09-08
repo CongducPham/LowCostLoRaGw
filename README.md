@@ -102,6 +102,8 @@ We will use in this example 192.168.2.8 for the gateway address (DHCP option in 
 	Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
 	permitted by applicable law.
 	Last login: Thu Aug  4 18:04:41 2016
+	
+**For the Raspberry Zero**, our SD card image set the RPI in access point mode. However, when in access-point mode, Ethernet over USB with dtoverlay=dwc2 in /boot/config.txt and modules-load=dwc2,g_ether /boot/cmdline.txt is not working. As the usage of the Raspberry Zero is mainly with Internet connection through a cellular network (using for instance the LORANGA board from La Fabrica Alegre) the easiest way to have Internet through Ethernet sharing with our SD card image is to use a USB-Ethernet adapter that will add an eth0 interface on the RPI0. These USB-Ethernet adapter are quite cheap and are really useful on the RPI0 as you can then connect it to a DHCP-enabled router/box just like the other RPI boards.
 
 Upgrade to the latest gateway version	
 -------------------------------------
