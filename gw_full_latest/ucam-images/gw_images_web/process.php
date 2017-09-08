@@ -26,14 +26,9 @@ if(isset($_GET['node']) && isset($_GET['time_interval'])){
  *************************/
 if(isset($_GET['mv']) && $_GET['mv']=="true"){ 
 	
-	$output1 = shell_exec("sudo cp -r /var/www/html/images/uploads/* /var/www/html/images/bak");
-
-	$output2 = shell_exec("sudo rm -rf /var/www/html/images/uploads/*");
+	$output = shell_exec("sudo /var/www/html/images/libs/sh/move_img.sh");
 	
-	//echo "<pre>$output1</pre>";
-	//echo "<pre>$output2</pre>";
-	
-	if ($output1 == 0 && $output2 == 0){
+	if ($output == 0){
 		echo '<p><center><font color="green">Images moved from uplooads to back directory.</font></center></p>';
 	}
 	else{

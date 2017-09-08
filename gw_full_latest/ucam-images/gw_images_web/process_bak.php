@@ -21,6 +21,20 @@ if(isset($_GET['node']) && isset($_GET['time_interval'])){
 	}
 }
 
-
+/**********************************
+ * Move images from uploads to bak
+ *********************************/
+if(isset($_GET['mv']) && $_GET['mv']=="true"){ 
+	
+	$output = shell_exec("sudo /var/www/html/images/libs/sh/move_img.sh");
+	
+	if ($output == 0){
+		echo '<p><center><font color="green">Images moved from uplooads to back directory.</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Issue to move images from uplooads to back directory.</font></center></p>';
+	}
+	
+}
 
 ?>

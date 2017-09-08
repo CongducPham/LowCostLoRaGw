@@ -24,7 +24,14 @@ $(function () {
             	$('#div_pic_by_node').html(data);
         });
     });
+    
+    $('#a_mv_img').click(function() {	
+    	$.get("process_bak.php", {mv: "true"}, function(data){
+            $('#mv_img_msg').html(data);
+            setTimeout(function() {
+  				$('#mv_img_msg').html("");
+	    	},5000);
+        });
+    });
 
 });
- 
-    
