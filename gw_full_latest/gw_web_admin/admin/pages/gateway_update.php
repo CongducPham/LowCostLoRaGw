@@ -113,7 +113,7 @@ require 'header.php';
                                    
                                    		<p>
                                    			<button id="btn_gw_basic_conf" type="button" class="btn btn-primary" href="process.php?gw_basic_conf=true">   <span class="fa fa-edit"></button>
-                                   			Configuring and recompiling your gateway after new installation/update and after changing PA_BOOST settings.
+                                   			Configure your gateway after new installation/update or after changing PA_BOOST settings.
                                    		</p>
 
 										</br>

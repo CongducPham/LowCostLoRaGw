@@ -439,7 +439,7 @@ $(function () {
        										   
     
 //######################
-//# Setting Gatewway ID
+//# Setting Gateway ID
 //######################
     $('#td_edit_gw_id').hide();
     $('#td_gw_id_submit').hide();
@@ -503,6 +503,37 @@ $(function () {
     	$('#td_aes_submit').hide();
     });
 
+//######################
+//# Setting downlink
+//######################
+    $('#td_edit_downlink').hide();
+    $('#td_downlink_submit').hide();
+    $("#gw_msg").hide();
+    //$("#div_mode_select").hide();
+    
+    $('#btn_edit_downlink').click(function() {	
+    	$('#td_edit_downlink').show();
+    	$('#td_downlink_submit').show();
+    });
+ 
+    $('#btn_downlink_submit').click(function() {	
+    	downlink = $("#downlink_input").val();
+    	$.get("process.php", {downlink: downlink}, function(data){	
+			//$('#gw_msg').html(data);
+			//$('#gw_msg').show();
+			$("#gw_config_msg").html(data);
+            			//erase message after 5 seconds
+	   			setTimeout(function() {
+  					$('#gw_config_msg').html("");
+	     			},5000);
+        });
+
+        	$('#downlink_value').html(downlink);
+        	$("#downlink_input").val("");
+       		 $('#td_edit_downlink').hide();
+    		$('#td_downlink_submit').hide();
+    });
+    
 //######################
 //# Setting alert sms
 //######################

@@ -229,6 +229,24 @@ require 'header.php';
    										    		<button id="btn_aes_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
    										   </tr>
+   										   <tr>
+    									    <td>downlink</td>
+    										<td id="downlink_value">
+    											<?php echo $gw_conf['downlink'];?>
+    										</td>
+    										<td align="right"><button id="btn_edit_downlink" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_downlink">
+   										    	<div id="div_update_downlink" class="form-group">
+                                            		<label>Downlink timer</label>
+                                					<input id="downlink_input" class="form-control" placeholder="downlink timer in seconds" name="downlink" type="number" value="" autofocus>
+                                        			<p><font color="red">Enter 00 for 0. Specifying a value different from 0 triggers the downlink checking process at both post-processing and lora_gateway level. Run Gateway Update/Basic config to recompile lora_gateway with downlink support.</font></p>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_downlink_submit" align="right">
+   										    		<button id="btn_downlink_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>  										   
+   										   
 										 </tbody>
     								    </table>
     							      </div>

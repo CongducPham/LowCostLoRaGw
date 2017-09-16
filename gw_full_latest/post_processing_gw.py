@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v3.3 - image modification and need to incorporate aux_radio features
+# v3.4 - image modification and need to incorporate aux_radio features
 # + copy post-processing feature
 #------------------------------------------------------------
 
@@ -193,13 +193,16 @@ try:
 	_gw_dht22 = json_array["gateway_conf"]["dht22"]
 except KeyError:
 	_gw_dht22 = 0
-	
+
+if _gw_dht22 < 0:
+	_gw_dht22 = 0
+		
 _date_save_dht22 = None
 
 try:
 	_dht22_mongo = json_array["gateway_conf"]["dht22_mongo"]
 except KeyError:
-	_dht22_mongo = 0
+	_dht22_mongo = False
 
 if (_dht22_mongo):
 	global add_document	
@@ -262,8 +265,8 @@ def dht22_target():
 _gw_copy_post_processing=False
 
 def copy_post_processing():
-	print "extract last 500 lines of post-processing_"+_gwid+".log into /var/www/html/admin/log/post-processing-500L.log"
-	cmd="sudo tail -n 500 log/post-processing_"+_gwid+".log > /var/www/html/admin/log/post-processing-500L.log"
+	print "extract last 500 lines of post-processing.log into /var/www/html/admin/log/post-processing-500L.log"
+	cmd="sudo tail -n 500 log/post-processing.log > /var/www/html/admin/log/post-processing-500L.log"
 	
 	try:
 		os.system(cmd)
@@ -293,6 +296,9 @@ try:
 except KeyError:
 	_gw_downlink = 0
 
+if _gw_downlink < 0:
+	_gw_downlink = 0
+	
 _post_downlink_file = "downlink/downlink-post.txt"
 _post_downlink_queued_file = "downlink/downlink-post-queued.txt"
 _gw_downlink_file = "downlink/downlink.txt"
@@ -367,6 +373,9 @@ try:
 	_gw_status = json_array["gateway_conf"]["status"]
 except KeyError:
 	_gw_status = 0		
+
+if _gw_status < 0:
+	_gw_status = 0 
 
 if _gw_status:
 	try:

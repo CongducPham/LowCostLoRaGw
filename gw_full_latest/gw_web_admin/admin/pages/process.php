@@ -300,6 +300,29 @@ if (isset($_GET["aes"]) && (! empty($_GET["aes"]))) {
 }
 
 /*************************
+ * Setting downlink
+ *************************/
+if (isset($_GET["downlink"]) && (! empty($_GET["downlink"]))) {
+    
+    $downlink = htmlspecialchars($_GET["downlink"]);
+    
+    if ($downlink == '') {
+    	$downlink=0;
+    }
+    	
+	$output = update_gw_conf("gateway_conf","downlink", $downlink);
+	
+	if($output == 0){
+		//echo "Success";
+		echo '<p><center><font color="green">downlink timer updated.</font></center></p>';
+	}
+	else{
+		//echo "Failure";
+		echo '<p><center><font color="red">Failed to update downlink timer.</font></center></p>';	
+	}
+}
+
+/*************************
  * Setting ThingSpeak status
  *************************/
 if (isset($_GET["thingspeak_status"]) && (! empty($_GET["thingspeak_status"]))) {

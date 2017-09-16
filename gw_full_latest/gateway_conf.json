@@ -29,7 +29,7 @@
 		"mail_server" : "smtp.gmail.com",
 		"mail_passwd" : "your_passwd",
 		"use_sms" : false,
-		"pin":0,
+		"pin": "0000",
 		"contact_sms":["+33XXXXXXXXX","+33XXXXXXXXX"],
 		"gammurc_file":"/home/pi/.gammurc"
 	}	
