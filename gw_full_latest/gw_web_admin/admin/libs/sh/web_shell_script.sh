@@ -73,6 +73,21 @@ then
 	fi
 fi
 
+if [ "$1" = "paboost" ]
+then
+	###################################
+	# update paboost
+	###################################
+
+	if [ $2 == "Enabled" ]
+	then
+		sudo sed -i 's/#*CFLAGS/CFLAGS/g' /home/pi/lora_gateway/radio.makefile	
+	else
+		sudo sed -i 's/^CFLAGS/#CFLAGS/g' /home/pi/lora_gateway/radio.makefile
+	fi	
+fi	
+
+
 if [ "$1" = "install_gw" ]
 then
 

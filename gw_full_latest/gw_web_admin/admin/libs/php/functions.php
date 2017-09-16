@@ -51,6 +51,10 @@ function update_gw_conf($module, $key, $value){
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh gateway_conf ".$module." ".$key." ".$value);
 }
 
+function update_paboost($value) {
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh paboost ".$value);
+}
+
 function update_contact_sms($contacts){
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh contact_sms ".$contacts);
 }

@@ -105,7 +105,7 @@ require 'header.php';
    										   <tr>
     									    <td>Frequency</td>
     										<td id="freq_value"><?php echo $radio_conf['freq']; ?></td>
-    										<td align="right"><button id="btn_edit_freq" type="button" class="btn btn-primary" href="gateway.php?freq="><span class="fa fa-edit"></span></button></td>
+    										<td align="right"><button id="btn_edit_freq" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
    										   	<td id="td_edit_freq">
    										    	<div class="form-group">
                                             		<label>ISM Band </label>
@@ -121,8 +121,46 @@ require 'header.php';
                                         	</td>
                                         	<td id="freq_submit" align="right"><button id="btn_edit_mode" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button></td> 
    										   </tr>
+
+   										   <tr>
+    									    <td>PA_BOOST</td>
+    										<td id="paboost_value">
+    											<?php
+    												$current_paboost=exec('egrep ^CFLAGS /home/pi/lora_gateway/radio.makefile');
+    												
+    												if ($current_paboost=='')
+													{
+    													echo "Disabled";    
+													}
+													else {
+   					 									echo "Enabled";   
+													}
+    											?>    										
+    										</td>
+    										<td align="right"><button id="btn_edit_paboost" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_paboost">
+   										    	<div id="div_paboost_options" class="form-group">
+                                            		<label></label>
+                                           			<div class="radio">
+                                                		<label>
+                                                    		<input type="radio" name="optionsRadios" id="paboost_true" value="Enabled" checked>Enabled
+                                                		</label>
+                                                		</br>
+                                                		<label>
+                                                    		<input type="radio" name="optionsRadios" id="paboost_false" value="Disabled" checked>Disabled
+                                                		</label>
+                                            		</div>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_paboost_submit" align="right">
+   										    		<button id="btn_paboost_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>    									    
+   										   </tr>   										   
+   										   
 										</tbody>
     								  </table>
+    								  <p>PA_BOOST is required for some radio modules such as inAir9B, RFM92W, RFM95W, NiceRF LoRa1276</p>
+    								  <p>After changing the PA_BOOST settings, run <b>Gateway Update/Basic config</b> to recompile the low-level gateway program</p> 
     							     </div>
     							     
     							  </div>

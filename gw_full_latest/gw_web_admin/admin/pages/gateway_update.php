@@ -73,7 +73,15 @@ require 'header.php';
                                    			<button id="btn_gw_new_install" type="button" class="btn btn-primary" href="process.php?gw_new_install=true">   <span class="fa fa-upload"></button>
                                    			Installing latest version of gateway, erasing existing configuration. May take 1 minute, wait for finish notification.
                                    		</p>
-                                   	
+
+										</br>
+										
+										<?php
+											$current_install_date=exec('stat --format=%y /home/pi/lora_gateway/post_processing_gw.py');
+
+											echo "Date of current distribution is $current_install_date";    
+										?> 
+						                                   	
             						<div id="gw_new_install_msg"></div>	
                                 	
                         		</div>
@@ -86,7 +94,14 @@ require 'header.php';
                                    			<button id="btn_gw_full_update" type="button" class="btn btn-primary" href="process.php?gw_full_update=true">   <span class="fa fa-upload"></button>
                                    			Updating to latest version of gateway, preserving your local configuration files. May take 1 minute, wait for finish notification.
                                    		</p>
-                                   	
+
+										</br>
+										<?php
+											$current_install_date=exec('stat --format=%y /home/pi/lora_gateway/post_processing_gw.py');
+
+											echo "Date of current distribution is $current_install_date";   
+										?> 
+										                                   	
             						<div id="gw_full_update_msg"></div>	
                                 	
                         		</div>
@@ -98,9 +113,21 @@ require 'header.php';
                                    
                                    		<p>
                                    			<button id="btn_gw_basic_conf" type="button" class="btn btn-primary" href="process.php?gw_basic_conf=true">   <span class="fa fa-edit"></button>
-                                   			Configuring your gateway after new installation or update.
+                                   			Configuring and recompiling your gateway after new installation/update and after changing PA_BOOST settings.
                                    		</p>
-                                   	
+
+										</br>
+										<?php
+											$current_install_date=exec('stat --format=%y /home/pi/lora_gateway/gateway_id.txt 2>/dev/null');
+											
+											if ($current_install_date=='') {
+												echo "Date of last configuration undefined";
+											}
+											else {
+												echo "Date of last basic configuration is $current_install_date";
+											}
+										?> 
+										                                   	
             						<div id="gw_basic_conf_msg"></div>	
                                 	
                         		</div>
@@ -131,14 +158,23 @@ require 'header.php';
                                 </div> 
                                 <!-- tab-pane -->
 
-				<div class="tab-pane fade" id="update_web_admin-pills">
+								<div class="tab-pane fade" id="update_web_admin-pills">
                                    	</br></br>
-                                   
+                    
                                    		<p>
                                    			<button id="btn_update_web_admin" type="button" class="btn btn-primary" href="process.php?update_web_admin=true">   <span class="fa fa-upload"></button>
                                    			Updating to latest version of gateway web admin interface. May take 30s, wait for finish notification.
-                                   		</p>                             	
+                                   		</p>    
+
+										</br>
+										<?php
+											$current_install_date=exec('stat --format=%y /var/www/html/admin/index.php');
+
+											echo "Date of installed web admin interface is $current_install_date";   
+										?> 
+										                                   		                         	
                         		</div>
+
                         </div>
                         <!-- /.panel-body -->
                 </div>

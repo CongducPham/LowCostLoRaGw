@@ -124,6 +124,7 @@ $(function () {
 	    		//erase message after 5 seconds
 	    		setTimeout(function() {
   					$('#gw_update_msg').html("");
+  					window.location.reload();  					
 	     		},5000);
 	 		});
 		}
@@ -149,6 +150,7 @@ $(function () {
 	    		//erase message after 5 seconds
 	   		 	setTimeout(function() {
   					$('#gw_update_msg').html("");
+  					window.location.reload();  					
 	    		},5000);
         	})
 		}
@@ -170,6 +172,7 @@ $(function () {
 	    //erase message after 5 seconds
 	    setTimeout(function() {
   		$('#gw_update_msg').html("");
+  		window.location.reload();  		
 	    },5000);
         });
     });
@@ -216,6 +219,7 @@ $(function () {
 	    //erase message after 5 seconds
 	    setTimeout(function() {
   		$('#gw_update_msg').html("");
+  		window.location.reload();  		
 	    },5000);
         });
     });
@@ -401,7 +405,38 @@ $(function () {
     	}*/
     	
     });
-   										   
+
+//######################
+//# Setting PABOOST
+//######################
+    $('#td_edit_paboost').hide();
+    $('#td_paboost_submit').hide();
+    $("#gw_msg").hide();
+    //$("#div_mode_select").hide();
+    
+    $('#btn_edit_paboost').click(function() {	
+    	$('#td_edit_paboost').show();
+    	$('#td_paboost_submit').show();
+    });
+ 
+    $('#btn_paboost_submit').click(function() {	
+    	paboost = $( "input:checked" ).val();
+        $.get("process.php", {paboost: paboost}, function(data){
+            // handle the response (*) by storing the message into the DIV#message
+            //$('#gw_full_update_msg').html(res);
+	     $('#gw_config_msg').html(data);
+	    //erase message after 5 seconds
+	    setTimeout(function() {
+  		$('#gw_config_msg').html("");
+	    },5000);
+        });
+    	
+	if(paboost != '') 
+        	$('#paboost_value').html(paboost);
+        $('#td_edit_paboost').hide();
+    	$('#td_paboost_submit').hide();
+    });
+       										   
     
 //######################
 //# Setting Gatewway ID

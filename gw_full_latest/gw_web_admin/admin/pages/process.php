@@ -240,6 +240,23 @@ if (isset($_GET["band"]) && isset($_GET["freq"])) {
 	}
 }
 
+/*************************
+ * Setting PABOOST
+ *************************/
+if (isset($_GET["paboost"]) && (! empty($_GET["paboost"]))) {
+    
+    $paboost = htmlspecialchars($_GET["paboost"]);
+	$output = update_paboost($paboost);
+	
+	if($output == 0){
+		//echo "Success";
+		echo '<p><center><font color="green">PABOOST option updated.</font></center></p>';
+	}
+	else{
+		//echo "Failure";
+		echo '<p><center><font color="red">Failed to update PABOOST option.</font></center></p>';	
+	}
+}
 
 /*************************
  * Setting gateway ID
