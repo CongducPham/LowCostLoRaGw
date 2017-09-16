@@ -24,8 +24,6 @@
 #
 # example: ./basic_config_gw.sh
 
-board=`cat /proc/cpuinfo | grep "Revision" | cut -d ':' -f 2 | tr -d " \t\n\r"`
-
 if [ $# == 1 ]
 then
 	echo "Taking provided address: $1"
@@ -93,7 +91,7 @@ echo "Gateway WiFi wpa_passphrase is loragateway"
 echo "Setting gateway to run at boot"
 # we always remove so that there will be no duplicate lines
 echo "Removing /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local if any"
-sudo sed -i 's/\/home\/pi\/lora_gateway\/scripts\/start_gw.sh//g' /etc/rc.local
+sudo sed -i '\/home\/pi\/lora_gateway\/scripts\/start_gw.sh/d' /etc/rc.local
 echo "Done"
 
 echo "Add /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local"
@@ -104,30 +102,64 @@ echo "Compile lora_gateway executable"
 
 pushd /home/pi/lora_gateway/
 
+board=`cat /proc/cpuinfo | grep "Revision" | cut -d ':' -f 2 | tr -d " \t\n\r"`
+
+downlink=`jq ".gateway_conf.downlink" gateway_conf.json`
+ 
+if [ "$downlink" != "0" ]
+then
+	echo "Detecting downlink timer, will compile with downlink support"
+fi	
+		
 if [ "$board" = "a01041" ] || [ "$board" = "a21041" ] || [ "$board" = "a22042" ]
 	then
 		echo "You have a Raspberry 2"
 		echo "Compiling for Raspberry 2 and 3"
-		make lora_gateway_pi2
+		if [ "$downlink" = "0" ]
+			then 
+				make lora_gateway_pi2
+			else
+				make lora_gateway_pi2_downlink 
+		fi		
 elif [ "$board" = "a02082" ] || [ "$board" = "a22082" ]
 	then
 		echo "You have a Raspberry 3"
 		echo "Compiling for Raspberry 2 and 3"
-		make lora_gateway_pi2
+		if [ "$downlink" = "0" ]
+			then 
+				make lora_gateway_pi2
+			else
+				make lora_gateway_pi2_downlink 
+		fi	
 elif [ "$board" = "900092" ] || [ "$board" = "900093" ]
 	then
 		echo "You have a Raspberry Zero"
-		echo "Compiling for Raspberry 1"
-		make lora_gateway
+		echo "Compiling for Raspberry Zero (same as Raspberry 1)"
+		if [ "$downlink" = "0" ]
+			then 
+				make lora_gateway
+			else
+				make lora_gateway_downlink 
+		fi	
 elif [ "$board" = "9000c1" ]
 	then
 		echo "You have a Raspberry Zero W"
-		echo "Compiling for Raspberry 1"
-		make lora_gateway
+		echo "Compiling for Raspberry Zero W (same as Raspberry 1)"
+		if [ "$downlink" = "0" ]
+			then 
+				make lora_gateway
+			else
+				make lora_gateway_downlink 
+		fi	
 else
 	echo "You have a Raspberry 1"		
 	echo "Compiling for Raspberry 1"
-	make lora_gateway
+	if [ "$downlink" = "0" ]
+		then 
+			make lora_gateway
+		else
+			make lora_gateway_downlink 
+	fi	
 fi
 		
 sudo chown -R pi:pi /home/pi/lora_gateway/
