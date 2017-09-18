@@ -77,9 +77,25 @@
    										    		<button id="service_tree_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
    										   </tr>
-   										   
+
+   										   <tr>
+    									    <td>Orion token</td>
+    										<td id="orion_token_value"><?php echo $key_clouds['orion_token']; ?></td>
+    										<td align="right"><button id="btn_edit_orion_token" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_orion_token">
+   										    	<div id="div_update_orion_token" class="form-group">
+                                            		<label>Orion token</label>
+                                					<input id="orion_token_input" class="form-control" placeholder="Orion token" name="orion_token" type="text" value="" autofocus></div>
+                                        	</td> 
+   										    <td id="td_orion_token_submit" align="right">
+   										    		<button id="orion_token_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>
+   										      										   
 										 </tbody>
     								    </table>
+    									<p>The WAZIUP cloud uses the FIWARE Orion broker. The <b>FIWARE service</b> will be the project name and the <b>FIWARE service-path></b> will obtained from <tt> '/'+organization+service-tree</tt></p>
+    								  	<p>The device id will be <tt>organization+"Sensor"+device_addr</tt>. For instance, from sensor 2 hosted by UPPA: <tt>UPPA_Sensor2</tt></p>
     							      </div>
     							    </div>
 		

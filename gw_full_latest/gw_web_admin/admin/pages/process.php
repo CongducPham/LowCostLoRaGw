@@ -668,6 +668,30 @@ if(isset($_GET['service_tree'])){
 	}
 }
 
+/******************************
+ * Setting Waziup Orion token
+ ******************************/
+if(isset($_GET['orion_token'])){
+	
+    $orion_token = htmlspecialchars($_GET['orion_token']);
+    echo $orion_token;
+	if(empty($orion_token)){
+		echo '<p><center><font color="red">Please fill all fields.</font></center></p>';
+	}
+	else{
+    
+		$output = waziup_key("orion_token", $orion_token);
+	
+		if($output == 0){
+			//echo "Success";
+			echo '<p><center><font color="green">Orion token saved.</font></center></p>';
+		}
+		else{
+			echo '<p><center><font color="red">Failed to save Orion token.</font></center></p>';
+		}
+	}
+}
+
 /*************************
  * Setting downlink request
  *************************/

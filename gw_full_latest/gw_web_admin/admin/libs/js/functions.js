@@ -1065,6 +1065,39 @@ $(function () {
     	$('#td_service_tree_submit').hide();
     });
 
+    
+//##############################
+//# Setting Waziup Orion token
+//##############################
+    $('#td_edit_orion_token').hide();
+    $('#td_orion_token_submit').hide();
+    $("#waziup_status_msg").hide();
+    
+    $('#btn_edit_orion_token').click(function() {	
+    	$('#td_edit_orion_token').show();
+    	$('#td_orion_token_submit').show();
+    });
+ 
+    $('#orion_token_submit').click(function() {	
+    	orion_token = $('#orion_token_input').val();
+    	//alert(serv);
+    	$.get("process.php", {orion_token: orion_token}, function(data){	
+			//$('#waziup_status_msg').html(data);
+			//$('#waziup_status_msg').show();
+			$('#cloud_msg').html(data);
+	   		 //erase message after 5 seconds
+	    		setTimeout(function() {
+  				$('#cloud_msg').html("");
+	    		},5000);
+        });
+    	
+	if(orion_token !='')		
+        	$('#orion_token_value').html(orion_token);
+        $('#orion_token_input').val("");
+        $('#td_edit_orion_token').hide();
+    	$('#td_orion_token_submit').hide();
+    });
+    
 //#######################
 //# Setting access point
 //#######################
