@@ -65,6 +65,12 @@ then
 		if [ $3 == "gateway_ID" ] || [ $3 == "contact_mail" ] || [ $3 == "mail_from" ] || [ $3 == "mail_passwd" ] || [ $3 == "mail_server" ] || [ $3 == "pin" ]
 		then
 			jq '.'"$2"'.'"$3"' = "'$4'" ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+			if [ $3 == "gateway_ID" ]
+			then
+				echo "$4" > /home/pi/lora_gateway/gateway_id.txt
+				md5sum /home/pi/lora_gateway/gateway_id.txt | cut -d ' ' --field=1 > /home/pi/lora_gateway/gateway_id.md5
+			fi
+			
 		else
 			jq '.'"$2"'.'"$3"' = '$4' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
 		fi

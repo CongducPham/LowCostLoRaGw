@@ -107,8 +107,8 @@ uint8_t node_addr=6;
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE READ PIN AND THE POWER PIN FOR THE TEMP. SENSOR
 #define TEMP_PIN_READ  A0
-// use digital 8 to power the temperature sensor if needed
-#define TEMP_PIN_POWER 8
+// use digital 9 to power the temperature sensor if needed
+#define TEMP_PIN_POWER 9
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////

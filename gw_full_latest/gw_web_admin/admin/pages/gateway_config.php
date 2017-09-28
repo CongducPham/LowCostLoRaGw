@@ -189,6 +189,7 @@ require 'header.php';
    										    	<div id="div_update_gw_id" class="form-group">
                                             		<label>Gateway ID</label>
 													<input id="gw_id_input" class="form-control" placeholder="New value" type="text" value="" autofocus>
+													<p><font color="red">WARNING: the gateway id is normally derived from the MAC address of the gateway. When you run Update/Basic config the gateway id will be automatically determined so it is not recommended to manually edit the gateway id.</font></p>
                                         		</div>
                                         	</td> 
    										    <td id="td_gw_id_submit" align="right">
@@ -196,6 +197,22 @@ require 'header.php';
    										    </td>
    										   
    										   </tr>
+    									    <td>Gateway ID MD5 hashed</td>
+    										<td id="gw_id_md5_value">
+    											<?php
+    												$gw_id_md5=exec('cat /home/pi/lora_gateway/gateway_id.md5');
+    												
+    												if ($gw_id_md5=='')
+													{
+    													echo "not defined";    
+													}
+													else {
+   					 									echo $gw_id_md5;   
+													}
+    											?>     										
+    										</td>
+											<td align="right">not editable </td>
+   										   </tr>   										   
    										   <tr>
     									    <td>AES</td>
     										<!-- <td id="aes_value"><?php echo $gw_conf['aes']; ?></td> -->

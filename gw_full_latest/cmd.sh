@@ -57,6 +57,10 @@ then
 	echo "Replacing gw id in gateway_conf.json"
 	sed -i -- 's/"000000.*"/"000000'"$gwid"'"/g' gateway_conf.json
 	echo "Done"
+	
+	echo "Creating /home/pi/lora_gateway/gateway_id.md5 file"
+	md5sum /home/pi/lora_gateway/gateway_id.txt | cut -d ' ' --field=1 > /home/pi/lora_gateway/gateway_id.md5
+	echo "Done"
 fi
 
 gatewayid=`cat gateway_id.txt`

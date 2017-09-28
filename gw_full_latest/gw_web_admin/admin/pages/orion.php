@@ -94,8 +94,8 @@
    										      										   
 										 </tbody>
     								    </table>
-    									<p>The WAZIUP cloud uses the FIWARE Orion broker. The <b>FIWARE service</b> will be the project name and the <b>FIWARE service-path></b> will obtained from <tt> '/'+organization+service-tree</tt></p>
-    								  	<p>The device id will be <tt>organization+"Sensor"+device_addr</tt>. For instance, from sensor 2 hosted by UPPA: <tt>UPPA_Sensor2</tt></p>
+    									<p>The WAZIUP cloud uses the FIWARE Orion broker. The <b>FIWARE service</b> will be the project name and the <b>FIWARE service-path</b> will be obtained from <tt>'/'+organization+service-tree</tt></p>
+    								  	<p>The device id will be <tt>organization+"Sensor"+device_addr</tt>. For instance, for sensor 2 hosted by UPPA: <tt>UPPA_Sensor2</tt></p>
     							      </div>
     							    </div>
 		
