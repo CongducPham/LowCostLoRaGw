@@ -39,11 +39,8 @@ void HCSR04::update_data()
     
     // wait
     delay(get_wait_time());
-    
-    // you can decice to have less samples
-    uint8_t nb_sample=5;
    
-    for(int i=0; i<nb_sample; i++) {
+    for(int i=0; i<get_n_sample(); i++) {
     	
 	   	digitalWrite(get_pin_trigger(), HIGH);
 	   	// at least 10us
@@ -62,7 +59,7 @@ void HCSR04::update_data()
         digitalWrite(get_pin_power(),LOW);
   
     // getting the average
-    set_data(distance / (double)nb_sample);
+    set_data(distance / (double)get_n_sample());
   }
   else {
   	if (has_fake_data())

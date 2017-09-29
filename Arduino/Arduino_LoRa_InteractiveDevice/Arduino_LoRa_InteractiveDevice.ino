@@ -224,7 +224,7 @@
 //
 // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-//#define PABOOST
+#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////
@@ -402,7 +402,7 @@ boolean full_lorawan=false;
 
 ///////////////////////////////////////////////////////////////////
 
-#if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
+#if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined ARDUINO_SAM_DUE
 int freeMemory () {
   extern int __heap_start, *__brkval; 
   int v; 
@@ -533,6 +533,20 @@ void startConfig() {
   PRINT_CSTSTR("%s",": state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
+
+  e=sx1272.getCRC();
+  PRINT_CSTSTR("%s","^$CRC ");
+  PRINT_VALUE("%d", sx1272._CRC);
+  PRINT_CSTSTR("%s",": state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;  
+
+  e=sx1272.setCRC_ON();
+  PRINT_CSTSTR("%s","^$CRC ");
+  PRINT_VALUE("%d", sx1272._CRC);
+  PRINT_CSTSTR("%s",": state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;  
   
   // Print a success message
   PRINT_CSTSTR("%s","^$SX1272/76 configured ");
@@ -551,32 +565,66 @@ void setup()
 #else
   Serial.begin(38400);  
 #endif  
-
+  // Print a start message
+  PRINT_CSTSTR("%s","LoRa interactive device\n");
+  
 #ifdef ARDUINO_AVR_PRO
-  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");
+  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");  
 #endif
-
 #ifdef ARDUINO_AVR_NANO
-  PRINT_CSTSTR("%s","Arduino Nano detected\n");
+  PRINT_CSTSTR("%s","Arduino Nano detected\n");   
 #endif
-
 #ifdef ARDUINO_AVR_MINI
-  PRINT_CSTSTR("%s","Arduino MINI/Nexus detected\n");
+  PRINT_CSTSTR("%s","Arduino Mini/Nexus detected\n");  
 #endif
-
+#ifdef ARDUINO_AVR_MEGA2560
+  PRINT_CSTSTR("%s","Arduino Mega2560 detected\n");  
+#endif
+#ifdef ARDUINO_SAM_DUE
+  PRINT_CSTSTR("%s","Arduino Due detected\n");  
+#endif
+#ifdef __MK66FX1M0__
+  PRINT_CSTSTR("%s","Teensy36 MK66FX1M0 detected\n");
+#endif
+#ifdef __MK64FX512__
+  PRINT_CSTSTR("%s","Teensy35 MK64FX512 detected\n");
+#endif
 #ifdef __MK20DX256__
-  PRINT_CSTSTR("%s","Teensy31/32 detected\n");
+  PRINT_CSTSTR("%s","Teensy31/32 MK20DX256 detected\n");
 #endif
-
 #ifdef __MKL26Z64__
-  PRINT_CSTSTR("%s","TeensyLC detected\n");
+  PRINT_CSTSTR("%s","TeensyLC MKL26Z64 detected\n");
 #endif
-
-#ifdef __SAMD21G18A__ 
+#ifdef ARDUINO_SAMD_ZERO 
   PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
 #endif
+#ifdef ARDUINO_AVR_FEATHER32U4 
+  PRINT_CSTSTR("%s","Adafruit Feather32U4 detected\n"); 
+#endif
+#ifdef  ARDUINO_SAMD_FEATHER_M0
+  PRINT_CSTSTR("%s","Adafruit FeatherM0 detected\n");
+#endif
 
-#if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
+// See http://www.nongnu.org/avr-libc/user-manual/using_tools.html
+// for the list of define from the AVR compiler
+
+#ifdef __AVR_ATmega328P__
+  PRINT_CSTSTR("%s","ATmega328P detected\n");
+#endif 
+#ifdef __AVR_ATmega32U4__
+  PRINT_CSTSTR("%s","ATmega32U4 detected\n");
+#endif 
+#ifdef __AVR_ATmega2560__
+  PRINT_CSTSTR("%s","ATmega2560 detected\n");
+#endif 
+#ifdef __SAMD21G18A__ 
+  PRINT_CSTSTR("%s","SAMD21G18A ARM Cortex-M0 detected\n");
+#endif
+#ifdef __SAM3X8E__ 
+  PRINT_CSTSTR("%s","SAM3X8E ARM Cortex-M3 detected\n");
+#endif
+
+#if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined ARDUINO_SAM_DUE
     // Print a start message
   Serial.print(freeMemory());
   Serial.println(F(" bytes of free memory.")); 
@@ -746,15 +794,29 @@ void CarrierSense1() {
 void CarrierSense2() {
   int e;
   bool carrierSenseRetry=false;  
+  uint8_t foundBusyDuringDIFSafterBusyState=0;
   uint8_t n_collision=0;
-
+  // upper bound of the random backoff timer
+  uint8_t W=2;  
+  
   PRINT_CSTSTR("%s","--> CarrierSense2: do CAD for DIFS=9CAD");
   PRINTLN;  
   
   if (send_cad_number) {
     do { 
-      do {
         
+      do {
+        //D f W
+        //2 2 4
+        //3 3 8
+        //4 4 16
+        //5 5 16
+        //6 6 16
+        //...
+        
+        if (foundBusyDuringDIFSafterBusyState>1 && foundBusyDuringDIFSafterBusyState<5)
+          W=W*2;
+                
         // check for free channel (SIFS/DIFS)        
         startDoCad=millis();
         e = sx1272.doCAD(send_cad_number);
@@ -766,7 +828,7 @@ void CarrierSense2() {
 
         // successull SIFS/DIFS
         if (!e) {
-
+          
           // previous collision detected
           if (n_collision) {
                 
@@ -774,7 +836,7 @@ void CarrierSense2() {
               // count for random number of CAD/SIFS/DIFS?   
               // SIFS=3CAD
               // DIFS=9CAD            
-              uint8_t w = random(3,24);
+              uint8_t w = random(0,W*send_cad_number);
 
               PRINT_VALUE("%d", w);
               PRINTLN;              
@@ -855,6 +917,7 @@ void CarrierSense2() {
         }
         else {
           n_collision++;
+          foundBusyDuringDIFSafterBusyState++;          
           PRINT_CSTSTR("%s","###");  
           PRINT_VALUE("%d",n_collision);
           PRINTLN;
@@ -934,10 +997,11 @@ void CarrierSense3() {
   int e;
   bool carrierSenseRetry=false;
   uint8_t n_collision=0;
+  uint8_t n_cad=9;
   
   uint32_t max_toa = sx1272.getToA(255);
 
-  unsigned long end_carrier_sense=0;
+  //unsigned long end_carrier_sense=0;
   
   if (send_cad_number) {
     do { 
@@ -946,9 +1010,9 @@ void CarrierSense3() {
       PRINT_VALUE("%ld", max_toa);
       PRINTLN;  
         
-      end_carrier_sense=millis()+max_toa;
+      //end_carrier_sense=millis()+(max_toa/n_cad)*(n_cad-1);
       
-      do {      
+      for (int i=0; i<n_cad; i++) {      
         startDoCad=millis();
         e = sx1272.doCAD(1);
         endDoCad=millis();
@@ -961,10 +1025,12 @@ void CarrierSense3() {
           PRINT_VALUE("%ld", endDoCad-startDoCad);
           PRINTLN;
         }
-
-        delay(500);
-
-      } while (millis()<end_carrier_sense && !e);
+        else
+          continue;
+          
+        // wait in order to have n_cad CAD operations during max_toa
+        delay(max_toa/(n_cad-1)-(millis()-startDoCad));
+      }
 
       if (e) {
         n_collision++;

@@ -34,11 +34,8 @@ void HRLV::update_data()
     
     // wait
     delay(get_wait_time());
-    
-    // you can decice to have less samples
-    uint8_t nb_sample=5;
    
-    for(int i=0; i<nb_sample; i++) {
+    for(int i=0; i<get_n_sample(); i++) {
     	
 	    if (get_is_analog()) {
 	      aux_dist = analogRead(get_pin_read()) * 5; // mm
@@ -53,7 +50,7 @@ void HRLV::update_data()
         digitalWrite(get_pin_power(),LOW);
   
     	// getting the average
-		set_data(distance / (double)nb_sample);
+		set_data(distance / (double)get_n_sample());
 	}
 	else {
   		// if not connected, set a random value (for testing)  	

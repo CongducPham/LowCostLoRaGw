@@ -89,9 +89,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
-#if not defined _VARIANT_ARDUINO_DUE_X_ && not defined __SAMD21G18A__
 #define WITH_EEPROM
-#endif
 #define WITH_APPKEY
 #define FLOAT_TEMP
 #define LOW_POWER
@@ -99,6 +97,17 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 //#define WITH_ACK
 //this will enable a receive window after every transmission
 //#define WITH_RCVW
+///////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// ADD HERE OTHER PLATFORMS THAT DO NOT SUPPORT EEPROM NOR LOW POWER
+#if defined ARDUINO_SAM_DUE || defined __SAMD21G18A__
+#undef WITH_EEPROM
+#endif
+
+#if defined ARDUINO_SAM_DUE
+#undef LOW_POWER
+#endif
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -245,8 +254,6 @@ const int number_of_sensors = 8;
 // array containing sensors pointers
 Sensor* sensor_ptrs[number_of_sensors];
 
-#if not defined _VARIANT_ARDUINO_DUE_X_ && defined FLOAT_TEMP
-
 char *ftoa(char *a, double f, int precision)
 {
  long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
@@ -260,7 +267,6 @@ char *ftoa(char *a, double f, int precision)
  itoa(desimal, a, 10);
  return ret;
 }
-#endif
 
 void setup()
 {  
@@ -304,27 +310,59 @@ void setup()
   PRINT_CSTSTR("%s","Generic LoRa sensor\n");
 
 #ifdef ARDUINO_AVR_PRO
-  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");
+  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");  
 #endif
-
 #ifdef ARDUINO_AVR_NANO
-  PRINT_CSTSTR("%s","Arduino Nano detected\n");
+  PRINT_CSTSTR("%s","Arduino Nano detected\n");   
 #endif
-
 #ifdef ARDUINO_AVR_MINI
-  PRINT_CSTSTR("%s","Arduino MINI/Nexus detected\n");
+  PRINT_CSTSTR("%s","Arduino MINI/Nexus detected\n");  
 #endif
-
+#ifdef ARDUINO_AVR_MEGA2560
+  PRINT_CSTSTR("%s","Arduino Mega2560 detected\n");  
+#endif
+#ifdef ARDUINO_SAM_DUE
+  PRINT_CSTSTR("%s","Arduino Due detected\n");  
+#endif
+#ifdef __MK66FX1M0__
+  PRINT_CSTSTR("%s","Teensy36 MK66FX1M0 detected\n");
+#endif
+#ifdef __MK64FX512__
+  PRINT_CSTSTR("%s","Teensy35 MK64FX512 detected\n");
+#endif
 #ifdef __MK20DX256__
-  PRINT_CSTSTR("%s","Teensy31/32 detected\n");
+  PRINT_CSTSTR("%s","Teensy31/32 MK20DX256 detected\n");
 #endif
-
 #ifdef __MKL26Z64__
-  PRINT_CSTSTR("%s","TeensyLC detected\n");
+  PRINT_CSTSTR("%s","TeensyLC MKL26Z64 detected\n");
+#endif
+#ifdef ARDUINO_SAMD_ZERO 
+  PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
+#endif
+#ifdef ARDUINO_AVR_FEATHER32U4 
+  PRINT_CSTSTR("%s","Adafruit Feather32U4 detected\n"); 
+#endif
+#ifdef  ARDUINO_SAMD_FEATHER_M0
+  PRINT_CSTSTR("%s","Adafruit FeatherM0 detected\n");
 #endif
 
+// See http://www.nongnu.org/avr-libc/user-manual/using_tools.html
+// for the list of define from the AVR compiler
+
+#ifdef __AVR_ATmega328P__
+  PRINT_CSTSTR("%s","ATmega328P detected\n");
+#endif 
+#ifdef __AVR_ATmega32U4__
+  PRINT_CSTSTR("%s","ATmega32U4 detected\n");
+#endif 
+#ifdef __AVR_ATmega2560__
+  PRINT_CSTSTR("%s","ATmega2560 detected\n");
+#endif 
 #ifdef __SAMD21G18A__ 
-  PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
+  PRINT_CSTSTR("%s","ATSAMD21G18A detected\n");
+#endif
+#ifdef __SAM3X8E__ 
+  PRINT_CSTSTR("%s","SAM3X8E ARM Cortex-M3 detected\n");
 #endif
 
   // Power ON the module
@@ -731,8 +769,8 @@ void loop(void)
 #endif          
       for (int i=0; i<nCycle; i++) {  
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || ARDUINO_AVR_UNO || ARDUINO_AVR_MINI  
-          // ATmega328P, ATmega168
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
+          // ATmega328P, ATmega168, ATmega32U4
           LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
           
           //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
@@ -756,7 +794,7 @@ void loop(void)
           delay(LOW_POWER_PERIOD*1000);
 #endif                        
           PRINT_CSTSTR("%s",".");
-          FLUSHOUTPUT; 
+          FLUSHOUTPUT
           delay(10);                        
       }
       

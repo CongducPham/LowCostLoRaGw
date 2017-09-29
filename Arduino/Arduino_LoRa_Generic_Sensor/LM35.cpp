@@ -36,11 +36,8 @@ void LM35::update_data()
     
     // wait
     delay(get_wait_time());
-    
-    // you can decice to have less samples
-    uint8_t nb_sample=5;
    
-    for(int i=0; i<nb_sample; i++) {
+    for(int i=0; i<get_n_sample(); i++) {
     	
     	// a bit useless to test for analog as we know it is analog
     	// remove this test?
@@ -57,8 +54,8 @@ void LM35::update_data()
     if (get_is_low_power())    
         digitalWrite(get_pin_power(),LOW);
   
-    	// getting the average
-		set_data(temperature / (double)nb_sample);
+    // getting the average
+    set_data(value/(double)get_n_sample()); 
 	}
 	else {
   		// if not connected, set a random value (for testing)  	

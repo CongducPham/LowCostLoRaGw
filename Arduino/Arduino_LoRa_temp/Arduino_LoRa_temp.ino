@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: June 17th by C. Pham
+ * last update: Sept 29th, 2017 by C. Pham
  */
 #include <SPI.h> 
 // Include the SX1272
@@ -77,9 +77,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
-#if not defined _VARIANT_ARDUINO_DUE_X_ && not defined __SAMD21G18A__
 #define WITH_EEPROM
-#endif
 #define WITH_APPKEY
 #define FLOAT_TEMP
 #define NEW_DATA_FIELD
@@ -91,6 +89,17 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 //#define WITH_ACK
 //this will enable a receive window after every transmission
 //#define WITH_RCVW
+///////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// ADD HERE OTHER PLATFORMS THAT DO NOT SUPPORT EEPROM NOR LOW POWER
+#if defined ARDUINO_SAM_DUE || defined __SAMD21G18A__
+#undef WITH_EEPROM
+#endif
+
+#if defined ARDUINO_SAM_DUE
+#undef LOW_POWER
+#endif
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -113,7 +122,7 @@ uint8_t node_addr=6;
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 5;
+unsigned int idlePeriodInMin = 10;
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -171,7 +180,7 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 #define NB_RETRIES 2
 #endif
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__ || defined __SAMD21G18A__
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined ARDUINO_SAM_DUE || defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__ || defined __SAMD21G18A__
   // if you have a Pro Mini running at 5V, then change here
   // these boards work in 3.3V
   // Nexus board from Ideetron is a Mini
@@ -194,7 +203,7 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 #include <Snooze.h>
 SnoozeTimer timer;
 SnoozeBlock sleep_config(timer);
-#else
+#else // for all other boards based on ATMega168, ATMega328P, ATMega32U4, ATMega2560, ATMega256RFR2, ATSAMD21G18A
 #define LOW_POWER_PERIOD 8
 // you need the LowPower library from RocketScream
 // https://github.com/rocketscream/Low-Power
@@ -317,27 +326,59 @@ void setup()
   PRINT_CSTSTR("%s","LoRa temperature sensor, extended version\n");
 
 #ifdef ARDUINO_AVR_PRO
-  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");
+  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");  
 #endif
-
 #ifdef ARDUINO_AVR_NANO
-  PRINT_CSTSTR("%s","Arduino Nano detected\n");
+  PRINT_CSTSTR("%s","Arduino Nano detected\n");   
 #endif
-
 #ifdef ARDUINO_AVR_MINI
-  PRINT_CSTSTR("%s","Arduino MINI/Nexus detected\n");
+  PRINT_CSTSTR("%s","Arduino MINI/Nexus detected\n");  
 #endif
-
+#ifdef ARDUINO_AVR_MEGA2560
+  PRINT_CSTSTR("%s","Arduino Mega2560 detected\n");  
+#endif
+#ifdef ARDUINO_SAM_DUE
+  PRINT_CSTSTR("%s","Arduino Due detected\n");  
+#endif
+#ifdef __MK66FX1M0__
+  PRINT_CSTSTR("%s","Teensy36 MK66FX1M0 detected\n");
+#endif
+#ifdef __MK64FX512__
+  PRINT_CSTSTR("%s","Teensy35 MK64FX512 detected\n");
+#endif
 #ifdef __MK20DX256__
-  PRINT_CSTSTR("%s","Teensy31/32 detected\n");
+  PRINT_CSTSTR("%s","Teensy31/32 MK20DX256 detected\n");
 #endif
-
 #ifdef __MKL26Z64__
-  PRINT_CSTSTR("%s","TeensyLC detected\n");
+  PRINT_CSTSTR("%s","TeensyLC MKL26Z64 detected\n");
+#endif
+#ifdef ARDUINO_SAMD_ZERO 
+  PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
+#endif
+#ifdef ARDUINO_AVR_FEATHER32U4 
+  PRINT_CSTSTR("%s","Adafruit Feather32U4 detected\n"); 
+#endif
+#ifdef  ARDUINO_SAMD_FEATHER_M0
+  PRINT_CSTSTR("%s","Adafruit FeatherM0 detected\n");
 #endif
 
+// See http://www.nongnu.org/avr-libc/user-manual/using_tools.html
+// for the list of define from the AVR compiler
+
+#ifdef __AVR_ATmega328P__
+  PRINT_CSTSTR("%s","ATmega328P detected\n");
+#endif 
+#ifdef __AVR_ATmega32U4__
+  PRINT_CSTSTR("%s","ATmega32U4 detected\n");
+#endif 
+#ifdef __AVR_ATmega2560__
+  PRINT_CSTSTR("%s","ATmega2560 detected\n");
+#endif 
 #ifdef __SAMD21G18A__ 
-  PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
+  PRINT_CSTSTR("%s","ATSAMD21G18A detected\n");
+#endif
+#ifdef __SAM3X8E__ 
+  PRINT_CSTSTR("%s","SAM3X8E ARM Cortex-M3 detected\n");
 #endif
 
   // Power ON the module
@@ -467,7 +508,6 @@ void setup()
   delay(500);
 }
 
-#if not defined _VARIANT_ARDUINO_DUE_X_ && defined FLOAT_TEMP
 char *ftoa(char *a, double f, int precision)
 {
  long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
@@ -478,10 +518,12 @@ char *ftoa(char *a, double f, int precision)
  while (*a != '\0') a++;
  *a++ = '.';
  long desimal = abs((long)((f - heiltal) * p[precision]));
+ if (desimal < p[precision-1]) {
+  *a++ = '0';
+ } 
  itoa(desimal, a, 10);
  return ret;
 }
-#endif
 
 void loop(void)
 {
@@ -537,14 +579,6 @@ void loop(void)
       uint8_t r_size;
 
       // then use app_key_offset to skip the app key
-#ifdef _VARIANT_ARDUINO_DUE_X_
-#ifdef NEW_DATA_FIELD
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#TC/%.2f", field_index, temp);
-#else
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#%.2f", field_index, temp);
-#endif      
-#else
-    
 #ifdef FLOAT_TEMP
       ftoa(float_str,temp,2);
 
@@ -563,7 +597,6 @@ void loop(void)
 #else
       r_size=sprintf((char*)message+app_key_offset, "\\!#%d#%d", field_index, (int)temp);
 #endif         
-#endif
 #endif
 
       PRINT_CSTSTR("%s","Sending ");
@@ -890,7 +923,7 @@ void loop(void)
         PRINT_CSTSTR("%s","No packet\n");
 #endif
 
-#ifdef LOW_POWER
+#if defined LOW_POWER && not defined _VARIANT_ARDUINO_DUE_X_
       PRINT_CSTSTR("%s","Switch to power saving mode\n");
 
       e = sx1272.setSleepMode();
@@ -929,8 +962,8 @@ void loop(void)
           
       for (int i=0; i<nCycle; i++) {  
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || ARDUINO_AVR_UNO || ARDUINO_AVR_MINI         
-          // ATmega328P, ATmega168
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
+          // ATmega328P, ATmega168, ATmega32U4
           LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
           
           //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
@@ -954,7 +987,7 @@ void loop(void)
           delay(LOW_POWER_PERIOD*1000);
 #endif                        
           PRINT_CSTSTR("%s",".");
-          FLUSHOUTPUT; 
+          FLUSHOUTPUT
           delay(10);                        
       }
       

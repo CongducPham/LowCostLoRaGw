@@ -27,7 +27,7 @@ Sensor::Sensor(char* nomenclature, bool is_analog, bool is_connected, bool is_lo
   set_data(0);
   set_wait_time(0);
   set_fake_data(false);
-  set_n_sample(5);
+  set_n_sample(1);
   
   /*if(_pin_power != -1){
     set_power_set("LOW");
