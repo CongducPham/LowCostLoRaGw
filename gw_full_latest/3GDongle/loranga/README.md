@@ -5,7 +5,7 @@ The [LORANGA](https://www.alegrefactory.com/loranga) board from "La Fabrica Aleg
 
 	CFLAGS=-DPABOOST -DMAX_DBM=14
 	
-Then, run the scripts/basic_config_gw.sh to both configure your gateway and compile the loga_gateway program.	
+Then, run the scripts/basic_config_gw.sh to both configure your gateway and compile the lora_gateway program.	
 
 Starting Internet connection
 ----------------------------
@@ -21,8 +21,7 @@ If you use our latest version of SD card image (from September 2017) then everyt
 
 You can add the following lines in your /etc/rc.local file to have it started at boot:
 
-	cd /home/pi/lora_gateway/3GDongle/loranga
-	start-internet.sh
+	/home/pi/lora_gateway/3GDongle/loranga/start-internet.sh
 	
 Normally after the following line:
 
