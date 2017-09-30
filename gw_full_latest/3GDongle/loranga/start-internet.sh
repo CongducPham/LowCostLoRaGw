@@ -2,4 +2,4 @@
 
 sudo python wake-2G.py
 sleep 2
-sudo pppd call gprs &
+sudo pppd $1 call gprs &

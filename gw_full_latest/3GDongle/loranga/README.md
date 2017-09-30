@@ -16,18 +16,30 @@ They have the following [test github](https://github.com/edu986/test_ppp) to exp
 
 If you use our latest version of SD card image (from September 2017) then everything is set-up to use the LORANGA board. You just have to run:
 
-	> cd 3GDongle/loranga
+	> cd /home/pi/lora_gateway/3GDongle/loranga
 	> ./start-internet.sh
 
-You can add the following lines in your /etc/rc.local file to have it started at boot:
+To start the 2G/3G Internet connection at boot, run:
 
-	/home/pi/lora_gateway/3GDongle/loranga/start-internet.sh
+	> ./enable-loranga-internet-on-boot.sh
 	
-Normally after the following line:
+This simple script simply creates a file called use_loranga_internet_on_boot.txt. The start_gw.sh script, called at boot time, now checks for this file and will run the start-internet.sh script before launching the gateway program and post-processing stage. However, it is safer to test it first in interactive mode to see how the ppp connection is going. Once you are supposed to have Internet, try to ping some remote computers or use the web admin interface to see whether the gateway has Internet or not. 
 
-	/home/pi/lora_gateway/scripts/start_gw.sh
+You can provide a parameter to start-internet.sh when testing in interactive mode. With no parameters, pppd logs are sent to stdout with is not very convenient. You can use:
 
-However, it is safer to test it first in interactive mode. Use stop-internet.sh to stop the pppd process and power-off the LORANGA board. Once you are supposed to have Internet, try to ping some remote computers.
+	> ./start-internet.sh "logfile pppd.log"
+	
+To redirect pppd logs to pppd.log (in the /home/pi/lora_gateway/3GDongle/loranga folder). If you don't want any logs, run:
+
+	> ./start-internet.sh nolog	
+
+When pppd is started at boot for an operational gateway, start-internet.sh is run without any parameters but it is not important because the logs will not appear on stdout. We did not want to have logs in a file because we want to avoid having a log file that can grow quite fast. However, if you want to have the logs saved in a file, you can just edit /home/pi/lora_gateway/script/start_gw.sh and add "logfile pppd.log" after ./start-internet.sh.
+
+Use stop-internet.sh to stop the pppd process and power-off the LORANGA board. Also, you can disable the usage of Loranga on boot with:
+
+	> ./disable-loranga-internet-on-boot.sh
+	
+which simply deletes the use_loranga_internet_on_boot.txt file. 	
 
 Sending SMS
 -----------
@@ -82,7 +94,15 @@ And use an end-device (our interactive device for instance) to send "\!TC/22.5" 
 	2017-09-02T09:47:38.579110> python CloudSMS.py "TC/22.5" "1,16,6,2,9,6,-57" "125,5,12" "2017-09-02T09:47:19.959" "00000027EBBEDA21"
 	2017-09-02T09:47:38.579381> --> cloud end
 
-However, currently, it is not possible to have Internet connectivity and SMS support at the same time.
+However, currently, **it is not possible to have Internet connectivity and SMS support at the same time**. Therefore, if you want to enable the Loranga SMS feature at boot time, run:
+
+	> ./enable-loranga-SMS-on-boot.sh
+	
+This simple script simply creates a file called use_loranga_SMS_on_boot.txt. The start_gw.sh script, called at boot time, now also checks for this file and will power on the modem before launching the gateway program and post-processing stage. You can disable the usage of Loranga SMS on boot with:
+
+	> ./disable-loranga-SMS-on-boot.sh
+	
+which simply deletes the use_loranga_SMS_on_boot.txt file. Note that if you have both use_loranga_Internet_on_boot.txt and use_loranga_SMS_on_boot.txt then the priority is the Internet connection. Remember to use disable-loranga-internet-on-boot.sh if you want only the SMS features.	
 
 Raspberry PI Zero
 -----------------
