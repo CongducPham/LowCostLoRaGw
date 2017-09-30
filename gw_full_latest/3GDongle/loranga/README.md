@@ -10,7 +10,7 @@ Then, run the scripts/basic_config_gw.sh to both configure your gateway and comp
 Starting Internet connection
 ----------------------------
 
-The support of [LORANGA](https://www.alegrefactory.com/loranga) board has been kindly provided by the team from "La Fabrica Alegre" company.
+The support of [LORANGA](https://www.alegrefactory.com/loranga) board has been realized in collaboration with "La Fabrica Alegre" development team.
 
 They have the following [test github](https://github.com/edu986/test_ppp) to explain the installation of the support of the LORANGA board. Note that the wvdial method explained for 3G USB dongles is currently not working with the LORANGA board.
 
@@ -33,9 +33,9 @@ To redirect pppd logs to pppd.log (in the /home/pi/lora_gateway/3GDongle/loranga
 
 	> ./start-internet.sh nolog	
 
-When pppd is started at boot for an operational gateway, start-internet.sh is run without any parameters but it is not important because the logs will not appear on stdout. We did not want to have logs in a file because we want to avoid having a log file that can grow quite fast. However, if you want to have the logs saved in a file, you can just edit /home/pi/lora_gateway/script/start_gw.sh and add "logfile pppd.log" after ./start-internet.sh.
+When pppd is started at boot for an operational gateway, start-internet.sh is run without any parameters but it is not important because the logs will not appear on stdout. We did not want to have logs in a file because we want to avoid having a log file that can grow quite fast. However, if you want to have the logs saved in a file, you can just edit /home/pi/lora_gateway/scripts/start_gw.sh and add "logfile pppd.log" after ./start-internet.sh.
 
-Use stop-internet.sh to stop the pppd process and power-off the LORANGA board. Also, you can disable the usage of Loranga on boot with:
+Use stop-internet.sh to stop the pppd process and power-off the LORANGA board. Also, you can disable the usage of LORANGA on boot with:
 
 	> ./disable-loranga-internet-on-boot.sh
 	
@@ -94,7 +94,7 @@ And use an end-device (our interactive device for instance) to send "\!TC/22.5" 
 	2017-09-02T09:47:38.579110> python CloudSMS.py "TC/22.5" "1,16,6,2,9,6,-57" "125,5,12" "2017-09-02T09:47:19.959" "00000027EBBEDA21"
 	2017-09-02T09:47:38.579381> --> cloud end
 
-However, currently, **it is not possible to have Internet connectivity and SMS support at the same time**. Therefore, if you want to enable the Loranga SMS feature at boot time, run:
+However, currently, **it is not possible to have Internet connectivity and SMS support at the same time**. Therefore, if you want to enable the LORANGA SMS feature at boot time, run:
 
 	> ./enable-loranga-SMS-on-boot.sh
 	
