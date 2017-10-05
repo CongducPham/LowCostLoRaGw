@@ -24,6 +24,12 @@
 			"enabled":false,
 			"always_enabled":false
 		},		
+		{    
+            "name":"Temporary storage for no Internet connection",
+            "script":"python CloudNoInternet.py",
+            "type":"file",            
+            "enabled":false
+        },			
 		{	
 			"name":"WAZIUP Orion cloud",
 			"script":"python CloudOrion.py",

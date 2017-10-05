@@ -950,6 +950,7 @@ while True:
 						print ude
 					else:
 						print cmd_arg
+						sys.stdout.flush()
 						try:
 							os.system(cmd_arg)
 						except:
@@ -1094,6 +1095,7 @@ while True:
 									print ude
 								else:
 									print cmd_arg
+									sys.stdout.flush()
 									try:
 										os.system(cmd_arg)
 									except:
@@ -1175,6 +1177,7 @@ while True:
 									print ude
 								else:
 									print cmd_arg
+									sys.stdout.flush()
 									try:
 										os.system(cmd_arg)
 									except:
