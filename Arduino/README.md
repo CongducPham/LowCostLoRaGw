@@ -75,6 +75,10 @@ You can look at the provided examples to see how you can write a specific sensor
 
 **Arduino_LoRa_InteractiveDevice** is a tool that turns an Arduino board to an interactive device where a user can interactively enter data to be sent to the gateway. There are also many parameters that can dynamically be configured. This example can serve for test and debug purposes as well.
 
+**Arduino_LoRa_Simple_BeaconCollar** is a simple beacon system to build a collar device intended for Cattle Rustling applications. The device will periodically send a beacon message with a sequence number to track at the gateway the beacon's RSSI and beacon losses to trigger alarms. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system.
+
+**Arduino_LoRa_GPS** is a more elaborated GPS beacon system where a GPS module (UBlox 6/7/8) is used to get the coordinates of the collar device. The device will periodically send a beacon message with a sequence number and the GPS coordinates. This example can served as a basis for a tracking device. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system.
+
 **Arduino_LoRa_ucamII** is the image IoT sensor device for multimedia sensing. Read [this specific page](http://cpham.perso.univ-pau.fr/WSN-MODEL/tool-html/imagesensor.html) and this [specific tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-ImageIoT-step-by-step.pdf) for more informations on how to build and run the image sensor.
 
 What Arduino boards are supported?
