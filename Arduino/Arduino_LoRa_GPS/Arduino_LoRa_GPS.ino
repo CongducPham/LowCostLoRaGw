@@ -1,7 +1,7 @@
 /*
- *  Simple beaconing system for cattle rustling
+ *  GPS sensor to test the LoRa gateway
  *
- *  Copyright (C) 2016 Congduc Pham, University of Pau, France
+ *  Copyright (C) 2017 Congduc Pham & Mamour Diop, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
+ * last update: March 22th by M. Diop
  */
 #include <SPI.h> 
 // Include the SX1272
@@ -48,8 +49,6 @@
 // previous way for setting output power
 // 'H' is actually 6dBm, so better to use the new way to set output power
 // char powerLevel='H';
-#elif defined FCC_US_REGULATION
-#define MAX_DBM 14
 #endif
 
 #ifdef BAND868
@@ -69,23 +68,27 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 //
 // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-//#define PABOOST
+#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
+#define WITH_EEPROM
 #define WITH_APPKEY
+#define FLOAT_TEMP
+#define NEW_DATA_FIELD
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
-//#define WITH_AES
-//#define LORAWAN
-//#define TO_LORAWAN_GW
 //#define WITH_ACK
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
-// ADD HERE OTHER PLATFORMS THAT DO NOT LOW POWER
+// ADD HERE OTHER PLATFORMS THAT DO NOT SUPPORT EEPROM NOR LOW POWER
+#if defined ARDUINO_SAM_DUE || defined __SAMD21G18A__
+#undef WITH_EEPROM
+#endif
+
 #if defined ARDUINO_SAM_DUE
 #undef LOW_POWER
 #endif
@@ -94,7 +97,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE LORA MODE, NODE ADDRESS 
 #define LORAMODE  1
-#define node_addr 14
+#define node_addr 15
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -106,6 +109,30 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
 unsigned int idlePeriodInMin = 20;
 ///////////////////////////////////////////////////////////////////
+
+#define GPS_FIX_ATTEMPT_TIME_IN_MS 180000
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE GPS SERIAL PORT
+
+//Arduino Pro Mini, Uno, Nano, Arduino Mini/Nexus, Arduino M0/Zero
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_MINI || defined __SAMD21G18A__
+  #define gps_serial Serial
+  // Arduino Mega, Due, Teensy3.1/3.2,
+#elif defined ARDUINO_AVR_MEGA2560 || defined ARDUINO_SAM_DUE || defined __MK20DX256__
+  #define gps_serial Serial3
+#endif
+
+///////////////////////////////////////////////
+// CHANGE HERE THE POWER PIN FOR THE GPS MODULE
+// use digital 8 to power the GPS if needed
+#define GPS_PIN_POWER 
+#define GPS_PIN_POWER_PIN 8
+///////////////////////////////////////////////////////////////////
+
+#include "gps_light.h"
+gps_light gps(gps_serial);
+//////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
 ///////////////////////////////////////////////////////////////////
@@ -121,15 +148,17 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 #define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
 #define PRINT_STR(fmt,param)      SerialUSB.print(param)
 #define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
-#define PRINT_HEX(fmt,param)      SerialUSB.print(param,HEX)
 #define FLUSHOUTPUT               SerialUSB.flush();
 #else
 #define PRINTLN                   Serial.println("")
 #define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
 #define PRINT_STR(fmt,param)      Serial.print(param)
 #define PRINT_VALUE(fmt,param)    Serial.print(param)
-#define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
 #define FLUSHOUTPUT               Serial.flush();
+#endif
+
+#ifdef WITH_EEPROM
+#include <EEPROM.h>
 #endif
 
 #define DEFAULT_DEST_ADDR 1
@@ -146,7 +175,7 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 #include <Snooze.h>
 SnoozeTimer timer;
 SnoozeBlock sleep_config(timer);
-#else
+#else // for all other boards based on ATMega168, ATMega328P, ATMega32U4, ATMega2560, ATMega256RFR2, ATSAMD21G18A
 #define LOW_POWER_PERIOD 8
 // you need the LowPower library from RocketScream
 // https://github.com/rocketscream/Low-Power
@@ -162,64 +191,51 @@ RTCZero rtc;
 unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
 
-#ifdef WITH_AES
-
-#include "AES-128_V10.h"
-#include "Encrypt_V31.h"
-
-unsigned char AppSkey[16] = {
-  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
-};
-
-unsigned char NwkSkey[16] = {
-  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
-};
-
-unsigned char DevAddr[4] = {
-  0x00, 0x00, 0x00, node_addr
-};
-
-uint16_t Frame_Counter_Up = 0x0000;
-// we use the same convention than for LoRaWAN as we will use the same AES convention
-// See LoRaWAN specifications
-unsigned char Direction = 0x00;
-#endif
-
 unsigned long nextTransmissionTime=0L;
 uint8_t message[100];
 
-#ifdef TO_LORAWAN_GW
-int loraMode=1;
-#else
 int loraMode=LORAMODE;
-#endif
+double latitude = 0.0;
+double longitude = 0.0;
+long currentTime; 
+long fixTime = -1.0;
+uint8_t starting = 1;
 
 uint16_t beaconCounter=0;
-long randCounter=1234L;
+
+#ifdef WITH_EEPROM
+struct sx1272config {
+
+  uint8_t flag1;
+  uint8_t flag2;
+  uint8_t seq;
+  // can add other fields such as LoRa mode,...
+};
+
+sx1272config my_sx1272config;
+#endif
 
 void setup()
 {
   int e;
 
-  randomSeed(randCounter);
-  
-#ifdef LOW_POWER
-#ifdef __SAMD21G18A__
-  rtc.begin();
-#endif  
-#endif
-  
-  delay(3000); 
+  delay(3000);
   // Open serial communications and wait for port to open:
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0 
   SerialUSB.begin(38400);
 #else
   Serial.begin(38400);  
 #endif  
+
+#ifdef GPS_PIN_POWER
+  //to power the temperature sensor
+  pinMode(GPS_PIN_POWER_PIN,OUTPUT);
+#endif
+  
+  gps.begin(9600);
+  
   // Print a start message
-  PRINT_CSTSTR("%s","Simple beacon system\n");
+  PRINT_CSTSTR("%s","Simple LoRa GPS sensor\n");
 
 #ifdef ARDUINO_AVR_PRO
   PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");  
@@ -228,7 +244,7 @@ void setup()
   PRINT_CSTSTR("%s","Arduino Nano detected\n");   
 #endif
 #ifdef ARDUINO_AVR_MINI
-  PRINT_CSTSTR("%s","Arduino MINI/Nexus detected\n");  
+  PRINT_CSTSTR("%s","Arduino Mini/Nexus detected\n");  
 #endif
 #ifdef ARDUINO_AVR_MEGA2560
   PRINT_CSTSTR("%s","Arduino Mega2560 detected\n");  
@@ -254,7 +270,7 @@ void setup()
 #ifdef ARDUINO_AVR_FEATHER32U4 
   PRINT_CSTSTR("%s","Adafruit Feather32U4 detected\n"); 
 #endif
-#ifdef  ARDUINO_SAMD_FEATHER_M0
+#ifdef ARDUINO_SAMD_FEATHER_M0
   PRINT_CSTSTR("%s","Adafruit FeatherM0 detected\n");
 #endif
 
@@ -279,6 +295,28 @@ void setup()
 
   // Power ON the module
   sx1272.ON();
+
+#ifdef WITH_EEPROM
+  // get config from EEPROM
+  EEPROM.get(0, my_sx1272config);
+
+  // found a valid config?
+  if (my_sx1272config.flag1==0x12 && my_sx1272config.flag2==0x34) {
+    PRINT_CSTSTR("%s","Get back previous sx1272 config\n");
+
+    // set sequence number for SX1272 library
+    sx1272._packetNumber=my_sx1272config.seq;
+    PRINT_CSTSTR("%s","Using packet sequence number of ");
+    PRINT_VALUE("%d", sx1272._packetNumber);
+    PRINTLN;
+  }
+  else {
+    // otherwise, write config and start over
+    my_sx1272config.flag1=0x12;
+    my_sx1272config.flag2=0x34;
+    my_sx1272config.seq=sx1272._packetNumber;
+  }
+#endif
   
   // Set transmission mode and print the result
   e = sx1272.setMode(loraMode);
@@ -311,7 +349,7 @@ void setup()
 #endif
 
   // previous way for setting output power
-  // e = sx1272.setPower(powerLevel);
+  // e = sx1272.setPower(powerLevel); 
 
   e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
   PRINT_CSTSTR("%s","Setting Power: state ");
@@ -324,16 +362,20 @@ void setup()
   PRINT_VALUE("%d", e);
   PRINTLN;
 
-#ifdef TO_LORAWAN_GW
-  e = sx1272.setSyncWord(0x34);
-  PRINT_CSTSTR("%s","Set sync word to 0x34 state ");
-  PRINT_VALUE("%d", e);
-  PRINTLN;
-#endif 
-
   // Print a success message
   PRINT_CSTSTR("%s","SX1272 successfully configured\n");
 
+#ifdef GPS_PIN_POWER
+  digitalWrite(GPS_PIN_POWER_PIN,HIGH);
+  PRINT_CSTSTR("%s","Seting HIGH digital GPS power pin: ");       
+  PRINT_VALUE("%d", GPS_PIN_POWER_PIN);
+  PRINTLN;      
+  delay(200);
+#endif  
+
+#ifndef GPS_PIN_POWER
+  gps.gps_init_PSM();
+#endif  
   delay(500);
 }
 
@@ -347,22 +389,80 @@ void loop(void)
 #ifndef LOW_POWER
   // 600000+random(15,60)*1000
   if (millis() > nextTransmissionTime) {
-#endif
+#endif       
+
+      if  (!starting) {
+#ifdef GPS_PIN_POWER
+          digitalWrite(GPS_PIN_POWER_PIN,HIGH);
+          PRINT_CSTSTR("%s","Seting HIGH digital GPS power pin: ");       
+          PRINT_VALUE("%d", GPS_PIN_POWER_PIN);
+          PRINTLN;      
+          delay(200);
+#else         
+          gps.gps_ON();
+#endif          
+      }
+
+      currentTime = millis();
+      uint8_t get_fix_sucess = 0, timeout = 0;
       
-#if defined WITH_APPKEY && not defined WITH_AES
+      while (!timeout && !get_fix_sucess)  {
+        
+        if (millis() - currentTime > GPS_FIX_ATTEMPT_TIME_IN_MS) {
+          timeout = 1;
+        }
+        else{
+          gps.parseNMEA();
+          if (gps.isGGA()){
+            gps.decode();
+            if (gps.isValid()){
+              fixTime = millis() - currentTime;
+              latitude = gps.get_latitude();
+              longitude = gps.get_longitude();              
+              get_fix_sucess = 1;
+            }
+          }
+        }
+      } // End While
+
+#ifdef GPS_PIN_POWER
+      digitalWrite(GPS_PIN_POWER_PIN,LOW);
+#endif  
+      starting = 0;   
+    
+#ifdef WITH_APPKEY
       app_key_offset = sizeof(my_appKey);
       // set the app key in the payload
       memcpy(message,my_appKey,app_key_offset);
-#endif
-
+#endif     
       uint8_t r_size;
+      
+      if (timeout) {
+          PRINT_CSTSTR("%s", "No fix, timeout expired!");
+          PRINTLN;
+          r_size=sprintf((char*)message+app_key_offset, "\\!BC/%d/LAT/0/LGT/0/FXT/-1", beaconCounter);
+      }
+      else {       
+        PRINT_CSTSTR("%s","Fix is ");
+        PRINT_VALUE("%ld", fixTime);
+        PRINTLN;
+        
+        String latString = String(latitude, 5);
+        PRINT_CSTSTR("%s","Latitude is ");
+        PRINT_VALUE("%s", latString);
+        PRINTLN;
+        
+        String lgtString = String(longitude, 5);
+        PRINT_CSTSTR("%s","Longitude is ");
+        PRINT_VALUE("%s", lgtString);
+        PRINTLN;
+              
+        // then use app_key_offset to skip the app key
+        r_size=sprintf((char*)message+app_key_offset, "\\!BC/%dLAT/%s/LGT/%s/FXT/%ld", beaconCounter, latString.c_str(), lgtString.c_str(), fixTime);
+      }
 
-      //r_size=sprintf((char*)message+app_key_offset,"\\!SRC/%d/BC/%d/RC/%ld",node_addr, beaconCounter, randCounter);
-      r_size=sprintf((char*)message+app_key_offset,"\\!BC/%d", beaconCounter);
-      
       beaconCounter++;
-      randCounter=random(0, 65536);
-      
+            
       PRINT_CSTSTR("%s","Sending ");
       PRINT_STR("%s",(char*)(message+app_key_offset));
       PRINTLN;
@@ -372,132 +472,17 @@ void loop(void)
       PRINTLN;
       
       int pl=r_size+app_key_offset;
-
-#ifdef WITH_AES
-      // if encryption then we DO NOT use appkey
-      //
-      PRINT_STR("%s",(char*)message);
-      PRINTLN;
-      PRINT_CSTSTR("%s","plain payload hex\n");
-      for (int i=0; i<pl;i++) {
-        if (message[i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", message[i]);
-        PRINT_CSTSTR("%s"," ");
-      }
-      PRINTLN; 
-
-      PRINT_CSTSTR("%s","Encrypting\n");     
-      PRINT_CSTSTR("%s","encrypted payload\n");
-      Encrypt_Payload((unsigned char*)message, pl, Frame_Counter_Up, Direction);
-      //Print encrypted message
-      for(int i = 0; i < pl; i++)      
-      {
-        if (message[i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", message[i]);         
-        PRINT_CSTSTR("%s"," ");
-      }
-      PRINTLN;   
-
-      // with encryption, we use for the payload a LoRaWAN packet format to reuse available LoRaWAN encryption libraries
-      //
-      unsigned char LORAWAN_Data[256];
-      unsigned char LORAWAN_Package_Length;
-      unsigned char MIC[4];
-      //Unconfirmed data up
-      unsigned char Mac_Header = 0x40;
-      // no ADR, not an ACK and no options
-      unsigned char Frame_Control = 0x00;
-      // with application data so Frame_Port = 1..223
-      unsigned char Frame_Port = 0x01; 
-
-      //Build the Radio Package, LoRaWAN format
-      //See LoRaWAN specification
-      LORAWAN_Data[0] = Mac_Header;
-    
-      LORAWAN_Data[1] = DevAddr[3];
-      LORAWAN_Data[2] = DevAddr[2];
-      LORAWAN_Data[3] = DevAddr[1];
-      LORAWAN_Data[4] = DevAddr[0];
-    
-      LORAWAN_Data[5] = Frame_Control;
-    
-      LORAWAN_Data[6] = (Frame_Counter_Up & 0x00FF);
-      LORAWAN_Data[7] = ((Frame_Counter_Up >> 8) & 0x00FF);
-    
-      LORAWAN_Data[8] = Frame_Port;
-    
-      //Set Current package length
-      LORAWAN_Package_Length = 9;
-      
-      //Load Data
-      for(int i = 0; i < r_size; i++)
-      {
-        // see that we don't take the appkey, just the encrypted data that starts that message[app_key_offset]
-        LORAWAN_Data[LORAWAN_Package_Length + i] = message[i];
-      }
-    
-      //Add data Lenth to package length
-      LORAWAN_Package_Length = LORAWAN_Package_Length + r_size;
-    
-      PRINT_CSTSTR("%s","calculate MIC with NwkSKey\n");
-      //Calculate MIC
-      Calculate_MIC(LORAWAN_Data, MIC, LORAWAN_Package_Length, Frame_Counter_Up, Direction);
-    
-      //Load MIC in package
-      for(int i=0; i < 4; i++)
-      {
-        LORAWAN_Data[i + LORAWAN_Package_Length] = MIC[i];
-      }
-    
-      //Add MIC length to package length
-      LORAWAN_Package_Length = LORAWAN_Package_Length + 4;
-    
-      PRINT_CSTSTR("%s","transmitted LoRaWAN-like packet:\n");
-      PRINT_CSTSTR("%s","MHDR[1] | DevAddr[4] | FCtrl[1] | FCnt[2] | FPort[1] | EncryptedPayload | MIC[4]\n");
-      //Print transmitted data
-      for(int i = 0; i < LORAWAN_Package_Length; i++)
-      {
-        if (LORAWAN_Data[i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", LORAWAN_Data[i]);         
-        PRINT_CSTSTR("%s"," ");
-      }
-      PRINTLN;      
-
-      // copy back to message
-      memcpy(message,LORAWAN_Data,LORAWAN_Package_Length);
-      pl = LORAWAN_Package_Length;
-
-#ifdef LORAWAN
-      PRINT_CSTSTR("%s","end-device uses native LoRaWAN packet format\n");
-      // indicate to SX1272 lib that raw mode at transmission is required to avoid our own packet header
-      sx1272._rawFormat=true;
-#else
-      PRINT_CSTSTR("%s","end-device uses encapsulated LoRaWAN packet format only for encryption\n");
-#endif
-      // in any case, we increment Frame_Counter_Up
-      // even if the transmission will not succeed
-      Frame_Counter_Up++;
-#endif
       
       sx1272.CarrierSense();
       
       startSend=millis();
 
-#ifdef WITH_AES
-      // indicate that payload is encrypted
-      // DO NOT take into account appkey
-      sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_ENCRYPTED);
-#else
 #ifdef WITH_APPKEY
       // indicate that we have an appkey
       sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_WAPPKEY);
 #else
       // just a simple data packet
       sx1272.setPacketType(PKT_TYPE_DATA);
-#endif
 #endif
       
       // Send message to the gateway and print the result
@@ -523,10 +508,11 @@ void loop(void)
       e = sx1272.sendPacketTimeout(DEFAULT_DEST_ADDR, message, pl);
 #endif  
       endSend=millis();
-
-#ifdef LORAWAN
-      // switch back to normal behavior
-      sx1272._rawFormat=false;
+    
+#ifdef WITH_EEPROM
+      // save packet number for next packet in case of reboot
+      my_sx1272config.seq=sx1272._packetNumber;
+      EEPROM.put(0, my_sx1272config);
 #endif
 
       PRINT_CSTSTR("%s","LoRa pkt size ");
@@ -548,7 +534,11 @@ void loop(void)
       PRINT_CSTSTR("%s","Packet sent, state ");
       PRINT_VALUE("%d", e);
       PRINTLN;
-        
+
+      PRINT_CSTSTR("%s","Remaining ToA is ");
+      PRINT_VALUE("%d", sx1272.getRemainingToA());
+      PRINTLN;
+    
 #ifdef LOW_POWER
       PRINT_CSTSTR("%s","Switch to power saving mode\n");
 
@@ -585,10 +575,16 @@ void loop(void)
       timer.setTimer(LOW_POWER_PERIOD*1000 + random(1,5)*1000);// milliseconds
 
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
-#endif          
-      for (int i=0; i<nCycle; i++) {  
+#endif 
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
+#ifndef GPS_PIN_POWER
+      //we switch GPS OFF here because writing to Serial (with Serial.print) will wake up GPS.
+      gps.gps_OFF(); 
+#endif      
+
+      for (int i=0; i<nCycle; i++) {  
+        
+#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__ 
           // ATmega328P, ATmega168, ATmega32U4
           LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
           
@@ -614,7 +610,7 @@ void loop(void)
           delay(LOW_POWER_PERIOD*1000);
 #endif                        
           //PRINT_CSTSTR("%s",".");
-          //FLUSHOUTPUT; 
+          //FLUSHOUTPUT;
           //delay(10);                        
       }
       
