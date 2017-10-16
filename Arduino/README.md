@@ -9,6 +9,10 @@ This folder contains sketches for Arduino (and compatible) boards. The example s
  
 **Arduino_LoRa_temp** illustrates a more complex example with AES encryption and the possibility to send LoRaWAN packet. It can also open a receive window after every transmission to wait for downlink message coming from the gateway. The template shows for instance how an '/@Ax#' command can be parsed to set the node's address to 'x'. It can serve as a template for a more complex LoRa IoT device.
 
+**Arduino_LoRa_Simple_BeaconCollar** is a simple beacon system to build a collar device intended for Cattle Rustling applications. The device will periodically send a beacon message with a sequence number to track at the gateway the beacon's RSSI and beacon losses to trigger alarms. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system.
+
+**Arduino_LoRa_GPS** is a more elaborated GPS beacon system where a GPS module (UBlox 6/7/8) is used to get the coordinates of the collar device. The device will periodically send a beacon message with a sequence number and the GPS coordinates. This example can served as a basis for a tracking device. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system. The GPS device uses an open source PCB board designed by Fabien Ferrero from LEAT laboratory, University of Nice, France, to easily integrate an Arduino Pro Mini and an RFM95W radio module. The PCB has an integrated antenna to avoid external fragile part. The PCB Gerber file can be obtained from [https://github.com/FabienFerrero/UCA_Board](https://github.com/FabienFerrero/UCA_Board).
+
 **Arduino_LoRa_Generic_Sensor** is a very generic sensor template where a large variety of new physical sensors can be added. All physical sensors must be derived from a base Sensor class (defined in Sensor.cpp and Sensor.h) and should provide a get_value() and get_nomenclature() function. All the periodic task loop with duty-cycle low-power management is already there as in previous examples. Some predefined physical sensors are also already defined:
 
 - very simple LM35DZ analog temperature sensor
@@ -75,10 +79,6 @@ You can look at the provided examples to see how you can write a specific sensor
 
 **Arduino_LoRa_InteractiveDevice** is a tool that turns an Arduino board to an interactive device where a user can interactively enter data to be sent to the gateway. There are also many parameters that can dynamically be configured. This example can serve for test and debug purposes as well.
 
-**Arduino_LoRa_Simple_BeaconCollar** is a simple beacon system to build a collar device intended for Cattle Rustling applications. The device will periodically send a beacon message with a sequence number to track at the gateway the beacon's RSSI and beacon losses to trigger alarms. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system.
-
-**Arduino_LoRa_GPS** is a more elaborated GPS beacon system where a GPS module (UBlox 6/7/8) is used to get the coordinates of the collar device. The device will periodically send a beacon message with a sequence number and the GPS coordinates. This example can served as a basis for a tracking device. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system.
-
 **Arduino_LoRa_ucamII** is the image IoT sensor device for multimedia sensing. Read [this specific page](http://cpham.perso.univ-pau.fr/WSN-MODEL/tool-html/imagesensor.html) and this [specific tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-ImageIoT-step-by-step.pdf) for more informations on how to build and run the image sensor.
 
 What Arduino boards are supported?
@@ -112,7 +112,10 @@ Other boards may be supported as well with only very few modifications. It has b
 Configuring the device
 ======================
 
-There are a number of configuration options that can be either enabled or disabled by respectively uncommenting or commenting some definition. The first bloc that you can configure is for the radio regulation and the frequency band. By default, ETSI-based regulations for Short Range Devices (SRD) is used in the 868MHz frequency band. 
+Frequency
+---------
+
+There are a number of configuration options that can be either enabled or disabled by respectively uncommenting or commenting some definition. The first block that you can configure is for the radio regulation and the frequency band. By default, ETSI-based regulations for Short Range Devices (SRD) is used in the 868MHz frequency band. 
 
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// please uncomment only 1 choice
@@ -172,6 +175,101 @@ If you select ETSI_EUROPE_REGULATION then available channels are channel CH_10_8
 	
 Although 900MHz band is supported (mostly for the US ISM band) by using CH_05_900 as default channel, the library does not implement the frequency hopping mechanism nor the limited dwell time (e.g. 400ms per transmission). Therefore, for the moment, FCC_US_REGULATION is not implemented.
 
+Adapting frequency for your country
+-----------------------------------
+
+We can have a better view on the available license-free frequency bands by looking at the current specification of LoRaWAN which defines the set of default frequency channels for EU 863-870MHz ISM Band & EU 433MHz ISM Band, US 902-928MHz ISM Band, China 779-787MHz ISM Band & China 470-510MHz Band, Australia 915-928MHz ISM Band, South Korea 920-923MHz ISM Band and AS923 ISM Band channel frequencies. The last AS923 ISM Band applies to regions where the frequencies [923...923.5MHz] are comprised in the ISM band, which is the case for the following countries:
+
+- Brunei [923-925 MHz]
+- Cambodia [923-925 MHz]
+- Hong Kong [920-925 MHz]
+- Indonesia [923-925 MHz]
+- Japan [920-928 MHz]
+- Laos [923-925 MHz]
+- Malaysia [919-923 MHz]
+- New Zealand [915-928 MHz]
+- Philippines [918-920 MHz]
+- Singapore [920-925 MHz]
+- Taiwan [922-928 MHz]
+- Thailand [920-925 MHz]
+- Vietnam [920-925 MHz]
+
+You can easily redefine the default frequency for your country. For instance, if we take the case of Vietnam, you can select the 900MHz band by uncommenting BAND900:
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// please uncomment only 1 choice
+	//#define BAND868
+	#define BAND900
+	//#define BAND433
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	
+and change the default channel to CH_08_900=920.36MHz as follows:
+
+	#ifdef BAND868
+	#ifdef SENEGAL_REGULATION
+	const uint32_t DEFAULT_CHANNEL=CH_04_868;
+	#else
+	const uint32_t DEFAULT_CHANNEL=CH_10_868;
+	#endif
+	#elif defined BAND900
+	const uint32_t DEFAULT_CHANNEL=CH_08_900; // <------- here
+	#elif defined BAND433
+	const uint32_t DEFAULT_CHANNEL=CH_00_433;
+	#endif
+
+If you want, you can also change for the gateway side in lora_gateway.cpp, first the band:
+
+	// IMPORTANT
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// please uncomment only 1 choice
+	//#define BAND868
+	#define BAND900
+	//#define BAND433
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+then the default channel declaration:
+
+	#ifdef BAND868
+	#define MAX_NB_CHANNEL 15
+	#define STARTING_CHANNEL 4
+	#define ENDING_CHANNEL 18
+	#ifdef SENEGAL_REGULATION
+	uint8_t loraChannelIndex=0;
+	#else
+	uint8_t loraChannelIndex=6;
+	#endif
+	uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_04_868,CH_05_868,CH_06_868,CH_07_868,CH_08_868,CH_09_868,
+												CH_10_868,CH_11_868,CH_12_868,CH_13_868,CH_14_868,CH_15_868,CH_16_868,CH_17_868,CH_18_868};
+
+	#elif defined BAND900 
+	#define MAX_NB_CHANNEL 13
+	#define STARTING_CHANNEL 0
+	#define ENDING_CHANNEL 12
+	uint8_t loraChannelIndex=8; // <------- here
+	uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_900,CH_01_900,CH_02_900,CH_03_900,CH_04_900,CH_05_900,CH_06_900,CH_07_900,CH_08_900,
+												CH_09_900,CH_10_900,CH_11_900,CH_12_900};
+	#elif defined BAND433
+	#define MAX_NB_CHANNEL 4
+	#define STARTING_CHANNEL 0
+	#define ENDING_CHANNEL 3
+	uint8_t loraChannelIndex=0;
+	uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_433,CH_01_433,CH_02_433,CH_03_433};                                              
+	#endif
+
+However, it is highly advised to rather change the frequency setting at the gateway by editing the gateway_conf.json file:
+
+	"radio_conf" : {
+		"mode" : 1,
+		"bw" : 500,
+		"cr" : 5,
+		"sf" : 12,
+		"ch" : -1,
+		"freq" : 920.36
+	},	
+
+PA_BOOST
+--------
+
 Then, depending on your radio module, you have to indicate whether PA_BOOST should be used or not. Uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276 or if you known from the circuit diagram that output use the PA_BOOST line instead of the RFO line.
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -180,6 +278,9 @@ Then, depending on your radio module, you have to indicate whether PA_BOOST shou
 	// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
 	//#define PABOOST
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////// 	
+
+LoRa mode
+---------
 
 The next usefull configuration block defines the LoRa mode and the node address. If you deploy several sensor nodes then node address should be different from one sensor to another. For the moment, the address is between 2 and 255 included. 0 is for broadcast and 1 for the gateway.
 	
