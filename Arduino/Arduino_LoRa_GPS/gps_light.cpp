@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Oct 12th by C. Pham
+ * last update: Oct 17th by C. Pham
  */
  
 #include "gps_light.h"
@@ -42,14 +42,14 @@ void gps_light::gps_init_PSM() {
   // search time is 0ms, do not get back to acquisiation state after acquisition timeout
   // grid offset is 0ms, 
   // on time is 2s
-  // minimum acquisition time is 180s -> 3mins     
+  // minimum acquisition time is 35s   
   uint8_t GPS_CFG_PM2[] = {0xB5, 0x62, 0x06, 0x3B, 0x2C, 0x00, 0x01, 0x00, 0x00, 0x00, 
     0x00, 0x10, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 
     0x02, 0x00, 
-    0x14, 0x00, 
+    0x23, 0x00, 
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};  
 
   //Serial.println("CFG-PM2 initiated");
@@ -128,22 +128,33 @@ uint8_t gps_light::isValid(){
 
 void gps_light::parseNMEA() {
   char inByte;
-  while (this->serial.available() > 0){
-    inByte = this->serial.read();
-    // Output exactly what we read from the GPS to debug
-    if ((inByte =='$') || (this->gps_index >= 80)){
-      this->gps_index = 0;
-    }
+  bool detect_new_line=false;
+  
+  while (!detect_new_line){
+    if (this->serial.available()) {
     
-    if (inByte != '\r'){
-      gps_buffer[this->gps_index++] = inByte;
-    }
- 
-    if (inByte == '\n'){
-      this->gps_index = 0;
+      inByte = this->serial.read();
+      
+      if ((inByte =='$') || (this->gps_index >= 80)){
+        this->gps_index = 0;
+      }
+    
+      if (inByte != '\r' && inByte != '\n') {
+        gps_buffer[this->gps_index++] = inByte;
+      }
+   
+      if (inByte == '\n') {
+        gps_buffer[this->gps_index++] = '\0';
+        detect_new_line=true;
+      }
     }
   } 
+
+  // Output exactly what we read from the GPS to debug  
+  //Serial.println(GPSBuffer);
+  //Serial.flush();
 }
+
 
 uint8_t gps_light::isGGA(){
   return (gps_buffer[1] == 'G' && (gps_buffer[2] == 'P' || gps_buffer[2] == 'N') && gps_buffer[3]=='G' && gps_buffer[4]=='G' && gps_buffer[5]=='A');
@@ -259,13 +270,13 @@ uint8_t gps_light::get_UBX_ACK(uint8_t *msg) {
     // Test for success
     if (ackByteID > 9) {
       // All packets in order!
-      printf("Success! \n");
+      //printf("Success! \n");
       return 1;
     }
  
     // Timeout if no valid response in 3 seconds
     if (millis() - startTime > 3000) { 
-      printf("Failed!  \n");
+      //printf("Failed!  \n");
       return 0;
     }
  
@@ -286,7 +297,7 @@ uint8_t gps_light::get_UBX_ACK(uint8_t *msg) {
   }
 }
 
-void gps_light::gps_ON(){
+void gps_light::gps_ON() {
   bool gps_set_sucess = false;
   
   // CFG-RST
@@ -294,14 +305,16 @@ void gps_light::gps_ON(){
   uint8_t dummy[] = {0xFF, 0xFF};
 
   //send_UBX_MSG(dummy, sizeof(dummy)/sizeof(uint8_t));  
-  
+
+  send_UBX_MSG(GPS_CFG_RST, sizeof(GPS_CFG_RST)/sizeof(uint8_t));
+    
   while(!gps_set_sucess){    
     send_UBX_MSG(GPS_CFG_RST, sizeof(GPS_CFG_RST)/sizeof(uint8_t));
     gps_set_sucess=get_UBX_ACK(GPS_CFG_RST);
   }  
 }
 
-void gps_light::gps_OFF(){
+void gps_light::gps_OFF() {
   bool gps_set_sucess = false;
   // CFG-RST
   uint8_t GPS_CFG_RST[] = {0xB5, 0x62, 0x06, 0x04, 0x04, 0x00, 0x00, 0x00, 0x08, 0x00};
@@ -316,7 +329,6 @@ void gps_light::gps_OFF(){
 
   //Serial.println("RXM-PMREQ ok");
 
-  // no ACK for RMX messages
   //while(!gps_set_sucess){    
   //  send_UBX_MSG(GPSoff, sizeof(GPSoff)/sizeof(uint8_t));
   //  gps_set_sucess=get_UBX_ACK(GPSoff);

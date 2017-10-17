@@ -17,8 +17,9 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: March 22th by M. Diop
+ * last update: October 17th by C. Pham
  */
+ 
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
@@ -110,7 +111,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 unsigned int idlePeriodInMin = 20;
 ///////////////////////////////////////////////////////////////////
 
-#define GPS_FIX_ATTEMPT_TIME_IN_MS 180000
+#define GPS_FIX_ATTEMPT_TIME_IN_MS 35000
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE GPS SERIAL PORT
@@ -125,7 +126,9 @@ unsigned int idlePeriodInMin = 20;
 
 ///////////////////////////////////////////////
 // CHANGE HERE THE POWER PIN FOR THE GPS MODULE
-// use digital 8 to power the GPS if needed
+// use digital 8 to power the GPS
+// if commenting GPS_PIN_POWER then the GPS module is put in inactive mode with Power Save Mode but it still consumes a lot of energy
+// for deployment, use a MOSFET transistor and uncomment GPS_PIN_POWER
 #define GPS_PIN_POWER 
 #define GPS_PIN_POWER_PIN 8
 ///////////////////////////////////////////////////////////////////
@@ -379,6 +382,23 @@ void setup()
   delay(500);
 }
 
+char *ftoa(char *a, double f, int precision)
+{
+ long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
+ 
+ char *ret = a;
+ long heiltal = (long)f;
+ itoa(heiltal, a, 10);
+ while (*a != '\0') a++;
+ *a++ = '.';
+ long desimal = abs((long)((f - heiltal) * p[precision]));
+ if (desimal < p[precision-1]) {
+  *a++ = '0';
+ } 
+ itoa(desimal, a, 10);
+ return ret;
+}
+
 void loop(void)
 {
   long startSend;
@@ -404,7 +424,7 @@ void loop(void)
       }
 
       currentTime = millis();
-      uint8_t get_fix_sucess = 0, timeout = 0;
+      uint8_t get_fix_sucess = 0, timeout = 0, nb_validGPGGA=3;
       
       while (!timeout && !get_fix_sucess)  {
         
@@ -418,8 +438,10 @@ void loop(void)
             if (gps.isValid()){
               fixTime = millis() - currentTime;
               latitude = gps.get_latitude();
-              longitude = gps.get_longitude();              
-              get_fix_sucess = 1;
+              longitude = gps.get_longitude();    
+              nb_validGPGGA--;          
+              if (nb_validGPGGA==0)
+                get_fix_sucess = 1;
             }
           }
         }
@@ -448,17 +470,24 @@ void loop(void)
         PRINTLN;
         
         String latString = String(latitude, 5);
-        PRINT_CSTSTR("%s","Latitude is ");
-        PRINT_VALUE("%s", latString);
-        PRINTLN;
+        //char latString[10];
+        //ftoa(latString,latitude,5);
         
+        PRINT_CSTSTR("%s","Latitude is ");
+        PRINT_STR("%s", latString);
+        PRINTLN;
+
         String lgtString = String(longitude, 5);
+        //char lgtString[10];        
+        //ftoa(lgtString,longitude,5);
+          
         PRINT_CSTSTR("%s","Longitude is ");
-        PRINT_VALUE("%s", lgtString);
+        PRINT_STR("%s", lgtString);
         PRINTLN;
               
         // then use app_key_offset to skip the app key
-        r_size=sprintf((char*)message+app_key_offset, "\\!BC/%dLAT/%s/LGT/%s/FXT/%ld", beaconCounter, latString.c_str(), lgtString.c_str(), fixTime);
+        r_size=sprintf((char*)message+app_key_offset, "\\!BC/%d/LAT/%s/LGT/%s/FXT/%ld", beaconCounter, latString.c_str(), lgtString.c_str(), fixTime);
+        //r_size=sprintf((char*)message+app_key_offset, "\\!BC/%d/LAT/%s/LGT/%s/FXT/%ld", beaconCounter, latString, lgtString, fixTime);
       }
 
       beaconCounter++;
@@ -568,7 +597,7 @@ void loop(void)
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT
 #else
-      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
+      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD; // + random(2,4);
 
 #if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
       // warning, setTimer accepts value from 1ms to 65535ms max

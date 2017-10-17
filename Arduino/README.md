@@ -11,7 +11,7 @@ This folder contains sketches for Arduino (and compatible) boards. The example s
 
 **Arduino_LoRa_Simple_BeaconCollar** is a simple beacon system to build a collar device intended for Cattle Rustling applications. The device will periodically send a beacon message with a sequence number to track at the gateway the beacon's RSSI and beacon losses to trigger alarms. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system.
 
-**Arduino_LoRa_GPS** is a more elaborated GPS beacon system where a GPS module (UBlox 6/7/8) is used to get the coordinates of the collar device. The device will periodically send a beacon message with a sequence number and the GPS coordinates. This example can served as a basis for a tracking device. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system. The GPS device uses an open source PCB board designed by Fabien Ferrero from LEAT laboratory, University of Nice, France, to easily integrate an Arduino Pro Mini and an RFM95W radio module. The PCB has an integrated antenna to avoid external fragile part. The PCB Gerber file can be obtained from [https://github.com/FabienFerrero/UCA_Board](https://github.com/FabienFerrero/UCA_Board).
+**Arduino_LoRa_GPS** is a more elaborated GPS beacon system where a GPS module (UBlox 6M/7M/M8N) is used to get the coordinates of the collar device. The device will periodically send a beacon message with a sequence number and the GPS coordinates in the following format \\!BC/0/LAT/43.31408/LGT/-0.36362/FXT/4172. This example can served as a basis for a tracking device that parses in a very light-weight manner the GPGGA NMEA message. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system. In the tutorial, the GPS device can use an open source PCB board designed by Fabien Ferrero from LEAT laboratory, University of Nice, France, to easily integrate an Arduino Pro Mini and an RFM95W radio module. The PCB has an integrated antenna to avoid external fragile part. The PCB Gerber layout file can be obtained from [https://github.com/FabienFerrero/UCA_Board](https://github.com/FabienFerrero/UCA_Board).
 
 **Arduino_LoRa_Generic_Sensor** is a very generic sensor template where a large variety of new physical sensors can be added. All physical sensors must be derived from a base Sensor class (defined in Sensor.cpp and Sensor.h) and should provide a get_value() and get_nomenclature() function. All the periodic task loop with duty-cycle low-power management is already there as in previous examples. Some predefined physical sensors are also already defined:
 
@@ -91,7 +91,7 @@ One main issue for a eligible board is to have a 3.3v pin to power the radio mod
 - Arduino Pro Mini (8MHz/3.3V version), Arduino Nano (ATmega328 16MHz/5V but 3.3v pin), Arduino Micro (ATmega32u4 16MHz/5V but 3.3v pin)
 - Teensy LC/31/32/35/36
 - Ideetron Nexus (which is an ATmega328P at 3.3v, select as Arduino Mini in IDE)  
-- Adafruit Feather 32u4 and Feather M0
+- Adafruit Feather32u4 and FeatherM0
 
 **Uno/MEGA form factor**
 
@@ -217,7 +217,7 @@ and change the default channel to CH_08_900=920.36MHz as follows:
 	const uint32_t DEFAULT_CHANNEL=CH_00_433;
 	#endif
 
-If you want, you can also change for the gateway side in lora_gateway.cpp, first the band:
+If you want, you can also change for the gateway side in lora_gateway.cpp. First the band:
 
 	// IMPORTANT
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -256,7 +256,7 @@ then the default channel declaration:
 	uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_433,CH_01_433,CH_02_433,CH_03_433};                                              
 	#endif
 
-However, it is highly advised to rather change the frequency setting at the gateway by editing the gateway_conf.json file:
+However, it is **highly** advised to rather change the frequency setting at the gateway by editing the gateway_conf.json file:
 
 	"radio_conf" : {
 		"mode" : 1,
@@ -270,7 +270,7 @@ However, it is highly advised to rather change the frequency setting at the gate
 PA_BOOST
 --------
 
-Then, depending on your radio module, you have to indicate whether PA_BOOST should be used or not. Uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276 or if you known from the circuit diagram that output use the PA_BOOST line instead of the RFO line.
+Depending on your radio module, you have to indicate whether PA_BOOST should be used or not. Uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276 or if you known from the circuit diagram that output use the PA_BOOST line instead of the RFO line. Many boards uses the RFM95W (Adafruit LoRa Feather boards, Dragino LoRa shield/hat, Loranga board for instance). In this case, they behaves like an RFM95W so they need PA_BOOST.
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
