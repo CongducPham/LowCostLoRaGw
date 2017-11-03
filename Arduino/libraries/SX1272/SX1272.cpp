@@ -30,6 +30,10 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  November 3rd, 2017
+ *	- IMPORTANT: the CS pin is now always pin number 10 on Arduino boards
+ *	- if you use the Libelium Multiprotocol shield to connect a Libelium LoRa then change the CS pin to pin 2 in SX1272.h
+ *	- CRC is ON by default now
  *  June, 22th, 2017
  *      - setPowerDBM(uint8_t dbm) calls setPower('X') when dbm is set to 20
  *  Apr, 21th, 2017
@@ -266,6 +270,10 @@ uint8_t SX1272::ON()
 
     // set LoRa mode
     state = setLORA();
+
+    // Added by C. Pham     
+    // set CRC ON
+    setCRC_ON();
 
     // Added by C. Pham for ToA computation
     getPreambleLength();
@@ -4795,7 +4803,7 @@ int8_t SX1272::setDestination(uint8_t dest)
 uint8_t SX1272::setTimeout()
 {
     uint8_t state = 2;
-    uint16_t delay;
+    //uint16_t delay;
 
 #if (SX1272_debug_mode > 1)
     Serial.println();

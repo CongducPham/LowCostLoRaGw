@@ -47,6 +47,7 @@
  *****************************************************************************/
 
 // added by C. Pham
+// do not remove!
 #define W_REQUESTED_ACK
 //#define W_NET_KEY
 //#define W_INITIALIZATION
@@ -1383,10 +1384,10 @@ public:
 
 private:
 
-	void maxWrite16();
+    void maxWrite16();
 
-	char txbuf[2];
-	char rxbuf[2];
+    char txbuf[2];
+    char rxbuf[2];
 
     // added by C. Pham for ToA management
     //

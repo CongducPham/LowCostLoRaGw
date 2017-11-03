@@ -30,6 +30,8 @@
 #include <math.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  November 3rd, 2017
+ *	- CRC is ON by default now
  *  June, 22th, 2017
  *      - setPowerDBM(uint8_t dbm) calls setPower('X') when dbm is set to 20
  *  Apr, 21th, 2017
@@ -244,6 +246,10 @@ uint8_t SX1272::ON()
 
     // set LoRa mode
     state = setLORA();
+
+    // Added by C. Pham     
+    // set CRC ON
+    setCRC_ON();    
 
     // Added by C. Pham for ToA computation
     getPreambleLength();

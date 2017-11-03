@@ -68,7 +68,7 @@ then
 			if [ $3 == "gateway_ID" ]
 			then
 				echo "$4" > /home/pi/lora_gateway/gateway_id.txt
-				md5sum /home/pi/lora_gateway/gateway_id.txt | cut -d ' ' --field=1 > /home/pi/lora_gateway/gateway_id.md5
+				tr -d '\n' < /home/pi/lora_gateway/gateway_id.txt | md5sum - | cut -d ' ' --field=1 > /home/pi/lora_gateway/gateway_id.md5
 			fi
 			
 		else

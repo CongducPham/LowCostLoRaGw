@@ -4,7 +4,7 @@ Low-cost LoRa gateway features and configuration tools
 Configuration files and startup procedure
 -----------------------------------------
 
-A "gateway_conf.json" file defines gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Log file names will use the gateway ID. Both basic_config_gw.sh and config_gw.sh script can do it for you, see below.
+A "gateway_conf.json" file defines gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Both basic_config_gw.sh and config_gw.sh script can do it for you, see below. Starting from November 3rd, 2017, the gateway ID is recreated from the MAC address every time the Raspberry reboots. This is done in order to automatically have a valid gateway id when installing a new gateway with the provided SD card image.
 
 In gateway_conf.json, you can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
 
@@ -85,7 +85,7 @@ save the file and see below to configure your new gateway.
 Configure your gateway with basic_config_gw.sh or config_gw.sh
 --------------------------------------------------------------
 
-basic_config_gw.sh should be sufficient for most of the cases. The configuration script mainly assign the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will be the last 5 bytes of the Rapberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you.  
+basic_config_gw.sh should be sufficient for most of the cases. The configuration script mainly assign the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will use the last 5 bytes of the Raspberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you.  
 
     > ifconfig
     eth0  Link encap:Ethernet  HWaddr b8:27:eb:be:da:21  
@@ -97,7 +97,7 @@ basic_config_gw.sh should be sufficient for most of the cases. The configuration
           collisions:0 txqueuelen:1000 
           RX bytes:6565141 (6.2 MiB)  TX bytes:1452497 (1.3 MiB)
           
-In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "27EBBEDA21". There is an additional script called test_gwid.sh in the script folder to test whether the gateway id can be easily determined. In the script folder, simply run test_gwid.sh:
+In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "00000027EBBEDA21". There is an additional script called test_gwid.sh in the script folder to test whether the gateway id can be easily determined. In the script folder, simply run test_gwid.sh:
 
 	> cd /home/pi/lora_gateway/scripts
 	> ./test_gwid.sh

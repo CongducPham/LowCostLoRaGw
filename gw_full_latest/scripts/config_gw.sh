@@ -139,7 +139,9 @@ echo "000000$gwid" > /home/pi/lora_gateway/gateway_id.txt
 echo "Done"
 
 echo "Creating /home/pi/lora_gateway/gateway_id.md5 file"
-md5sum /home/pi/lora_gateway/gateway_id.txt | cut -d ' ' --field=1 > /home/pi/lora_gateway/gateway_id.md5
+tr -d '\n' < /home/pi/lora_gateway/gateway_id.txt | md5sum - | cut -d ' ' --field=1 > /home/pi/lora_gateway/gateway_id.md5
+#the version below actually takes the \n at the end of the gw id which is not what we want, thus the version above
+#md5sum /home/pi/lora_gateway/gateway_id.txt | cut -d ' ' --field=1 > /home/pi/lora_gateway/gateway_id.md5
 echo "Done"
 
 echo "Replacing gw id in /home/pi/lora_gateway/gateway_conf.json"

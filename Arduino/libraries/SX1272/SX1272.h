@@ -21,6 +21,11 @@
  *  Design:            David Gascón 
  *  Implementation:    Covadonga Albiñana & Victor Boria
  */
+ 
+/*
+ * Many changes have been performed to v1.1 released by Libelium
+ * C. Pham, see change logs in SX1272.cpp
+ */
 
 #ifndef SX1272_h
 #define SX1272_h
@@ -47,18 +52,16 @@
 #define W_REQUESTED_ACK
 //#define W_NET_KEY
 //#define W_INITIALIZATION
-#define SX1272_RST  3
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_MICRO || defined ARDUINO_AVR_MINI \
-|| defined __MK20DX256__ || defined __MKL26Z64__
-#define SX1272_SS 10
-#elif defined ARDUINO_AVR_FEATHER32U4 || defined ARDUINO_SAMD_FEATHER_M0
+#define SX1272_RST  4
+
+#ifdef ARDUINO_AVR_FEATHER32U4 || defined ARDUINO_SAMD_FEATHER_M0
 // on the Adafruit Feather, the RFM95W is embeded and CS pin is normally on pin 8
 #define SX1272_SS 8
-#undef SX1272_RST
-#define SX1272_RST  4
 #else
-#define SX1272_SS 2
+// starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino boards
+// if you use the Libelium Multiprotocol shield to connect a Libelium LoRa then change the CS pin to pin 2
+#define SX1272_SS 10
 #endif
 
 #define SX1272Chip  0
