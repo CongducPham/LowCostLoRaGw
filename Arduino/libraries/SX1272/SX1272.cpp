@@ -30,10 +30,12 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  November 7rd, 2017
+ *		- CRC is back to OFF by default until further debugging
  *  November 3rd, 2017
- *	- IMPORTANT: the CS pin is now always pin number 10 on Arduino boards
- *	- if you use the Libelium Multiprotocol shield to connect a Libelium LoRa then change the CS pin to pin 2 in SX1272.h
- *	- CRC is ON by default now
+ *		- IMPORTANT: the CS pin is now always pin number 10 on Arduino boards
+ *		- if you use the Libelium Multiprotocol shield to connect a Libelium LoRa then change the CS pin to pin 2 in SX1272.h
+ *		- CRC is ON by default now
  *  June, 22th, 2017
  *      - setPowerDBM(uint8_t dbm) calls setPower('X') when dbm is set to 20
  *  Apr, 21th, 2017
@@ -273,7 +275,7 @@ uint8_t SX1272::ON()
 
     // Added by C. Pham     
     // set CRC ON
-    setCRC_ON();
+    //setCRC_ON();
 
     // Added by C. Pham for ToA computation
     getPreambleLength();
