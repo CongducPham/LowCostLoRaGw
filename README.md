@@ -4,7 +4,7 @@ Low-cost LoRa gateway with Raspberry
 Tutorial materials
 ------------------
 
-Please also consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html.
+Also consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html.
 
 3 tutorial videos on YouTube: video of all the steps to build the whole framework from scratch:
 
@@ -304,7 +304,17 @@ We recommend buying either RPI2 or RPI3. RPI3 with Jessie has built-in WiFi and 
 Connect a radio module to Raspberry
 ===================================
 
-You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). Of course you also need to provide the power (3.3v) to the radio module. You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
+You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). 
+
+			 RPI      			Radio module
+			 GND pin 25----------GND   (ground in)
+			 3V3 pin 17----------3.3V  (3.3V in)
+		  CS/CE0 pin 24----------NSS   (CS chip select in)
+	 		 SCK pin 23----------SCK   (SPI clock in)
+			MOSI pin 19----------MOSI  (SPI Data in)
+			MISO pin 21----------MISO  (SPI Data out)
+
+You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
 	
 Compiling the low-level gateway program
 =======================================	 	
@@ -357,7 +367,17 @@ You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutor
 Connect a radio module to your end-device
 =========================================
 
-To have an end-device, you have to connect a LoRa radio module to an Arduino board. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS).  Starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino and Teensy boards. Of course you also need to provide the power (3.3v) to the radio module. You can have a look at the [Low-cost-LoRa-IoT-step-by-step](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-outdoor-step-by-step.pdf) tutorial in the tutorial repository (https://github.com/CongducPham/tutorials).
+To have an end-device, you have to connect a LoRa radio module to an Arduino board. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS/SS). On the Uno, Pro Mini, Mini, Nano, Teensy the mapping is as follows:
+
+			Arduino      Radio module
+			 GND----------GND   (ground in)
+			 3V3----------3.3V  (3.3V in)
+	  SS pin D10----------NSS   (CS chip select in)
+	 SCK pin D13----------SCK   (SPI clock in)
+	MOSI pin D11----------MOSI  (SPI Data in)
+	MISO pin D12----------MISO  (SPI Data out)
+
+On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino and Teensy boards. You can have a look at the [Low-cost-LoRa-IoT-step-by-step](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-outdoor-step-by-step.pdf) tutorial in the tutorial repository (https://github.com/CongducPham/tutorials).
 
 There is an important issue regarding the radio modules. The Semtech SX1272/76 has actually 2 lines of RF power amplification (PA): a high efficiency PA up to 14dBm (RFO) and a high power PA up to 20dBm (PA_BOOST). Setting transmission power to "L" (Low), "H" (High), and "M" (Max) only uses the RFO and delivers 2dBm, 6dBm and 14dBm respectively. "x" (extreme) and "X" (eXtreme) use the PA_BOOST and deliver 14dBm and 20dBm respectively.
 However even if the SX1272/76 chip has the PA_BOOST and the 20dBm features, not all radio modules (integrating these SX1272/76) do have the appropriate wiring and circuits to enable these features: it depends on the choice of the reference design that itself is guided by the main intended frequency band usage, and sometimes also by the target country's regulations (such as maximum transmitted power). So you have to check with the datasheet whether your radio module has PA_BOOST (usually check whether the PA_BOOST pin is wired) and 20dBm capability before using "x" or "X". Some other radio modules only wire the PA_BOOST and not the RFO resulting in very bad range when trying to use the RFO mode ("L", "H", and "M"). In this case, one has to use "x" to indicate PA_BOOST usage to get 14dBm.
@@ -421,7 +441,7 @@ The default configuration also use the EEPROM to store the last packet sequence 
 
 Once flashed, the Arduino temperature sensor will send to the gateway the following message \\!#3#20.4 (20.4 is the measured temperature so you may not have the same value) prefixed by the application key every 10 minutes (with some randomization interval). This will trigger at the processing stage of the gateway the logging on the default ThinkSpeak channel (the test channel we provide) in field 3. At the gateway, 20.4 will be recorded on the provided ThingSpeak test channel in field 3 of the channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value. 
 
-The program has been tested on Arduino Uno, Mega2560, Nano, Pro Mini, Mini, Due, Zero.  We also tested on the Teensy3.1/3.2 and the Ideetron Nexus. Starting from November 3rd, 2017, the SPI_SS pin (CS pin) is always pin number 10 on Arduino and Teensy boards. 
+The program has been tested on Arduino Uno, Mega2560, Nano, Pro Mini, Mini, Due, Zero.  We also tested on the TeensyLC/3.1/3.2, the Ideetron Nexus and the Feather32u4/M0. Starting from November 3rd, 2017, the SPI_SS pin (CS pin) is always pin number 10 on all Arduino and Teensy boards. 
 
 **Notice for low-cost/clone Arduino boards**. If you get a low-cost Arduino board, such as those sold by most of Chinese manufacturer, the USB connectivity is probably based on the CH340 or CH341. To make your low-cost Arduino visible to your Arduino IDE, you need the specific driver. Look at http://sparks.gogo.co.nz/ch340.html or http://www.microcontrols.org/arduino-uno-clone-ch340-ch341-chipset-usb-drivers/. For MacOS, you can look at http://www.mblock.cc/posts/run-makeblock-ch340-ch341-on-mac-os-sierra which works for MacOS up to Sierra. For MacOS user that have the previous version of CH34x drivers and encountering kernel panic with Sierra, don't forget to delete previous driver installation: "sudo rm -rf /System/Library/Extensions/usb.kext".
 
