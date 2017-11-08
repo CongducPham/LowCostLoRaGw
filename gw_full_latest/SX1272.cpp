@@ -30,10 +30,11 @@
 #include <math.h>
 
 /*  CHANGE LOGS by C. Pham
- *  November 7rd, 2017
- *		- CRC is back to OFF by default until further debugging 
+ *  November 7th, 2017
+ *      - CRC (RxPayloadCrcOn) is set back to OFF for the gateway
+ *      - bug fix in how the CRC is checked at receiver in getPacket() function
  *  November 3rd, 2017
- *		- CRC is ON by default now
+ *      - CRC is ON by default now
  *  June, 22th, 2017
  *      - setPowerDBM(uint8_t dbm) calls setPower('X') when dbm is set to 20
  *  Apr, 21th, 2017
@@ -141,7 +142,9 @@ SX1272::SX1272()
     _my_netkey[0] = net_key_0;
     _my_netkey[1] = net_key_1;
 #endif
-    _maxRetries = 3;
+    // end
+    // modified by C. Pham
+    _maxRetries = 0;
     packet_sent.retry = _retries;
 };
     
@@ -247,11 +250,7 @@ uint8_t SX1272::ON()
 #endif
 
     // set LoRa mode
-    state = setLORA();
-
-    // Added by C. Pham     
-    // set CRC ON
-    //setCRC_ON();    
+    state = setLORA();   
 
     // Added by C. Pham for ToA computation
     getPreambleLength();
@@ -3928,7 +3927,9 @@ uint8_t SX1272::receive()
     //end
 
     writeRegister(REG_FIFO_RX_BYTE_ADDR, 0x00); // Setting current value of reception buffer pointer
+    
     //clearFlags();						// Initializing flags
+    
     //state = 1;
     if( _modem == LORA )
     { // LoRa mode
@@ -4005,6 +4006,9 @@ uint8_t SX1272::receivePacketTimeout(uint16_t wait)
         if( availableData(wait) )
         {
             state = getPacket();
+#if (SX1272_debug_mode > 0)
+	    printf("getPacket() gives state=%d\n", state);
+#endif	    
         }
         else
         {
@@ -4508,6 +4512,7 @@ int8_t SX1272::getPacket(uint16_t wait)
 
     //previous = millis();
     exitTime = millis() + (unsigned long)wait;
+    
     if( _modem == LORA )
     { // LoRa mode
         value = readRegister(REG_IRQ_FLAGS);
@@ -4523,25 +4528,39 @@ int8_t SX1272::getPacket(uint16_t wait)
             //}
         } // end while (millis)
 
-        if( (bitRead(value, 6) == 1) && (bitRead(value, 5) == 0) )
-        { // packet received & CRC correct
-            p_received = true;	// packet correctly received
-            _reception = CORRECT_PACKET;
+        // modified by C. Pham
+        // RxDone
+        if ((bitRead(value, 6) == 1)) {
 #if (SX1272_debug_mode > 0)
-            printf("## Packet correctly received in LoRa mode ##\n");
+            printf("## Packet received in LoRa mode ##\n");
 #endif
-        }
-        else
-        {
-            if( bitRead(value, 5) != 0 )
-            { // CRC incorrect
-                _reception = INCORRECT_PACKET;
-                state = 3;
+            //CrcOnPayload?
+            if (bitRead(readRegister(REG_HOP_CHANNEL),6)) {
+
+                if ( (bitRead(value, 5) == 0) ) {
+                    // packet received & CRC correct
+                    p_received = true;	// packet correctly received
+                    _reception = CORRECT_PACKET;
 #if (SX1272_debug_mode > 0)
-                printf("** The CRC is incorrect **\n");
-                printf("\n");
+                    printf("** The CRC is correct **\n");
 #endif
+                }
+                else {
+                    _reception = INCORRECT_PACKET;
+                    state = 3;
+#if (SX1272_debug_mode > 0)
+                    printf("** The CRC is incorrect **\n");
+#endif
+                }
             }
+            else {
+                  // as CRC is not set we suppose that CRC is correct
+                  p_received = true;	// packet correctly received
+                  _reception = CORRECT_PACKET;
+#if (SX1272_debug_mode > 0)
+                  printf("## Packet supposed to be correct as CrcOnPayload is off at transmitter ##\n");
+#endif
+             }
         }
         writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);	// Setting standby LoRa mode
     }
@@ -4588,6 +4607,7 @@ int8_t SX1272::getPacket(uint16_t wait)
         }
         writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);	// Setting standby FSK mode
     }
+    
     if( p_received )
     {
         // Store the packet
@@ -4664,6 +4684,8 @@ int8_t SX1272::getPacket(uint16_t wait)
             printf("## Packet received:\n");
             printf("Destination: ");
             printf("%d\n", packet_received.dst);			 	// Printing destination
+	    printf("Type: ");
+            printf("%d\n", packet_received.type);			 	// Printing type    
             printf("Source: ");
             printf("%d\n", packet_received.src);			 	// Printing source
             printf("Packet number: ");
@@ -4676,8 +4698,8 @@ int8_t SX1272::getPacket(uint16_t wait)
                 printf("%c", packet_received.data[i]);		// Printing payload
             }
             printf("\n");
-            printf("Retry number: ");
-            printf("%d\n", packet_received.retry);			// Printing number retry
+            //printf("Retry number: ");
+            //printf("%d\n", packet_received.retry);			// Printing number retry
             printf(" ##\n");
             printf("\n");
 #endif
@@ -4697,7 +4719,7 @@ int8_t SX1272::getPacket(uint16_t wait)
     }
     else
     {
-        state = 1;
+        //state = 1;
         if( (_reception == INCORRECT_PACKET) && (_retries < _maxRetries) )
         {
             _retries++;
@@ -4707,11 +4729,14 @@ int8_t SX1272::getPacket(uint16_t wait)
 #endif
         }
     }
+    
     if( _modem == LORA )
     {
         writeRegister(REG_FIFO_ADDR_PTR, 0x00);  // Setting address pointer in FIFO data buffer
     }
+    
     clearFlags();	// Initializing flags
+
     if( wait > MAX_WAIT )
     {
         state = -1;

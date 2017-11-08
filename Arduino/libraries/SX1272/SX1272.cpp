@@ -30,12 +30,12 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
- *  November 7rd, 2017
- *		- CRC is back to OFF by default until further debugging
+ *  November 7th, 2017
+ *      - bug fix in how the CRC is checked at receiver in getPacket() function
  *  November 3rd, 2017
- *		- IMPORTANT: the CS pin is now always pin number 10 on Arduino boards
- *		- if you use the Libelium Multiprotocol shield to connect a Libelium LoRa then change the CS pin to pin 2 in SX1272.h
- *		- CRC is ON by default now
+ *      - IMPORTANT: the CS pin is now always pin number 10 on Arduino boards
+ *      - if you use the Libelium Multiprotocol shield to connect a Libelium LoRa then change the CS pin to pin 2 in SX1272.h
+ *      - CRC (RxPayloadCrcOn) is now ON by default for transmitter side
  *  June, 22th, 2017
  *      - setPowerDBM(uint8_t dbm) calls setPower('X') when dbm is set to 20
  *  Apr, 21th, 2017
@@ -152,7 +152,8 @@ SX1272::SX1272()
     _my_netkey[1] = net_key_1;
 #endif
     // end
-    _maxRetries = 3;
+    // modified by C. Pham
+    _maxRetries = 0;
     packet_sent.retry = _retries;
 };
 
@@ -275,7 +276,7 @@ uint8_t SX1272::ON()
 
     // Added by C. Pham     
     // set CRC ON
-    //setCRC_ON();
+    setCRC_ON();
 
     // Added by C. Pham for ToA computation
     getPreambleLength();
@@ -4547,27 +4548,41 @@ int8_t SX1272::getPacket(uint16_t wait)
             //}
         } // end while (millis)
 
-        if( (bitRead(value, 6) == 1) && (bitRead(value, 5) == 0) )
-        { // packet received & CRC correct
-            p_received = true;	// packet correctly received
-            _reception = CORRECT_PACKET;
+        // modified by C. Pham
+        // RxDone
+        if ((bitRead(value, 6) == 1)) {
 #if (SX1272_debug_mode > 0)
-            Serial.println(F("## Packet correctly received in LoRa mode ##"));
+            Serial.println(F("## Packet received in LoRa mode ##"));
 #endif
-        }
-        else
-        {
-            if( bitRead(value, 5) != 0 )
-            { // CRC incorrect
-                _reception = INCORRECT_PACKET;
-                state = 3;
+            //CrcOnPayload?
+            if (bitRead(readRegister(REG_HOP_CHANNEL),6)) {
+
+                if ( (bitRead(value, 5) == 0) ) {
+                    // packet received & CRC correct
+                    p_received = true;	// packet correctly received
+                    _reception = CORRECT_PACKET;
 #if (SX1272_debug_mode > 0)
-                Serial.println(F("** The CRC is incorrect **"));
-                Serial.println();
+                    Serial.println(F("** The CRC is correct **"));
 #endif
+                }
+                else {
+                    _reception = INCORRECT_PACKET;
+                    state = 3;
+#if (SX1272_debug_mode > 0)
+                    Serial.println(F("** The CRC is incorrect **"));
+#endif
+                }
             }
+            else {
+                  // as CRC is not set we suppose that CRC is correct
+                  p_received = true;	// packet correctly received
+                  _reception = CORRECT_PACKET;
+#if (SX1272_debug_mode > 0)
+                  Serial.println(F("## Packet supposed to be correct as CrcOnPayload is off at transmitter ##"));
+#endif
+             }
         }
-        //writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);	// Setting standby LoRa mode
+        writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);	// Setting standby LoRa mode
     }
     else
     { // FSK mode
@@ -4690,13 +4705,13 @@ int8_t SX1272::getPacket(uint16_t wait)
             Serial.print(F("Destination: "));
             Serial.println(packet_received.dst);			 	// Printing destination
             Serial.print(F("Type: "));
-            Serial.println(packet_received.type);			 	// Printing source
+            Serial.println(packet_received.type);			 	// Printing type
             Serial.print(F("Source: "));
             Serial.println(packet_received.src);			 	// Printing source
             Serial.print(F("Packet number: "));
             Serial.println(packet_received.packnum);			// Printing packet number
-            //Serial.print(F("Packet length: "));
-            //Serial.println(packet_received.length);			// Printing packet length
+            Serial.print(F("Packet length: "));
+            Serial.println(packet_received.length);			// Printing packet length
             Serial.print(F("Data: "));
             for(unsigned int i = 0; i < _payloadlength; i++)
             {
@@ -4724,7 +4739,7 @@ int8_t SX1272::getPacket(uint16_t wait)
     }
     else
     {
-        state = 1;
+        //state = 1;
         if( (_reception == INCORRECT_PACKET) && (_retries < _maxRetries) )
         {
             // comment by C. Pham

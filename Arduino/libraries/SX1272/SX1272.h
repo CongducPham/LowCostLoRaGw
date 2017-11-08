@@ -53,7 +53,7 @@
 //#define W_NET_KEY
 //#define W_INITIALIZATION
 
-#define SX1272_RST  4
+#define SX1272_RST  9
 
 #ifdef ARDUINO_AVR_FEATHER32U4 || defined ARDUINO_SAMD_FEATHER_M0
 // on the Adafruit Feather, the RFM95W is embeded and CS pin is normally on pin 8
