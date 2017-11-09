@@ -1,7 +1,7 @@
 Arduino example sketches
 ========================
 
-This folder contains sketches for Arduino (and compatible) boards. The example sketches will show how simple, yet effective, low-cost LoRa IoT device can be programmed. For instance, they show how LoRa radio modules are configured and how a device can send sensed data to a gateway. They actually serve as template for future developments. On the Uno, Pro Mini, Mini, Nano, Teensy the mapping is as follows:
+This folder contains sketches for Arduino (and compatible) boards. The example sketches will show how simple, yet effective, low-cost LoRa IoT device can be programmed. For instance, they show how LoRa radio modules are configured and how a device can send sensed data to a gateway. They actually serve as template for future developments. On the Uno, Pro Mini, Mini, Nano, Teensy the mapping is as follows::
 
 			Arduino      Radio module
 			 GND----------GND   (ground in)
@@ -314,8 +314,8 @@ Here is a reminder of the pre-defined LoRa modes as defined by the library.
 | 6    | 500| 11 |
 | 7    | 250|  9 |
 | 8    | 500|  9 |
-| 9    | 500|  7 |
-| 10   | 500|  8 |	
+| 9    | 500|  8 |
+| 10   | 500|  7 |	
 
 Low-power
 ---------

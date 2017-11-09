@@ -517,8 +517,8 @@ Pre-defined LoRa modes (from initial Libelium SX1272.h)
 | 6    | 500| 11 |
 | 7    | 250|  9 |
 | 8    | 500|  9 |
-| 9    | 500|  7 |
-| 10   | 500|  8 |
+| 9    | 500|  8 |
+| 10   | 500|  7 |
 
 Pre-defined channels in 868MHz, 915MHz and 433MHz band (most of them from initial Libelium SX1272.h, except those marked with *). Frequencies in bold are those used by default in each band.
 

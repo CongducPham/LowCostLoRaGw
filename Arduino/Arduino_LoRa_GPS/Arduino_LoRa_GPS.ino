@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: October 17th by C. Pham
+ * last update: November 9th by C. Pham
  */
  
 #include <SPI.h> 
@@ -129,6 +129,13 @@ unsigned int idlePeriodInMin = 20;
 // use digital 8 to power the GPS
 // if commenting GPS_PIN_POWER then the GPS module is put in inactive mode with Power Save Mode but it still consumes a lot of energy
 // for deployment, use a MOSFET transistor and uncomment GPS_PIN_POWER
+//
+//          MOSFET            ARDUINO      GPS
+//          Gate   ----------  pin 8
+//          Source ----------  GND
+//          Drain  ----------------------- GND  
+//                             VCC  -----  VCC
+//
 #define GPS_PIN_POWER 
 #define GPS_PIN_POWER_PIN 8
 ///////////////////////////////////////////////////////////////////
