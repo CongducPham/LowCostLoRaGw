@@ -1,15 +1,15 @@
 Arduino example sketches
 ========================
 
-This folder contains sketches for Arduino (and compatible) boards. The example sketches will show how simple, yet effective, low-cost LoRa IoT device can be programmed. For instance, they show how LoRa radio modules are configured and how a device can send sensed data to a gateway. They actually serve as template for future developments. On the Uno, Pro Mini, Mini, Nano, Teensy the mapping is as follows::
+This folder contains sketches for Arduino (and compatible) boards. The example sketches will show how simple, yet effective, low-cost LoRa IoT device can be programmed. For instance, they show how LoRa radio modules are configured and how a device can send sensed data to a gateway. They actually serve as template for future developments. On the Uno, Pro Mini, Mini, Nano, Teensy the mapping is as follows:
 
-			Arduino      Radio module
+                   Arduino      Radio module
 			 GND----------GND   (ground in)
 			 3V3----------3.3V  (3.3V in)
-	  SS pin D10----------NSS   (CS chip select in)
-	 SCK pin D13----------SCK   (SPI clock in)
-	MOSI pin D11----------MOSI  (SPI Data in)
-	MISO pin D12----------MISO  (SPI Data out)
+              SS pin D10----------NSS   (CS chip select in)
+             SCK pin D13----------SCK   (SPI clock in)
+            MOSI pin D11----------MOSI  (SPI Data in)
+            MISO pin D12----------MISO  (SPI Data out)
 
 On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino and Teensy boards. You can have a look at the [Low-cost-LoRa-IoT-step-by-step](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-outdoor-step-by-step.pdf) tutorial in the tutorial repository (https://github.com/CongducPham/tutorials).
 
