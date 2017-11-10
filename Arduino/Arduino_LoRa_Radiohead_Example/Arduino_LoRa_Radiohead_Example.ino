@@ -75,6 +75,14 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
 // So called LoRa mode 1 (BW125, CR45, SF12) with CRC on
 RH_RF95::ModemConfig my_Bw125Cr45Sf4096 = {0x72, 0xc4, 0x08};
 
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+#define PABOOST
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
@@ -133,11 +141,15 @@ void setup()
   // set to so-called LoRa mode 1
   rf95.setModemRegisters(&my_Bw125Cr45Sf4096);
   
-  // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5,Sf = 128chips/symbol, CRC on
-  // The default transmitter power is 13dBm, using PA_BOOST.
-  // If you are using RFM95/96/97/98 modules which uses the PA_BOOSTtransmitter pin, then
+  // The default transmitter power is 14dBm, using PA_BOOST.
+  // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin (means RFO = false), then
   // you can set transmitter powers from 5 to 23 dBm:
+#ifdef PABOOST
   rf95.setTxPower(14, false);
+#else
+  // RFO = true; for inAir9 module for instance
+  rf95.setTxPower(14, true);
+#endif  
 }
 
 void loop() {

@@ -3,13 +3,15 @@ Arduino example sketches
 
 This folder contains sketches for Arduino (and compatible) boards. The example sketches will show how simple, yet effective, low-cost LoRa IoT device can be programmed. For instance, they show how LoRa radio modules are configured and how a device can send sensed data to a gateway. They actually serve as template for future developments. On the Uno, Pro Mini, Mini, Nano, Teensy the mapping is as follows:
 
-                   Arduino      Radio module
-			 GND----------GND   (ground in)
-			 3V3----------3.3V  (3.3V in)
-              SS pin D10----------NSS   (CS chip select in)
-             SCK pin D13----------SCK   (SPI clock in)
-            MOSI pin D11----------MOSI  (SPI Data in)
-            MISO pin D12----------MISO  (SPI Data out)
+```
+       Arduino      Radio module
+         GND----------GND   (ground in)
+         3V3----------3.3V  (3.3V in)
+  SS pin D10----------NSS   (CS chip select in)
+ SCK pin D13----------SCK   (SPI clock in)
+MOSI pin D11----------MOSI  (SPI Data in)
+MISO pin D12----------MISO  (SPI Data out)
+```
 
 On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino and Teensy boards. You can have a look at the [Low-cost-LoRa-IoT-step-by-step](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-outdoor-step-by-step.pdf) tutorial in the tutorial repository (https://github.com/CongducPham/tutorials).
 
@@ -376,14 +378,16 @@ Please refer to the README file in the gw_advanced/aes_lorawan folder.
 Using the RadioHead library for the end-device
 ----------------------------------------------
 
-Although not recommended as you won't benefit from the advanced features proposed by our library, it is possible to use the RadioHead library to build an end-device that can send data to our gateway. The RadioHead lib can be downloaded from [http://www.airspayce.com/mikem/arduino/RadioHead/](http://www.airspayce.com/mikem/arduino/RadioHead/).
+Although not recommended as you won't benefit from the advanced features proposed by our library, it is possible to use the RadioHead library to build an end-device that can send data to our gateway. The radio driver is RH_RF95 which is primarily intended for the HopeRF RFM95/96/97/98 but other SX1276/77/78/79-based radio module will work. For instance both the Modtronix inAir9 and inAir9B. Care must be taken to correctly define the PA_BOOST support. Both RFM95W and inAir9B need PA_BOOST while the inAir9 uses the RFO instead. Also, the RadioHead library needs the radio's DIO 0 pin to be connected to an interrupt-enabled pin of the Arduino board. The RadioHead lib can be downloaded from [http://www.airspayce.com/mikem/arduino/RadioHead/](http://www.airspayce.com/mikem/arduino/RadioHead/).
 
 Our library uses the following 4-byte header: dst(1B) ptype(1B) src(1B) seq(1B). ptype is decomposed in 2 parts type(4bits) flags(4bits); type can take current value of DATA=0001 and ACK=0010. The flags are from left to right: ack_requested|encrypted|with_appkey|is_binary. Fortunately the RH lib also use a 4-byte header: to, from, id, flags. It is therefore easy to have the following correspondance: to <-> dst and from <-> src; and use id for ptype and flags for seq. However, in RH_RF95, the field insertion order is: to, from, id, flags so to avoid changing the RH lib, we chose to use the following mapping:
  
-	   to <-> dst
-	 from <-> ptype
-	   id <-> src
-	flags <-> seq 
+```
+   to <-> dst
+ from <-> ptype
+   id <-> src
+flags <-> seq 
+``` 
 
-These variables will be set using the RHDatagram.h functions: setHeaderTo, setHeaderfrom, setHeaderId, setHeaderFlags. The **Arduino_LoRa_Radiohead_Example** provides an example sending "hello" using so-called LoRa mode 1 (BW125, CR45, SF12) on 865.2Mhz.
+These variables will be set using the RHDatagram.h functions: setHeaderTo, setHeaderfrom, setHeaderId, setHeaderFlags. The **Arduino_LoRa_Radiohead_Example** provides an example sending "hello" using so-called LoRa mode 1 (BW125, CR45, SF12) on 865.2Mhz. PA_BOOST is activated by default and the DI0 pin is connected to Arduino digital pin 2.
 

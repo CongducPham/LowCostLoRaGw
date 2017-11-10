@@ -306,13 +306,15 @@ Connect a radio module to Raspberry
 
 You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). 
 
-             RPI      	 Radio module
-		GND pin 25----------GND   (ground in)
-		3V3 pin 17----------3.3V  (3.3V in)
-	     CS/CE0 pin 24----------NSS   (CS chip select in)
-	        SCK pin 23----------SCK   (SPI clock in)
-	       MOSI pin 19----------MOSI  (SPI Data in)
-	       MISO pin 21----------MISO  (SPI Data out)
+```
+      RPI            Radio module
+   GND pin 25----------GND   (ground in)
+   3V3 pin 17----------3.3V  (3.3V in)
+CS/CE0 pin 24----------NSS   (CS chip select in)
+   SCK pin 23----------SCK   (SPI clock in)
+  MOSI pin 19----------MOSI  (SPI Data in)
+  MISO pin 21----------MISO  (SPI Data out)
+```
 
 You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
 	
@@ -369,13 +371,15 @@ Connect a radio module to your end-device
 
 To have an end-device, you have to connect a LoRa radio module to an Arduino board. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS/SS). On the Uno, Pro Mini, Mini, Nano, Teensy the mapping is as follows:
 
-                   Arduino      Radio module
-			 GND----------GND   (ground in)
-			 3V3----------3.3V  (3.3V in)
-              SS pin D10----------NSS   (CS chip select in)
-             SCK pin D13----------SCK   (SPI clock in)
-            MOSI pin D11----------MOSI  (SPI Data in)
-            MISO pin D12----------MISO  (SPI Data out)
+```
+       Arduino      Radio module
+         GND----------GND   (ground in)
+         3V3----------3.3V  (3.3V in)
+  SS pin D10----------NSS   (CS chip select in)
+ SCK pin D13----------SCK   (SPI clock in)
+MOSI pin D11----------MOSI  (SPI Data in)
+MISO pin D12----------MISO  (SPI Data out)
+```
 
 On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino and Teensy boards. You can have a look at the [Low-cost-LoRa-IoT-step-by-step](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-outdoor-step-by-step.pdf) tutorial in the tutorial repository (https://github.com/CongducPham/tutorials).
 
