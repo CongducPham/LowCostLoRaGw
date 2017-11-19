@@ -30,6 +30,8 @@
 #include <math.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  November 10th, 2017
+ *		- change the way packet's RSSI is computed
  *  November 7th, 2017
  *      - CRC (RxPayloadCrcOn) is set back to OFF for the gateway
  *      - bug fix in how the CRC is checked at receiver in getPacket() function
@@ -3449,14 +3451,15 @@ int16_t SX1272::getRSSIpacket()
                 // added by C. Pham, using Semtech SX1272 rev3 March 2015
                 // for SX1272 we use -139, for SX1276, we use -157
                 // then for SX1276 when using low-frequency (i.e. 433MHz) then we use -164
-                _RSSIpacket = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)+(_channel<CH_04_868?7:0)) + (double)_RSSIpacket + (double)_rawSNR*0.25;
+                //_RSSIpacket = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)+(_channel<CH_04_868?7:0)) + (double)_RSSIpacket + (double)_rawSNR*0.25;
+                _RSSIpacket = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)+(_channel<CH_04_868?7:0)) + (double)_RSSIpacket + (double)_SNR*0.25;
                 state = 0;
             }
             else
             {
                 // commented by C. Pham
                 //_RSSIpacket = readRegister(REG_PKT_RSSI_VALUE);
-                _RSSIpacket = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)+(_channel<CH_04_868?7:0)) + (double)_RSSIpacket;
+                _RSSIpacket = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)+(_channel<CH_04_868?7:0)) + (double)_RSSIpacket*16.0/15.0;
                 //end
                 state = 0;
             }

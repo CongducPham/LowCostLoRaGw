@@ -73,7 +73,7 @@ def is_internet_pending():
 def store_internet_pending(ldata, pdata, rdata, tdata, gwid):
 	
 	try:
-		data = "{\"ldata\" : \""+ ldata.replace('\n','') +"\", \"pdata\" : \""+ pdata.replace('\n','') +"\", \"rdata\" : \""+ rdata.replace('\n','') +"\", \"tdata\" : \""+ tdata.replace('\n','') +"\", \"gwid\" : \""+ gwid.replace('\n','') +"\"}"
+		data = "{\"ldata\":\""+ldata.replace('\n','')+"\",\"pdata\":\""+pdata.replace('\n','')+"\",\"rdata\":\""+rdata.replace('\n','')+"\",\"tdata\":\""+tdata.replace('\n','')+"\",\"gwid\":\""+gwid.replace('\n','')+"\"}"
 		print data						
 		
 		if is_internet_pending():

@@ -45,6 +45,12 @@
 			"enabled":true
 		},
 		{	
+			"name":"NodeRed flow",
+			"script":"python CloudNodeRed.py",
+			"type":"nodered",			
+			"enabled":false
+		},		
+		{	
 			"name":"GroveStreams cloud",
 			"script":"python CloudGroveStreams.py",
 			"type":"iotcloud",			
