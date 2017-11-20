@@ -41,16 +41,18 @@ Features
 - a simple, user-friendly web admin interface to configure and update your gateway
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/gw_web_admin/README.md)
 	- [Tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf)
-- an alert mail can be sent to a list of contact email addresses to notify when gateway is starting and when the radio module has been reset
-- periodic status report to monitor whether the post-processing stage of the gateway is up or not
+- simple, flexible and generic cloud management approach
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
+	- Look at the provided cloud script examples to see how IoT clouds such as ThingSpeak or GroveStreams are supported
+	- a cloud script can be used to generalize upload of data using SMS, ftp, file, MQTT, Node-Red flow,...
 - encryption and native LoRaWAN frame format
 	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md)
 	- end-device can send native LoRaWAN packets
 	- low-level gateway provides raw output for post_processing_gw.py to handle LoRaWAN packets
 - downlink features: to send from gateway to end-device
-	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
-- simple, flexible and generic cloud management approach
-	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md) 	 	
+- an alert mail can be sent to a list of contact email addresses to notify when gateway is starting and when the radio module has been reset
+- periodic status report to monitor whether the post-processing stage of the gateway is up or not
 - support for an embedded DHT22 temperature/humidity sensor to monitor the condition inside the gateway case
 - there is a NoSQL MongoDB support and received data can be saved in the local database if this feature is activated. See [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md#support-of-mongodb-as-a-cloud-declaration) for more information on the local MongoDB structure.
 - there is an Apache web server with basic PHP forms to visualize graphically the received data of the MongoDB with any web browser
