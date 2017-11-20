@@ -1,6 +1,11 @@
 Change logs
 ===========
 
+November 20th, 2017
+------------------
+
+Add Node-Red support. CloudNodeRed.py can be enabled in clouds.json to generate json entries into nodered/nodered.txt that will be followed by a Node-Red flow. Look at README-NodeRed.md for more details.
+
 November 2nd, 2017
 ------------------
 
