@@ -10,7 +10,7 @@ The SD card image has Node-Red installed. Start Node-Red with
 
 	> node-red-start
 	
-Use your browser on http://192.168.2.8:1880 for instance if this is your gateway's IP address. Make sure that your gateway has internet connection.
+Use your browser on `http://192.168.2.8:1880` for instance if this is your gateway's IP address. Make sure that your gateway has internet connection.
 
 Importing the Node-Red flow
 ---------------------------
@@ -22,7 +22,7 @@ This is the flow that you can import (copy and then Import/Clipboard):
 Principles
 ----------
 
-CloudNodeRed.py will be called by post-processing-gw.py if a Node-Red cloud is enabled in clouds.json:
+`CloudNodeRed.py` will be called by `post-processing-gw.py` if a Node-Red cloud is enabled in `clouds.json`:
 
 	{	
 		"name":"NodeRed flow",
@@ -31,24 +31,24 @@ CloudNodeRed.py will be called by post-processing-gw.py if a Node-Red cloud is e
 		"enabled":true
 	}
 		
-Additionally, key_NodeRed.py will define project_name, organization_name and sensor_name that will be used to build the full sensor name. For instance, with:
+Additionally, `key_NodeRed.py` will define `project_name`, `organization_name` and `sensor_name` that will be used to build the full sensor name. For instance, with:
 
 	project_name="waziup"
 	organization_name="UPPA"
 	sensor_name="Sensor"
 
-then, when device 2 sends "TC/22.5/HU/85" to the gateway, CloudNodeRed.py will generate the following json entries in nodered/nodered.txt file:
+then, when device 2 sends "TC/22.5/HU/85" to the gateway, `CloudNodeRed.py` will generate the following json entries in `nodered/nodered.txt` file:
 
 	{"source":"waziup_UPPA_Sensor2","measure":"TC","value":22.5}
 	{"source":"waziup_UPPA_Sensor2","measure":"HU","value":85}	
 	
-The Node-Red flow is composed of a tail node that follows the nodered/nodered.txt file for new entries. Each entry will be converted into a json object with a json node. A function node will use the json entry to build a message as follows:
+The Node-Red flow is composed of a tail node that follows the `nodered/nodered.txt` file for new entries. Each entry will be converted into a json object with a json node. A function node will use the json entry to build a message as follows:
 
 	msg.topic=msg.payload.source+'/'+msg.payload.measure
 	msg.payload=msg.payload.value
 	return msg; 		
 	
-Finally, an MQTT node using the test.mosquitto.org broker will receive the messages with the topic defined as waziup_UPPA_Sensor2/TC and waziup_UPPA_Sensor2/HU, and will then respectively publish 22.5 and 85 under these topics. The default topic is then project_name+"_"+organization_name+"_"+sensor_name+sensor_address+"/"+measure_name. You can change the function if you want to build a different topic.	
+Finally, an MQTT node using the `test.mosquitto.org` broker will receive the messages with the topic defined as `waziup_UPPA_Sensor2/TC` and `waziup_UPPA_Sensor2/HU`, and will then respectively publish 22.5 and 85 under these topics. The default topic is then project\_name+"\_"+organization\_name+"\_"+sensor\_name+sensor\_address+"/"+measure\_name. You can change the function if you want to build a different topic.	
 
 Testing with test.mosquitto.org
 ===============================
@@ -71,11 +71,11 @@ You can of course subscribe to only one topic if you want:
 Emulating sensor data
 ---------------------
 
-With Node-Red started and the flow loaded and deployed with the web browser, use `echo` or `printf` in a terminal to write into the nodered/nodered.txt
+With Node-Red started and the flow loaded and deployed with the web browser, use `echo` or `printf` in a terminal to write into the `nodered/nodered.txt`file:
 
 	printf '{"source":"waziup_UPPA_Sensor2","measure":"TC","value":22.5}\n{"source":"waziup_UPPA_Sensor2","measure":"HU","value":85}\n' >> nodered/nodered.txt
 	
-You should see in the web browser debug information indicating that new data has been processed by the flow and, most importantly, in the terminal where you subscribed to the waziup-UPPA_Sensor2/# topics, you should see:
+You should see in the web browser debug information indicating that new data has been processed by the flow and, most importantly, in the terminal where you subscribed to the `waziup-UPPA_Sensor2/# topics, you should see:
 
 	waziup_UPPA_Sensor2/TC 22.5
 	waziup_UPPA_Sensor2/HU 85
