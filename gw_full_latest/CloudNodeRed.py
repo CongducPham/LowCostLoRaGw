@@ -95,7 +95,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		# this part depends on the syntax used by the end-device
 		# we use: TC/22.4/HU/85...
 		#
-		# but we accept also a_str#b_str#TC/22.4/HU/85... to indicate a Fiware-Service and Fiware-ServicePath
+		# but we accept also a_str#b_str#TC/22.4/HU/85... to indicate a project and organization
 		# or simply 22.4 in which case, the nomemclature will be DEF
 		 		
 		# get number of '#' separator
@@ -126,9 +126,10 @@ def main(ldata, pdata, rdata, tdata, gwid):
 
 			# we have 2 separators
 			if nsharp==2:
-				# if the length of BOTH fields is greater than 2 then we take them into account
-				if len(data_array[0])<3 or len(data_array[1])<3:
-					data_array[0]=''
+				# if the length of a fields is greater than 2 then we take it into account
+				if len(data_array[0])<3: 
+					data_array[0]=''				
+				if len(data_array[1])<3:
 					data_array[1]=''
 									
 			# get number of '/' separator on data_array[2]

@@ -186,9 +186,10 @@ def main(ldata, pdata, rdata, tdata, gwid):
 
 			# we have 2 separators
 			if nsharp==2:
-				# if the length of BOTH fields is greater than 2 then we take them into account
-				if len(data_array[0])<3 or len(data_array[1])<3:
-					data_array[0]=''
+				# if the length of a fields is greater than 2 then we take it into account
+				if len(data_array[0])<3: 
+					data_array[0]=''				
+				if len(data_array[1])<3:
 					data_array[1]=''
 									
 			# get number of '/' separator on data_array[2]
