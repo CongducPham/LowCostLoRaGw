@@ -19,6 +19,8 @@ This is the flow that you can import (copy and then Import/Clipboard):
 
 [{"id":"603b4928.cc6418","type":"tail","z":"a4273e8d.ebc9f","name":"nodered.txt","filetype":"text","split":true,"filename":"/home/pi/lora_gateway/nodered/nodered.txt","x":104.70001220703125,"y":257.0500183105469,"wires":[["79bdb931.346a6"]]},{"id":"79bdb931.346a6","type":"json","z":"a4273e8d.ebc9f","name":"","x":258.70001220703125,"y":332.75,"wires":[["64923ae1.40f7ac","86c4a66a.456fd"]]},{"id":"74c63b2c.980bb4","type":"mqtt out","z":"a4273e8d.ebc9f","name":"","topic":"","qos":"","retain":"","broker":"10144d51.2d96db","x":622.7000122070312,"y":256.3000183105469,"wires":[]},{"id":"64923ae1.40f7ac","type":"debug","z":"a4273e8d.ebc9f","name":"","active":true,"console":"false","complete":"payload","x":429.6999816894531,"y":420.3000183105469,"wires":[]},{"id":"86c4a66a.456fd","type":"function","z":"a4273e8d.ebc9f","name":"set topic and payload","func":"msg.topic=msg.payload.source+'/'+msg.payload.measure\nmsg.payload=msg.payload.value\nreturn msg;","outputs":1,"noerr":0,"x":437.7000427246094,"y":277.8500061035156,"wires":[["74c63b2c.980bb4","514a5140.c56c88"]]},{"id":"514a5140.c56c88","type":"debug","z":"a4273e8d.ebc9f","name":"","active":true,"console":"false","complete":"true","x":618.699951171875,"y":354.70001220703125,"wires":[]},{"id":"10144d51.2d96db","type":"mqtt-broker","z":"","broker":"test.mosquitto.org","port":"1883","clientid":"","usetls":false,"compatmode":true,"keepalive":"60","cleansession":true,"willTopic":"","willQos":"0","willPayload":"","birthTopic":"","birthQos":"0","birthPayload":""}]
 
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/nodered-flow.png)
+
 Principles
 ----------
 
