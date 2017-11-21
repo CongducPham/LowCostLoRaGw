@@ -17,6 +17,8 @@ The installer will complete all steps for you.
 Then, use your browser, connect to the gateway's WiFi and enter the following url:
 
 	192.168.200.1/admin
+	
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/gw-web-admin.png)
 
 Enjoy!
-M. Diop	
+M. Diop and C. Pham	

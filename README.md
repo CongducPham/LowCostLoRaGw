@@ -319,6 +319,8 @@ CS/CE0 pin 24----------NSS   (CS chip select in)
 ```
 
 You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/connect-radio-rpi.png)
 	
 Compiling the low-level gateway program
 =======================================	 	
@@ -368,6 +370,8 @@ You can also customize the post-processing stage (post_processing_gw.py) at your
 
 You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
 
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/post-processing.png)
+
 Connect a radio module to your end-device
 =========================================
 
@@ -384,6 +388,8 @@ MISO pin D12----------MISO  (SPI Data out)
 ```
 
 On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino and Teensy boards. You can have a look at the [Low-cost-LoRa-IoT-step-by-step](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-outdoor-step-by-step.pdf) tutorial in the tutorial repository (https://github.com/CongducPham/tutorials).
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/connect-radio-device.png)
 
 There is an important issue regarding the radio modules. The Semtech SX1272/76 has actually 2 lines of RF power amplification (PA): a high efficiency PA up to 14dBm (RFO) and a high power PA up to 20dBm (PA_BOOST). Setting transmission power to "L" (Low), "H" (High), and "M" (Max) only uses the RFO and delivers 2dBm, 6dBm and 14dBm respectively. "x" (extreme) and "X" (eXtreme) use the PA_BOOST and deliver 14dBm and 20dBm respectively.
 However even if the SX1272/76 chip has the PA_BOOST and the 20dBm features, not all radio modules (integrating these SX1272/76) do have the appropriate wiring and circuits to enable these features: it depends on the choice of the reference design that itself is guided by the main intended frequency band usage, and sometimes also by the target country's regulations (such as maximum transmitted power). So you have to check with the datasheet whether your radio module has PA_BOOST (usually check whether the PA_BOOST pin is wired) and 20dBm capability before using "x" or "X". Some other radio modules only wire the PA_BOOST and not the RFO resulting in very bad range when trying to use the RFO mode ("L", "H", and "M"). In this case, one has to use "x" to indicate PA_BOOST usage to get 14dBm.
