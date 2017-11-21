@@ -70,6 +70,14 @@ You can of course subscribe to only one topic if you want:
 
 	mosquitto_sub -v -h test.mosquitto.org -t 'waziup-UPPA_Sensor2/TC'		
 	
+
+Publishing with mosquitto_pub
+-----------------------------
+
+In a terminal, run:
+
+	mosquitto_pub -h test.mosquitto.org -t 'waziup-UPPA_Sensor2/TC' -m 22.5	
+	
 Emulating sensor data
 ---------------------
 
@@ -81,6 +89,20 @@ You should see in the web browser debug information indicating that new data has
 
 	waziup_UPPA_Sensor2/TC 22.5
 	waziup_UPPA_Sensor2/HU 85
+	
+Running the gateway with Node-Red cloud enabled
+-----------------------------------------------
+
+- enable `CloudNodeRed.py` in `clouds.json`
+- start Node-Red on your gateway: `node-red-start`	
+- import the flow and deploy it
+- use the simple temperature sensor to send data to the gateway: `TC/22.5` for instance
+- use the gateway or another computer to subscribe to the topic: `waziup_UPPA_Sensor2/TC` for instance, depending on the address of your sensor node and your `key_NodeRed.py` configuration
+
+Simply publish to an MQTT topic with the gateway
+------------------------------------------------
+
+Of course, it is very simple to simply publish to an MQTT topic directly with the gateway. Look at the `CloudMQTT.py` cloud script that again uses the `test.mosquitto.org` broker. `key_MQTT.py` defines variables that will be used by `CloudMQTT.py` to build the MQTT topic.
 	
 Enjoy!
 C. Pham		

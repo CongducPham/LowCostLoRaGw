@@ -51,6 +51,12 @@
 			"enabled":false
 		},		
 		{	
+			"name":"MQTT cloud",
+			"script":"python CloudMQTT.py",
+			"type":"MQTT",			
+			"enabled":false
+		},		
+		{	
 			"name":"GroveStreams cloud",
 			"script":"python CloudGroveStreams.py",
 			"type":"iotcloud",			
