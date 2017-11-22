@@ -158,7 +158,13 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	SNR=arr[5]
 	RSSI=arr[6]
 	
-	if (str(src) in key_NoInternet.source_list) or (len(key_NoInternet.source_list)==0):		
+	#LoRaWAN packet
+	if dst==256:
+		src_str="%0.8X" % src
+	else:
+		src_str=str(src)	
+
+	if (src_str in key_NoInternet.source_list) or (len(key_NoInternet.source_list)==0):		
 		if checkNet():
 			print "Detected Internet connectivity"
 			#try to upload any pending messages

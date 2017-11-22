@@ -89,7 +89,7 @@ def send_data(data, src, nomenclatures, tdata):
 		#we use mosquitto client
 		#be sure to have run sudo apt-get install mosquitto-clients
 		#the topic will be for instance waziup_UPPA_Sensor2/TC
-		cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'_'+data[1]+'_'+key_MQTT.sensor_name+src+'/'+nomenclatures[i]+' -m '+data[i+2]
+		cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'_'+data[1]+'_'+src+'/'+nomenclatures[i]+' -m '+data[i+2]
 
 		i += 1
 						
@@ -150,7 +150,13 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	SNR=arr[5]
 	RSSI=arr[6]
 	
-	if (str(src) in key_MQTT.source_list) or (len(key_MQTT.source_list)==0):
+	#LoRaWAN packet
+	if dst==256:
+		src_str="%0.8X" % src
+	else:
+		src_str=str(src)	
+
+	if (src_str in key_MQTT.source_list) or (len(key_MQTT.source_list)==0):
 	
 		# this part depends on the syntax used by the end-device
 		# we use: TC/22.4/HU/85...
@@ -225,9 +231,8 @@ def main(ldata, pdata, rdata, tdata, gwid):
 				data.append(data_array[i+1])
 				i += 2
 
-		# upload data to Orion
-		# here src is the address of the device, e.g. 2		
-		MQTT_uploadData(nomenclatures, data, str(src), tdata)
+		# upload data to Orion		
+		MQTT_uploadData(nomenclatures, data, key_MQTT.sensor_name+src_str, tdata)
 	else:
 		print "Source is not is source list, not sending with CloudOrion.py"				
 

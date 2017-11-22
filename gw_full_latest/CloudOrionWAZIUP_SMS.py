@@ -25,12 +25,15 @@ import sys
 import json
 import libSMS
 
-import key_SMS
+# get key definition from external file to ease
+# update of cloud script in the future
+import key_Orion
+import key_OrionWAZIUP_SMS
 
 try:
-	key_SMS.source_list
+	key_Orion.source_list
 except AttributeError:
-	key_SMS.source_list=[]
+	key_Orion.source_list=[]
 
 global sm, always_enabled, gammurc_file
 
@@ -54,24 +57,20 @@ clouds = json_array["clouds"]
 
 #here we check for our own script entry
 for cloud in clouds:
-	if "CloudSMS.py" in cloud["script"]:
+	if "CloudOrionWAZIUP_SMS.py" in cloud["script"]:
 			
 		try:
 			always_enabled = cloud["always_enabled"]
 		except KeyError:
 			print "always_enabled undefined"
 			always_enabled = False
-		
+			
 		try:
 			gammurc_file = cloud["gammurc_file"]
 		except KeyError:
 			print "gammurc_file undefined"
 
-if not always_enabled:
-	if (libSMS.internet_ON()):
-		print('Internet is available, no need to use the SMS Service')
-		sys.exit()
-		
+
 #check Gammu configuration
 if (not libSMS.gammuCheck()):
 	sys.exit()
@@ -79,14 +78,14 @@ else:
 	if (not libSMS.gammurcCheck(gammurc_file)):
 		sys.exit()
 
-if (libSMS.phoneConnection(gammurc_file, key_SMS.PIN) == None):
+if (libSMS.phoneConnection(gammurc_file, key_OrionWAZIUP_SMS.PIN) == None):
 	sys.exit()
 else:	
-	sm = libSMS.phoneConnection(gammurc_file, key_SMS.PIN)
+	sm = libSMS.phoneConnection(gammurc_file, key_OrionWAZIUP_SMS.PIN)
 		
-#------------------------------------------------------------
+
 # main
-#------------------------------------------------------------
+# -------------------
 
 def main(ldata, pdata, rdata, tdata, gwid):
 	
@@ -105,15 +104,15 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	bw=arr[0]
 	cr=arr[1]
 	sf=arr[2]
-	
+
 	#LoRaWAN packet
 	if dst==256:
 		src_str="%0.8X" % src
 	else:
 		src_str=str(src)	
 
-	if (src_str in key_SMS.source_list) or (len(key_SMS.source_list)==0): 
-	
+	if (src_str in key_Orion.source_list) or (len(key_Orion.source_list)==0):
+		
 		#this part depends on the syntax used by the end-device
 		#we use: thingspeak_channel#thingspeak_field#TC/22.4/HU/85... 
 		#ex: ##TC/22.4/HU/85... or TC/22.4/HU/85... or thingspeak_channel##TC/22.4/HU/85... 
@@ -123,77 +122,87 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		nsharp = ldata.count('#')
 		nslash=0
 
-		#will field delimited by '#' in the MongoDB
-		data=['','']
-							
-		#no separator
+		# no separator
 		if nsharp==0:
+			# will use default Fiware-Service and Fiware-ServicePath
+			data=['','']
+
 			# get number of '/' separator on ldata
 			nslash = ldata.count('/')
 				
-			#contains ['', '', "s1", s1value, "s2", s2value, ...]
-			data_array = data + re.split("/", ldata)
-		else:				
+			# contains ['', '', "s1", s1value, "s2", s2value, ...]
+			data_array = data + re.split("/", ldata)		
+		else:
 			data_array = re.split("#", ldata)
 		
 			# only 1 separator
 			if nsharp==1:
-				# get number of '/' separator on data_array[1]
-				nslash = data_array[1].count('/')
-		
-				# then reconstruct data_array
-				data_array=data + re.split("/", data_array[1])	
+				# insert '' to indicate default Fiware-Service
+				# as we assume that the only parameter indicate the Fiware-ServicePath
+				data_array.insert(0,'');
+				# if the length is greater than 2
+				if len(data_array[1])<3:
+					data_array[1]=''	
 
 			# we have 2 separators
 			if nsharp==2:
-				# get number of '/' separator on data_array[2]
-				nslash = data_array[2].count('/')
+				# if the length of BOTH fields is greater than 2 then we take them into account
+				if len(data_array[0])<3 or len(data_array[1])<3:
+					data_array[0]=''
+					data_array[1]=''
+									
+			# get number of '/' separator on data_array[2]
+			# because ldata may contain '/' as Fiware-ServicePath name
+			nslash = data_array[2].count('/')
+	
+			# then reconstruct data_array
+			data_array=[data_array[0],data_array[1]]+re.split("/", data_array[2])
+				
+			# at the end data_array contains
+			# ["Fiware-Service", "Fiware-ServicePath", "s1", s1value, "s2", s2value, ...]
 		
-				# then reconstruct data_array
-				data_array=data + re.split("/", data_array[2])
-		
-		#just in case we have an ending CR or 0
+		# just in case we have an ending CR or 0
 		data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\n', '')
 		data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\0', '')	
 	
 		#sms data to be sent
-		sms_data = "SensorData Sensor"+src_str+" SNR "+str(SNR)+" RSSI "+str(RSSI)+" SN "+str(seq)+" BW "+str(bw)+" CR "+str(cr)+" SF "+str(sf)+" GWID "+gwid
+		sms_data = "SensorData "+key_Orion.sensor_name+src_str
+	
+		#sms_data = "SRC#"+str(src)+"#RSSI#"+str(RSSI)+"#BW#"+str(bw)+"#CR#"+str(cr)+"#SF#"+str(sf)+"#GWID#"+gwid+"/"+data
+		#sms_data = "SensorData  Sensor"+str(src)+" RSSI "+str(RSSI)+" BW "+str(bw)+" CR "+str(cr)+" SF "+str(sf)+" GWID "+gwid+" "
+	
+		#start from the first nomenclature
+		i = 2
+	
+		while i < len(data_array)-1 :
+			sms_data += " "+data_array[i]+" "+data_array[i+1]
+			i += 2
+	
+		if data_array[0]=='':
+			data_array[0]=key_Orion.project_name
+
+		if data_array[1]=='':
+			data_array[1]=key_Orion.service_path
 		
-		nomenclatures = []
-		# data to send
-		data = []
-		data.append(data_array[0]) 
-		data.append(data_array[1])
-		
-		if nslash==0:
-			# old syntax without nomenclature key, so insert only one key
-			# we use DEF
-			nomenclatures.append("DEF")
-			data.append(data_array[2])
-		else:
-			# completing nomenclatures and data
-			i=2
-			while i < len(data_array)-1 :
-				nomenclatures.append(data_array[i])
-				data.append(data_array[i+1])
-				i += 2
-		
-		#add the nomemclatures and sensed values
-		i = 0
-		while i < len(data)-2:
-			sms_data += " "+nomenclatures[i]+" "+data[i+2]
-			i += 1
+		sms_data += " "+data_array[0]+" "+data_array[1]
 	
 		# Send data to expected contacts
 		success = False
-
-		print("rcv msg to send via the SMS Service: "+sms_data)
-		success = libSMS.send_sms(sm, sms_data, key_SMS.contacts)
-		
+		if(not always_enabled):
+			if (libSMS.internet_ON()):
+				print('Internet is available, no need to use the SMS Service')
+				sys.exit()
+			else:
+				print("rcv msg to send via the Orion WAZIUP SMS Service: "+sms_data)
+				success = libSMS.send_sms(sm, sms_data, key_OrionWAZIUP_SMS.contacts)
+		else:
+			print("rcv msg to send via the Orion WAZIUP SMS Service: "+sms_data)
+			success = libSMS.send_sms(sm, sms_data, key_OrionWAZIUP_SMS.contacts)
+	
 		if (success):
-			print "Sending SMS done"	
+				print "Sending SMS done"	
 	else:
-		print "Source is not is source list, not sending with CloudSMS.py"
+		print "Source is not is source list, not sending with CloudOrionWAZIUP_SMS.py"
 		
 if __name__ == "__main__":
         main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])

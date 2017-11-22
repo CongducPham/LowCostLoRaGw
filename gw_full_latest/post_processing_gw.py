@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v3.4 - image modification and need to incorporate aux_radio features
+# v3.6 - image modification and need to incorporate aux_radio features
 # + copy post-processing feature
 #------------------------------------------------------------
 
@@ -31,6 +31,8 @@
 # END
 #////////////////////////////////////////////////////////////
 
+dateutil_tz=True
+
 import sys
 import subprocess
 import select
@@ -39,6 +41,11 @@ from threading import Timer
 import time
 from collections import deque
 import datetime
+try:
+	import dateutil.tz
+except ImportError:
+	print "no timezone support, time will be expressed only in local time"
+	dateutil_tz=False
 import getopt
 import os
 import os.path
@@ -84,6 +91,8 @@ PKT_FLAG_ACK_REQ=0x08
 PKT_FLAG_DATA_ENCRYPTED=0x04
 PKT_FLAG_DATA_WAPPKEY=0x02
 PKT_FLAG_DATA_ISBINARY=0x01
+
+LORAWAN_HEADER_SIZE=13
 
 #------------------------------------------------------------
 #last pkt information
@@ -262,6 +271,7 @@ def dht22_target():
 
 #you can enable periodic copy of post-processing.log file by setting to True
 #but you need to install the web admin interface in order to have the /var/www/html/admin/log/ folder
+#note that this feature is obsoleted by an option in the web admin interface to copy post-processing.log file on demand
 _gw_copy_post_processing=False
 
 def copy_post_processing():
@@ -284,7 +294,9 @@ def copy_post_processing():
 def copy_post_processing_target():
 	while True:
 		copy_post_processing()
-		sys.stdout.flush()	
+		sys.stdout.flush()
+		#change here if you want to change the time between 2 extraction
+		#here it is 30mins	
 		time.sleep(1800)
 	
 #------------------------------------------------------------
@@ -887,8 +899,9 @@ while True:
 				
 				if _use_sms_alert:
 					print "post_processing_gw.py sends SMS indicating that gateway has reset radio module..."
-					send_sms("Gateway "+_gwid+" has reset its radio module")
-					print "Sending SMS done"		
+					success = libSMS.send_sms(sm, "Gateway "+_gwid+" has reset its radio module", contact_sms)
+					if (success):
+						print "Sending SMS done"
 						
 		continue
 
@@ -932,6 +945,11 @@ while True:
 			elif (ch=='!'): 
 
 				ldata = getAllLine()
+				
+				if (dateutil_tz==True):
+					#replacing tdata to get time zone information when uploading to clouds
+					localdt = datetime.datetime.now(dateutil.tz.tzlocal())
+					tdata = localdt.replace(microsecond=0).isoformat()
 				
 				print "number of enabled clouds is %d" % len(_enabled_clouds)	
 				
@@ -1008,7 +1026,7 @@ while True:
 				print "raw format from gateway"
 				ch=getSingleChar()
 				
-				#probably our modified Libelium header where the destination (1) is the gateway
+				#probably our modified Libelium header where the destination (i.e. 1) is the gateway
 				#dissect our modified Libelium format
 				if ord(ch)==1:			
 					dst=ord(ch)
@@ -1019,12 +1037,15 @@ while True:
 					#now we read datalen-4 (the header length) bytes in our line buffer
 					fillLinebuf(datalen-HEADER_SIZE)
 					datalen=datalen-HEADER_SIZE
-					pdata="%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,datalen,SNR,RSSI)				
+					pdata="%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,datalen,SNR,RSSI)
+					print "update ctrl pkt info (^p): "+pdata				
 				
 				#LoRaWAN uses the MHDR(1B)
 				#----------------------------
 				#| 7  6  5 | 4  3  2 | 1  0 |
 				#----------------------------
+				#  0  1  0   0  0  0   0  0		unconfirmed data up
+				#  1  0  0   0  0  0   0  0		confirmed data up 
 				#   MType      RFU     major
 				#
 				#the main MType is unconfirmed data up b010 or confirmed data up b100
@@ -1044,7 +1065,22 @@ while True:
 							lorapkt.append(ord(lorapktstr[i]))
 							
 						#you can comment this display if you want
-						#print [hex(x) for x in lorapkt]
+						print [hex(x) for x in lorapkt]
+						
+						datalen=datalen-LORAWAN_HEADER_SIZE
+						
+						src = lorapkt[4]*256*256*256
+						src += lorapkt[3]*256*256
+						src += lorapkt[2]*256
+						src += lorapkt[1]
+						
+						seq=lorapkt[7]*256+lorapkt[6]
+						
+						#just to print the src in 0x01020304 form
+						pdata="%d,%d,%s,%d,%d,%d,%d" % (256,ord(ch),"0x%0.8X" % src,seq,datalen,SNR,RSSI)
+						print "update ctrl pkt info (^p): "+pdata
+						#internally, we convert in int
+						pdata="%d,%d,%d,%d,%d,%d,%d" % (256,ord(ch),src,seq,datalen,SNR,RSSI)						
 						
 						from loraWAN import loraWAN_process_pkt
 						try:
@@ -1069,7 +1105,8 @@ while True:
 							#	print plain_payload
 							_linebuf = plain_payload
 							_has_linebuf=1
-							_hasClearData=1
+							_hasClearData=1							
+							
 					else:
 						print "--> DATA encrypted: local aes not activated"
 						lorapktstr_b64=base64.b64encode(lorapktstr)

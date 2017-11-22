@@ -289,8 +289,14 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	datalen=arr[4]
 	SNR=arr[5]
 	RSSI=arr[6]
+	
+	#LoRaWAN packet
+	if dst==256:
+		src_str="%0.8X" % src
+	else
+		src_str=str(src)	
 
-	if (str(src) in key_ThingSpeak.source_list) or (len(key_ThingSpeak.source_list)==0):
+	if (src_str in key_ThingSpeak.source_list) or (len(key_ThingSpeak.source_list)==0):
 	
 		#this part depends on the syntax used by the end-device
 		#we use: thingspeak_channel#thingspeak_field#TC/22.4/HU/85... 

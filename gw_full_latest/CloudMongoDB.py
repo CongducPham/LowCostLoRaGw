@@ -41,7 +41,7 @@ _enabled_clouds = []
 f = open(os.path.expanduser(cloud_filename),"r")
 string = f.read()
 f.close()
-	
+
 #change it into a python array
 json_array = json.loads(string)
 
@@ -73,6 +73,11 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	datalen=arr[4]
 	SNR=arr[5]
 	RSSI=arr[6]
+	
+	#LoRaWAN packet
+	if dst==256:
+		#here we only take the last 8 bits
+		src = src & 0x000000FF	
 	
 	arr = map(int,rdata.split(','))
 	bw=arr[0]

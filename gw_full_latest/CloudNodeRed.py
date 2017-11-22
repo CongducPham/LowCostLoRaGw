@@ -56,7 +56,7 @@ def NodeRed_generateData(data, src, nomenclatures, tdata):
 					
 	while i < len(data)-2:
 
-		entry = "{\"source\":\""+data[0]+"_"+data[1]+"_"+key_NodeRed.sensor_name+src+"\",\"measure\":\""+nomenclatures[i]+"\",\"value\":"+data[i+2]+"}"						
+		entry = "{\"source\":\""+data[0]+"_"+data[1]+"_"+src+"\",\"measure\":\""+nomenclatures[i]+"\",\"value\":"+data[i+2]+"}"						
 
 		print "CloudNodeRed: will generate json entry"
 		print entry
@@ -90,7 +90,13 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	SNR=arr[5]
 	RSSI=arr[6]
 	
-	if (str(src) in key_NodeRed.source_list) or (len(key_NodeRed.source_list)==0):
+	#LoRaWAN packet
+	if dst==256:
+		src_str="%0.8X" % src
+	else:
+		src_str=str(src)	
+
+	if (src_str in key_NodeRed.source_list) or (len(key_NodeRed.source_list)==0):
 	
 		# this part depends on the syntax used by the end-device
 		# we use: TC/22.4/HU/85...
@@ -164,9 +170,8 @@ def main(ldata, pdata, rdata, tdata, gwid):
 				nomenclatures.append(data_array[i])
 				data.append(data_array[i+1])
 				i += 2
-		
-		# here src is the address of the device, e.g. 2		
-		NodeRed_generateData(data, str(src), nomenclatures, tdata)
+			
+		NodeRed_generateData(data, key_NodeRed.sensor_name+src_str, nomenclatures, tdata)
 	else:
 		print "Source is not is source list, not generating with CloudNodeRed.py"				
 

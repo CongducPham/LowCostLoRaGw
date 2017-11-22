@@ -131,7 +131,13 @@ def main(ldata_b64, pdata, rdata, tdata, gwid):
 	cr=arr[1]
 	sf=arr[2]
 
-	if (str(src) in key_FireBase.source_list) or (len(key_FireBase.source_list)==0):	
+	#LoRaWAN packet
+	if dst==256:
+		src_str="%0.8X" % src
+	else:
+		src_str=str(src)	
+
+	if (src_str in key_FireBase.source_list) or (len(key_FireBase.source_list)==0):	
 
 		ldata=base64.b64decode(ldata_b64)
 	

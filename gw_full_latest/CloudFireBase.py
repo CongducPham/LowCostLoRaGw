@@ -136,7 +136,18 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	cr=arr[1]
 	sf=arr[2]
 
-	if (str(src) in key_FireBase.source_list) or (len(key_FireBase.source_list)==0):
+	#LoRaWAN packet
+	if dst==256:
+		src_str="%0.8X" % src
+	else:
+		src_str=str(src)	
+
+	if (src_str in key_FireBase.source_list) or (len(key_FireBase.source_list)==0):
+	
+		#LoRaWAN packet
+		if dst==256:
+			#here we only take the last 8 bits
+			src = src & 0x000000FF
 	
 		firebase_msg = {
 			'time':now.isoformat(),		
@@ -152,7 +163,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 			'data':ldata
 		}
 	
-		sensor_entry='sensor%d'% (src)
+		sensor_entry='sensor'+src_str
 		msg_entry='msg%d' % (seq)	
 	
 		#upload data to firebase
