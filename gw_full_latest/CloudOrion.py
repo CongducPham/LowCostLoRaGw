@@ -41,14 +41,14 @@ except AttributeError:
 
 ####################################################
 #To create a new entitiy
-# curl http://broker.waziup.io/v2/entities -s -S --header 'Content-Type: application/json' --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X POST -d '{ "id": "UPPASensor2", "type": "SensingDevice", "TC": { "value": 23, "type": "Number" }, "PR": { "value": 720, "type": "Number" } }'
+# curl http://broker.waziup.io/v2/entities -s -S --header 'Content-Type: application/json' --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X POST -d '{ "id": "UPPA_Sensor2", "type": "SensingDevice", "TC": { "value": 23, "type": "Number" }, "PR": { "value": 720, "type": "Number" } }'
 
 #Further updates of the values are like that:
 # curl http://broker.waziup.io/v2/entities/UPPASensor2/attrs/TC/value -s -S --header 'Content-Type: text/plain' --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X PUT -d 27
 # curl http://broker.waziup.io/v2/entities/UPPASensor2/attrs/PR/value -s -S --header 'Content-Type: text/plain' --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X PUT -d 722
 
 #To retrieve the last data point inserted:
-# curl http://broker.waziup.io/v2/entities/UPPASensor2/attrs/TC/value --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X GET
+# curl http://broker.waziup.io/v2/entities/UPPA_Sensor2/attrs/TC/value --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X GET
 ####################################################
 
 #error messages from server
@@ -125,7 +125,7 @@ def create_new_entity(data, src, nomenclatures):
 	
 	print "Orion: create new entity"
 	
-	cmd = 'curl '+key_Orion.orion_server+'/entities -s -S --header Content-Type:application/json --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d {\"id\":\"'+src+'\",\"type\":\"SensingDevice\",'
+	cmd = 'curl '+key_Orion.orion_server+'/entities -s -S --header Content-Type:application/json --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d {\"id\":\"'+key_Orion.organization_name+"_"+src+'\",\"type\":\"SensingDevice\",'
 						
 	i=0
 	while i < len(data)-2 :
@@ -174,7 +174,7 @@ def send_data(data, src, nomenclatures, tdata):
 		#cmd = 'curl '+key_Orion.orion_server+'/entities/'+src+'/attrs/'+nomenclatures[i]+'/value -s -S --header Content-Type:text/plain --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X PUT -d '+data[i+2]
 
 		#we now push data with a timestamp value
-		cmd = 'curl '+key_Orion.orion_server+'/entities/'+src+'/attrs/ -s -S --header Content-Type:application/json --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d {\"'+nomenclatures[i]+'\":{\"value\":'+data[i+2]+',\"metadata\":{\"timestamp\":{\"type\":\"DateTime\",\"value\":\"'+tdata+'\"}}}}'
+		cmd = 'curl '+key_Orion.orion_server+'/entities/'+key_Orion.organization_name+"_"+src+'/attrs/ -s -S --header Content-Type:application/json --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d {\"'+nomenclatures[i]+'\":{\"value\":'+data[i+2]+',\"metadata\":{\"timestamp\":{\"type\":\"DateTime\",\"value\":\"'+tdata+'\"}}}}'
 
 		i += 1
 						
@@ -226,7 +226,8 @@ def send_data(data, src, nomenclatures, tdata):
 			except subprocess.CalledProcessError:
 				print "Orion: curl command failed (maybe a disconnection)"
 				connection_failure = True
-	
+
+#no used in this new version, we call directly send_data(data, src, nomenclatures, tdata)	
 def Orion_uploadData(nomenclatures, data, src, tdata):
 	
 	connected = test_network_available()
@@ -351,7 +352,9 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		#if we got a response from the server, send the data to it	
 		if (connected):
 			print("Orion: uploading")
-			#here we prefix the device's address by key_Orion.sensor_name to get for instance UPPA_Sensor2
+			#here we append the device's address to get for instance Sensor2
+			#if packet come from a LoRaWAN device with 4-byte devAddr then we will have for instance Sensor01020304
+			#where the devAddr is expressed in hex format
 			send_data(data, key_Orion.sensor_name+src_str, nomenclatures, tdata)
 		else:
 			print("Orion: not uploading")
@@ -366,9 +369,11 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		global connection_failure
 		connection_failure = not connected
 		
-		# upload data to Orion
-		#here we prefix the device's address by key_Orion.sensor_name to get for instance UPPA_Sensor2			
-		# Orion_uploadData(nomenclatures, data, key_Orion.sensor_name+src_str, tdata)
+		#upload data to Orion
+		#here we append the device's address to get for instance Sensor2
+		#if packet come from a LoRaWAN device with 4-byte devAddr then we will have for instance Sensor01020304
+		#where the devAddr is expressed in hex format			
+		#Orion_uploadData(nomenclatures, data, key_Orion.sensor_name+src_str, tdata)
 	else:
 		print "Source is not is source list, not sending with CloudOrion.py"				
 

@@ -33,13 +33,16 @@ fi
 if [ -d lora_gateway ]
 	then
 		echo "detecting an existing lora_gateway folder"
-		cd gw_full_latest
-		echo "preserving your key files"
-		rm key_*
-		echo "preserving your configuration files"
-		rm gateway_conf.json clouds.json radio.makefile
+		cd lora_gateway
+		echo "preserving your configuration and key files"		
+		mkdir config_backup
+		cp gateway_conf.json clouds.json radio.makefile key_* config_backup
+		cd ../gw_full_latest
 		echo "copying new distrib into /home/pi/lora_gateway"
 		cp --preserve -r * /home/pi/lora_gateway
+		cd ../lora_gateway
+		echo "reinstalling your configuration and key files"
+		cp config_backup/* .	
 	else
 		echo "new installation"
 		echo "simply renaming gw_full_latest in lora_gateway"

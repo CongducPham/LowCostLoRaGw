@@ -170,7 +170,10 @@ def main(ldata, pdata, rdata, tdata, gwid):
 				nomenclatures.append(data_array[i])
 				data.append(data_array[i+1])
 				i += 2
-			
+				
+		#here we append the device's address to get for instance Sensor2
+		#if packet come from a LoRaWAN device with 4-byte devAddr then we will have for instance Sensor01020304
+		#where the devAddr is expressed in hex format			
 		NodeRed_generateData(data, key_NodeRed.sensor_name+src_str, nomenclatures, tdata)
 	else:
 		print "Source is not is source list, not generating with CloudNodeRed.py"				

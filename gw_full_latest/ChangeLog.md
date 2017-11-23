@@ -4,7 +4,7 @@ Change logs
 November 22th, 2017
 ------------------
 
-- v3.6 post-processing_gw.py. post_processing_gw.py can now handle the 4-byte LoRaWAN devAddr and pass this address to cloud scripts. Tha latter have been modified to handle both 1-byte address and 4-byte address. 
+- v3.6 post-processing_gw.py. post_processing_gw.py can now handle the 4-byte LoRaWAN devAddr and pass this address to cloud scripts. The latter has been modified to handle both 1-byte address and 4-byte address. 
 
 - Add Node-Red support. CloudNodeRed.py can be enabled in clouds.json to generate json entries into nodered/nodered.txt that will be followed by a Node-Red flow. Look at README-NodeRed.md for more details.
 

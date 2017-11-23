@@ -148,7 +148,7 @@ def create_new_entity(data, src, nomenclatures, tdata):
 	
 	print "Orion: create new entity"
 	
-	cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors -H accept:application/json -H content-type:application/json -d {\"id\":\"'+src+'_'+gw_id_md5+'\",\"gateway_id\":\"'+gw_id_md5+'\",\"measurements\":['
+	cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors -H accept:application/json -H content-type:application/json -d {\"id\":\"'+key_Orion.organization_name+"_"+src+'_'+gw_id_md5+'\",\"gateway_id\":\"'+gw_id_md5+'\",\"measurements\":['
 						
 	i=0
 	while i < len(data)-2 :
@@ -196,7 +196,7 @@ def send_data(data, src, nomenclatures, tdata):
 	while i < len(data)-2  and not entity_need_to_be_created:
 
 		#we now push data with a timestamp value
-		cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors/'+src+'_'+gw_id_md5+'/measurements/'+nomenclatures[i]+'/values -H accept:application/json -H content-type:application/json -d {\"value\":'+data[i+2]+',\"timestamp\":\"'+tdata+'\"}'
+		cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors/'+key_Orion.organization_name+"_"+src+'_'+gw_id_md5+'/measurements/'+nomenclatures[i]+'/values -H accept:application/json -H content-type:application/json -d {\"value\":'+data[i+2]+',\"timestamp\":\"'+tdata+'\"}'
 
 		i += 1
 						
@@ -248,7 +248,8 @@ def send_data(data, src, nomenclatures, tdata):
 			except subprocess.CalledProcessError:
 				print "Orion: curl command failed (maybe a disconnection)"
 				connection_failure = True
-	
+
+#no used in this new version, we call directly send_data(data, src, nomenclatures, tdata)
 def Orion_uploadData(nomenclatures, data, src, tdata):
 	
 	connected = test_network_available()
@@ -377,7 +378,9 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		#if we got a response from the server, send the data to it	
 		if (connected):
 			print("Orion: uploading")
-			#here we prefix the device's address by key_Orion.sensor_name to get for instance UPPA_Sensor2
+			#here we append the device's address to get for instance Sensor2
+			#if packet come from a LoRaWAN device with 4-byte devAddr then we will have for instance Sensor01020304
+			#where the devAddr is expressed in hex format
 			send_data(data, key_Orion.sensor_name+src_str, nomenclatures, tdata)
 		else:
 			print("Orion: not uploading")
@@ -393,7 +396,9 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		connection_failure = not connected
 			
 		# upload data to Orion
-		#here we prefix the device's address by key_Orion.sensor_name to get for instance UPPA_Sensor2
+		#here we append the device's address to get for instance Sensor2
+		#if packet come from a LoRaWAN device with 4-byte devAddr then we will have for instance Sensor01020304
+		#where the devAddr is expressed in hex format
 		#Orion_uploadData(nomenclatures, data, key_Orion.sensor_name+src_str, tdata)
 	else:
 		print "Source is not is source list, not sending with CloudOrion.py"				

@@ -12,6 +12,6 @@ echo "copying gw_images_web as /var/www/html/images"
 sudo cp -r gw_images_web/* /var/www/html/images
 echo "change group to www-data"
 sudo chown -R pi:www-data /var/www/html/images
-echo "allowing script to be executed by www-data"
-sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/images/libs/sh/move_img.sh" >> /etc/sudoers
+#echo "allowing script to be executed by www-data"
+#sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/images/libs/sh/move_img.sh" >> /etc/sudoers
 echo "Done"

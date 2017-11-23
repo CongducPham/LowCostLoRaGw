@@ -105,7 +105,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	bw=arr[0]
 	cr=arr[1]
 	sf=arr[2]
-	
+
 	#LoRaWAN packet
 	if dst==256:
 		src_str="%0.8X" % src
@@ -157,6 +157,9 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\0', '')	
 	
 		#sms data to be sent
+		#here we append the device's address to get for instance Sensor2
+		#if packet come from a LoRaWAN device with 4-byte devAddr then we will have for instance Sensor01020304
+		#where the devAddr is expressed in hex format		
 		sms_data = "SensorData Sensor"+src_str+" SNR "+str(SNR)+" RSSI "+str(RSSI)+" SN "+str(seq)+" BW "+str(bw)+" CR "+str(cr)+" SF "+str(sf)+" GWID "+gwid
 		
 		nomenclatures = []

@@ -231,10 +231,12 @@ def main(ldata, pdata, rdata, tdata, gwid):
 				data.append(data_array[i+1])
 				i += 2
 
-		# upload data to Orion		
+		#here we append the device's address to get for instance UPPA_Sensor2
+		#if packet come from a LoRaWAN device with 4-byte devAddr then we will have for instance UPPA_Sensor01020304
+		#where the devAddr is expressed in hex format		
 		MQTT_uploadData(nomenclatures, data, key_MQTT.sensor_name+src_str, tdata)
 	else:
-		print "Source is not is source list, not sending with CloudOrion.py"				
+		print "Source is not is source list, not sending with CloudMQTT.py"				
 
 if __name__ == "__main__":
 	main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])

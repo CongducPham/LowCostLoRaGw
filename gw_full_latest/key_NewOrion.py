@@ -19,7 +19,7 @@ service_tree='-TESTS'
 
 #sensor name: CHANGE HERE but maybe better to leave it as Sensor
 #the final name will contain the sensor address
-sensor_name=organization_name+"_Sensor"
+sensor_name="Sensor"
 
 #service path: DO NOT CHANGE HERE
 service_path='-'+organization_name+service_tree
@@ -31,11 +31,15 @@ service_path='-'+organization_name+service_tree
 #
 #with a domain vision, the domain will be project_name+service_path, e.g waziup-UPPA-TESTS
 #
-#the entity name will then be sensor_name+scr_addr, e.g. "UPPA_Sensor2"
+#the entity name will then be organization_name+"_"+sensor_name+scr_addr, e.g. "UPPA_Sensor2"
 #
 
 orion_token = "this_is_my_authorization_token"
 
+#Note how we can indicate a device source addr that are allowed to use the script
+#Use decimal between 2-255 and use 4-byte hex format for LoRaWAN devAddr
+#leave empty to allow all devices
+#source_list=["3", "255", "01020304"]
 source_list=[]
 
 ####################################################

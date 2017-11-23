@@ -59,26 +59,26 @@ def test_network_available():
 	response = None
 	
 	# we try 4 times to connect to the server.
-	while(not connection and iteration < 4) :
-	    	try:
-	    		# 3sec timeout in case of server available but overcrowded
+	while(not connection and iteration < 4):
+		try:
+			# 3sec timeout in case of server available but overcrowded
 			response=urllib2.urlopen('https://api.thingspeak.com/', timeout=3)
 			connection = True
-	    	except urllib2.URLError, e: pass
+		except urllib2.URLError, e: pass
 		except socket.timeout: pass
 		except ssl.SSLError: pass
 	    	
-	    	# if connection_failure == True and the connection with the server is unavailable, don't waste more time, exit directly
-	    	if(connection_failure and response is None) :
-	    		print('Thingspeak: the server is still unavailable')
-	    		iteration = 4
-	    	# print connection failure
-	    	elif(response is None) :
-	    		print('Thingspeak: server unavailable, retrying to connect soon...')
-	    		# wait before retrying
-	    		time.sleep(1)
-	    		iteration += 1
-	    		
+		# if connection_failure == True and the connection with the server is unavailable, don't waste more time, exit directly
+		if (connection_failure and response is None):
+			print('Thingspeak: the server is still unavailable')
+			iteration = 4
+	    # print connection failure
+		elif (response is None):
+			print('Thingspeak: server unavailable, retrying to connect soon...')
+			# wait before retrying
+			time.sleep(1)
+			iteration += 1
+
 	return connection
 	
 # send a data to the server
@@ -293,7 +293,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	#LoRaWAN packet
 	if dst==256:
 		src_str="%0.8X" % src
-	else
+	else:
 		src_str=str(src)	
 
 	if (src_str in key_ThingSpeak.source_list) or (len(key_ThingSpeak.source_list)==0):
