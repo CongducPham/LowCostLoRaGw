@@ -4,24 +4,36 @@ Cloud support module for the low-cost LoRa gateway
 Description 
 -----------
 
-clouds.json contains a list of clouds where you want your data to be uploaded. Here is an example with 3 clouds: local MongoDB, ThingSpeak and Grovestreams.
+`clouds.json` contains a list of clouds where you want your data to be uploaded. Here is an example with 5 clouds: local MongoDB, WAZIUP Orion, ThingSpeak, MQTT (test.mosquitto.org) and Grovestreams.
 
 	{
 		"clouds" : [
 			{	
+				"name":"Local gateway MongoDB",			
 				"notice":"do not remove the MongoDB cloud declaration, just change enabled and max_months_to_store if needed"
-				"name":"Local gateway MongoDB",
 				"script":"python CloudMongoDB.py",
 				"type":"database",
 				"max_months_to_store":2,
 				"enabled":false
-			},	
+			},
+			{	
+				"name":"WAZIUP Orion cloud",
+				"script":"python CloudOrion.py",
+				"type":"iotcloud",			
+				"enabled":true
+			},				
 			{	
 				"name":"ThingSpeak cloud",
 				"script":"python CloudThingSpeak.py",
 				"type":"iotcloud",			
 				"enabled":true
 			},
+			{	
+				"name":"MQTT cloud",
+				"script":"python CloudMQTT.py",
+				"type":"MQTT",			
+				"enabled":false
+			},				
 			{	
 				"name":"GroveStreams cloud",
 				"script":"python CloudGroveStreams.py",
@@ -30,12 +42,12 @@ clouds.json contains a list of clouds where you want your data to be uploaded. H
 			}
 	}
 
-Note that storage on the local MongoDB is declared as a cloud, among others that you can declare. You should not remove this cloud declaration and leave it in first position even if position has no matter. clouds.json is parsed by post_processing_gw.py using clouds_parser.py. For each cloud declaration, there are only 2 relevant fields: "script" and "enabled". "script" is used for you to provide the name of a script. You have also to indicate which launcher will be used. In this way, you can use several script languages (including shell scripts or executables provided that they read parameters that are passed by their command line). For instance, if the script is a python script, enter "python my_script_filename". "enabled" set to true indicates that you want this cloud to be active so that post_processing_gw.py will call the associated script to perform upload of the received data. All the other fields are not relevant for post_processing_gw.py but can be used by the associated script to get additional information that you may want to provide through the clouds.json file. Otherwise, you can always provide these additional information statically in the script.
+Note that storage on the local MongoDB is declared as a cloud, among others that you can declare. You should not remove this cloud declaration and leave it in first position even if position has no real matter. `clouds.json` is parsed by `post_processing_gw.py` using `clouds_parser.py`. For each cloud declaration, there are only 2 relevant fields: `script` and `enabled`. `script` is used for you to provide the name of a script. You have also to indicate which launcher will be used. In this way, you can use several script languages (including shell scripts or executables provided that they read parameters that are passed by their command line). For instance, if the script is a python script, enter `python my_script_filename`. `enabled` set to true indicates that you want this cloud to be active so that` post_processing_gw.py` will call the associated script to perform upload of the received data. All the other fields are not relevant for `post_processing_gw.py` but can be used by the associated script to get additional information that you may want to provide through the `clouds.json` file. Otherwise, you can always provide these additional information statically in the script.
 
-When your script is launched, post_processing_gw.py provides 5 parameters. 
+Recall that a message will be upload to cloud only if it is prefixed with `\!`. So assuming that you are sending `\!#4#TC/21.5` when your script is launched, `post_processing_gw.py` provides 5 parameters. 
 
-- ldata: the received data 
-	- e.g. #4#TC/21.5 as 1st argument (sys.argv[1] in python)
+- ldata: the received data (without the prefix)
+	- e.g. #4#TC/21.5 as 1t argument (sys.argv[1] in python)
 - pdata: packet information
 	- e.g. "1,16,3,0,10,8,-45" as 2nd argument (sys.argv[2] in python)
 	- interpreted as dst,ptype,src,seq,len,SNR,RSSI for the last received packet
@@ -76,14 +88,14 @@ These parameters are passed to the script. It is up to the cloud script to use t
 
 This cloud design approach allows for:
 
-- a very generic post_processing_gw.py script that handles the interface with the low-level lora_gateway program
+- a very generic `post_processing_gw.py` script that handles the interface with the low-level lora_gateway program
 - the end-user to have the entire responsability (through a cloud script) to decode the raw data provided by the end-device
 
-Assuming that _enabled_clouds contains:
+Assuming that `_enabled_clouds` contains:
 
 	['python CloudThingSpeak.py', 'python CloudGroveStreams.py']
 
-The main data upload processing task in post_processing_gw.py is very simple and looks like:
+The main data upload processing task in `post_processing_gw.py` is very simple and looks like:
 
 	ldata = getAllLine()
 	print "number of enabled clouds is %d" % len(_enabled_clouds)	
@@ -102,7 +114,7 @@ The main data upload processing task in post_processing_gw.py is very simple and
 Good practice for storing keys or identification information
 ------------------------------------------------------------
 
-Most of cloud platforms use some kind of keys for write access. These keys should be stored in a separate Python file so that updates on the cloud script can be realized independently from the existing keys (for instance if you already customized from a previous install). In the provided examples, key_FireBase.py, key_GroveStreams.py and key_ThingSpeak.py contain keys for their corresponding clouds. For instance, CloudThingSpeak.py starts with an "import key_ThingSpeak" statement. Only key_ThingSpeak.py has a usable key, which is our LoRa demo channel write key: SGSH52UGPVAUYG3S. 
+Most of cloud platforms use some kind of keys for write access. These keys should be stored in a separate Python file so that updates on the cloud script can be realized independently from the existing keys (for instance if you already customized from a previous install). In the provided examples, `key_FireBase.py`, `key_GroveStreams.py` and `key_ThingSpeak.py` contain keys for their corresponding clouds. For instance, `CloudThingSpeak.py` starts with an `import key_ThingSpeak` statement. Only `key_ThingSpeak.py` has a usable key, which is our LoRa demo channel write key: SGSH52UGPVAUYG3S. 
 
 	> cat key_ThingSpeak.py
 	# LoRa demo channel
@@ -118,13 +130,17 @@ We also define in the key file a list of allowed device source address:
 	> cat key_ThingSpeak.py
 	# LoRa demo channel
 	_def_thingspeak_channel_key='SGSH52UGPVAUYG3S'
+	#Note how we can indicate a device source addr that are allowed to use the script
+	#Use decimal between 2-255 and use 4-byte hex format for LoRaWAN devAddr
+	#leave empty to allow all devices
+	#source_list=["3", "255", "01020304"]	
 	source_list=["3","10"]
  
-When source_list is set to [] then all device are accepted. If it specifies a list of device address, then the CloudThingSpeak.py will only upload data from these devices.
+When `source_list` is set to `[]` then all device are accepted. If it specifies a list of device address, then the `CloudThingSpeak.py` will only upload data from these devices.
 
 The code of the CloudThingSpeak.py scripts looks like:
 
-	if (str(src) in key_ThingSpeak.source_list) or (len(key_ThingSpeak.source_list)==0):
+	if (src_str in key_ThingSpeak.source_list) or (len(key_ThingSpeak.source_list)==0):
 	
 		DO-WHATEVER-YOU-NEED-TO-DO-FOR-DATA-UPLOADING
 		
@@ -132,9 +148,9 @@ The code of the CloudThingSpeak.py scripts looks like:
 	else:
 		print "Source is not is source list, not sending with CloudThingSpeak.py"
 		
-This feature is quite useful when you want to upload data to various different clouds, depending on the device. Suppose that you have 10 devices whose addresses are from 1 to 10. You want to upload data from sensors 1..5 to a ThingSpeak channel and data from sensors 6..10 to GroveStreams. Then you need to activate in clouds.json both clouds and specify in key_ThingSpeak.py source_list=["1","2","3","4","5"] and in key_GroveStreams.py source_list=["6","7","8","9","10"]. 
+This feature is quite useful when you want to upload data to various different clouds, depending on the device. Suppose that you have 10 devices whose addresses are from 1 to 10. You want to upload data from sensors 1..5 to a ThingSpeak channel and data from sensors 6..10 to GroveStreams. Then you need to activate in clouds.json both clouds and specify in `key_ThingSpeak.py` `source_list=["1","2","3","4","5"]` and in `key_GroveStreams.py` `source_list=["6","7","8","9","10"]`. 
 
-Note that you can also upload to 2 different ThingSpeak channels by duplicating the CloudThingSpeak.py script into CloudThingSpeak_1.py, creating a new key_ThingSpeak_1.py file to store both the other ThingSpeak write key and source_list, changing in CloudThingSpeak_1.py the "import key_ThingSpeak" into "import key_ThingSpeak_1 as key_ThingSpeak" and then activating both CloudThingSpeak.py and CloudThingSpeak_1.py in clouds.json as follows:
+Note that you can also upload to 2 different ThingSpeak channels by duplicating the `CloudThingSpeak.py` script into `CloudThingSpeak_1.py`, creating a new `key_ThingSpeak_1.py` file to store both the other ThingSpeak write key and `source_list`, changing in `CloudThingSpeak_1.py` the `import key_ThingSpeak` into `import key_ThingSpeak_1 as key_ThingSpeak` and then activating both `CloudThingSpeak.py` and `CloudThingSpeak_1.py` in `clouds.json` as follows:
 
 	{
 		"clouds" : [
@@ -183,7 +199,7 @@ The LoRa gateway is usually started as follows:
 	
 	> sudo ./lora_gateway --mode 1 | python post_processing_gw.py &
 	
-The post_processing_gw_py script will start by parsing the clouds declarations in clouds.json and adds a new cloud script for each enabled cloud.
+The `post_processing_gw_py` script will start by parsing the clouds declarations in `clouds.json` and adds a new cloud script for each enabled cloud.
 
 	Parsing cloud declarations
 	[u'python CloudThingSpeak.py']
@@ -192,7 +208,7 @@ The post_processing_gw_py script will start by parsing the clouds declarations i
 	post_processing_gw.py got cloud list: 
 	[u'python CloudThingSpeak.py', u'python CloudGroveStreams.py']	
 	
-When incoming data is processed, post_processing_gw.py will loop over all enabled clouds to call their respective script.
+When incoming data with `\!` prefix is processed, `post_processing_gw.py` will loop over all enabled clouds to call their respective script.
 
 	number of enabled clouds is 2
 	--> cloud[0]
@@ -208,10 +224,66 @@ When incoming data is processed, post_processing_gw.py will loop over all enable
 	Grovestreams: Uploading feed to: /api/feed?compId=node_6&TC=21.5
 	--> cloud end
 	
+Remotely editing the `clouds.json` file
+-------------------------------------
+
+The gateway has a simple web admin interface that allows you to configure the ThingSpeak cloud and the WAZIUP Orion cloud (used by the WAZIUP european project). For all advanced editing of clouds.json file there are 2 possibilities. The first one is to use `ssh` to log into the gateway and then use the `nano` editor to edit the clouds.json file. Use `CTRL-O+RETURN` to save the file and then `CTRL-X` to quit.
+
+	> ssh pi@192.168.200.1
+	> cd lora_gateway
+	> nano clouds.json
+	
+Normally, if you have a recent SD card image, on ssh to the gateway, you will enter the simple command text interface. Then use option `D` to edit the `clouds.json` file.
+
+	=======================================* Gateway 00000027EBD4F300 *===
+	0- sudo python start_gw.py                                           +
+	1- sudo ./lora_gateway --mode 1                                      +
+	2- sudo ./lora_gateway --mode 1 | python post_processing_gw.py       +
+	3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +
+	4- tail --line=25 ../Dropbox/LoRa-test/post-processing.log           +
+	5- tail --line=25 -f ../Dropbox/LoRa-test/post-processing.log        +
+	6- less ../Dropbox/LoRa-test/post-processing.log                     +
+	------------------------------------------------------* Bluetooth *--+
+	a- run: sudo hciconfig hci0 piscan                                   +
+	b- run: sudo python rfcomm-server.py                                 +
+	c- run: nohup sudo python rfcomm-server.py -bg > rfcomm.log &        +
+	d- run: ps aux | grep rfcomm                                         +
+	e- run: tail -f rfcomm.log                                           +
+	---------------------------------------------------* Connectivity *--+
+	f- test: ping www.univ-pau.fr                                        +
+	--------------------------------------------------* Filtering msg *--+
+	l- List LoRa reception indications                                   +
+	m- List radio module reset indications                               +
+	n- List boot indications                                             +
+	o- List post-processing status                                       +
+	p- List low-level gateway status                                     +
+	--------------------------------------------------* Configuration *--+
+	A- show gateway_conf.json                                            +
+	B- edit gateway_conf.json                                            +
+	C- show clouds.json                                                  +
+	D- edit clouds.json                                                  +
+	---------------------------------------------------------* Update *--+
+	U- update to latest version on repository                            +
+	V- download and install a file                                       +
+	W- run a command                                                     +
+	-----------------------------------------------------------* kill *--+
+	K- kill all gateway related processes                                +
+	k- kill rfcomm-server process                                        +
+	R- reboot gateway                                                    +
+	S- shutdown gateway                                                  +
+	---------------------------------------------------------------------+
+	Q- quit                                                              +
+	======================================================================
+	Enter your choice: 
+	D
+	----------------------------------------------------------------------	
+	
+A second solution is to use a text editor on your computer/laptop that can directly edit and save a file on the Raspberry gateway. `Nodepad++` on Windows and `TextWrangler` on MacOs do that quite nicely and they usually use FTP/SFTP feature. You can follow this tutorial [http://trevorappleton.blogspot.fr/2014/03/remotely-modify-text-file-on-your.html](http://trevorappleton.blogspot.fr/2014/03/remotely-modify-text-file-on-your.html) or this one [https://www.dirtyoptics.com/edit-files-on-your-raspberry-pi-the-easy-way/](https://www.dirtyoptics.com/edit-files-on-your-raspberry-pi-the-easy-way/).
+	
 Support of MongoDB as a cloud declaration
 -----------------------------------------	
 
-As indicated previously, local storage of incoming data in the local MongoDB database is now viewed as a cloud upload. In the previous cloud declarations of clouds.json, if you enable the MongoDB cloud here is a typical output:
+As indicated previously, local storage of incoming data in the local MongoDB database is now viewed as a cloud upload. In the previous cloud declarations of `clouds.json`, if you enable the MongoDB cloud here is a typical output:
 
 	--> cloud[0]
 	uploading with python CloudMongoDB.py
@@ -222,13 +294,13 @@ As indicated previously, local storage of incoming data in the local MongoDB dat
 	MongoDB: saving the document in the collection...
 	MongoDB: saving done
 	
-The local MongoDB database is structured as follows: the database is "messages" and the collection is "ReceivedData". You can look at MongoDB.py for more details. CloudMongoDB.py is then the script that post_processing_gw.py will call to insert received data into the "ReceivedData" collection of "messages" database. 
+The local MongoDB database is structured as follows: the database is `messages` and the collection is `ReceivedData`. You can look at MongoDB.py for more details. `CloudMongoDB.py` is then the script that `post_processing_gw.py` will call to insert received data into the `ReceivedData` collection of `messages` database. 
 
 It is assumed that your data is formatted as follows, with a nomenclature code followed by the associated value:
 
 	TC/22.5/HU/85...
 	
-CloudMongoDB.py will create a json array with your received data as follows:
+`CloudMongoDB.py` will create a json array with your received data as follows:
 
 	{ "TC":22.5, "HU":85 }
 
@@ -236,7 +308,7 @@ but will also add the SNR and the RSSI of the received radio messages to have th
 
 	{ "SNR":8, "RSSI": -56, "TC":22.5, "HU":85 } 
 
-Then, the json document that will be inserted into the "ReceivedData" collection is as follows:
+Then, the json document that will be inserted into the `ReceivedData` collection is as follows:
 
 	"type" : ptype,
 	"gateway_eui" : gwid, 
@@ -331,7 +403,7 @@ You can list all data from sensor 10 with:
 	{ "_id" : ObjectId("58d57fef74fece068e221277"), "node_eui" : 10, "snr" : 8, "datarate" : "SF12BW125", "gateway_eui" : "00000027EBBEDA21", "rssi" : -61, "time" : ISODate("2017-03-24T20:22:07.690Z"), "type" : 18, "cr" : 5, "data" : "{\"SNR\": 8, \"RSSI\": -61, \"SHU\": 991}" }
 	{ "_id" : ObjectId("58d580ae74fece069a795276"), "node_eui" : 10, "snr" : 8, "datarate" : "SF12BW125", "gateway_eui" : "00000027EBBEDA21", "rssi" : -66, "time" : ISODate("2017-03-24T20:25:18.439Z"), "type" : 18, "cr" : 5, "data" : "{\"SNR\": 8, \"RSSI\": -66, \"SHU\": 993}" }
 	
-If you want to delete all entries of the "ReceivedData" collection, you can issue the following command:
+If you want to delete all entries of the `ReceivedData` collection, you can issue the following command:
 
 	> db.ReceivedData.remove({})
 

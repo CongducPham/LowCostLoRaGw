@@ -1,8 +1,8 @@
 {
 	"clouds" : [
-		{	
+		{
+			"name":"Local gateway MongoDB",			
 			"notice":"do not remove the MongoDB cloud declaration, just change enabled and max_months_to_store if needed",
-			"name":"Local gateway MongoDB",
 			"script":"python CloudMongoDB.py",
 			"type":"database",
 			"max_months_to_store":2,
@@ -34,14 +34,12 @@
 			"name":"WAZIUP Orion cloud",
 			"script":"python CloudOrion.py",
 			"type":"iotcloud",			
-			"write_key":"",
 			"enabled":false
 		},			
 		{	
 			"name":"ThingSpeak cloud",
 			"script":"python CloudThingSpeak.py",
 			"type":"iotcloud",			
-			"write_key":"",
 			"enabled":true
 		},
 		{	
@@ -60,14 +58,12 @@
 			"name":"GroveStreams cloud",
 			"script":"python CloudGroveStreams.py",
 			"type":"iotcloud",			
-			"write_key":"",
 			"enabled":false
 		},
 		{	
 			"name":"Firebase cloud",
 			"script":"python CloudFireBase.py",
 			"type":"jsoncloud",			
-			"write_key":"",
 			"enabled":false
 		},		
 		{	
