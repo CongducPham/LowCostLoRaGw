@@ -7132,4 +7132,15 @@ long SX1272::removeToA(uint16_t toa) {
     return _remainingToA;
 }
 
+int8_t SX1272::setFreqHopOn() {
+    
+    double bw=0.0;
+    bw=(_bandwidth==BW_125)?125e3:((_bandwidth==BW_250)?250e3:500e3);
+    // Symbol rate : time for one symbol (secs)
+    double rs = bw / ( 1 << _spreadingFactor);
+    double ts = 1 / rs;
+
+        
+}
+
 SX1272 sx1272 = SX1272();

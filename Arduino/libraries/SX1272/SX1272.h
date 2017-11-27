@@ -53,11 +53,15 @@
 //#define W_NET_KEY
 //#define W_INITIALIZATION
 
-#define SX1272_RST  9
+//it is not mandatory to wire this pin
+//we take pin 4 as it is available on many boards
+#define SX1272_RST  4
 
 #ifdef ARDUINO_AVR_FEATHER32U4 || defined ARDUINO_SAMD_FEATHER_M0
 // on the Adafruit Feather, the RFM95W is embeded and CS pin is normally on pin 8
 #define SX1272_SS 8
+#elif defined ARDUINO_ESP8266_ESP01
+#define SX1272_SS 15
 #else
 // starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino boards
 // if you use the Libelium Multiprotocol shield to connect a Libelium LoRa then change the CS pin to pin 2
@@ -1180,6 +1184,7 @@ public:
     long limitToA();
     long getRemainingToA();
     long removeToA(uint16_t toa);
+    int8_t setFreqHopOn();
 
     // SX1272 or SX1276?
     uint8_t _board;
@@ -1194,6 +1199,8 @@ public:
     bool _extendedIFS;
     bool _RSSIonSend;
     bool _enableCarrierSense;
+    bool _freqHopOn;
+    uint8_t _hopPeriod;
     bool _rawFormat;
     int8_t _rcv_snr_in_ack;
     bool _needPABOOST;

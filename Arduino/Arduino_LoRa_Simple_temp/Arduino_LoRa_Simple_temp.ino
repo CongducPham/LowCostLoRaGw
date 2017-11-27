@@ -1,5 +1,5 @@
 /*
- *  temperature sensor on analog 8 to test the LoRa gateway
+ *  temperature sensor on analog A0 to test the LoRa gateway
  *
  *  Copyright (C) 2016 Congduc Pham, University of Pau, France
  *
@@ -22,6 +22,8 @@
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
+//uncomment if you want to disable WiFi on ESP8266 boards
+//#include <ESP8266WiFi.h>
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +85,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //#define WITH_ACK
+//#define LOW_POWER_TEST
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -111,12 +114,17 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 // CHANGE HERE THE READ PIN AND THE POWER PIN FOR THE TEMP. SENSOR
 #define TEMP_PIN_READ  A0
 // use digital 9 to power the temperature sensor if needed
+// but on most ESP8266 boards pin 9 can not be used, so use pin 2 instead
+#ifdef ARDUINO_ESP8266_ESP01
+#define TEMP_PIN_POWER 2
+#else
 #define TEMP_PIN_POWER 9
+#endif
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 10;
+unsigned int idlePeriodInMin = 1;
 ///////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
@@ -175,9 +183,9 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 #include <Snooze.h>
 SnoozeTimer timer;
 SnoozeBlock sleep_config(timer);
-//#elif defined ARDUINO_AVR_FEATHER32U4
-//#define LOW_POWER_PERIOD 8
-//#include "Adafruit_SleepyDog.h"
+#elif defined ARDUINO_ESP8266_ESP01
+#define LOW_POWER_PERIOD 60
+//we will use the deepSleep feature, so no additional library
 #else // for all other boards based on ATMega168, ATMega328P, ATMega32U4, ATMega2560, ATMega256RFR2, ATSAMD21G18A
 #define LOW_POWER_PERIOD 8
 // you need the LowPower library from RocketScream
@@ -216,6 +224,13 @@ void setup()
 {
   int e;
 
+  //uncomment to disable WiFi on the ESP8266 boards
+  //will save about 50mA
+  //WiFi.disconnect();
+  //WiFi.mode(WIFI_OFF);
+  //WiFi.forceSleepBegin();
+  //delay(1);
+  
   // for the temperature sensor
   pinMode(TEMP_PIN_READ, INPUT);
   // and to power the temperature sensor
@@ -266,7 +281,7 @@ void setup()
 #ifdef __MKL26Z64__
   PRINT_CSTSTR("%s","TeensyLC MKL26Z64 detected\n");
 #endif
-#ifdef ARDUINO_SAMD_ZERO 
+#if defined ARDUINO_SAMD_ZERO && not defined ARDUINO_SAMD_FEATHER_M0
   PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
 #endif
 #ifdef ARDUINO_AVR_FEATHER32U4 
@@ -274,6 +289,12 @@ void setup()
 #endif
 #ifdef ARDUINO_SAMD_FEATHER_M0
   PRINT_CSTSTR("%s","Adafruit FeatherM0 detected\n");
+#endif
+#ifdef ARDUINO_ESP8266_ESP01
+  PRINT_CSTSTR("%s","Expressif ESP8266 detected\n");
+  //uncomment if you want to disable the WiFi, this will reset your board
+  //but maybe it is preferable to use the WiFi.mode(WIFI_OFF), see above
+  //ESP.deepSleep(1, WAKE_RF_DISABLED);  
 #endif
 
 // See http://www.nongnu.org/avr-libc/user-manual/using_tools.html
@@ -289,7 +310,7 @@ void setup()
   PRINT_CSTSTR("%s","ATmega2560 detected\n");
 #endif 
 #ifdef __SAMD21G18A__ 
-  PRINT_CSTSTR("%s","SAMD21G18A ARM Cortex-M0 detected\n");
+  PRINT_CSTSTR("%s","SAMD21G18A ARM Cortex-M0+ detected\n");
 #endif
 #ifdef __SAM3X8E__ 
   PRINT_CSTSTR("%s","SAM3X8E ARM Cortex-M3 detected\n");
@@ -299,6 +320,10 @@ void setup()
   sx1272.ON();
 
 #ifdef WITH_EEPROM
+
+#ifdef ARDUINO_ESP8266_ESP01
+  EEPROM.begin(512);
+#endif
   // get config from EEPROM
   EEPROM.get(0, my_sx1272config);
 
@@ -363,7 +388,13 @@ void setup()
   PRINT_CSTSTR("%s","Setting node addr: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
-  
+
+  // Set CRC off
+  //e = sx1272.setCRC_OFF();
+  //PRINT_CSTSTR("%s","Setting CRC off: state ");
+  //PRINT_VALUE("%d", e);
+  //PRINTLN;
+    
   // Print a success message
   PRINT_CSTSTR("%s","SX1272 successfully configured\n");
 
@@ -507,8 +538,11 @@ void loop(void)
     
 #ifdef WITH_EEPROM
       // save packet number for next packet in case of reboot
-      my_sx1272config.seq=sx1272._packetNumber;
+      my_sx1272config.seq=sx1272._packetNumber;     
       EEPROM.put(0, my_sx1272config);
+#ifdef ARDUINO_ESP8266_ESP01
+      EEPROM.commit();
+#endif
 #endif
 
       PRINT_CSTSTR("%s","LoRa pkt size ");
@@ -546,11 +580,15 @@ void loop(void)
         PRINT_CSTSTR("%s","Could not switch LoRa module in sleep mode\n");
         
       FLUSHOUTPUT
+      
+#ifdef LOW_POWER_TEST
+      delay(10000);
+#else            
       delay(50);
+#endif
 
 #ifdef __SAMD21G18A__
       // For Arduino M0 or Zero we use the built-in RTC
-      //LowPower.standby();
       rtc.setTime(17, 0, 0);
       rtc.setDate(1, 1, 2000);
       rtc.setAlarmTime(17, idlePeriodInMin, 0);
@@ -559,7 +597,9 @@ void loop(void)
       rtc.enableAlarm(rtc.MATCH_HHMMSS);
       //rtc.attachInterrupt(alarmMatch);
       rtc.standbyMode();
-
+      
+      LowPower.standby();
+      
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT
 #else
@@ -593,6 +633,11 @@ void loop(void)
 #else            
           Snooze.deepSleep(sleep_config);
 #endif
+#elif defined ARDUINO_ESP8266_ESP01
+          //in microseconds
+          //it is reported that RST pin should be connected to pin 16 to actually reset the board when deepsleep
+          //timer is triggered
+          ESP.deepSleep(LOW_POWER_PERIOD*1000*1000);
 #else
           // use the delay function
           delay(LOW_POWER_PERIOD*1000);

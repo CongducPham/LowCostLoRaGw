@@ -102,10 +102,11 @@ One main issue for a eligible board is to have a 3.3v pin to power the radio mod
 
 **Small form factor**
 
-- Arduino Pro Mini (8MHz/3.3V version), Arduino Nano (ATmega328 16MHz/5V but 3.3v pin), Arduino Micro (ATmega32u4 16MHz/5V but 3.3v pin)
+- Arduino Pro Mini (8MHz/3.3V version is better for power consumption), Arduino Nano (ATmega328 16MHz/5V but 3.3v pin), Arduino Micro (ATmega32u4 16MHz/5V but 3.3v pin)
 - Teensy LC/31/32/35/36
 - Ideetron Nexus (which is an ATmega328P at 3.3v, select as Arduino Mini in IDE)  
 - Adafruit Feather32u4 and FeatherM0
+- Expressif ESP8266 (only the **Arduino_LoRa_Simple_temp** has been modified to support the ESP8266)
 
 **Uno/MEGA form factor**
 
@@ -119,7 +120,7 @@ Note that there might be current limitation issues on some boards. The radio mod
 What about other boards?
 ------------------------
 
-Other boards may be supported as well with only very few modifications. It has been reported that the ESP8266 works fine. However, for all the other boards, low-power features may need to use specific libraries depending on the microcontroller. If you have compilation issues, try to compile with low-power disabled:
+Other boards may be supported as well with only very few modifications. However, for all the other boards, low-power features may need to use specific libraries depending on the microcontroller. If you have compilation issues, try to compile with low-power disabled:
 
 	//#define LOW_POWER
 
