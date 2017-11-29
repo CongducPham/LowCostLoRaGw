@@ -13,6 +13,14 @@ The SD card image has Node-Red installed. Start Node-Red with
 	
 Use your browser on `http://192.168.2.8:1880` for instance if this is your gateway's IP address. Make sure that your gateway has internet connection.
 
+If you consider to use Node-Red as the main mode to process received data, then you may enable starting Node-Red at boot:
+
+	> sudo systemctl enable nodered.service
+
+But be sure that this is what you want because having Node-Red running is resource-consuming . If you just want to test, just use the `node-red-start` command. You can disable the service at any time with:
+
+	> sudo systemctl disable nodered.service	
+
 
 Importing the Node-Red flow
 ---------------------------
@@ -75,7 +83,9 @@ First, install the mosquitto client software:
 	
 If you want to install the full package including the `mosquitto` MQTT broker and python lib, then:
 
-	> sudo apt-get install mosquitto mosquitto-clients python-mosquitto 	
+	> sudo apt-get install mosquitto mosquitto-clients python-mosquitto 
+	
+But if you just want to enable MQTT client, it is advise to just have the mosquitto-clients package.	
 
 	
 Subscribing to a sensor
