@@ -1,6 +1,20 @@
 Low-cost LoRa gateway features and configuration tools
 ======================================================
 
+There are additional dedicated README files
+-------------------------------------------
+
+- interfacing with Node-Red
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NodeRed.md)
+- cloud management approach
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
+- encryption and native LoRaWAN frame format
+	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md)
+	- end-device can send native LoRaWAN packets
+	- low-level gateway provides raw output for post_processing_gw.py to handle LoRaWAN packets
+- downlink features: to send from gateway to end-device
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
+	
 Configuration files and startup procedure
 -----------------------------------------
 
@@ -488,18 +502,6 @@ The gateway architecture is flexible on purpose for adding or customizing your g
 
 New cloud platforms can be added by writing new cloud scripts and adding them to clouds.json. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md).
 
-More information on the gateway advanced features
-=================================================
-
-- cloud management approach
-	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
-- encryption and native LoRaWAN frame format
-	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md)
-	- end-device can send native LoRaWAN packets
-	- low-level gateway provides raw output for post_processing_gw.py to handle LoRaWAN packets
-- downlink features: to send from gateway to end-device
-	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
-
 USE cmd.sh to interact with the gateway
 =======================================
 
@@ -509,7 +511,7 @@ You can use cmd.sh as follows:
 	=======================================* Gateway 00000027EBBEDA21 *===
 	0- sudo python start_gw.py                                           +
 	1- sudo ./lora_gateway --mode 1                                      +
-	2- sudo ./lora_gateway --mode 1|python post_processing_gw.py -t -m 2 +
+	2- sudo ./lora_gateway --mode 1 | python post_processing_gw.py       +
 	3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +
 	4- tail --line=15 ../Dropbox/LoRa-test/post-processing.log           +
 	5- tail -f ../Dropbox/LoRa-test/post-processing.log                  +
