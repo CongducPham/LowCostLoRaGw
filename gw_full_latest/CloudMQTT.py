@@ -89,7 +89,7 @@ def send_data(data, src, nomenclatures, tdata):
 		#we use mosquitto client
 		#be sure to have run sudo apt-get install mosquitto-clients
 		#the topic will be for instance waziup_UPPA_Sensor2/TC
-		cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'_'+data[1]+'_'+src+'/'+nomenclatures[i]+' -m '+data[i+2]
+		cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'/'+data[1]+'/'+src+'/'+nomenclatures[i]+' -m '+data[i+2]
 
 		i += 1
 						

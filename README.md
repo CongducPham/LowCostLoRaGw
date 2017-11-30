@@ -26,7 +26,14 @@ Look also at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.
 Get our SD card image
 ---------------------
 
-Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip). It is not a MacOS X DMG package as the extension may be misleading, simply unzip the file and burn the dmg file to an SD card. Use an SD card of a minimum of 8GB. Take also a class 10. If you have bigger SD card, e.g. 16GB, then after boot, use raspi-config (see [tutorial here](https://www.raspberrypi.org/documentation/configuration/raspi-config.md)) to resize the partition in order to use the extra space available (you will need to reboot but raspi-config will ask you for that). You can use "df -h" to verify that you have more space after reboot.  
+Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip). The current image has everything you need including:
+
+- mosquitto-clients package installed to have mosquitto_pub and mosquitto_sub commands
+- paho-mqtt for python
+- Node-Red and npm upgraded with node-red-contrib-thingspeak42 installed
+- a ready-to-use Node-Red flow to show how received data can be uploaded to MQTT brokers and ThingSpeak
+
+It is not a MacOS X DMG package as the extension may be misleading, simply unzip the file and burn the dmg file to an SD card. Use an SD card of a minimum of 8GB. Take also a class 10. If you have bigger SD card, e.g. 16GB, then after boot, use raspi-config (see [tutorial here](https://www.raspberrypi.org/documentation/configuration/raspi-config.md)) to resize the partition in order to use the extra space available (you will need to reboot but raspi-config will ask you for that). You can use "df -h" to verify that you have more space after reboot.  
 
 You can look at various tutorials on how to burn an image to an SD card. There is one [here from raspberrypi.org](https://www.raspberrypi.org/documentation/installation/installing-images/) and [here from elinux.org](http://elinux.org/RPi_Easy_SD_Card_Setup). I use a Mac to do so and [this is my preferred solution](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md). The [Linux version](https://www.raspberrypi.org/documentation/installation/installing-images/linux.md) is not very different. The Etcher tool is nice and you don't even need to unzip the SD card image.
 
@@ -43,11 +50,11 @@ Features
 	- [Tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf)
 - simple, flexible and generic cloud management approach
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
-	- Look at the provided cloud script examples to see how IoT clouds such as ThingSpeak or GroveStreams are supported
-	- a cloud script can be used to generalize upload of data using SMS, ftp, file, MQTT, Node-Red flow,...
+	- Look at the provided cloud script examples to see how IoT clouds such as ThingSpeak, GroveStreams, MQTT,... are supported
+	- a cloud script can be used to generalize the upload of data using SMS, ftp, file, MQTT, Node-Red flow,...
 - encryption and native LoRaWAN frame format
 	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md)
-	- end-device can send native LoRaWAN packets
+	- end-device can send native LoRaWAN packets (for instance using a LoRaWAN radio chip such as RN2483)
 	- low-level gateway provides raw output for post_processing_gw.py to handle LoRaWAN packets
 - downlink features: to send from gateway to end-device
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md) 	 	

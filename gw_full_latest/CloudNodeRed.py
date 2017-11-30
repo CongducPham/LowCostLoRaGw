@@ -56,7 +56,7 @@ def NodeRed_generateData(data, src, nomenclatures, tdata):
 					
 	while i < len(data)-2:
 
-		entry = "{\"source\":\""+data[0]+"_"+data[1]+"_"+src+"\",\"measure\":\""+nomenclatures[i]+"\",\"value\":"+data[i+2]+"}"						
+		entry = "{\"source\":\""+data[0]+"/"+data[1]+"/"+src+"\",\"measure\":\""+nomenclatures[i]+"\",\"value\":"+data[i+2]+"}"						
 
 		print "CloudNodeRed: will generate json entry"
 		print entry
