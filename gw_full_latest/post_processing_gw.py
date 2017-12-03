@@ -1058,29 +1058,29 @@ while True:
 					fillLinebuf(datalen-1)
 					lorapktstr=ch+getAllLine()
 					
-					if _local_aes==1:	
+					lorapkt=[]
+					for i in range (0,len(lorapktstr)):
+						lorapkt.append(ord(lorapktstr[i]))
 						
-						lorapkt=[]
-						for i in range (0,len(lorapktstr)):
-							lorapkt.append(ord(lorapktstr[i]))
-							
-						#you can comment this display if you want
-						print [hex(x) for x in lorapkt]
-						
-						datalen=datalen-LORAWAN_HEADER_SIZE
-						
-						src = lorapkt[4]*256*256*256
-						src += lorapkt[3]*256*256
-						src += lorapkt[2]*256
-						src += lorapkt[1]
-						
-						seq=lorapkt[7]*256+lorapkt[6]
-						
-						#just to print the src in 0x01020304 form
-						pdata="%d,%d,%s,%d,%d,%d,%d" % (256,ord(ch),"0x%0.8X" % src,seq,datalen,SNR,RSSI)
-						print "update ctrl pkt info (^p): "+pdata
-						#internally, we convert in int
-						pdata="%d,%d,%d,%d,%d,%d,%d" % (256,ord(ch),src,seq,datalen,SNR,RSSI)						
+					#you can uncomment/comment this display if you want
+					print [hex(x) for x in lorapkt]
+					
+					datalen=datalen-LORAWAN_HEADER_SIZE
+					
+					src = lorapkt[4]*256*256*256
+					src += lorapkt[3]*256*256
+					src += lorapkt[2]*256
+					src += lorapkt[1]
+					
+					seq=lorapkt[7]*256+lorapkt[6]
+					
+					#just to print the src in 0x01020304 form
+					pdata="%d,%d,%s,%d,%d,%d,%d" % (256,ord(ch),"0x%0.8X" % src,seq,datalen,SNR,RSSI)
+					print "update ctrl pkt info (^p): "+pdata
+					#internally, we convert in int
+					pdata="%d,%d,%d,%d,%d,%d,%d" % (256,ord(ch),src,seq,datalen,SNR,RSSI)					
+					
+					if _local_aes==1:							
 						
 						from loraWAN import loraWAN_process_pkt
 						try:

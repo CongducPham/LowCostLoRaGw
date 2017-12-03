@@ -23,11 +23,50 @@ import sys
 import re
 import string
 import base64
-import LoRaWAN
-from LoRaWAN.MHDR import MHDR
+import os
+import os.path
 
-AppSKey = '2B7E151628AED2A6ABF7158809CF4F3C'
-NwkSKey = '2B7E151628AED2A6ABF7158809CF4F3C'
+try:
+	import LoRaWAN
+	from LoRaWAN.MHDR import MHDR
+except ImportError:
+	print "LoRaWAN python lib must be installed"
+
+import loraWAN_config
+		
+def import_LoRaWAN_lib():
+
+	try:
+		import LoRaWAN
+		from LoRaWAN.MHDR import MHDR
+	except ImportError:
+		print "LoRaWAN python lib must be installed"
+		print "loraWAN.py: checking for LoRaWAN lib"
+	
+		if os.path.isfile(os.path.expanduser("aes-python-lib/LoRaWAN/MHDR.py")):
+			cmd_arg="sudo cp -r aes-python-lib/LoRaWAN /usr/lib/python2.7/dist-packages"
+			print "copying LoRaWAN lib in python distribution"
+			try:
+				os.system(cmd_arg)
+			except:
+				print "Error when copying LoRaWAN lib"
+				return False
+			
+			print "try importing LoRaWAN lib again"
+			
+			try:	
+				import LoRaWAN
+				from LoRaWAN.MHDR import MHDR
+				print "import now ok"
+				return True
+			except ImportError:
+				print "sorry, error."
+				return False							
+		else:	
+			return False
+	
+	print "import ok"		
+	return True	
 
 PKT_TYPE_DATA=0x10
 
@@ -39,29 +78,38 @@ def replchars_to_hex(match):
 	
 def loraWAN_process_pkt(lorapkt):
 
-	appskey=bytearray.fromhex(AppSKey)
-	appskeylist=[]
+	#print "entering loraWAN_process_pkt"
+	
+	if True:
+	#if import_LoRaWAN_lib()==True:
 
-	for i in range (0,len(appskey)):
-		appskeylist.append(appskey[i])
+		#print "start decryption"
+		
+		appskey=bytearray.fromhex(loraWAN_config.AppSKey)
+		appskeylist=[]
 
-	nwkskey=bytearray.fromhex(NwkSKey)
-	nwkskeylist=[]
-	for i in range (0,len(nwkskey)):
-		nwkskeylist.append(nwkskey[i])
+		for i in range (0,len(appskey)):
+			appskeylist.append(appskey[i])
 
-	lorawan = LoRaWAN.new(nwkskeylist)
-	lorawan.read(lorapkt)
-	lorawan.compute_mic()
-	if lorawan.valid_mic():
-		print "?loraWAN: valid MIC"
-		lorawan = LoRaWAN.new(appskeylist)
-		lorawan.read(lorapkt)	
-		plain_payload = ''.join(chr(x) for x in lorawan.get_payload())
-		print "?loraWAN: plain payload is "+replchars.sub(replchars_to_hex, plain_payload)
-		return plain_payload
+		nwkskey=bytearray.fromhex(loraWAN_config.NwkSKey)
+		nwkskeylist=[]
+		for i in range (0,len(nwkskey)):
+			nwkskeylist.append(nwkskey[i])
+
+		lorawan = LoRaWAN.new(nwkskeylist)
+		lorawan.read(lorapkt)
+		lorawan.compute_mic()
+		if lorawan.valid_mic():
+			print "?loraWAN: valid MIC"
+			lorawan = LoRaWAN.new(appskeylist)
+			lorawan.read(lorapkt)	
+			plain_payload = ''.join(chr(x) for x in lorawan.get_payload())
+			print "?loraWAN: plain payload is "+replchars.sub(replchars_to_hex, plain_payload)
+			return plain_payload
+		else:
+			return "###BADMIC###"
 	else:
-		return "###BADMIC###"	
+		return "###BADMIC###"		
 		
 if __name__ == "__main__":
 	
@@ -85,6 +133,12 @@ if __name__ == "__main__":
 		SNR=arr[5]
 		RSSI=arr[6]
 
+		#LoRaWAN packet
+		if dst==256:
+			src_str="%0.8X" % src
+		else:
+			src_str=str(src)
+		
 	if argc>3:	
 		rdata=sys.argv[3]
 	

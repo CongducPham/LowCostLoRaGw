@@ -1,7 +1,7 @@
 {
 	"clouds" : [
-		{
-			"name":"Local gateway MongoDB",			
+		{	
+			"name":"Local gateway MongoDB",	
 			"notice":"do not remove the MongoDB cloud declaration, just change enabled and max_months_to_store if needed",
 			"script":"python CloudMongoDB.py",
 			"type":"database",
@@ -23,23 +23,24 @@
 			"gammurc_file":"/home/pi/.gammurc",
 			"enabled":false,
 			"always_enabled":false
-		},		
+		},	
 		{
 			"name":"Temporary storage for no Internet connection",
 			"script":"python CloudNoInternet.py",
 			"type":"file",            
 			"enabled":false
-        },			
+        },								
 		{	
 			"name":"WAZIUP Orion cloud",
 			"script":"python CloudOrion.py",
 			"type":"iotcloud",			
 			"enabled":false
-		},			
+		},				
 		{	
 			"name":"ThingSpeak cloud",
 			"script":"python CloudThingSpeak.py",
 			"type":"iotcloud",			
+			"write_key":"",
 			"enabled":true
 		},
 		{	
@@ -47,23 +48,25 @@
 			"script":"python CloudNodeRed.py",
 			"type":"nodered",			
 			"enabled":false
-		},		
+		},
 		{	
 			"name":"MQTT cloud",
 			"script":"python CloudMQTT.py",
-			"type":"MQTT",			
+			"type":"MQTT on test.mosquitto.org",			
 			"enabled":false
-		},		
+		},						
 		{	
 			"name":"GroveStreams cloud",
 			"script":"python CloudGroveStreams.py",
 			"type":"iotcloud",			
+			"write_key":"",
 			"enabled":false
 		},
 		{	
 			"name":"Firebase cloud",
 			"script":"python CloudFireBase.py",
 			"type":"jsoncloud",			
+			"write_key":"",
 			"enabled":false
 		},		
 		{	
@@ -79,6 +82,18 @@
 		}				
 	],
 	"encrypted_clouds" : [
+		{	
+			"name":"NodeRed flow",
+			"script":"python CloudNodeRed.py",
+			"type":"nodered",			
+			"enabled":false
+		},
+		{	
+			"name":"MQTT cloud",
+			"script":"python CloudMQTT.py",
+			"type":"MQTT on test.mosquitto.org",			
+			"enabled":false
+		},		
 		{
 			"name":"Firebase cloud",
 			"script":"python CloudFireBaseAES.py",
@@ -88,6 +103,18 @@
 		}
 	],
 	"lorawan_encrypted_clouds" : [
+		{	
+			"name":"NodeRed flow",
+			"script":"python CloudNodeRed.py",
+			"type":"nodered",			
+			"enabled":false
+		},
+		{	
+			"name":"MQTT cloud",
+			"script":"python CloudMQTT.py",
+			"type":"MQTT on test.mosquitto.org",			
+			"enabled":false
+		},	
 		{
 			"name":"Firebase cloud",
 			"script":"python CloudFireBaseLWAES.py",

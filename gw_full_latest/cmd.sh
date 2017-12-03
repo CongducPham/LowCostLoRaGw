@@ -77,12 +77,17 @@ echo "3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +"
 echo "4- tail --line=25 ../Dropbox/LoRa-test/post-processing.log           +"
 echo "5- tail --line=25 -f ../Dropbox/LoRa-test/post-processing.log        +"
 echo "6- less ../Dropbox/LoRa-test/post-processing.log                     +"
-echo "------------------------------------------------------* Bluetooth *--+"
-echo "a- run: sudo hciconfig hci0 piscan                                   +"
-echo "b- run: sudo python rfcomm-server.py                                 +"
-echo "c- run: nohup sudo python rfcomm-server.py -bg > rfcomm.log &        +"
-echo "d- run: ps aux | grep rfcomm                                         +"
-echo "e- run: tail -f rfcomm.log                                           +"
+echo "-------------------------------------------------------* Node-Red *--+"
+echo "a- start Node-Red                                                    +"
+echo "b- stop Node-Red                                                     +"
+echo "c- enable Node-Red at boot                                           +"
+echo "d- disable Node-Red at boot                                          +"
+#echo "------------------------------------------------------* Bluetooth *--+"
+#echo "a- run: sudo hciconfig hci0 piscan                                   +"
+#echo "b- run: sudo python rfcomm-server.py                                 +"
+#echo "c- run: nohup sudo python rfcomm-server.py -bg > rfcomm.log &        +"
+#echo "d- run: ps aux | grep rfcomm                                         +"
+#echo "e- run: tail -f rfcomm.log                                           +"
 echo "---------------------------------------------------* Connectivity *--+"
 echo "f- test: ping www.univ-pau.fr                                        +"
 echo "--------------------------------------------------* Filtering msg *--+"
@@ -171,43 +176,67 @@ fi
 
 if [ "$choice" = "a" ] 
 	then
-		echo "Testing the Bluetooth interface"
-		echo "###############################"
-		sudo hciconfig hci0 piscan
-		echo "###############################"
-		echo "if no error then the RPI is visible with Bluetooth"
+		echo "Starting Node-Red; press CTRL-C"
+		node-red-start
 fi
 
 if [ "$choice" = "b" ] 
 	then
-		echo "Running rfcomm server for Bluetooth queries... CTRL-C to exit"
-		sudo python rfcomm-server.py
+		echo "Stopping Node-Red;"
+		node-red-stop
 fi
 
 if [ "$choice" = "c" ] 
 	then
-		echo "Running in background the rfcomm server for Bluetooth queries. Logs in rfcomm.log"
-		nohup sudo python rfcomm-server.py -bg > rfcomm.log &
+		echo "enable Node-Red at boot"
+		sudo systemctl enable nodered.service
 fi
-
 
 if [ "$choice" = "d" ] 
 	then
-		echo "Check for rfcomm-server process"
-		echo "###############################"
-		ps aux | grep rfcomm-server
-		echo "###############################"
-		echo "You should see python rfcomm-server.py for Bluetooth queries"
+		echo "disable Node-Red at boot"
+		sudo systemctl disable nodered.service
 fi
 
-if [ "$choice" = "e" ] 
-	then
-		echo "Following last lines of rfcomm.log. CTRL-C to return"
-		echo "Current UTC date is"
-		date --utc
-		trap "echo" SIGINT
-		tail -f rfcomm.log
-fi
+# if [ "$choice" = "a" ] 
+# 	then
+# 		echo "Testing the Bluetooth interface"
+# 		echo "###############################"
+# 		sudo hciconfig hci0 piscan
+# 		echo "###############################"
+# 		echo "if no error then the RPI is visible with Bluetooth"
+# fi
+# 
+# if [ "$choice" = "b" ] 
+# 	then
+# 		echo "Running rfcomm server for Bluetooth queries... CTRL-C to exit"
+# 		sudo python rfcomm-server.py
+# fi
+# 
+# if [ "$choice" = "c" ] 
+# 	then
+# 		echo "Running in background the rfcomm server for Bluetooth queries. Logs in rfcomm.log"
+# 		nohup sudo python rfcomm-server.py -bg > rfcomm.log &
+# fi
+# 
+# 
+# if [ "$choice" = "d" ] 
+# 	then
+# 		echo "Check for rfcomm-server process"
+# 		echo "###############################"
+# 		ps aux | grep rfcomm-server
+# 		echo "###############################"
+# 		echo "You should see python rfcomm-server.py for Bluetooth queries"
+# fi
+# 
+# if [ "$choice" = "e" ] 
+# 	then
+# 		echo "Following last lines of rfcomm.log. CTRL-C to return"
+# 		echo "Current UTC date is"
+# 		date --utc
+# 		trap "echo" SIGINT
+# 		tail -f rfcomm.log
+# fi
 
 if [ "$choice" = "f" ] 
 	then

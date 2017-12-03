@@ -89,7 +89,10 @@ def send_data(data, src, nomenclatures, tdata):
 		#we use mosquitto client
 		#be sure to have run sudo apt-get install mosquitto-clients
 		#the topic will be for instance waziup_UPPA_Sensor2/TC
-		cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'/'+data[1]+'/'+src+'/'+nomenclatures[i]+' -m '+data[i+2]
+		if nomenclatures=='':
+			cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'/'+data[1]+'/'+src+' -m '+data[i+2]			
+		else:		
+			cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'/'+data[1]+'/'+src+'/'+nomenclatures[i]+' -m '+data[i+2]
 
 		i += 1
 						
@@ -157,84 +160,93 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		src_str=str(src)	
 
 	if (src_str in key_MQTT.source_list) or (len(key_MQTT.source_list)==0):
-	
-		# this part depends on the syntax used by the end-device
-		# we use: TC/22.4/HU/85...
-		#
-		# but we accept also a_str#b_str#TC/22.4/HU/85... to indicate a project and organization
-		# or simply 22.4 in which case, the nomemclature will be DEF
-		 		
-		# get number of '#' separator
-		nsharp=ldata.count('#')
-		nslash=0
-				
-		# no separator
-		if nsharp==0:
-			# will use default project and organisation name
+
+		#LoRaWAN (so encrypted packet)
+		#or encapsulated encrypted
+		if ptype & 0x40 == 0x40 or ptype & 0x80 == 0x80 or ptype & 0x04 == 0x04:
+			nomenclatures = ''
 			data=['','']
-
-			# get number of '/' separator on ldata
-			nslash = ldata.count('/')
-				
-			# contains ['', '', "s1", s1value, "s2", s2value, ...]
-			data_array = data + re.split("/", ldata)		
+			data.append(ldata)		
+			MQTT_uploadData(nomenclatures, data, key_MQTT.sensor_name+src_str, tdata)
 		else:
-			data_array = re.split("#", ldata)
-		
-			# only 1 separator
-			if nsharp==1:
-				# insert '' to indicate default project
-				# as we assume that the only parameter indicate the organisation name
-				data_array.insert(0,'');
-				# if the length is greater than 2
-				if len(data_array[1])<3:
-					data_array[1]=''	
+				
+			# this part depends on the syntax used by the end-device
+			# we use: TC/22.4/HU/85...
+			#
+			# but we accept also a_str#b_str#TC/22.4/HU/85... to indicate a project and organization
+			# or simply 22.4 in which case, the nomemclature will be DEF
+				
+			# get number of '#' separator
+			nsharp=ldata.count('#')
+			nslash=0
+				
+			# no separator
+			if nsharp==0:
+				# will use default project and organisation name
+				data=['','']
 
-			# we have 2 separators
-			if nsharp==2:
-				# if the length of a fields is greater than 2 then we take it into account
-				if len(data_array[0])<3: 
-					data_array[0]=''				
-				if len(data_array[1])<3:
-					data_array[1]=''
+				# get number of '/' separator on ldata
+				nslash = ldata.count('/')
+				
+				# contains ['', '', "s1", s1value, "s2", s2value, ...]
+				data_array = data + re.split("/", ldata)		
+			else:
+				data_array = re.split("#", ldata)
+		
+				# only 1 separator
+				if nsharp==1:
+					# insert '' to indicate default project
+					# as we assume that the only parameter indicate the organisation name
+					data_array.insert(0,'');
+					# if the length is greater than 2
+					if len(data_array[1])<3:
+						data_array[1]=''	
+
+				# we have 2 separators
+				if nsharp==2:
+					# if the length of a fields is greater than 2 then we take it into account
+					if len(data_array[0])<3: 
+						data_array[0]=''				
+					if len(data_array[1])<3:
+						data_array[1]=''
 									
-			# get number of '/' separator on data_array[2]
-			# because ldata may contain '/' 
-			nslash = data_array[2].count('/')
+				# get number of '/' separator on data_array[2]
+				# because ldata may contain '/' 
+				nslash = data_array[2].count('/')
 	
-			# then reconstruct data_array
-			data_array=[data_array[0],data_array[1]]+re.split("/", data_array[2])
+				# then reconstruct data_array
+				data_array=[data_array[0],data_array[1]]+re.split("/", data_array[2])
 				
-			# at the end data_array contains
-			# ["project", "organisation_name", "s1", s1value, "s2", s2value, ...]
+				# at the end data_array contains
+				# ["project", "organisation_name", "s1", s1value, "s2", s2value, ...]
 		
-		# just in case we have an ending CR or 0
-		data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\n', '')
-		data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\0', '')	
+			# just in case we have an ending CR or 0
+			data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\n', '')
+			data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\0', '')	
 																		
-		nomenclatures = []
-		# data to send
-		data = []
-		data.append(data_array[0]) #project (if '' default)
-		data.append(data_array[1]) #organization name (if '' default)
+			nomenclatures = []
+			# data to send
+			data = []
+			data.append(data_array[0]) #project (if '' default)
+			data.append(data_array[1]) #organization name (if '' default)
 		
-		if nslash==0:
-			# old syntax without nomenclature key, so insert only one key
-			# we use DEF
-			nomenclatures.append("DEF")
-			data.append(data_array[2])
-		else:
-			# completing nomenclatures and data
-			i=2
-			while i < len(data_array)-1 :
-				nomenclatures.append(data_array[i])
-				data.append(data_array[i+1])
-				i += 2
+			if nslash==0:
+				# old syntax without nomenclature key, so insert only one key
+				# we use DEF
+				nomenclatures.append("DEF")
+				data.append(data_array[2])
+			else:
+				# completing nomenclatures and data
+				i=2
+				while i < len(data_array)-1 :
+					nomenclatures.append(data_array[i])
+					data.append(data_array[i+1])
+					i += 2
 
-		#here we append the device's address to get for instance UPPA_Sensor2
-		#if packet come from a LoRaWAN device with 4-byte devAddr then we will have for instance UPPA_Sensor01020304
-		#where the devAddr is expressed in hex format		
-		MQTT_uploadData(nomenclatures, data, key_MQTT.sensor_name+src_str, tdata)
+			#here we append the device's address to get for instance UPPA_Sensor2
+			#if packet come from a LoRaWAN device with 4-byte devAddr then we will have for instance UPPA_Sensor01020304
+			#where the devAddr is expressed in hex format		
+			MQTT_uploadData(nomenclatures, data, key_MQTT.sensor_name+src_str, tdata)
 	else:
 		print "Source is not is source list, not sending with CloudMQTT.py"				
 
