@@ -44,8 +44,8 @@ except AttributeError:
 # curl http://broker.waziup.io/v2/entities -s -S --header 'Content-Type: application/json' --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X POST -d '{ "id": "UPPA_Sensor2", "type": "SensingDevice", "TC": { "value": 23, "type": "Number" }, "PR": { "value": 720, "type": "Number" } }'
 
 #Further updates of the values are like that:
-# curl http://broker.waziup.io/v2/entities/UPPASensor2/attrs/TC/value -s -S --header 'Content-Type: text/plain' --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X PUT -d 27
-# curl http://broker.waziup.io/v2/entities/UPPASensor2/attrs/PR/value -s -S --header 'Content-Type: text/plain' --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X PUT -d 722
+# curl http://broker.waziup.io/v2/entities/UPPASensor2/attrs/TC/value -s -S --header 'Content-Type: text/plain' --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X POST -d 27
+# curl http://broker.waziup.io/v2/entities/UPPASensor2/attrs/PR/value -s -S --header 'Content-Type: text/plain' --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X POST -d 722
 
 #To retrieve the last data point inserted:
 # curl http://broker.waziup.io/v2/entities/UPPA_Sensor2/attrs/TC/value --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X GET
@@ -119,7 +119,7 @@ def test_network_available():
 	    		
 	return connection
 
-def create_new_entity(data, src, nomenclatures):
+def create_new_entity(data, src, nomenclatures, tdata):
 
 	global connection_failure
 	
@@ -129,7 +129,7 @@ def create_new_entity(data, src, nomenclatures):
 						
 	i=0
 	while i < len(data)-2 :
-		cmd = cmd+"\""+nomenclatures[i]+"\":{\"value\":"+data[i+2]+",\"type\":\"Number\"}"
+		cmd = cmd+'\"'+nomenclatures[i]+'\":{\"value\":'+data[i+2]+',\"type\":\"Number\",\"metadata\":{\"timestamp\":{\"type\":\"DateTime\",\"value\":\"'+tdata+'\"}}}'
 		i += 1
 		if i < len(data)-2:
 			cmd = cmd+","
@@ -171,7 +171,7 @@ def send_data(data, src, nomenclatures, tdata):
 			
 	while i < len(data)-2  and not entity_need_to_be_created:
 	
-		#cmd = 'curl '+key_Orion.orion_server+'/entities/'+src+'/attrs/'+nomenclatures[i]+'/value -s -S --header Content-Type:text/plain --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X PUT -d '+data[i+2]
+		#cmd = 'curl '+key_Orion.orion_server+'/entities/'+src+'/attrs/'+nomenclatures[i]+'/value -s -S --header Content-Type:text/plain --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d '+data[i+2]
 
 		#we now push data with a timestamp value
 		cmd = 'curl '+key_Orion.orion_server+'/entities/'+key_Orion.organization_name+"_"+src+'/attrs/ -s -S --header Content-Type:application/json --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d {\"'+nomenclatures[i]+'\":{\"value\":'+data[i+2]+',\"metadata\":{\"timestamp\":{\"type\":\"DateTime\",\"value\":\"'+tdata+'\"}}}}'
@@ -219,7 +219,7 @@ def send_data(data, src, nomenclatures, tdata):
 					# the entity has not been created before
 					if Orion_entity_not_created in out:
 						entity_need_to_be_created=True
-						create_new_entity(data, src, nomenclatures)						
+						create_new_entity(data, src, nomenclatures, tdata)						
 				else :
 					print 'Orion: upload success'
 					

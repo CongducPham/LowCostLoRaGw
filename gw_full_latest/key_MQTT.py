@@ -14,7 +14,7 @@ organization_name="UPPA"
 #the final name will contain the sensor address
 sensor_name="Sensor"
 
-# CloudMQTT will built the sensor name as waziup_UPPA_Sensor2
+# CloudMQTT will built the sensor name as waziup/UPPA/Sensor2 to serve as an MQTT topic
 
 #Note how we can indicate a device source addr that are allowed to use the script
 #Use decimal between 2-255 and use 4-byte hex format for LoRaWAN devAddr

@@ -12,7 +12,7 @@ organization_name="UPPA"
 #the final name will contain the sensor address
 sensor_name="Sensor"
 
-# CloudNodeRed will built the sensor name as waziup_UPPA_Sensor2
+# CloudNodeRed will built the source as waziup/UPPA/Sensor2 to easily connect an MQTT node after the gateway
 
 #Note how we can indicate a device source addr that are allowed to use the script
 #Use decimal between 2-255 and use 4-byte hex format for LoRaWAN devAddr
