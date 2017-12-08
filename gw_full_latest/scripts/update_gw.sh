@@ -36,7 +36,7 @@ if [ -d lora_gateway ]
 		cd lora_gateway
 		echo "preserving your configuration and key files"		
 		mkdir config_backup
-		cp gateway_conf.json clouds.json radio.makefile key_* config_backup
+		cp gateway_conf.json clouds.json radio.makefile key_* loraWAN_config.py config_backup
 		cd ../gw_full_latest
 		echo "copying new distrib into /home/pi/lora_gateway"
 		cp --preserve -r * /home/pi/lora_gateway
