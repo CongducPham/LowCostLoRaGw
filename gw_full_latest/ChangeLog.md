@@ -1,8 +1,16 @@
 Change logs
 ===========
 
+December 12th, 2017
+-------------------
+
+- v3.7 post-processing_gw.py. 
+	* List of app keys has been move to key_AppKey.py file. 
+	* post_status_processing_gw.py will be called periodically by post_processing_gw.py (defined by "status":600 for instance in gateway_conf.json, 600 means every 600s). Periodic tasks can then be added into post_status_processing_gw.py. For the moment, the gateway will just indicate periodically that it is up and will show its GPS coordinates. In gateway_conf.json, a new section called "status_conf" can be used to store dedicated information/variable to be used by custom tasks defined in post_status_processing_gw.py.
+	* post_processing_gw.py has been slightly modified to be able to support other low-level gateway bridge (e.g. 802.14.5). Still experimental.
+	
 November 22th, 2017
-------------------
+-------------------
 
 - v3.6 post-processing_gw.py. post_processing_gw.py can now handle the 4-byte LoRaWAN devAddr and pass this address to cloud scripts. The latter has been modified to handle both 1-byte address and 4-byte address. 
 

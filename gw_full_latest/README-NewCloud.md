@@ -91,7 +91,7 @@ This cloud design approach allows for:
 - a very generic `post_processing_gw.py` script that handles the interface with the low-level lora_gateway program
 - the end-user to have the entire responsability (through a cloud script) to decode the raw data provided by the end-device
 
-Assuming that `_enabled_clouds` contains:
+Assuming that `_enabled_clouds` contains: 
 
 	['python CloudThingSpeak.py', 'python CloudGroveStreams.py']
 

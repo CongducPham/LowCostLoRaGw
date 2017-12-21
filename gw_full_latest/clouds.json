@@ -29,7 +29,13 @@
 			"script":"python CloudNoInternet.py",
 			"type":"file",            
 			"enabled":false
-        },								
+        },
+		{	
+			"name":"GPS",
+			"script":"python CloudGpsFile.py",
+			"type":"file",			
+			"enabled":false
+		},	        								
 		{	
 			"name":"WAZIUP Orion cloud",
 			"script":"python CloudOrion.py",
@@ -40,7 +46,6 @@
 			"name":"ThingSpeak cloud",
 			"script":"python CloudThingSpeak.py",
 			"type":"iotcloud",			
-			"write_key":"",
 			"enabled":true
 		},
 		{	
@@ -59,14 +64,12 @@
 			"name":"GroveStreams cloud",
 			"script":"python CloudGroveStreams.py",
 			"type":"iotcloud",			
-			"write_key":"",
 			"enabled":false
 		},
 		{	
 			"name":"Firebase cloud",
 			"script":"python CloudFireBase.py",
 			"type":"jsoncloud",			
-			"write_key":"",
 			"enabled":false
 		},		
 		{	
@@ -98,7 +101,6 @@
 			"name":"Firebase cloud",
 			"script":"python CloudFireBaseAES.py",
 			"type":"iotcloud",			
-			"write_key":"",
 			"enabled":false			
 		}
 	],
@@ -119,7 +121,6 @@
 			"name":"Firebase cloud",
 			"script":"python CloudFireBaseLWAES.py",
 			"type":"iotcloud",			
-			"write_key":"",
 			"enabled":false			
 		}
 	]	

@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v3.6 - image modification and need to incorporate aux_radio features
+# v3.7 - image modification and need to incorporate aux_radio features
 # + copy post-processing feature
 #------------------------------------------------------------
 
@@ -63,23 +63,24 @@ import libSMS
 
 
 #////////////////////////////////////////////////////////////
-# ADD HERE APP KEYS THAT YOU WANT TO ALLOW FOR YOUR GATEWAY
-#////////////////////////////////////////////////////////////
-# NOTE: the format of the application key list has changed from 
-# a list of list, to a list of string that will be process as 
-# a byte array. Doing so wilL allow for dictionary construction
-# using the appkey to retrieve information such as encryption key,...
-
-app_key_list = [
-	#change/add here your application keys
-	'\x01\x02\x03\x04',
-	'\x05\x06\x07\x08' 
-]
-
-#////////////////////////////////////////////////////////////
 
 #------------------------------------------------------------
-#header packet information
+#low-level data prefix
+#------------------------------------------------------------
+
+LL_PREFIX_1=0xFF
+LL_PREFIX_LORA=0xFE
+#add here other data prefix for other type of low-level radio gateway
+
+
+#list here other radio type
+LORA_RADIO=1
+
+#will be dynamically determined according to the second data prefix
+radio_type=LORA_RADIO
+
+#------------------------------------------------------------
+#LoRa header packet information
 #------------------------------------------------------------
 
 HEADER_SIZE=4
@@ -193,8 +194,14 @@ except KeyError:
 	_wappkey = 0	
 	
 if _wappkey:
-	print "will enforce app key"		
-
+	print "will enforce app key"
+	print "importing list of app key"
+	try:
+		import key_AppKey
+	except ImportError:
+		print "no key_AppKey.py file"
+		_wappkey = 0
+		
 #------------------------------------------------------------
 #initialize gateway DHT22 sensor
 #------------------------------------------------------------
@@ -274,6 +281,7 @@ def dht22_target():
 #note that this feature is obsoleted by an option in the web admin interface to copy post-processing.log file on demand
 _gw_copy_post_processing=False
 
+#TODO: integrate copy post_processing feature into periodic status/tasks?
 def copy_post_processing():
 	print "extract last 500 lines of post-processing.log into /var/www/html/admin/log/post-processing-500L.log"
 	cmd="sudo tail -n 500 log/post-processing.log > /var/www/html/admin/log/post-processing-500L.log"
@@ -378,7 +386,7 @@ def downlink_target():
 		time.sleep(_gw_downlink)
 		
 #------------------------------------------------------------
-#for sending periodic status
+#for doing periodic status/tasks
 #------------------------------------------------------------
 
 try:
@@ -389,20 +397,24 @@ except KeyError:
 if _gw_status < 0:
 	_gw_status = 0 
 
-if _gw_status:
-	try:
-		_gw_lat = json_array["gateway_conf"]["ref_latitude"]
-	except KeyError:
-		_gw_lat = "undef"
-	try:
-		_gw_long = json_array["gateway_conf"]["ref_longitude"]
-	except KeyError:
-		_gw_long = "undef"		
+# if _gw_status:
+# 	try:
+# 		_gw_lat = json_array["gateway_conf"]["ref_latitude"]
+# 	except KeyError:
+# 		_gw_lat = "undef"
+# 	try:
+# 		_gw_long = json_array["gateway_conf"]["ref_longitude"]
+# 	except KeyError:
+# 		_gw_long = "undef"		
 					
 def status_target():
 	while True:
 		print datetime.datetime.now()
-		print 'post status: gw ON, lat '+_gw_lat+' long '+_gw_long
+		print 'post status: gw ON, executing periodic tasks'
+		try:
+			os.system('python post_status_processing_gw.py')
+		except:
+			print "Error when executing status_processing_gw.py"			
 		sys.stdout.flush()
 		global _gw_status
 		time.sleep(_gw_status)
@@ -726,7 +738,7 @@ if (_gw_downlink):
 
 #status feature
 if (_gw_status):
-	print "Starting thread to report gw status"
+	print "Starting thread to perform periodic gw status/tasks"
 	sys.stdout.flush()
 	t_status = threading.Thread(target=status_target)
 	t_status.daemon = True
@@ -734,6 +746,7 @@ if (_gw_status):
 	time.sleep(1)	
 	
 #copy post_processing feature
+#TODO: integrate copy post_processing feature into periodic status/tasks?
 	
 if (_gw_copy_post_processing):
 	print "Starting thread to copy post_processing.log"
@@ -992,19 +1005,18 @@ while True:
 
 		continue
 	
-	#handle binary prefixes
-	#if (ch == '\xFF' or ch == '+'):
-	if (ch == '\xFF'):
+	#handle low-level gateway data
+	if (ch == str(LL_PREFIX_1)):
 	
 		print "got first framing byte"
 		ch=getSingleChar()	
 		
-		#data prefix for non-encrypted data
-		#if (ch == '\xFE' or ch == '+'):			
-		if (ch == '\xFE'):
+		#data from low-level LoRa gateway?		
+		if (ch == str(LL_PREFIX_LORA)):
 			#the data prefix is inserted by the gateway
 			#do not modify, unless you know what you are doing and that you modify lora_gateway (comment WITH_DATA_PREFIX)
-			print "--> got data prefix"
+			print "--> got LoRa data prefix"
+			radio_type=LORA_RADIO
 			
 			#if SNR < -20:
 			#	print "--> SNR too low, discarding data"
@@ -1023,7 +1035,7 @@ while True:
 			#if we have raw output from gw, then try to determine which kind of packet it is
 			#
 			if (_rawFormat==1):
-				print "raw format from gateway"
+				print "raw format from LoRa gateway"
 				ch=getSingleChar()
 				
 				#probably our modified Libelium header where the destination (i.e. 1) is the gateway
@@ -1235,19 +1247,17 @@ while True:
 				
 				print "app key is ",
 				print " ".join("0x{:02x}".format(ord(c)) for c in the_app_key)
-				
-				if the_app_key in app_key_list:
-					print "in app key list"
-					if _wappkey==1:
+
+				if _wappkey==1:
+					if the_app_key in key_AppKey.app_key_list:
+						print "in app key list"				
 						_validappkey=1
-				else:		
-					print "not in app key list"
-					if _wappkey==1:
+					else:
+						print "not in app key list"
 						_validappkey=0
-					else:	
-						#we do not check for app key
-						_validappkey=1
-						print "but app key disabled"				
+				else:
+					print "app key disabled"
+					_validappkey=1				
 				
 			continue	
 					
