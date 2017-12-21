@@ -39,60 +39,6 @@ try:
 except AttributeError:
 	key_GpsFile.source_list=[]
 		
-sm=None
-gammurc_file=None
-can_send_sms=False
-
-#------------------------------------------------------------
-# Open clouds.json file 
-#------------------------------------------------------------
-
-#name of json file containing the cloud declarations
-cloud_filename = "clouds.json"
-
-#open json file to retrieve enabled clouds
-f = open(os.path.expanduser(cloud_filename),"r")
-string = f.read()
-f.close()
-	
-#change it into a python array
-cloud_json_array = json.loads(string)
-
-#retrieving all cloud declarations
-clouds = cloud_json_array["clouds"]
-
-#here we check for our own script entry
-for cloud in clouds:
-	if "CloudSMS.py" in cloud["script"]:
-		
-		try:
-			gammurc_file = cloud["gammurc_file"]
-		except KeyError:
-			print "GPS file: gammurc_file in clouds.json undefined"
-
-#------------------------------------------------------------
-# Check if SMS should/can be sent
-#------------------------------------------------------------
-			
-if (key_GpsFile.SMS==True):
-	can_send_sms=True
-	print 'GPS file: SMS is requested'
-	#check Gammu configuration
-	if (not libSMS.gammuCheck()):
-		print 'GPS file: Gammu is not available'
-		can_send_sms=False
-	else: 
-		if (not libSMS.gammurcCheck(gammurc_file)):
-			print 'GPS file: gammurc file is not available'
-			can_send_sms=False
-
-	if (libSMS.phoneConnection(gammurc_file, key_GpsFile.PIN) == None):
-		print 'GPS file: Can not connect to cellular network'
-		can_send_sms=False
-	else:	
-		sm = libSMS.phoneConnection(gammurc_file, key_GpsFile.PIN)
-		print 'GPS file: SMS can be sent'
-
 #------------------------------------------------------------
 #open gateway_conf.json file 
 #------------------------------------------------------------
@@ -171,8 +117,6 @@ def initial_bearing(pointA, pointB):
 
 def store_gps_coordinate(src, SNR, RSSI, seq, lat, lgt, fxt, tdata, gwid):
 
-	global sm, can_send_sms
-			
 	#print "Reading GPS file"
 
 	#open json file to retrieve enabled clouds
@@ -211,13 +155,59 @@ def store_gps_coordinate(src, SNR, RSSI, seq, lat, lgt, fxt, tdata, gwid):
 	print 'GPS file: lat='+lat
 	print 'GPS file: lgt='+lgt
 	print 'GPS file: d='+"%.4f" % distance
+
+	if (key_GpsFile.SMS==True):
+		#------------------------------------------------------------
+		# Open clouds.json file 
+		#------------------------------------------------------------
+
+		#name of json file containing the cloud declarations
+		cloud_filename = "clouds.json"
+
+		#open json file to retrieve enabled clouds
+		f = open(os.path.expanduser(cloud_filename),"r")
+		string = f.read()
+		f.close()
 	
-	if (can_send_sms==True):
-		print "GPS file: Sending SMS"
-		success = libSMS.send_sms(sm, data, key_GpsFile.contacts)
+		#change it into a python array
+		cloud_json_array = json.loads(string)
+
+		#retrieving all cloud declarations
+		clouds = cloud_json_array["clouds"]
+
+		#here we check for our own script entry
+		for cloud in clouds:
+			if "CloudSMS.py" in cloud["script"]:
+				try:
+					gammurc_file = cloud["gammurc_file"]
+				except KeyError:
+					print "GPS file: gammurc_file in clouds.json undefined"
+					
+		can_send_sms=True
 		
-		if (success):
-			print "GPS file: Sending SMS done"
+		print 'GPS file: SMS is requested'
+		#check Gammu configuration
+		if (not libSMS.gammuCheck()):
+			print 'GPS file: Gammu is not available'
+			can_send_sms=False
+		else: 
+			if (not libSMS.gammurcCheck(gammurc_file)):
+				print 'GPS file: gammurc file is not available'
+				can_send_sms=False
+
+		if (libSMS.phoneConnection(gammurc_file, key_GpsFile.PIN) == None):
+			print 'GPS file: Can not connect to cellular network'
+			can_send_sms=False
+		else:	
+			sm = libSMS.phoneConnection(gammurc_file, key_GpsFile.PIN)
+			print 'GPS file: SMS can be sent'
+			
+		if (can_send_sms==True):
+			print "GPS file: Sending SMS"
+			success = libSMS.send_sms(sm, data, key_GpsFile.contacts)
+		
+			if (success):
+				print "GPS file: Sending SMS done"
 							
 #------------------------------------------------------------
 # main

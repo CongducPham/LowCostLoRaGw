@@ -68,8 +68,8 @@ import libSMS
 #low-level data prefix
 #------------------------------------------------------------
 
-LL_PREFIX_1=0xFF
-LL_PREFIX_LORA=0xFE
+LL_PREFIX_1='\xFF'
+LL_PREFIX_LORA='\xFE'
 #add here other data prefix for other type of low-level radio gateway
 
 
@@ -1006,13 +1006,13 @@ while True:
 		continue
 	
 	#handle low-level gateway data
-	if (ch == str(LL_PREFIX_1)):
+	if (ch == LL_PREFIX_1):
 	
 		print "got first framing byte"
 		ch=getSingleChar()	
 		
 		#data from low-level LoRa gateway?		
-		if (ch == str(LL_PREFIX_LORA)):
+		if (ch == LL_PREFIX_LORA):
 			#the data prefix is inserted by the gateway
 			#do not modify, unless you know what you are doing and that you modify lora_gateway (comment WITH_DATA_PREFIX)
 			print "--> got LoRa data prefix"
