@@ -136,12 +136,22 @@ def store_gps_coordinate(src, SNR, RSSI, seq, lat, lgt, fxt, tdata, gwid):
 	except KeyError:
 		_gw_long = "undef"
 		
+	try:
+		gw_lat = float(_gw_lat)
+	except ValueError:
+		_gw_lat = "undef"
+		
+	try:
+		gw_long = float(_gw_long)
+	except ValueError:
+		_gw_long = "undef"		
+		
 	if (_gw_lat=="undef") or (_gw_long=="undef"):
 		print 'GPS file: gw has no valid GPS coordinate'
 		distance=-1
 	else:		
 		# gw
-		pA = (float(_gw_lat), float(_gw_long))
+		pA = (gw_lat, gw_long)
 		pB = (float(lat), float(lgt))
 		distance = haversine(pA, pB)
 	
