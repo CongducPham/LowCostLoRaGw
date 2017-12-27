@@ -580,9 +580,9 @@ You can use `cmd.sh` as follows:
 	d- disable Node-Red at boot                                          +
 	---------------------------------------------------* Connectivity *--+
 	f- test: ping www.univ-pau.fr                                        +
-	g- wifi: configure as WiFi client at next reboot                    +
-	h- wifi: indicate WiFi SSID and password at next reboot             +
-	i- wifi: configure as WiFi access point at next reboot              +	
+	g- wifi: configure as WiFi client at next reboot                     +
+	h- wifi: indicate WiFi SSID and password at next reboot              +
+	i- wifi: configure as WiFi access point at next reboot               +	
 	--------------------------------------------------* Filtering msg *--+
 	l- List LoRa reception indications                                   +
 	m- List radio module reset indications                               +
