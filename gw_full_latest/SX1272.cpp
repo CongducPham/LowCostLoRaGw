@@ -35,8 +35,6 @@
  *  November 7th, 2017
  *      - CRC (RxPayloadCrcOn) is set back to OFF for the gateway
  *      - bug fix in how the CRC is checked at receiver in getPacket() function
- *  November 3rd, 2017
- *      - CRC is ON by default now
  *  June, 22th, 2017
  *      - setPowerDBM(uint8_t dbm) calls setPower('X') when dbm is set to 20
  *  Apr, 21th, 2017
@@ -6625,14 +6623,29 @@ uint16_t SX1272::getToA(uint8_t pl) {
     return ceil(airTime/1000)+1;
 }
 
+
+void SX1272::CarrierSense(uint8_t cs) {
+    
+    if (cs==1)
+    	CarrierSense1();
+    
+    if (cs==2)
+    	CarrierSense2(); 
+    	
+    if (cs==3)
+    	CarrierSense2();     	
+}    	  	   	
+
 // need to set _send_cad_number to a value > 0
 // we advise using _send_cad_number=3 for a SIFS and _send_cad_number=9 for a DIFS
 // prior to send any data
-void SX1272::CarrierSense() {
+void SX1272::CarrierSense1() {
 
     int e;
     bool carrierSenseRetry=false;
 
+  	printf("--> CarrierSense1\n"); 
+  	    
     if (_send_cad_number && _enableCarrierSense) {
         do {
             do {
@@ -6723,6 +6736,250 @@ void SX1272::CarrierSense() {
 
         } while (carrierSenseRetry);
     }
+}
+
+void SX1272::CarrierSense2() {
+
+  int e;
+  bool carrierSenseRetry=false;  
+  uint8_t foundBusyDuringDIFSafterBusyState=0;
+  uint8_t n_collision=0;
+  // upper bound of the random backoff timer
+  uint8_t W=2;  
+  
+  printf("--> CarrierSense2: do CAD for DIFS=9CAD\n"); 
+  
+  if (_send_cad_number && _enableCarrierSense) {
+    do { 
+        
+      do {
+        //D f W
+        //2 2 4
+        //3 3 8
+        //4 4 16
+        //5 5 16
+        //6 6 16
+        //...
+        
+        if (foundBusyDuringDIFSafterBusyState>1 && foundBusyDuringDIFSafterBusyState<5)
+          W=W*2;
+                
+        // check for free channel (SIFS/DIFS)        
+        _startDoCad=millis();
+        e = sx1272.doCAD(_send_cad_number);
+        _endDoCad=millis();
+        
+        printf("--> DIFS duration ");
+        printf("%ld\n",_endDoCad-_startDoCad);
+
+        // successull SIFS/DIFS
+        if (!e) {
+          
+          // previous collision detected
+          if (n_collision) {
+                
+              printf("--> counting for ");
+              // count for random number of CAD/SIFS/DIFS?   
+              // SIFS=3CAD
+              // DIFS=9CAD            
+              uint8_t w = random(0,W*_send_cad_number);
+
+              printf("%d\n", w);             
+
+              int busyCount=0;
+              bool nowBusy=false;
+              
+              do {
+
+                  if (nowBusy)
+                    e = sx1272.doCAD(_send_cad_number);
+                  else
+                    e = sx1272.doCAD(1);
+
+                  if (nowBusy && e) {
+                    printf("#");
+                    busyCount++;                    
+                  }
+                  else
+                  if (nowBusy && !e) {
+                    printf("|");
+                    nowBusy=false;                    
+                  }                  
+                  else
+                  if (!e) {
+                    w--;
+                    printf("-");
+                  }  
+                  else {
+                    printf("*");
+                    nowBusy=true;
+                    busyCount++;  
+                  }
+                  
+              } while (w);      
+
+              // if w==0 then we exit and 
+              // the packet will be sent  
+              printf("\n--> found busy during ");
+              printf("%d\n", busyCount);
+          }
+          else {
+              printf("OK1\n");
+    
+              _extendedIFS=false;
+              
+              if (_extendedIFS)  {          
+                // wait for random number of CAD         
+                uint8_t w = random(1,8);
+    
+                printf("--> extended waiting for ");
+                printf("%d\n",w);
+                printf(" CAD = ");
+                printf("%d\n",sx1272_CAD_value[_loraMode]*w);
+                
+                delay(sx1272_CAD_value[loraMode]*w);
+                
+                // check for free channel (SIFS/DIFS) once again
+                _startDoCad=millis();
+                e = sx1272.doCAD(_send_cad_number);
+                _endDoCad=millis();
+     
+                printf("--> CAD duration ");
+                printf("%ld\n",_endDoCad-_startDoCad);
+            
+                if (!e)
+                  printf("OK2\n");            
+                else
+                  printf("###2\n");
+              }          
+          }    
+        }
+        else {
+          n_collision++;
+          foundBusyDuringDIFSafterBusyState++;          
+          printf("###");  
+          printf("%d\n",n_collision);
+          
+          printf("--> Channel busy. Retry CAD until free channel\n");
+
+          int busyCount=0;
+              
+          _startDoCad=millis();
+          do {
+            
+            e = sx1272.doCAD(1);
+
+            if (e) {
+                printf("R");
+                busyCount++;              
+            }
+                         
+          } while (e);
+
+          _endDoCad=millis();
+
+          printf("\n--> found busy during ");
+          printf("%d\n", busyCount);
+                        
+          printf("--> wait duration ");
+          printf("%ld\n",_endDoCad-_startDoCad);
+
+          // to perform a new DIFS
+          printf("--> retry\n");
+          e=1;
+        }
+
+      } while (e);
+    
+      // CAD is OK, but need to check RSSI
+      if (_RSSIonSend) {
+    
+          e=sx1272.getRSSI();
+          
+          uint8_t rssi_retry_count=10;
+          
+          if (!e) {
+          
+            printf("--> RSSI ");
+            printf("%d\n", sx1272._RSSI);
+            
+            while (sx1272._RSSI > -90 && rssi_retry_count) {
+              
+              delay(1);
+              sx1272.getRSSI();
+              printf("--> RSSI ");
+              printf("%d\n",  sx1272._RSSI);       
+              rssi_retry_count--;
+            }
+          }
+          else
+            printf("--> RSSI error\n"); 
+        
+          if (!rssi_retry_count)
+            carrierSenseRetry=true;  
+          else
+      carrierSenseRetry=false;            
+      }
+      
+    } while (carrierSenseRetry);  
+  }
+}
+
+void SX1272::CarrierSense3() {
+
+  int e;
+  bool carrierSenseRetry=false;
+  uint8_t n_collision=0;
+  uint8_t n_cad=9;
+  
+  uint32_t max_toa = sx1272.getToA(255);
+  
+  //unsigned long end_carrier_sense=0;
+  
+  if (_send_cad_number && _enableCarrierSense) {
+    do { 
+
+      printf("--> CarrierSense3: do CAD for MaxToa=");
+      printf("%ld\n", max_toa);
+        
+      //end_carrier_sense=millis()+(max_toa/n_cad)*(n_cad-1);
+      
+      for (int i=0; i<n_cad; i++) {      
+        _startDoCad=millis();
+        e = sx1272.doCAD(1);
+        _endDoCad=millis();
+
+        if (!e) {
+          printf("%ld\n", _endDoCad);
+          printf(" 0 ");
+          printf("%d\n", sx1272._RSSI);
+          printf(" ");
+          printf("%ld\n", _endDoCad-_startDoCad);
+        }
+        else
+          continue;
+          
+        // wait in order to have n_cad CAD operations during max_toa
+        delay(max_toa/(n_cad-1)-(millis()-_startDoCad));
+      }
+
+      if (e) {
+        n_collision++;
+        printf("###");  
+        printf("%d\n",n_collision);
+                  
+        printf("Channel busy. Wait for MaxToA=");
+        printf("%ld\n", max_toa);      
+        delay(max_toa);
+        // to perform a new max_toa waiting
+        printf("--> retry\n");        
+        carrierSenseRetry=true;
+      }
+      else
+        carrierSenseRetry=false;
+      
+    } while (carrierSenseRetry);  
+  }
 }
 
 /*

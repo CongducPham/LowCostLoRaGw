@@ -1156,7 +1156,10 @@ public:
     void RxChainCalibration();
     uint8_t doCAD(uint8_t counter);
     uint16_t getToA(uint8_t pl);
-    void CarrierSense();
+    void CarrierSense(uint8_t cs=1);
+    void CarrierSense1();
+    void CarrierSense2();
+    void CarrierSense3();        
     int8_t setSyncWord(uint8_t sw);
     int8_t getSyncWord();
     int8_t setSleepMode();

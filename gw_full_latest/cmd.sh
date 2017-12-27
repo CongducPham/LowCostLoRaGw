@@ -90,6 +90,9 @@ echo "d- disable Node-Red at boot                                          +"
 #echo "e- run: tail -f rfcomm.log                                           +"
 echo "---------------------------------------------------* Connectivity *--+"
 echo "f- test: ping www.univ-pau.fr                                        +"
+echo "g- wifi: configure as WiFi client at next reboot                    +"
+echo "h- wifi: indicate WiFi SSID and password at next reboot             +"
+echo "i- wifi: configure as WiFi access point at next reboot              +" 
 echo "--------------------------------------------------* Filtering msg *--+"
 echo "l- List LoRa reception indications                                   +"
 echo "m- List radio module reset indications                               +"
@@ -243,6 +246,54 @@ if [ "$choice" = "f" ]
 		echo "Test Internet connectivity. CTRL-C to return"
 		trap "echo" SIGINT
 		ping www.univ-pau.fr
+fi
+
+if [ "$choice" = "g" ] 
+	then
+		echo "Configure as WiFi client for at reboot"
+		echo "Warning: if a valid WiFi network is not configured you will not be able to connect through the gateway's access point anymore"
+		echo "*********************"
+		echo "*** continue Y/N  ***"
+		echo "*********************"
+		read ouinon
+
+		if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
+			then    
+				echo "Configuring as WiFi client at next reboot"
+				./scripts/prepare_wifi_client.sh
+				echo "Done"
+				echo "Use option h to indicate a WiFi SSID for next reboot"			
+		fi
+fi
+
+if [ "$choice" = "h" ] 
+	then
+		echo "Indicate WiFi SSID and password at next reboot"
+		echo "Enter WiFi SSID"
+		read wifi_ssid
+		echo "Enter WiFi password"
+		read wifi_password
+		echo "Creating entry in /etc/wpa_supplicant/wpa_supplicant.conf"
+		wpa_passphrase "$wifi_ssid" "$wifi_password" | sudo tee -a /etc/wpa_supplicant/wpa_supplicant.conf > /dev/null
+		echo "Use option R to reboot"
+		echo "Then you need to know the IP address assigned to your gateway for ssh or web admin interface"
+fi
+
+if [ "$choice" = "i" ] 
+	then
+		echo "Configure as WiFi access point at next reboot"
+		echo "Warning: Internet connectivity should be provided by wired Ethernet or 2G/3G"
+		echo "*********************"
+		echo "*** continue Y/N  ***"
+		echo "*********************"
+		read ouinon
+
+		if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
+			then    
+				echo "Configuring as WiFi access point at next reboot"
+				./scripts/start_access_point.sh
+				echo "Done"		
+		fi
 fi
 
 if [ "$choice" = "l" ] 

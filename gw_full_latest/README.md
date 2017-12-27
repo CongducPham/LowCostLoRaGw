@@ -18,11 +18,11 @@ There are additional dedicated README files
 Configuration files and startup procedure
 -----------------------------------------
 
-A "gateway_conf.json" file defines gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Both basic_config_gw.sh and config_gw.sh script can do it for you, see below. Starting from November 3rd, 2017, the gateway ID is recreated from the MAC address every time the Raspberry reboots. This is done in order to automatically have a valid gateway id when installing a new gateway with the provided SD card image.
+A `gateway_conf.json` file defines gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Both `basic_config_gw.sh` and `config_gw.sh` script can do it for you, see below. Starting from November 3rd, 2017, the gateway ID is recreated from the MAC address every time the Raspberry reboots. This is done in order to automatically have a valid gateway id when installing a new gateway with the provided SD card image.
 
-In gateway_conf.json, you can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
+In `gateway_conf.json`, you can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
 
-A "start_gw.py" Python script runs the gateway, using the gateway configuration file to launch the low-level gateway with appropriate parameters and to log all outputs from the post-processing stage. As start_gw.py simply reads the configuration file to launch lora_gateway and the post_processing_gw.py script, it is just a simpler way to run the gateway. You can still use the corresponding command line. For instance, with the default configuration file:
+A `start_gw.py` Python script runs the gateway, using the gateway configuration file to launch the low-level gateway with appropriate parameters and to log all outputs from the post-processing stage. As `start_gw.py` simply reads the configuration file to launch `lora_gateway` and the `post_processing_gw.py` script, it is just a simpler way to run the gateway. You can still use the corresponding command line. For instance, with the default configuration file:
 
 	> sudo python start_gw.py
 	
@@ -30,33 +30,9 @@ is equivalent to:
 
 	> sudo ./lora_gateway --mode 1 | python ./post_processing_gw.py | python ./log_gw	
 
-Cloud support is separated into different external Python script file. We provide examples for Firebase and ThingSpeak with FireBase.py and ThinkSpeak.py.
+Cloud support is separated into different external Python script file. We provide examples ThingSpeak with `CloudThinkSpeak.py`. See the dedicated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md) file on cloud management.
 
-A cmd.sh script can be used in an interactive way to launch various commands for the gateway.
-
-Connect to your new gateway
----------------------------
-
-If you see the WiFi network WAZIUP_PI_GW_XXXXXXXXXX then connect to this WiFi network. The address of the Raspberry is then 192.168.200.1. If you see no WiFi access point (e.g. RP1/RPI2/RPI0 without WiFi dongle), then plug your Raspberry into a DHCP-enabled box/router/network to get an IP address or shared your laptop internet connection to make your laptop acting as a DHCP server. On a Mac, there is a very simple solution [here](https://mycyberuniverse.com/mac-os/connect-to-raspberry-pi-from-a-mac-using-ethernet.html). For Windows, you can follow [this tutorial](http://www.instructables.com/id/Direct-Network-Connection-between-Windows-PC-and-R/) or [this one](https://electrosome.com/raspberry-pi-ethernet-direct-windows-pc/). You can then use [Angry IP Scanner](http://angryip.org/) to determine the assigned IP address for the Raspberry.
-
-We will use in this example 192.168.2.8 for the gateway address (DHCP option in order to have Internet access from the Raspberry)
-
-	> ssh pi@192.168.2.8
-	pi@192.168.200.1's password: 
-	
-	The programs included with the Debian GNU/Linux system are free software;
-	the exact distribution terms for each program are described in the
-	individual files in /usr/share/doc/*/copyright.
-	
-	Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-	permitted by applicable law.
-	Last login: Thu Aug  4 18:04:41 2016
-
-go to lora_gateway folder
-
-	> cd lora_gateway
-	
-and follows instructions below.
+A `cmd.sh` script can be used in an interactive way to launch various commands for the gateway. See at the end of this document.
 
 WiFi instructions on RPI1B+ and RPI2
 ------------------------------------
@@ -71,7 +47,7 @@ If your dongle cannot set up an access-point, then you probably need to install 
 	> sudo rm hostapd
 	> sudo ln -s hostapd.tplink725.realtek hostapd
 
-Then edit /etc/hostapd/hostapd.conf. If you don't have the /etc/hostapd/hostapd.conf file then you may need to run:
+Then edit `/etc/hostapd/hostapd.conf`. If you don't have the `/etc/hostapd/hostapd.conf` file then you may need to run:
 
 	> zcat /usr/share/doc/hostapd/examples/hostapd.conf.gz | sudo tee -a /etc/hostapd/hostapd.conf
 	
@@ -96,10 +72,34 @@ uncomment
 	
 save the file and see below to configure your new gateway.
 
-Configure your gateway with basic_config_gw.sh or config_gw.sh
+Connect to your new gateway
+---------------------------
+
+With the default gateway configuration, the gateway acts as a WiFi access point. If you see the WiFi network WAZIUP_PI_GW_XXXXXXXXXX then connect to this WiFi network. The address of the Raspberry is then 192.168.200.1. If you see no WiFi access point (e.g. RP1/RPI2/RPI0 without WiFi dongle), then plug your Raspberry into a DHCP-enabled box/router/network to get an IP address or shared your laptop internet connection to make your laptop acting as a DHCP server. On a Mac, there is a very simple solution [here](https://mycyberuniverse.com/mac-os/connect-to-raspberry-pi-from-a-mac-using-ethernet.html). For Windows, you can follow [this tutorial](http://www.instructables.com/id/Direct-Network-Connection-between-Windows-PC-and-R/) or [this one](https://electrosome.com/raspberry-pi-ethernet-direct-windows-pc/). You can then use [Angry IP Scanner](http://angryip.org/) to determine the assigned IP address for the Raspberry.
+
+We will use in this example 192.168.2.8 for the gateway address (DHCP option in order to have Internet access from the Raspberry)
+
+	> ssh pi@192.168.2.8
+	pi@192.168.200.1's password: 
+	
+	The programs included with the Debian GNU/Linux system are free software;
+	the exact distribution terms for each program are described in the
+	individual files in /usr/share/doc/*/copyright.
+	
+	Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+	permitted by applicable law.
+	Last login: Thu Aug  4 18:04:41 2016
+
+go to `lora_gateway` folder
+
+	> cd lora_gateway
+	
+and follows instructions below.
+
+Configure your gateway with `basic_config_gw.sh` or `config_gw.sh`
 --------------------------------------------------------------
 
-basic_config_gw.sh should be sufficient for most of the cases. The configuration script mainly assign the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will use the last 5 bytes of the Raspberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you.  
+`basic_config_gw.sh` should be sufficient for most of the cases. The configuration script mainly assign the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will use the last 5 bytes of the Raspberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you.  
 
     > ifconfig
     eth0  Link encap:Ethernet  HWaddr b8:27:eb:be:da:21  
@@ -111,13 +111,13 @@ basic_config_gw.sh should be sufficient for most of the cases. The configuration
           collisions:0 txqueuelen:1000 
           RX bytes:6565141 (6.2 MiB)  TX bytes:1452497 (1.3 MiB)
           
-In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "00000027EBBEDA21". There is an additional script called test_gwid.sh in the script folder to test whether the gateway id can be easily determined. In the script folder, simply run test_gwid.sh:
+In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "00000027EBBEDA21". There is an additional script called `test_gwid.sh` in the script folder to test whether the gateway id can be easily determined. In the `scripts` folder, simply run `test_gwid.sh`:
 
 	> cd /home/pi/lora_gateway/scripts
 	> ./test_gwid.sh
 	Detecting gw id as 00000027EBBEDA21
 	
-If you don't see something similar to 00000027EBBEDA21 (8 bytes in hex format) then you have to explicitly provide the **last 5 bytes**	of the gw id to basic_config_gw.sh. Otherwise, in the script folder, simply run basic_config_gw.sh to automatically configure your gateway. 
+If you don't see something similar to 00000027EBBEDA21 (8 bytes in hex format) then you have to explicitly provide the **last 5 bytes** of the gw id to `basic_config_gw.sh`. Otherwise, in the `scripts` folder, simply run `basic_config_gw.sh` to automatically configure your gateway. 
 
 	> cd /home/pi/lora_gateway/scripts
 	> ./basic_config_gw.sh
@@ -126,37 +126,87 @@ or
 
 	> ./basic_config_gw.sh 27EBBEDA21
 	
-**basic_config_gw.sh takes care of:**
+`basic_config_gw.sh` takes care of:
 
 - determining the gateway id
-- compiling the lora_gateway program, the Raspberry board version will be checked automatically
-- creating a "gateway_id.txt" file containing the gateway id (e.g. "00000027EBBEDA21")
-- setting in gateway_cong.json the gateway id: "gateway_ID" : "00000027EBBEDA21"
-- creating the /home/pi/Dropbox/LoRa-test folder for log files (if it does not exist) 
-- creating a "log" symbolic link in the lora_gateway folder pointing to /home/pi/Dropbox/LoRa-test folder
-- configuring /etc/hostapd/hostapd.conf for WiFi (step A)
-- configuring the gateway to run the lora_gateway program at boot (step I)
+- compiling the `lora_gateway` program, the Raspberry board version will be checked automatically
+- creating a `gateway_id.txt` file containing the gateway id (e.g. "00000027EBBEDA21")
+- setting in `gateway_cong.json` the gateway id: "gateway_ID" : "00000027EBBEDA21"
+- creating the `/home/pi/Dropbox/LoRa-test` folder for log files (if it does not exist) 
+- creating a `log` symbolic link in the `lora_gateway` folder pointing to `/home/pi/Dropbox/LoRa-test` folder
+- configuring `/etc/hostapd/hostapd.conf` for WiFi access point (step A)
+- configuring the gateway to run the `lora_gateway` program at boot (step I)
 
-If you need more advanced configuration, then run config_gw.sh. for advanced WiFi and Bluettoth configuration tasks (if you use our SD card image, otherwise, you need first to install some required packages). If you don't want some features, just skip them. The configuration script also automatically determines the gateway id like previously. **config_gw.sh takes care of:**
+If you need more advanced configuration, then run `config_gw.sh`. for advanced WiFi and Bluettoth configuration tasks (if you use our SD card image, otherwise, you need first to install some required packages). If you don't want some features, just skip them. The configuration script also automatically determines the gateway id like previously. `config_gw.sh` **takes care of:**
 
-- everything that basic_config_gw.sh is doing, **plus**
-- configuring /etc/bluetooth/main.conf for Bluetooth (step B)
+- everything that `basic_config_gw.sh` is doing, **plus**
+- configuring `/etc/bluetooth/main.conf` for Bluetooth (step B)
 - activating MongoDB storage (step F)
 - compiling DHT22 support (step H)
 
 Anyway, check steps A to I as described below and perform all needed tasks that config_gw.sh is not addressing.
 
-**Even if you installed from the zipped SD card image basic_config_gw.sh or config_gw.sh is still needed to personalize your gateway to:**
+**Even if you installed from the zipped SD card image `basic_config_gw.sh` or `config_gw.sh` is still needed to personalize your gateway to:**
 
-- compile the lora_gateway program for your the Raspberry board version
-- configure /etc/hostapd/hostapd.conf for to advertise a WiFi SSID corresponding to last 5 hex-byte of your eth0 interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
+- compile the `lora_gateway` program for your the Raspberry board version
+- configure `/etc/hostapd/hostapd.conf` to advertise a WiFi SSID corresponding to last 5 hex-byte of your eth0 interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
+
+
+Make your gateway a WiFi client
+------------------------------
+
+As indicated previously, in the default gateway configuration (i.e. from the SD card image) the gateway acts as a WiFi access point and Internet connectivity is provided through the wire Ethernet interface. In case you want to make the gateway a WiFi client so that it connects to the Internet through an existing WiFi network you have to do the following steps. Note that this solution works even if you are logged (ssh) on the gateway using the gateway's access point WiFi network.
+
+1. run in the `lora_gateway/scripts` folder the `prepare_wifi_client.sh` script
+2. run the following command:
+	```
+	wpa_passphrase "my_ssid" "my_password" | sudo tee -a /etc/wpa_supplicant/wpa_supplicant.conf > /dev/null
+	```
+	where `my_ssid` and `my_password` should be replaced by your WiFi SSID and password
+	
+3. reboot the gateway:
+	```
+	sudo shutdown -r now
+	```
+	
+At reboot, your gateway is not acting as a WiFi access point anymore and should be connected to your WiFi network. One issue is to know the IP address assigned to your gateway by the WiFi access point. If your WiFi access point can show the list of leased IP address then you can easily determined your gateway IP address. 
+
+Otherwise, one solution is to take a smartphone or a computer that is connected to the WiFi network in order to know the IP network address of the WiFi network advertised by your access point (e.g. 192.168.1.0). Then you can use a network tool such as `Angry IP scanner` available on most platforms (including Android smartphone) to ping and discover all devices on that WiFi network. Once you obtained the IP address of the gateway on that WiFi network, for instance 192.168.1.25, you can then use `ssh` to log into the gateway and use the gateway's web interface to manage your gateway as usual.
+
+Once logged on your gateway through a computer on the same WiFi network, you can use:
+
+	> iwgetid
+	wlan0	ESSID:"my_ssid"
+	
+or 
+
+	> iwconfig
+	lo		no wireless extensions.
+	
+	wlan0	IEEE 802.11  ESSID:"my_ssid"  
+			Mode:Managed  Frequency:2.437 GHz  Access Point: 2E:F0:A2:90:30:55
+			Bit Rate=24 Mb/s   Tx-Power=31 dBm   
+			Retry short limit:7   RTS thr:off   Fragment thr:off
+			Power Management:on
+			Link Quality=40/70  Signal level=-70 dBm  
+			Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+			Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+	
+	eth0	no wireless extensions.	  
+	
+to verify that the gateway is connected on the WiFi network. You can also try Internet connectivity by pinging a computer on the Internet.
+
+If you are using the text command interface (`cmd.sh`, see end of this document), use option `g` to run `prepare_wifi_client.sh` and option `h` to interactively enter the SSID and password. Then use option `R` to reboot your gateway.
+
+When you want to switch back the gateway into access point mode, then run in the `lora_gateway/scripts` folder the `start_access_point.sh` script (or option `i` of the text command interface).	
+
 
 If you install everything yourself, from a standard Jessie (or newer) distribution
 ==================================================================================
 
 You need to install some additional packages:
 
-Python pip installer
+Python `pip` installer
 
 	> sudo apt-get install python-pip
 	
@@ -193,18 +243,18 @@ First, install the required packages
 
 	> sudo apt-get install hostapd dnsmasq
 
-Set your hot-spot name (ssid) in /etc/hostapd/hostapd.conf (i.e. WAZIUP_PI_GW_27EBBEDA21 using the last 5 hex bytes of your eth0 mac address) and the password (wpa_passphrase)
+Set your hot-spot name (ssid) in `/etc/hostapd/hostapd.conf` (i.e. WAZIUP_PI_GW_27EBBEDA21 using the last 5 hex bytes of your eth0 mac address) and the password (wpa_passphrase)
 
-Replace in /etc/default/hostapd #DAEMON_CONF="" by DAEMON_CONF="/etc/hostapd/hostapd.conf"
+Replace in `/etc/default/hostapd` #DAEMON_CONF="" by DAEMON_CONF="/etc/hostapd/hostapd.conf"
 
-Add in /etc/dnsmasq.conf
+Add in `/etc/dnsmasq.conf`
 
 	interface=wlan0 
 	dhcp-range=192.168.200.100,192.168.200.120,255.255.255.0,1h
 
 to give IP address between 192.168.200.100 and 192.168.200.120, with the subnet mask 255.255.255.0 and a 1h lease
 
-Copy the interfaces_ap file from the scripts folder into /etc/network
+Copy the `interfaces_ap` file from the `scripts` folder into `/etc/network`
 
 	> sudo cp scripts/interfaces_ap /etc/networks
 
@@ -221,12 +271,12 @@ At this point, it is safer to reboot:
 
 	> sudo shutdown -r now
 
-When you want configure your Raspberry into an access-point, run the start_access_point.sh script (only once):
+When you want configure your Raspberry into an access-point, run the `start_access_point.sh` script (only once):
 
 	> cd scripts
 	> ./start_access_point.sh
 	
-You should be able to ssh on 192.168.200.1. start_access_point.sh renames the current interfaces file into interfaces_not_ap and then renames interfaces_ap into interfaces and restarts the various networking services. Now, even if your Raspberry reboots it will automatically be an access-point until you run the stop_access_point.sh script as follows:
+You should be able to ssh on 192.168.200.1. `start_access_point.sh` renames the current interfaces file into `interfaces_not_ap` and then renames `interfaces_ap` into `interfaces` and restarts the various networking services. Now, even if your Raspberry reboots it will automatically be an access-point until you run the `stop_access_point.sh` script as follows:
 
 	> cd scripts
 	> ./stop_access_point.sh
@@ -235,7 +285,7 @@ On Wheezy with a RPI2 using a WiFi dongle you have to check whether you need a s
 	
 	> lsusb
 	
-If your dongle cannot set up an access-point, then you probably need to install a new version of hostapd. For instance with the TP-Link TL-WN725 you can follow instructions from here https://www.raspberrypi.org/forums/viewtopic.php?f=91&t=54946	
+If your dongle cannot set up an access-point, then you probably need to install a new version of `hostapd`. For instance with the TP-Link TL-WN725 you can follow instructions from [https://www.raspberrypi.org/forums/viewtopic.php?f=91&t=54946](https://www.raspberrypi.org/forums/viewtopic.php?f=91&t=54946)	
 
 B/ Add Bluetooth support
 ========================
@@ -250,7 +300,7 @@ Then, in all cases
 
 	> sudo apt-get install python-bluez
 
-/etc/bluetooth/main.conf file may be edited to give a name to your Bluetooth network (i.e. WAZIUP_PI_BT_GW_27EBBEDA21 using the last 5 hex bytes of your eth0 mac address). You should have a Bluetooth interface (MAC address) listed in /var/lib/bluetooth/. If the Bluetooth network name indicated in /etc/bluetooth/main.conf is not taken into account, you can modify in /var/lib/bluetooth/<mac_address> either in config file (Wheezy) or settings file (Jessie) the Bluetooth network name for the interface.
+`/etc/bluetooth/main.conf` file may be edited to give a name to your Bluetooth network (i.e. WAZIUP_PI_BT_GW_27EBBEDA21 using the last 5 hex bytes of your eth0 mac address). You should have a Bluetooth interface (MAC address) listed in `/var/lib/bluetooth/`. If the Bluetooth network name indicated in `/etc/bluetooth/main.conf` is not taken into account, you can modify in `/var/lib/bluetooth/<mac_address>`, either in config file (Wheezy) or settings file (Jessie), the Bluetooth network name for the interface.
 
 then reboot
 
@@ -261,7 +311,7 @@ C/ Bluetooth App on Android
 
 Loot at http://blog.davidvassallo.me/2014/05/11/android-linux-raspberry-pi-bluetooth-communication/
 
-Check that your /etc/bluetooth/main.conf file has the following line
+Check that your `/etc/bluetooth/main.conf` file has the following line
 
 	DisablePlugins = pnat
 
@@ -270,11 +320,16 @@ then, with Jessie:
 - Look at https://www.raspberrypi.org/forums/viewtopic.php?f=63&t=133263
 - Look at https://www.raspberrypi.org/forums/viewtopic.php?p=919420#p919420
 - in file /lib/systemd/system/bluetooth.service
+
 	Add ' -C' at the end of the 'ExecStart=' line, to start the bluetooth daemon in 'compatibility' mode.
-	Add a new 'ExecStartPost=' immediately after that line, to add the SP Profile. 
-	The two lines should look like this:
-		ExecStart=/usr/lib/bluetooth/bluetoothd -C
-		ExecStartPost=/usr/bin/sdptool add SP
+	
+    Add a new 'ExecStartPost=' immediately after that line, to add the SP Profile.
+    
+    The two lines should look like this:
+    ```
+	ExecStart=/usr/lib/bluetooth/bluetoothd -C
+	ExecStartPost=/usr/bin/sdptool add SP
+    ```
 
 then, with Wheezy: normally nothing to be done
 	 
@@ -284,7 +339,7 @@ May need to run on RPI
 
 	> sudo hciconfig hci0 piscan
 
-Run the rfcomm-server Python script in background to handle Bluetooth connections:
+Run the `rfcomm-server` Python script in background to handle Bluetooth connections:
 
 	> sudo python rfcomm-server.py > rfcomm.log &
 	
@@ -346,12 +401,12 @@ Check if PHP works by connecting to the IP address of the gateway with a web bro
 	> sudo wget -O verif_apache.html http://127.0.0.1
 	> cat ./verif_apache.html
 	
-Remember that starting with Jessie, the web pages are in /var/www/html instead of /var/www, so change accordingly
+Remember that starting with Jessie, the web pages are in `/var/www/html` instead of `/var/www`, so change accordingly
 
 	> sudo apt-get install php5-dev php5-cli php-pear
 	> sudo pecl install mongo
 
-Add in /etc/php5/apache2/php.ini the following line
+Add in `/etc/php5/apache2/php.ini` the following line
 
 	> extension=mongo.so
 	
@@ -359,7 +414,7 @@ Restart the web server
 	
 	> sudo service apache2 restart	
 	
-Copy all files in the php folder into /var/www/html or /var/www depending on whether you are running Jessie or Wheezy:
+Copy all files in the `lora_gateway/php` folder into `/var/www/html` or `/var/www` depending on whether you are running Jessie or Wheezy:
 
 	> cd php
 	> sudo cp * /var/www/html
@@ -376,7 +431,7 @@ Installing the Python-GPIO library
 	> make -j4
 	> sudo make install
 	
-If you want the gateway to periodically take the measure, edit in gateway_conf.json the line:
+If you want the gateway to periodically take the measure, edit in `gateway_conf.json` the line:
 
 	"dht22" : 0	
 
@@ -391,18 +446,18 @@ If you want to run the gateway at boot, you can add the following line:
 
 	/home/pi/lora_gateway/scripts/start_gw.sh
 	
-in the /etc/rc.local file, before the "exit 0" line
+in the `/etc/rc.local` file, before the `exit 0` line
 
-If you use the config_gw.sh script, it can do it for you.
+If you use the `config_gw.sh` script, it can do it for you.
 
-**IMPORTANT NOTICE**: when the gateway is run at boot, it is run under root identity. In the post_processing_gw.py script, the folder path for log files is hard coded as /home/pi/Dropbox/LoRa-test. In this way, even if the gateway is run under root identity, the log files are stored in the pi user account.
+**IMPORTANT NOTICE**: when the gateway is run at boot, it is run under root identity. In the `post_processing_gw.py` script, the folder path for log files is hard coded as `/home/pi/Dropbox/LoRa-test`. In this way, even if the gateway is run under root identity, the log files are stored in the pi user account.
 
 **IMPORTANT NOTICE**: To run an operation gateway, it is better to reboot the gateway and let the LoRa gateway program start at boot. Manually lauching the gateway can be usefull for test purposes but we observed that redirections of LoRa gateway output to the post-processing stage can be broken thus leading to a not responding gateway.
 
-gateway_conf.json options
+`gateway_conf.json` options
 =========================
 
-A typical gateway_conf.json is shown below:
+A typical `gateway_conf.json` is shown below:
 
 	{
 		"radio_conf" : {
@@ -441,43 +496,45 @@ A typical gateway_conf.json is shown below:
 		}	
 	}
 	
-["radio_conf"] defines the LoRa radio parameters. This section is read by start_gw.py to launch the lora_gateway program with the appropriate parameters. You can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. To specify an ad-hoc frequency, use ["freq" : 433.3] for instance. If you want to use "ch", you have to modify lora_gateway.cpp to select the correct frequency band and then only you can use ["ch" : 10]. If BAND900 is selected in lora_gateway.cpp then the channel used will be CH_10_900 which is 924.68MHz (defined in SX1272.h).
+["radio_conf"] defines the LoRa radio parameters. This section is read by `start_gw.py` to launch the `lora_gateway` program with the appropriate parameters. You can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. To specify an ad-hoc frequency, use ["freq" : 433.3] for instance. If you want to use "ch", you have to modify `lora_gateway.cpp` to select the correct frequency band and then only you can use ["ch" : 10]. If BAND900 is selected in lora_gateway.cpp then the channel used will be CH_10_900 which is 924.68MHz (defined in `SX1272.h`).
 
 ["gateway_conf"]["gateway_ID""] is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address.
 
-["gateway_conf"]["ref_latitude"] you can put the gateway latitude here. We plan to push this data to LoRaWAN network server in the future.
+["gateway_conf"]["ref_latitude"] you can put the gateway latitude here. 
 
-["gateway_conf"]["ref_longitude"] you can put the gateway longitude here. We plan to push this data to LoRaWAN network server in the future.
+["gateway_conf"]["ref_longitude"] you can put the gateway longitude here. For instance, `CloudGpsFile.py` uses the gateway GPS coordinates to calculate the distance of remote GPS device to the gateway. It is also possible to periodically push the gateway GPS coordinates on a cloud platform (similar to what is is done in LoRaWAN network server). For that purpose, `post_processing_gw.py` periodically calls `post_status_processing_gw.py` where customized peridodic tasks can be added.
 
-["gateway_conf"]["wappkey"] when set to true will enable app key enforcement in post_processing_gw.py. Add there the list of appkey that you want to enable.
+["gateway_conf"]["wappkey"] when set to true will enable app key enforcement in `post_processing_gw.py`. Add in `key_AppKey.py` the list of appkey that you want to enable.
 
-["gateway_conf"]["raw"] when set to true will make  the lora_gateway program to provide raw payload to the post-processing stage. Then, post_processing_gw.py will try to dissect the packet which will be in most case a LoRaWAN packet. However, you can use your own packet format and then modify post_processing_gw.py ccordingly.
+["gateway_conf"]["raw"] when set to true will make  the `lora_gateway` program to provide raw payload to the post-processing stage. Then, `post_processing_gw.py` will try to dissect the packet which will be in most case a LoRaWAN packet. However, you can use your own packet format and then modify `post_processing_gw.py` accordingly.
 
-["gateway_conf"]["aes"] when set to true will enable local AES decryption in post_processing_gw.py. The AES AppSKey and NwkSKey are stored in loraWAN.py. They must match those used by the end-device. We only support ABP (activitation by personalization) method. Actually, AES is usefull to provide data privicy.
+["gateway_conf"]["aes"] when set to true will enable local AES decryption in `post_processing_gw.py`. The AES AppSKey and NwkSKey are stored in `loraWAN_config.py`. They must match those used by the end-device. We only support ABP (activitation by personalization) method. Actually, AES is usefull to provide data privacy.
 
-["gateway_conf"]["log_post_processing"] when set to true will make start_gw.py to additionally launch log_gw.py script to log all the post_processing_gw.py's outputs.
+["gateway_conf"]["log_post_processing"] when set to true will make `start_gw.py` to additionally launch `log_gw.py` script to log all the `post_processing_gw.py`'s outputs.
 
-["gateway_conf"]["log_weekly"] when set to true will make log_gw.py to create a new log file every week, instead of every month.
+["gateway_conf"]["log_weekly"] when set to true will make `log_gw.py` to create a new log file every week, instead of every month.
 
-["gateway_conf"]["dht22"] indicates the time interval (in second) for post_processing_gw.py to trigger a temperature/humidity measure from the DHT22 sensor every N seconds (that you must connect and install, see step H). post_processing_gw.py will typically display the following information, that will be logged in the log file.
+["gateway_conf"]["dht22"] indicates the time interval (in second) for `post_processing_gw.py` to trigger a temperature/humidity measure from the DHT22 sensor every N seconds (that you must connect and install, see step H). `post_processing_gw.py` will typically display the following information, that will be logged in the log file.
 
 	2017-03-31T23:42:52.703430> Getting gateway temperature
 	2017-03-31T23:42:52.703722> Gateway TC : 26.40 C | HU : 24.90 % at 2017-03-31 23:42:52.703074
 
 ["gateway_conf"]["dht22_mongo"] when set to true will further store the temperature/humidity measure in the local MongDB. Then, these measures will be visible on the gateway's web page. You can check with this feature the condition inside the gateway's case in outdoor deployment.
 
-["gateway_conf"]["downlink"] indicates the time interval (in second) for post_processing_gw.py to check for a downlink-post.txt. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md).
+["gateway_conf"]["downlink"] indicates the time interval (in second) for `post_processing_gw.py` to check for a `downlink-post.txt`. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md).
 
-["gateway_conf"]["status"] indicates the time interval (in second) for post_processing_gw.py to display a status message to indicate that the script is correctly running in case you don't receive packet for a long time.
+["gateway_conf"]["status"] indicates the time interval (in second) for `post_processing_gw.py` to call `post_status_processing_gw.py` for periodic tasks. Currently, `post_status_processing_gw.py` will display a status message to indicate that the script is correctly running in case you don't receive packet for a long time.
 
-	2017-03-31T23:44:00.479800> 2017-03-31 23:44:00.479397
-	2017-03-31T23:44:00.480088> post status: gw ON, lat my_lat long my_long 
+	2017-12-27T14:30:17.496030> status: start running
+	2017-12-27T14:30:17.496899> status: show current GPS position
+	2017-12-27T14:30:17.497074> show GPS: current GPS coordinate: gw lat my_lat long my_long
+	2017-12-27T14:30:17.497242> status: exiting
 
-We plan in the future to send appropriate message to a LoRaWAN network server (such as TTN) in the same way the single_chan_pkt_fwd program from Thomas Telkamp works (and like most LoRaWAN gateways). 
+We plan in the future to send appropriate message to a LoRaWAN network server (such as TTN) in the same way the `single_chan_pkt_fwd` program from Thomas Telkamp works (and like most LoRaWAN gateways). 
 
-["gateway_conf"]["aux_radio"] indicates the time interval (in second) for post_processing_gw.py to check for a aux_radio_post.txt file with data received from other radio interfaces, e.g. IEEE802.15.4, etc. This feature is not currently distributed as it is still in the early stage of development.
+["gateway_conf"]["aux_radio"] indicates the time interval (in second) for `post_processing_gw.py` to check for a `aux_radio_post.txt` file with data received from other radio interfaces, e.g. IEEE802.15.4, etc. This feature is not currently distributed as it is still in the early stage of development.
 
-["alert_conf"]["use_mail"] when set to true indicates that post_processing_gw.py will sent an alerting mail on specific events. There are currently 2 events: when post_processing_gw.py is started (which usually means that the gateway has booted and is up) and when the radio module has been reset by the low-level lora_gateway program because of some receive errors.
+["alert_conf"]["use_mail"] when set to true indicates that `post_processing_gw.py` will sent an alerting mail on specific events. There are currently 2 events: when `post_processing_gw.py` is started (which usually means that the gateway has booted and is up) and when the radio module has been reset by the low-level lora_gateway program because of some receive errors.
 
 ["alert_conf"]["contact_mail"] is the list of email address recipients: e.g. joejoejoe@gmail.com,jackjackjack@hotmail.com,...
 
@@ -487,7 +544,7 @@ We plan in the future to send appropriate message to a LoRaWAN network server (s
 
 ["alert_conf"]["mail_passwd"] is the passwd. It is not very secure but there is no other way to the best of my knowledge.
 
-["alert_conf"]["use_sms"] when set to true indicates that post_processing_gw.py will sent an alerting SMS on specific events. This feature will be integrated soon. We already tested the SMS transmission using gammu with a 3G dongle (see this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/3GDongle/README.md) that explains how to use a 3G dongle for Internet connectivity).
+["alert_conf"]["use_sms"] when set to true indicates that `post_processing_gw.py` will sent an alerting SMS on specific events. There are currently 2 events: when `post_processing_gw.py` is started (which usually means that the gateway has booted and is up) and when the radio module has been reset by the low-level lora_gateway program because of some receive errors. We already tested the SMS transmission using gammu with a 3G dongle (see this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/3GDongle/README.md) that explains how to use a 3G dongle for Internet connectivity).
 
 ["alert_conf"]["pin"] is the SIM card pin number if this feature is enabled.
 
@@ -498,14 +555,14 @@ We plan in the future to send appropriate message to a LoRaWAN network server (s
 Adding new features
 ===================
 
-The gateway architecture is flexible on purpose for adding or customizing your gateway by only modifying the post_processing_gw.py script. To add new options, you can either add new fields in one of the current sections in gateway_conf.json, or add a brand new section.
+The gateway architecture is flexible on purpose for adding or customizing your gateway by modifying the `post_processing_gw.py` script or the `post_status_processing_gw.py` script or by adding now cloud scripts. To add new options, you can either add new fields in one of the current sections in `gateway_conf.json`, or add a brand new section. 
 
-New cloud platforms can be added by writing new cloud scripts and adding them to clouds.json. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md).
+New cloud platforms can be added by writing new cloud scripts and adding them to `clouds.json`. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md).
 
-USE cmd.sh to interact with the gateway
+Use `cmd.sh` to interact with the gateway
 =======================================
 
-You can use cmd.sh as follows:
+You can use `cmd.sh` as follows:
 
 	> ./cmd.sh
 	=======================================* Gateway 00000027EBBEDA21 *===
@@ -516,14 +573,16 @@ You can use cmd.sh as follows:
 	4- tail --line=15 ../Dropbox/LoRa-test/post-processing.log           +
 	5- tail -f ../Dropbox/LoRa-test/post-processing.log                  +
 	6- less ../Dropbox/LoRa-test/post-processing.log                     +
-	------------------------------------------------------* Bluetooth *--+
-	a- run: sudo hciconfig hci0 piscan                                   +
-	b- run: sudo python rfcomm-server.py                                 +
-	c- run: nohup sudo python rfcomm-server.py -bg > rfcomm.log &        +
-	d- run: ps aux | grep rfcomm                                         +
-	e- run: tail -f rfcomm.log                                           +
+	-------------------------------------------------------* Node-Red *--+
+	a- start Node-Red                                                    +
+	b- stop Node-Red                                                     +
+	c- enable Node-Red at boot                                           +
+	d- disable Node-Red at boot                                          +
 	---------------------------------------------------* Connectivity *--+
 	f- test: ping www.univ-pau.fr                                        +
+	g- wifi: configure as WiFi client at next reboot                    +
+	h- wifi: indicate WiFi SSID and password at next reboot             +
+	i- wifi: configure as WiFi access point at next reboot              +	
 	--------------------------------------------------* Filtering msg *--+
 	l- List LoRa reception indications                                   +
 	m- List radio module reset indications                               +
@@ -549,12 +608,12 @@ You can use cmd.sh as follows:
 	======================================================================
 	Enter your choice: 
 
-cmd.sh needs a file called gateway_id.txt that should contain the ID of your gateway. As indicated previously, the gateway ID is composed of 8 bytes in hexadecimal notation with the last 5 bytes being the last 5 bytes of the gateway eth0 interface MAC address. It is exactely the same ID that the one indicated in gateway_conf.json. If you start cmd.sh without this gateway_id.txt file, it will create such file by determining last 5 bytes of the gateway eth0 interface MAC address:
+`cmd.sh` needs a file called `gateway_id.txt` that should contain the ID of your gateway. As indicated previously, the gateway ID is composed of 8 bytes in hexadecimal notation with the last 5 bytes being the last 5 bytes of the gateway eth0 interface MAC address. It is exactely the same ID that the one indicated in `gateway_conf.json`. If you start `cmd.sh` without this `gateway_id.txt` file, `cmd.sh` will create such file by determining last 5 bytes of the gateway eth0 interface MAC address:
 
 	> cat gateway_id.txt
 	00000027EBBEDA21
 	
-cmd.sh will also set the gateway id in the gateway_conf.json file: "gateway_ID" : "00000027EBBEDA21". 
+`cmd.sh` will also set the gateway id in the `gateway_conf.json` file: "gateway_ID" : "00000027EBBEDA21". 
 
 Normally, the LoRa gateway starts automatically on boot. To verify that you have a running gateway, use option 3.
 
@@ -580,9 +639,9 @@ You can start manually the gateway for test purposes with option 0.
 	
 **IMPORTANT NOTICE**: To run an operation gateway, it is better to reboot the gateway and let the LoRa gateway program start at boot. Manually lauching the gateway can be usefull for test purposes but we observed that redirections of LoRa gateway output to the post-processing stage can be broken thus leading to a not responding gateway.
 
-You can then use option 5 to see the logs in real time. To test the simple low-level gateway, use option 1. You can ssh at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an ssh apps to log on 192.168.200.1 and launch cmd.sh from your smartphone.	
+You can then use option 5 to see the logs in real time. To test the simple low-level gateway, use option 1. You can `ssh` at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an `ssh` app to log on 192.168.200.1 and launch `cmd.sh` from your smartphone.	
 
-You can easily add new useful commands to the cmd.sh shell script.
+You can easily add new useful commands to the `cmd.sh` shell script.
 	
 Enjoy!
 C. Pham	

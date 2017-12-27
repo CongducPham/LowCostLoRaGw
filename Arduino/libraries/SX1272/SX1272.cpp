@@ -30,12 +30,14 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  November 10th, 2017
+ *		- change the way packet's RSSI is computed
  *  November 7th, 2017
  *      - bug fix in how the CRC is checked at receiver in getPacket() function
  *  November 3rd, 2017
  *      - IMPORTANT: the CS pin is now always pin number 10 on Arduino boards
  *      - if you use the Libelium Multiprotocol shield to connect a Libelium LoRa then change the CS pin to pin 2 in SX1272.h
- *      - CRC (RxPayloadCrcOn) is now ON by default for transmitter side
+ *      - CRC (RxPayloadCrcOn) is now ON by default for transmitter side (end-device)
  *  June, 22th, 2017
  *      - setPowerDBM(uint8_t dbm) calls setPower('X') when dbm is set to 20
  *  Apr, 21th, 2017
@@ -3481,14 +3483,15 @@ int16_t SX1272::getRSSIpacket()
                 // added by C. Pham, using Semtech SX1272 rev3 March 2015
                 // for SX1272 we use -139, for SX1276, we use -157
                 // then for SX1276 when using low-frequency (i.e. 433MHz) then we use -164
-                _RSSIpacket = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)+(_channel<CH_04_868?7:0)) + (double)_RSSIpacket + (double)_rawSNR*0.25;
+                //_RSSIpacket = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)+(_channel<CH_04_868?7:0)) + (double)_RSSIpacket + (double)_rawSNR*0.25;
+                _RSSIpacket = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)+(_channel<CH_04_868?7:0)) + (double)_RSSIpacket + (double)_SNR*0.25;
                 state = 0;
             }
             else
             {
                 // commented by C. Pham
                 //_RSSIpacket = readRegister(REG_PKT_RSSI_VALUE);
-                _RSSIpacket = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)+(_channel<CH_04_868?7:0)) + (double)_RSSIpacket;
+                _RSSIpacket = -(OFFSET_RSSI+(_board==SX1276Chip?18:0)+(_channel<CH_04_868?7:0)) + (double)_RSSIpacket*16.0/15.0;
                 //end
                 state = 0;
             }
@@ -6738,15 +6741,29 @@ uint16_t SX1272::getToA(uint8_t pl) {
     return _currentToA;
 }
 
+void SX1272::CarrierSense(uint8_t cs) {
+    
+    if (cs==1)
+    	CarrierSense1();
+    
+    if (cs==2)
+    	CarrierSense2(); 
+    	
+    if (cs==3)
+    	CarrierSense2();     	
+}    	  	   	
+
 // need to set _send_cad_number to a value > 0
 // we advise using _send_cad_number=3 for a SIFS and _send_cad_number=9 for a DIFS
 // prior to send any data
 // TODO: have a maximum number of trials
-void SX1272::CarrierSense() {
+void SX1272::CarrierSense1() {
 
     int e;
     bool carrierSenseRetry=false;
 
+  	Serial.print(F("--> CarrierSense1\n")); 
+  	
     if (_send_cad_number && _enableCarrierSense) {
         do {
             do {
@@ -6845,6 +6862,256 @@ void SX1272::CarrierSense() {
 
         } while (carrierSenseRetry);
     }
+}
+void SX1272::CarrierSense2() {
+
+  int e;
+  bool carrierSenseRetry=false;  
+  uint8_t foundBusyDuringDIFSafterBusyState=0;
+  uint8_t n_collision=0;
+  // upper bound of the random backoff timer
+  uint8_t W=2;  
+  
+  Serial.print(F("--> CarrierSense2: do CAD for DIFS=9CAD\n")); 
+  
+  if (_send_cad_number && _enableCarrierSense) {
+    do { 
+        
+      do {
+        //D f W
+        //2 2 4
+        //3 3 8
+        //4 4 16
+        //5 5 16
+        //6 6 16
+        //...
+        
+        if (foundBusyDuringDIFSafterBusyState>1 && foundBusyDuringDIFSafterBusyState<5)
+          W=W*2;
+                
+        // check for free channel (SIFS/DIFS)        
+        _startDoCad=millis();
+        e = sx1272.doCAD(_send_cad_number);
+        _endDoCad=millis();
+        
+        Serial.print(F("--> DIFS duration "));
+        Serial.print(_endDoCad-_startDoCad);
+		Serial.println();
+		
+        // successull SIFS/DIFS
+        if (!e) {
+          
+          // previous collision detected
+          if (n_collision) {
+                
+              Serial.print(F("--> counting for "));
+              // count for random number of CAD/SIFS/DIFS?   
+              // SIFS=3CAD
+              // DIFS=9CAD            
+              uint8_t w = random(0,W*_send_cad_number);
+
+              Serial.println(w);             
+
+              int busyCount=0;
+              bool nowBusy=false;
+              
+              do {
+
+                  if (nowBusy)
+                    e = sx1272.doCAD(_send_cad_number);
+                  else
+                    e = sx1272.doCAD(1);
+
+                  if (nowBusy && e) {
+                    Serial.print(F("#"));
+                    busyCount++;                    
+                  }
+                  else
+                  if (nowBusy && !e) {
+                    Serial.print(F("|"));
+                    nowBusy=false;                    
+                  }                  
+                  else
+                  if (!e) {
+                    w--;
+                    Serial.print(F("-"));
+                  }  
+                  else {
+                    Serial.print(F("*"));
+                    nowBusy=true;
+                    busyCount++;  
+                  }
+                  
+              } while (w);      
+
+              // if w==0 then we exit and 
+              // the packet will be sent 
+              Serial.println();
+              Serial.print(F("--> found busy during "));
+              Serial.println(busyCount);
+          }
+          else {
+              Serial.println(F("OK1"));
+    
+              _extendedIFS=false;
+              
+              if (_extendedIFS)  {          
+                // wait for random number of CAD         
+                uint8_t w = random(1,8);
+    
+                Serial.print(F("--> extended waiting for "));
+                Serial.println(w);
+                Serial.print(F(" CAD = "));
+                Serial.println(sx1272_CAD_value[_loraMode]*w);
+                
+                delay(sx1272_CAD_value[_loraMode]*w);
+                
+                // check for free channel (SIFS/DIFS) once again
+                _startDoCad=millis();
+                e = sx1272.doCAD(_send_cad_number);
+                _endDoCad=millis();
+     
+                Serial.print(F("--> CAD duration "));
+                Serial.println(_endDoCad-_startDoCad);
+            
+                if (!e)
+                  Serial.println("OK2");            
+                else
+                  Serial.println("###2");
+              }          
+          }    
+        }
+        else {
+          n_collision++;
+          foundBusyDuringDIFSafterBusyState++;          
+          Serial.print(F("###"));  
+          Serial.println(n_collision);
+          
+          Serial.println(F("--> Channel busy. Retry CAD until free channel"));
+
+          int busyCount=0;
+              
+          _startDoCad=millis();
+          do {
+            
+            e = sx1272.doCAD(1);
+
+            if (e) {
+                Serial.print(F("R"));
+                busyCount++;              
+            }
+                         
+          } while (e);
+
+          _endDoCad=millis();
+
+		  Serial.println();	
+          Serial.print(F("--> found busy during "));
+          Serial.println(busyCount);
+                        
+          Serial.print(F("--> wait duration "));
+          Serial.println(_endDoCad-_startDoCad);
+
+          // to perform a new DIFS
+          Serial.println(F("--> retry"));
+          e=1;
+        }
+
+      } while (e);
+    
+		// CAD is OK, but need to check RSSI
+		if (_RSSIonSend) {
+
+			e=getRSSI();
+
+			uint8_t rssi_retry_count=10;
+
+			if (!e) {
+
+				Serial.print(F("--> RSSI "));
+				Serial.print(_RSSI);
+				Serial.println();
+
+				while (_RSSI > -90 && rssi_retry_count) {
+
+					delay(1);
+					getRSSI();
+					Serial.print(F("--> RSSI "));
+					Serial.print(_RSSI);
+					Serial.println();
+					rssi_retry_count--;
+				}
+			}
+			else
+				Serial.print(F("--> RSSI error\n"));
+
+			if (!rssi_retry_count)
+				carrierSenseRetry=true;
+			else
+				carrierSenseRetry=false;
+		}
+      
+    } while (carrierSenseRetry);  
+  }
+}
+
+void SX1272::CarrierSense3() {
+
+  int e;
+  bool carrierSenseRetry=false;
+  uint8_t n_collision=0;
+  uint8_t n_cad=9;
+  
+  uint32_t max_toa = sx1272.getToA(255);
+  
+  Serial.println(F("--> CarrierSense3")); 
+
+  //unsigned long end_carrier_sense=0;
+  
+  if (_send_cad_number && _enableCarrierSense) {
+    do { 
+
+      Serial.println(F("--> CarrierSense3: do CAD for MaxToa="));
+      Serial.println(max_toa);
+        
+      //end_carrier_sense=millis()+(max_toa/n_cad)*(n_cad-1);
+      
+      for (int i=0; i<n_cad; i++) {      
+        _startDoCad=millis();
+        e = sx1272.doCAD(1);
+        _endDoCad=millis();
+
+        if (!e) {
+          Serial.println(_endDoCad);
+          Serial.print(F(" 0 "));
+          Serial.println(sx1272._RSSI);
+          Serial.print(F(" "));
+          Serial.println(_endDoCad-_startDoCad);
+        }
+        else
+          continue;
+          
+        // wait in order to have n_cad CAD operations during max_toa
+        delay(max_toa/(n_cad-1)-(millis()-_startDoCad));
+      }
+
+      if (e) {
+        n_collision++;
+        Serial.print(F("###"));  
+        Serial.println(n_collision);
+                  
+        Serial.print(F("Channel busy. Wait for MaxToA="));
+        Serial.println(max_toa);      
+        delay(max_toa);
+        // to perform a new max_toa waiting
+        Serial.println(F("--> retry"));        
+        carrierSenseRetry=true;
+      }
+      else
+        carrierSenseRetry=false;
+      
+    } while (carrierSenseRetry);  
+  }
 }
 
 /*
