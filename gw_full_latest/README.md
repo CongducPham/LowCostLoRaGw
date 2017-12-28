@@ -209,6 +209,46 @@ When you want to switch back the gateway into access point mode, then run in the
 
 **The web admin interface** can also be used to put the gateway into WiFi client mode and to specify a WiFi network and password (equivalent to option `g` and `h`, and do not forget to reboot). In addition, `raspap-webgui` from https://github.com/billz/raspap-webgui has been integrated and can be accessed at http://`gw_ip_address`/raspap-webgui. **Once** the gateway is configured as a WiFi client with the web admin interface, `raspap-webgui` is useful to dynamically discover and configure additional WiFi networks. **However**, note that it is risky to specify several WiFi networks because it becomes very difficult to know on which WiFi network the gateway is connected to.
 
+**The SD card image has `raspap-webgui` already installed**. If you want to install it manually, here are some instructions, mainly taken and adapted from https://github.com/billz/raspap-webgui. We suppose that you have our latest gateway software and all required packages, only additional packages will be described. The installation instructions are adapted to preserve our gateway settings.
+
+Start off by installing `lighttpd`
+
+	> sudo apt-get install lighttpd
+	
+After that, enable PHP for lighttpd and restart it for the settings to take effect
+
+	> sudo lighttpd-enable-mod fastcgi-php
+	> sudo service lighttpd restart	
+
+Regarding the `www-data ALL=(ALL)` line for the `/etc/sudoers` file, we already updated our web admin interface installation script to include all of them. So no need to do this step here.
+
+Then, git clone the files to `/var/www/html`. Note: for older versions of Raspbian (before Jessie, May 2016) use `/var/www` instead.
+
+	> cd /var/www/html 
+	> sudo git clone https://github.com/billz/raspap-webgui
+	
+Set the files ownership to `pi:www-data` user:group
+
+	> sudo chown -R pi:www-data /var/www/html/raspap-webgui
+	
+Move the RaspAP configuration file to the correct location
+
+	> sudo mkdir /etc/raspap
+	> sudo mv /var/www/html/raspap-webgui/raspap.php /etc/raspap/
+	> sudo chown -R www-data:www-data /etc/raspap
+
+Move the HostAPD logging scripts to the correct location
+
+	> sudo mkdir /etc/raspap/hostapd
+	> sudo mv /var/www/html/raspap-webgui/installers/*log.sh /etc/raspap/hostapd 
+
+Reboot and it should be up and running!
+
+	> sudo reboot
+
+The default username is 'admin' and the default password is 'secret'. RaspAp webgui can then be accessed at http://`gw_ip_address`/raspap-webgui. There is also a link from our web admin interface to RaspAp in the `System` menu.
+
+
 If you install everything yourself, from a standard Jessie (or newer) distribution
 ==================================================================================
 
