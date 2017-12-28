@@ -225,3 +225,31 @@ then
 	sudo sed -i 's/^wpa_passphrase.*/wpa_passphrase='"$2"'/g' /etc/hostapd/hostapd.conf
 fi
 
+if [ "$1" = "wificlient" ]
+then
+	###################################
+	# configure wifi client
+	###################################
+	cd /home/pi/lora_gateway/scripts
+	./prepare_wifi_client.sh
+	#adding the WiFi network into /etc/wpa_supplicant/wpa_supplicant.conf
+	wpa_passphrase "$2" "$3" | sudo tee -a /etc/wpa_supplicant/wpa_supplicant.conf > /dev/null
+fi
+
+if [ "$1" = "apmode" ]
+then
+	###################################
+	# configure wifi client
+	###################################
+	cd /home/pi/lora_gateway/scripts
+	./prepare_access_point.sh
+fi
+
+if [ "$1" = "apmodenow" ]
+then
+	###################################
+	# configure wifi client
+	###################################
+	cd /home/pi/lora_gateway/scripts
+	./start_access_point.sh
+fi

@@ -1130,6 +1130,65 @@ $(function () {
     });
 
 //#######################
+//# Setting wifi client
+//#######################
+	
+	$('#btn_wificlient_form_reset').click(function() {	
+    	$('#wificlient_form')[0].reset();
+    	//$("#form_msg").html("");
+	$("#system_msg").html("");
+    });	
+
+	$("#wificlient_form").submit(function(event){
+        // Stop form from submitting normally
+        event.preventDefault();
+        
+        /* Serialize the submitted form control values to be sent to the web server with the request */
+        var formValues = $(this).serialize();
+        
+        // Send the form data using post
+        $.post("process.php", formValues, function(data){
+            // Display the returned data in browser
+            //$("#form_msg").html(data);
+	    $("#system_msg").html(data);
+            //erase message after 5 seconds
+	    setTimeout(function() {
+  		$('#system_msg').html("");
+	     },5000);
+        });
+        $('#wificlient_form')[0].reset();
+        
+    });
+
+//#######################
+//# Setting AP mode
+//#######################
+
+	$('#btn_apmode').click(function() {
+        $.post($(this).attr('href'), function (res) { 
+	     $('#system_msg').html(res);
+	    //erase message after 5 seconds
+	    setTimeout(function() {
+  		$('#system_msg').html("");
+	    },5000);
+        });
+    });
+
+//#######################
+//# Setting AP mode now
+//#######################
+
+	$('#btn_apmodenow').click(function() {
+        $.post($(this).attr('href'), function (res) { 
+	     $('#system_msg').html(res);
+	    //erase message after 5 seconds
+	    setTimeout(function() {
+  		$('#system_msg').html("");
+	    },5000);
+        });
+    });
+                
+//#######################
 //# Downlink request form
 //#######################
 	

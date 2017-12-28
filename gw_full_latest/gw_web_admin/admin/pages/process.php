@@ -31,15 +31,12 @@ if (isset($_GET['internet']) && $_GET['internet'] == "true"){
  ********************************/
 if (isset($_GET['low_level_status']) && $_GET['low_level_status'] == "true"){ 	
 	$output = low_level_gw_status();
-	//echo $output;
 	
 	if($output ==""){
 		echo '<p><center><font color="red">Desynchronization => '.date('Y-m-d H:i:s').'.</font></center></p>';
 	}
 	else{
-		//$date = explode(">", $output );
 		$date = explode(".", $output );
-		//print_r($date);
 		echo '<p><center><font color="green">Last low-level gateway status ON: '.$date[0].'</font></center></p>';
 	}
 }
@@ -67,12 +64,9 @@ if (isset($_GET['logout']) && $_GET['logout'] == "true"){
 
 	// Finally, destroy the session.
 	session_destroy();
-	
-	//print_r($_SESSION);
 
 	// redirection
 	header('Location: ../');
-	//header('Location: login.php');
 }
 
 /*************************
@@ -88,11 +82,9 @@ if (isset($_GET['gw_new_install']) && $_GET['gw_new_install'] == "true"){
 		$output = gw_new_install();
 		
 		if($output == 0){
-			//echo "Success";
 			echo '<p><center><font color="green">New install of gateway done.</font></center></p>';
 		}
 		else{
-			//echo "Failure";
 			echo '<p><center><font color="red">Failed to install a new version of gateway</font></center></p>';	
 		}
 	}
@@ -110,11 +102,9 @@ if (isset($_GET['gw_full_update']) && $_GET['gw_full_update'] == "true"){
 	else{	
 		$output = gw_full_update(); 
 		if($output == 0){
-			//echo "Success";
 			echo '<p><center><font color="green">Gateway updated.</font></center></p>';
 		}
 		else{
-			//echo "Failure";
 			echo '<p><center><font color="red">Failed to update gateway</font></center></p>';	
 		}
 	}	
@@ -127,11 +117,9 @@ if (isset($_GET['gw_basic_conf']) && $_GET['gw_basic_conf'] == "true"){
 	
 	$output = gw_basic_conf();
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">Basic configuration done.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to run basic configuration.</font></center></p>';	
 	}
 }
@@ -151,15 +139,12 @@ if (isset($_POST['file_name_url'])){
     		echo '<p><center><font color="red">Please enter a valid URL.</font></center></p>';
 		}
 		else{
-			//echo $filename_url ;
 			$output = gw_update_file($filename_url);
 	
 			if($output == 0){
-				//echo "Success";
 				echo '<p><center><font color="green">File has been downloaded and installed.</font></center></p>';
 			}
 			else{
-				//echo "Failure";
 				echo '<p><center><font color="red">Failed to install file</font></center></p>';	
 			}
 		}
@@ -173,11 +158,9 @@ if (isset($_GET['update_web_admin']) && $_GET['update_web_admin'] == "true"){
 	
 	$output = update_web_admin_interface();
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">Web admin interface updated.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to update web admin interface.</font></center></p>';	
 	}
 }
@@ -189,11 +172,9 @@ if (isset($_GET['copy_log_file']) && $_GET['copy_log_file'] == "true"){
 	
 	$output = copy_log_file();
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">post-processing.log has been copied and 500 lines have also been extracted. Links are now consistent.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to copy post-processing.log file.</font></center></p>';	
 	}
 }
@@ -207,11 +188,9 @@ if (isset($_GET["mode"]) && (! empty($_GET["mode"]))) {
 	$output = update_gw_conf("radio_conf","mode", $mode);
 	
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">Mode updated.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to update mode.</font></center></p>';	
 	}
 }
@@ -230,11 +209,9 @@ if (isset($_GET["band"]) && isset($_GET["freq"])) {
 		$output = update_gw_conf("radio_conf","freq", $freq);
 	
 		if($output == 0){
-			//echo "Success";
 			echo '<p><center><font color="green">Frequency updated.</font></center></p>';
 		}
 		else{
-			//echo "Failure";
 			echo '<p><center><font color="red">Failed to update frequency.</font></center></p>';	
 		}
 	}
@@ -249,11 +226,9 @@ if (isset($_GET["paboost"]) && (! empty($_GET["paboost"]))) {
 	$output = update_paboost($paboost);
 	
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">PABOOST option updated.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to update PABOOST option.</font></center></p>';	
 	}
 }
@@ -271,11 +246,9 @@ if (isset($_GET["gateway_ID"])) {
 		$output = update_gw_conf("gateway_conf","gateway_ID", $gw_id);
 	
 		if($output == 0){
-			//echo "Success";
 			echo '<p><center><font color="green">Gateway ID updated</font></center></p>';
 		}
 		else{
-			//echo "Failure";
 			echo '<p><center><font color="red">Failed to update gateway ID.</font></center></p>';	
 		}
 	}
@@ -290,11 +263,9 @@ if (isset($_GET["aes"]) && (! empty($_GET["aes"]))) {
 	$output = update_gw_conf("gateway_conf","aes", $aes);
 	
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">AES option updated.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to update AES option.</font></center></p>';	
 	}
 }
@@ -313,11 +284,9 @@ if (isset($_GET["downlink"]) && (! empty($_GET["downlink"]))) {
 	$output = update_gw_conf("gateway_conf","downlink", $downlink);
 	
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">downlink timer updated.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to update downlink timer.</font></center></p>';	
 	}
 }
@@ -331,12 +300,9 @@ if (isset($_GET["thingspeak_status"]) && (! empty($_GET["thingspeak_status"]))) 
 	$output = thingspeak_conf("enabled", $thingspeak_status);
 	
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">ThingSpeak status updated.</font></center></p>';
-		//echo $thingspeak_status;
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to update ThingSpeak status.</font></center></p>';	
 	}
 }
@@ -350,12 +316,9 @@ if (isset($_GET["waziup_status"]) && (! empty($_GET["waziup_status"]))) {
 	$output = waziup_conf("enabled", $waziup_status);
 	
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">Waziup Orion status updated.</font></center></p>';
-		//echo $waziup_status;
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to update Waziup Orion status.</font></center></p>';	
 	}
 }
@@ -370,11 +333,9 @@ if (isset($_GET["use_mail"]) && (! empty($_GET["use_mail"]))) {
 	$output = update_gw_conf("alert_conf","use_mail", $use_mail);
 	
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">Alert mail info updated.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to update alert mail info.</font></center></p>';	
 	}
 }
@@ -392,11 +353,9 @@ if (isset($_GET["mail_from"]) && (! empty($_GET["mail_from"]))) {
 	$output = update_gw_conf("alert_conf","mail_from", $mail_from);
 	
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">Mail account updated.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to update mail account.</font></center></p>';	
 	}
     }
@@ -415,11 +374,9 @@ if (isset($_GET["mail_passwd"]) ) {
 	else{
 		$output = update_gw_conf("alert_conf","mail_passwd", $mail_passwd);
 		if($output == 0){
-			//echo "Success";
 			echo '<p><center><font color="green">Mail password updated.</font></center></p>';
 		}
 		else{
-			//echo "Failure";
 			echo '<p><center><font color="red">Failed to update mail password.</font></center></p>';	
 		}
 	}
@@ -439,11 +396,9 @@ if (isset($_GET["mail_server"])) {
 	else{
 		$output = update_gw_conf("alert_conf","mail_server", $mail_server);
 		if($output == 0){
-			//echo "Success";
 			echo '<p><center><font color="green">Mail server updated.</font></center></p>';
 		}
 		else{
-			//echo "Failure";
 			echo '<p><center><font color="red">Failed to update mail server.</font></center></p>';	
 		}
 	}	
@@ -464,7 +419,6 @@ if (isset($_GET["contact_mail"]) && (! empty($_GET["contact_mail"]))) {
 			$str .= $contacts[$i].",";
 	}
 		
-	//echo $str; 
 	$output = update_contact_mail($str);
 	
 	if($output == 0){
@@ -484,11 +438,9 @@ if (isset($_GET["use_sms"]) && (! empty($_GET["use_sms"]))) {
 	$output = update_gw_conf("alert_conf","use_sms", $use_sms);
 	
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">Alert sms updated.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to update alert sms.</font></center></p>';	
 	}
 }
@@ -502,11 +454,9 @@ if (isset($_GET["sms_pin"]) && (! empty($_GET["sms_pin"]))) {
 	$output = update_gw_conf("alert_conf","pin", $sms_pin);
 	
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">Pin code updated.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to update pin code.</font></center></p>';	
 	}
 }
@@ -516,7 +466,6 @@ if (isset($_GET["sms_pin"]) && (! empty($_GET["sms_pin"]))) {
  *************************/
 if (isset($_GET["contact_sms"]) && (! empty($_GET["contact_sms"]))) {
     $contacts = json_decode($_GET["contact_sms"]);
-   	//var_dump($contacts);
    	
    	//valid list number: [\"+33299002233\",\"+23299338822\",\"+47922337788"]
 	$str = '[';
@@ -532,11 +481,9 @@ if (isset($_GET["contact_sms"]) && (! empty($_GET["contact_sms"]))) {
 	$output = update_contact_sms($str);
 	
 	if($output == 0){
-		//echo "Success";
 		echo '<p><center><font color="green">SMS contacts updated.</font></center></p>';
 	}
 	else{
-		//echo "Failure";
 		echo '<p><center><font color="red">Failed to update SMS contacts.</font></center></p>';	
 	}
 }
@@ -553,22 +500,74 @@ if(isset($_POST['ssid']) && isset($_POST['wpa_phrasepass'])){
 	if(empty($ssid) || empty($wpa_pass)){
 		echo '<p><center><font color="red">Please fill all fields.</font></center></p>';
 	}
-	else{ // not empty: isset($_POST['ssid']) && isset($_POST['wpa_phrasepass'])
-		//Gerer le contr^le de saisie ici
-		
-		//S'il n'y a aucune erreur faire ceci
+	else{
     
 		$output = hostapd_conf($ssid, $wpa_pass);
 	
 		if($output == 0){
-			//echo "Success";
-			echo '<p><center><font color="green">WiFi access point configuration updated.</font></center></p>';
+			echo '<p><center><font color="green">WiFi access point configuration updated. You MUST reboot for changes to take effect.</font></center></p>';
 		}
 		else{
 			echo '<p><center><font color="red">Failed to update WiFi access point configuration.</font></center></p>';
 		}
 	}
 }
+
+/*************************
+ * Setting wifi client
+ *************************/
+if(isset($_POST['wificlient_ssid']) && isset($_POST['wificlient_wpa_phrasepass'])){
+	
+	$wificlient_ssid = htmlspecialchars($_POST['wificlient_ssid']);
+    $wificlient_wpa_pass = htmlspecialchars($_POST['wificlient_wpa_phrasepass']);
+    
+	if(empty($wificlient_ssid) || empty($wificlient_wpa_pass)){
+		echo '<p><center><font color="red">Please fill all fields.</font></center></p>';
+	}
+	else{ 
+    
+		$output = wificlient_conf($wificlient_ssid, $wificlient_wpa_pass);
+	
+		if($output == 0){
+			echo '<p><center><font color="green">WiFi client network configuration updated. You MUST reboot for changes to take effect.</font></center></p>';
+		}
+		else{
+			echo '<p><center><font color="red">Failed to update WiFi client configuration.</font></center></p>';
+		}
+	}
+}
+
+/*************************
+ * Setting ap mode
+ *************************/
+
+if (isset($_GET['apmode']) && $_GET['apmode'] == "true"){ 
+    
+	$output = apmode_conf();
+
+	if($output == 0){
+		echo '<p><center><font color="green">Gateway is configured for access point mode. You MUST reboot for changes to take effect.</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to configure gateway in access point mode.</font></center></p>';
+	}
+}	
+
+/*************************
+ * Setting ap mode now
+ *************************/
+
+if (isset($_GET['apmodenow']) && $_GET['apmodenow'] == "true"){ 
+    
+	$output = apmodenow_conf();
+
+	if($output == 0){
+		echo '<p><center><font color="green">Gateway is now in access point mode. Connect to gateway at 192.168.200.1.</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to set gateway in access point mode.</font></center></p>';
+	}
+}	
 
 /******************************
  * Setting ThingSpeak write key
@@ -585,7 +584,6 @@ if(isset($_GET['write_key'])){
 		$output = thingspeak_key($write_key);
 	
 		if($output == 0){
-			//echo "Success";
 			echo '<p><center><font color="green">Write key saved.</font></center></p>';
 		}
 		else{
@@ -605,8 +603,6 @@ if(isset($_GET['project_name'])){
 		echo '<p><center><font color="red">Please fill all fields.</font></center></p>';
 	}
 	else{ 
-		//Gerer le contrôle de saisie ici
-		//S'il n'y a aucune erreur faire ceci
     
 		$output = waziup_key("project_name", $project);
 	
@@ -634,7 +630,6 @@ if(isset($_GET['organization_name'])){
 		$output = waziup_key("organization_name", $org);
 	
 		if($output == 0){
-			//echo "Success";
 			echo '<p><center><font color="green">Organization name saved.</font></center></p>';
 		}
 		else{
@@ -656,10 +651,8 @@ if(isset($_GET['service_tree'])){
 	else{
     
 		$output = waziup_key("service_tree", $serv);
-		//$output = waziup_key_service_tree("service_tree", $serv);
 	
 		if($output == 0){
-			//echo "Success";
 			echo '<p><center><font color="green">Service tree saved.</font></center></p>';
 		}
 		else{
@@ -683,7 +676,6 @@ if(isset($_GET['orion_token'])){
 		$output = waziup_key("orion_token", $orion_token);
 	
 		if($output == 0){
-			//echo "Success";
 			echo '<p><center><font color="green">Orion token saved.</font></center></p>';
 		}
 		else{
@@ -700,19 +692,17 @@ if(isset($_POST['destination']) && isset($_POST['message'])){
 	$dst = htmlspecialchars($_POST['destination']);
     $msg = htmlspecialchars($_POST['message']);
     
-    
 	if(empty($dst) || empty($msg)){
 		echo '<p><center><font color="red">Please fill all fields.</font></center></p>';
 	}
-	else{ // not empty : $dst and $msg
+	else{ 
+		// not empty : $dst and $msg
 		$str = '"';
 		$str .= $msg;
 		$str .= '"';
-		//echo $str;
 		$output = send_downlink($dst, $str);
 	
 		if($output == 0){
-			//echo "Success";
 			echo '<p><center><font color="green">Downlink request saved.</font></center></p>';
 		}
 		else{

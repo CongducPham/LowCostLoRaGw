@@ -59,7 +59,7 @@ require 'header.php';
                                 </li>
                                 <li><a href="#update-pills" data-toggle="tab">Download and install a file</a>
                                 </li>
-				 <li><a href="#update_web_admin-pills" data-toggle="tab">Update web admin interface</a>
+				 				<li><a href="#update_web_admin-pills" data-toggle="tab">Update web admin interface</a>
                                 </li>
                             </ul>
 

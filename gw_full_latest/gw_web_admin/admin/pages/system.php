@@ -51,12 +51,30 @@ require 'header.php';
                         <div class="panel-body">
                             <!-- Nav tabs -->
                             <ul class="nav nav-pills">
-                                <li class="active"><a href="#hostapd-pills" data-toggle="tab">Access Point</a>
+                                <li class="active"><a href="#hostapd-pills" data-toggle="tab">GW Access Point</a>
                                 </li>
-				<li><a href="#profile-pills" data-toggle="tab">Web admin login settings</a>
-         			</li>
+                                <li><a href="#wificlient-pills" data-toggle="tab">Configure as WiFi client</a>
+                                </li> 
+                                <li><a href="#apmode-pills" data-toggle="tab">Switch back to AP mode</a>
+                                </li>
+                                <li><a href="../../raspap-webgui/">RaspAP webgui</a>
+                                </li>                                                                                                 
+								<li><a href="#profile-pills" data-toggle="tab">Web admin login settings</a>
+         						</li>
                             </ul>
                             
+                            </br>
+            				<p>
+								<?php 
+									if(is_file("/etc/network/interfaces_not_ap")){
+										echo "&nbsp;&nbsp;&nbsp;Gateway configuration file is for Access Point mode";
+									}
+									else{
+										echo "&nbsp;&nbsp;&nbsp;Gateway configuration file is for WiFi client mode";
+									}
+								?>                            
+                            </p>
+                                                        
                             <!-- Tab panes -->
                             <div class="tab-content">
 				
@@ -68,7 +86,7 @@ require 'header.php';
                             						<fieldset>
                                 						<div class="form-group">
                                 							<label>SSID</label>
-                                							<input id="ssid" class="form-control" placeholder="WAZIUP_PI_GW_XXXXXXXXXX" name="ssid" type="text" value="" autofocus>
+                                							<input id="ssid" class="form-control" placeholder="WAZIUP_PI_GW_XXXXXXXXXX" name="ssid" type="text" value="">
                                 							<p><font color="grey">where XXXXXXXXXX is the last 5 bytes of your MAC Ethernet interface address.</font></p>
                                 						</div>
                                 						<div class="form-group">
@@ -85,10 +103,49 @@ require 'header.php';
                     						</div>
             						</div>	
             						</br>
-            						<div id="form_msg"></div>	
+            						<div id="hostapd_msg"></div>	
                                 </div> 
+                                
+                            	<div class="tab-pane fade" id="wificlient-pills">
+                                   </br>
+                                    <div class="col-md-8 col-md-offset-1"> 
+                    						<div class="panel-body">
+                        						<form id="wificlient_form" role="form">
+                            						<fieldset>
+                                						<div class="form-group">
+                                							<label>SSID</label>
+                                							<input id="wificlient_ssid" class="form-control" placeholder="your_wifi_network" name="wificlient_ssid" type="text" value="" autofocus>
+                                							<p><font color="red">Warning: if a valid WiFi network is not configured you will not be able to connect through the gateway's access point anymore. If that happens, use wired Ethernet to switch back to access point mode. You MUST reboot after submitting the command.</font></p>
+                                						</div>
+                                						<div class="form-group">
+                                							<label>WPA Passphrase</label>
+                                    						<input id="wificlient_wpa_phrasepass" class="form-control" placeholder="your_wifi_network_password" name="wificlient_wpa_phrasepass" type="password" value="">
+                                						</div>
+
+                                						<center>
+                                							<button  type="submit" class="btn btn-primary">Submit</button>
+                                							<button  id="btn_wificlient_form_reset" type="reset" class="btn btn-primary">Clear</button>
+                                						</center> 
+                            						</fieldset>
+                        						</form>
+                    						</div>
+            						</div>	
+            						</br>
+            						<div id="wificlient_msg"></div>	
+                                </div>                                
                            
-                            
+                            	<div class="tab-pane fade" id="apmode-pills">
+                                   </br>
+										<center>
+											<p><font color="red">Warning: Internet connectivity should then be provided by wired Ethernet or 2G/3G</font></p>
+											<p><font color="red">Warning: If using the "now" mode, you may loose current connection. Connect to gateway's access point WiFi.</font></p>
+											<button  id="btn_apmode" type="button" class="btn btn-primary" href="process.php?apmode=true">Switch to AP mode - next reboot</button>
+											<button  id="btn_apmodenow" type="button" class="btn btn-primary" href="process.php?apmodenow=true">Switch to AP mode - now</button>
+										</center> 
+            						</br>
+            						<div id="apmode_msg"></div>	
+                                </div> 
+                                                            
                             <!-- Tab panes -->
                             	<div class="tab-pane fade" id="profile-pills">
                                    </br>

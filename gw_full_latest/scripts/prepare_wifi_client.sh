@@ -9,6 +9,7 @@ if [ -f $INTERFACES_NOT_AP_FILE ];
   then
 	sudo mv $INTERFACES_FILE $INTERFACES_AP_FILE
 	sudo mv $INTERFACES_NOT_AP_FILE $INTERFACES_FILE
+	sudo systemctl disable hostapd.service
 	echo "The access point will be disabled at next reboot, using the file /etc/wpa_supplicant/wpa_supplicant.conf to connect to an access point."
   else
 	echo "The access point is already disabled."

@@ -282,7 +282,7 @@ fi
 if [ "$choice" = "i" ] 
 	then
 		echo "Configure as WiFi access point at next reboot"
-		echo "Warning: Internet connectivity should be provided by wired Ethernet or 2G/3G"
+		echo "Warning: Internet connectivity should then be provided by wired Ethernet or 2G/3G"
 		echo "*********************"
 		echo "*** continue Y/N  ***"
 		echo "*********************"
@@ -291,8 +291,9 @@ if [ "$choice" = "i" ]
 		if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 			then    
 				echo "Configuring as WiFi access point at next reboot"
-				./scripts/start_access_point.sh
-				echo "Done"		
+				./scripts/prepare_access_point.sh
+				echo "Use option R to reboot"
+				echo "Then connect to 192.168.200.1"		
 		fi
 fi
 

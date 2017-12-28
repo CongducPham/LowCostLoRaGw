@@ -41,20 +41,42 @@ echo "Edit /etc/sudoers to obtain root privileges for www-data"
 sudo cp /etc/sudoers /tmp/sudoers.bak
 # delete existing files
 sudo sed -i '/www-data/d' /tmp/sudoers.bak
+
+#for raspap-webgui
+#from https://github.com/billz/raspap-webgui
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ifdown wlan0" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ifup wlan0" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cat /etc/wpa_supplicant/wpa_supplicant.conf" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/wifidata /etc/wpa_supplicant/wpa_supplicant.conf" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli scan_results" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli scan" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli reconfigure" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/hostapddata /etc/hostapd/hostapd.conf" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/init.d/hostapd start" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/init.d/hostapd stop" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/init.d/dnsmasq start" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/init.d/dnsmasq stop" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/dhcpddata /etc/dnsmasq.conf" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/shutdown -h now" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/reboot" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ip link set wlan0 down" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ip link set wlan0 up" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ip -s a f label wlan0" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /etc/raspap/networking/dhcpcd.conf /etc/dhcpcd.conf" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/raspap/hostapd/enablelog.sh" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/raspap/hostapd/disablelog.sh" >> /tmp/sudoers.bak
+
+#for our simple web admin interface
+sudo echo ""
 sudo echo "www-data ALL=(ALL) NOPASSWD: /sbin/reboot, /sbin/shutdown, /etc/hostapd/hostapd.conf" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/web_shell_script.sh" >> /tmp/sudoers.bak
-
-#sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/thingspeak_key.sh, /var/www/html/admin/libs/sh/waziup_key.sh" >> /tmp/sudoers.bak
-#sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/update_gw.sh, /var/www/html/admin/libs/sh/install_gw.sh, /var/www/html/admin/libs/sh/update_gw_file.sh" >> /tmp/sudoers.bak
-#sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/gateway_conf.sh, /var/www/html/admin/libs/sh/waziup_conf.sh, /var/www/html/admin/libs/sh/thingspeak_conf.sh" >> /tmp/sudoers.bak
-#sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/contact_mail.sh, /var/www/html/admin/libs/sh/contact_sms.sh" >> /tmp/sudoers.bak
-#sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/set_profile.sh, /var/www/html/admin/libs/sh/low_level_gw_status.sh, /var/www/html/admin/libs/sh/downlink_request.sh" >> /tmp/sudoers.bak
-#sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/copy_log_file.sh" >> /tmp/sudoers.bak
-
 sudo echo "www-data ALL=(ALL) NOPASSWD: /usr/bin/python" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/python/key_clouds.py, /var/www/html/admin/libs/python/key_thingspeak.py" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/basic_config_gw.sh" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/update_gw.sh" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/prepare_wifi_client.sh" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/prepare_access_point.sh" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/start_access_point.sh" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/gw_web_admin/install.sh" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/images/libs/sh/move_img.sh" >> /tmp/sudoers.bak
 

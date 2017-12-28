@@ -1,6 +1,15 @@
 Low-cost LoRa gateway with Raspberry
 ====================================
 
+Quick start
+-----------
+
+- The current SD card image has everything you need!
+- Read the [Low-cost-LoRa-device leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-device-leaflet.pdf)
+- Read the [Low-cost-LoRa-GW leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-leaflet.pdf)
+- Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. For instance, to configure a new gateway, just use the web admin interface to update the gateway software and to run the basic configuration procedure.
+- The rest of this README file contains additional information to better understand the gateway architecture and advanced mechanisms.
+
 Tutorial materials
 ------------------
 
@@ -28,6 +37,7 @@ Get our SD card image
 
 Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip). The current image has everything you need including:
 
+- the simple gateway web admin interface for easy configuration and management
 - mosquitto-clients package installed to have mosquitto_pub and mosquitto_sub commands
 - paho-mqtt for python
 - Node-Red and npm upgraded with node-red-contrib-thingspeak42 installed
@@ -46,8 +56,10 @@ Features
 ========
 
 - a simple, user-friendly web admin interface to configure and update your gateway
+	- open a browser and go to http://`gw_ip_address`/admin
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/gw_web_admin/README.md)
 	- [Tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf)
+	- `raspap-webgui` from https://github.com/billz/raspap-webgui has been integrated and can be accessed at http://`gw_ip_address`/raspap-webgui. When the gateway is configured as a WiFi client, `raspap-webgui` is especially useful to dynamically discover and configure additional WiFi networks. Read this [section](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest#make-your-gateway-a-wifi-client) prior to use `raspap-webgui`.	
 - simple, flexible and generic cloud management approach
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
 	- Look at the provided cloud script examples to see how IoT clouds such as ThingSpeak, GroveStreams, MQTT,... are supported
@@ -101,7 +113,7 @@ The full, latest distribution of the low-cost gateway is available in the gw_ful
 Connect to your new gateway
 ---------------------------
 
-If you see the WiFi network WAZIUP_PI_GW_XXXXXXXXXX then connect to this WiFi network. The address of the Raspberry is then 192.168.200.1. If you see no WiFi access point (e.g. RP1/RPI2/RPI0 without WiFi dongle), then plug your Raspberry into a DHCP-enabled box/router/network to get an IP address or shared your laptop internet connection to make your laptop acting as a DHCP server. On a Mac, there is a very simple solution [here](https://mycyberuniverse.com/mac-os/connect-to-raspberry-pi-from-a-mac-using-ethernet.html). For Windows, you can follow [this tutorial](http://www.instructables.com/id/Direct-Network-Connection-between-Windows-PC-and-R/) or [this one](https://electrosome.com/raspberry-pi-ethernet-direct-windows-pc/). You can then use [Angry IP Scanner](http://angryip.org/) to determine the assigned IP address for the Raspberry.
+With the default gateway configuration, the gateway acts as a WiFi access point. If you see the WiFi network WAZIUP_PI_GW_XXXXXXXXXX then connect to this WiFi network. The address of the Raspberry is then 192.168.200.1. If you see no WiFi access point (e.g. RP1/RPI2/RPI0 without WiFi dongle), then plug your Raspberry into a DHCP-enabled box/router/network to get an IP address or shared your laptop internet connection to make your laptop acting as a DHCP server. On a Mac, there is a very simple solution [here](https://mycyberuniverse.com/mac-os/connect-to-raspberry-pi-from-a-mac-using-ethernet.html). For Windows, you can follow [this tutorial](http://www.instructables.com/id/Direct-Network-Connection-between-Windows-PC-and-R/) or [this one](https://electrosome.com/raspberry-pi-ethernet-direct-windows-pc/). You can then use [Angry IP Scanner](http://angryip.org/) to determine the assigned IP address for the Raspberry.
 
 We will use in this example 192.168.2.8 for the gateway address (DHCP option in order to have Internet access from the Raspberry)
 

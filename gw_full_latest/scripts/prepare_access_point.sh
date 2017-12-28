@@ -17,17 +17,10 @@ INTERFACES_FILE=/etc/network/interfaces
 # checking if right interfaces file or not
 if [ -f $INTERFACES_AP_FILE ]; 
   then
-	sudo service networking stop
 	sudo mv $INTERFACES_FILE $INTERFACES_NOT_AP_FILE
 	sudo mv $INTERFACES_AP_FILE $INTERFACES_FILE
 	sudo systemctl enable hostapd.service
-	sudo service networking start
-	echo "The access point is now enabled."
+	echo "The access point is now enabled for next reboot."
   else
-	echo "The access point is already enabled."
+	echo "The access point is already enabled. Reboot for changes to take effect."
 fi
-
-#launching services dnsmasq and hostapd
-echo "Starting hostapd and dnsmasq services"
-sudo service dnsmasq start
-sudo service hostapd start

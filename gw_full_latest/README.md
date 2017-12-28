@@ -1,6 +1,14 @@
 Low-cost LoRa gateway features and configuration tools
 ======================================================
 
+Quick start
+-----------
+
+- The current SD card image has everything you need!
+- Read the [Low-cost-LoRa-GW leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-leaflet.pdf)
+- Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. For instance, to configure a new gateway, just use the web admin interface to update the gateway software and to run the basic configuration procedure.
+- The rest of this README file contains additional information to better understand the gateway architecture and advanced mechanisms.
+
 There are additional dedicated README files
 -------------------------------------------
 
@@ -151,7 +159,6 @@ Anyway, check steps A to I as described below and perform all needed tasks that 
 - compile the `lora_gateway` program for your the Raspberry board version
 - configure `/etc/hostapd/hostapd.conf` to advertise a WiFi SSID corresponding to last 5 hex-byte of your eth0 interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
 
-
 Make your gateway a WiFi client
 ------------------------------
 
@@ -200,6 +207,7 @@ If you are using the text command interface (`cmd.sh`, see end of this document)
 
 When you want to switch back the gateway into access point mode, then run in the `lora_gateway/scripts` folder the `start_access_point.sh` script (or option `i` of the text command interface).	
 
+**The web admin interface** can also be used to put the gateway into WiFi client mode and to specify a WiFi network and password (equivalent to option `g` and `h`, and do not forget to reboot). In addition, `raspap-webgui` from https://github.com/billz/raspap-webgui has been integrated and can be accessed at http://`gw_ip_address`/raspap-webgui. **Once** the gateway is configured as a WiFi client with the web admin interface, `raspap-webgui` is useful to dynamically discover and configure additional WiFi networks. **However**, note that it is risky to specify several WiFi networks because it becomes very difficult to know on which WiFi network the gateway is connected to.
 
 If you install everything yourself, from a standard Jessie (or newer) distribution
 ==================================================================================

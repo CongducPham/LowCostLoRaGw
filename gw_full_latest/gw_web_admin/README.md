@@ -1,8 +1,12 @@
-# Gateway Admin
+# Gateway Web Admin
 
-Gateway Admin is a simple responsive web interface to manage/configure some parameters of the WAZIUP's Raspberry Pi gateway.
+Gateway Web Admin is a simple responsive web interface to manage/configure some parameters of the Raspberry Pi LoRa IoT gateway.
 
-## Installation
+The current SD card image has everything you need, including the web admin interface installed. Use the web admin interface to update the gateway software and the web admin interface to the latest version from the github repository.
+
+Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. For instance, to configure a new gateway, just use the web admin interface to update the gateway software and to run the basic configuration procedure.
+
+## Manual installation
 
 Go to lora_gateway/gw_web_admin folder
 

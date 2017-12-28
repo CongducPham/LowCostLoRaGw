@@ -45,6 +45,18 @@ function hostapd_conf($ssid, $wpa_passphrase){
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh wifi ".$ssid." ".$wpa_passphrase);
 }
 
+function wificlient_conf($wificlient_ssid, $wificlient_wpa_passphrase){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh wificlient ".$wificlient_ssid." ".$wificlient_wpa_passphrase);
+}
+
+function apmode_conf(){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh apmode");
+}
+
+function apmodenow_conf(){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh apmodenow");
+}
+
 //module => Key => value 
 //radio_conf => ch => -1
 function update_gw_conf($module, $key, $value){
@@ -143,10 +155,10 @@ function cloud_status($clouds_arr, $cloud_script){
     while($i < count($clouds_arr) && ! $find){
     	if($clouds_arr[$i]['script'] == $cloud_script){
 			if($clouds_arr[$i]['enabled']){
-				echo "true"; //echo "Enable";   
+				echo "true"; 
 			}
 			else {
-				echo "false"; //echo "Disable";  
+				echo "false"; 
 			}
 		}
 		$i++;
