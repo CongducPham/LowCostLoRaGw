@@ -7,7 +7,7 @@ Quick start
 - **The current SD card image has everything you need!**
 - Read the [Low-cost-LoRa-device leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-device-leaflet.pdf)
 - Read the [Low-cost-LoRa-GW leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-leaflet.pdf)
-- Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. **For instance, to configure a new gateway, it is recommended to use the web admin interface to update the gateway software and to run the basic configuration procedure as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/README.md#option-(i))**.
+- Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. **For instance, to configure a new gateway, it is recommended to use the web admin interface to update the gateway software and to run the basic configuration procedure as described [here](https://github.com/CongducPham/LowCostLoRaGw#option-i)**.
 - **The rest of this README file contains additional information to better understand the proposed low-cost IoT framework**.
 
 Tutorial materials
