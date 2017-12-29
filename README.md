@@ -1,19 +1,19 @@
-Low-cost LoRa gateway with Raspberry
-====================================
+Low-cost LoRa IoT framework developed in the EU H2020 WAZIUP project
+=====================================================================
 
 Quick start
 -----------
 
-- The current SD card image has everything you need!
+- **The current SD card image has everything you need!**
 - Read the [Low-cost-LoRa-device leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-device-leaflet.pdf)
 - Read the [Low-cost-LoRa-GW leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-leaflet.pdf)
-- Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. For instance, to configure a new gateway, just use the web admin interface to update the gateway software and to run the basic configuration procedure.
-- The rest of this README file contains additional information to better understand the gateway architecture and advanced mechanisms.
+- Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. **For instance, to configure a new gateway, it is recommended to use the web admin interface to update the gateway software and to run the basic configuration procedure as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/README.md#option-(i))**.
+- **The rest of this README file contains additional information to better understand the proposed low-cost IoT framework**.
 
 Tutorial materials
 ------------------
 
-Also consult the web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html.
+Also consult the following web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
 
 3 tutorial videos on YouTube: video of all the steps to build the whole framework from scratch:
 
@@ -32,28 +32,8 @@ Go to [https://github.com/CongducPham/tutorials](https://github.com/CongducPham/
 
 Look also at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.pdf)!
 
-Get our SD card image
----------------------
-
-Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip). The current image has everything you need including:
-
-- the simple gateway web admin interface for easy configuration and management
-- mosquitto-clients package installed to have mosquitto_pub and mosquitto_sub commands
-- paho-mqtt for python
-- Node-Red and npm upgraded with node-red-contrib-thingspeak42 installed
-- a ready-to-use Node-Red flow to show how received data can be uploaded to MQTT brokers and ThingSpeak
-
-It is not a MacOS X DMG package as the extension may be misleading, simply unzip the file and burn the dmg file to an SD card. Use an SD card of a minimum of 8GB. Take also a class 10. If you have bigger SD card, e.g. 16GB, then after boot, use raspi-config (see [tutorial here](https://www.raspberrypi.org/documentation/configuration/raspi-config.md)) to resize the partition in order to use the extra space available (you will need to reboot but raspi-config will ask you for that). You can use "df -h" to verify that you have more space after reboot.  
-
-You can look at various tutorials on how to burn an image to an SD card. There is one [here from raspberrypi.org](https://www.raspberrypi.org/documentation/installation/installing-images/) and [here from elinux.org](http://elinux.org/RPi_Easy_SD_Card_Setup). I use a Mac to do so and [this is my preferred solution](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md). The [Linux version](https://www.raspberrypi.org/documentation/installation/installing-images/linux.md) is not very different. The Etcher tool is nice and you don't even need to unzip the SD card image.
-
-Upgrade notice
---------------
-
-Starting Apr 2nd 2017, the gateway configuration files have changed. There is now only one configuration file, gateway_conf.json, instead of two, global_conf.json and local_conf.json. If you have a gateway version prior to Apr 2nd, 2017, please read the "Upgrade notice" below.
-
 Features
-========
+--------
 
 - a simple, user-friendly web admin interface to configure and update your gateway
 	- open a browser and go to http://`gw_ip_address`/admin
@@ -74,46 +54,53 @@ Features
 - periodic status report to monitor whether the post-processing stage of the gateway is up or not
 - support for an embedded DHT22 temperature/humidity sensor to monitor the condition inside the gateway case
 - there is a NoSQL MongoDB support and received data can be saved in the local database if this feature is activated. See [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md#support-of-mongodb-as-a-cloud-declaration) for more information on the local MongoDB structure.
-- there is an Apache web server with basic PHP forms to visualize graphically the received data of the MongoDB with any web browser
-- the gateway acts as the WiFi access-point. The SSID is WAZIUP_PI_GW_XXXXXXXXXX where XXXXXXXXXX is the last 5 hex bytes of gateway ID: WAZIUP_PI_GW_27EB27F90F for instance. It has IP address 192.168.200.1 and will lease IP addresses in the range of 192.168.200.100 and 192.168.200.120. Just connect to http://192.168.200.1 with a web brower (could be from a smartphone) to get the graphic visualization of the data stored in the gateway's MongoDB database.	
+- the gateway acts as the WiFi access-point. The SSID is WAZIUP_PI_GW_XXXXXXXXXX where XXXXXXXXXX is the last 5 hex bytes of gateway ID: WAZIUP_PI_GW_27EB27F90F for instance. It has IP address 192.168.200.1 and will lease IP addresses in the range of 192.168.200.100 and 192.168.200.120. 
+- there is an Apache web server with basic PHP forms to visualize graphically the received data of the MongoDB with any web browser. Just connect to http://192.168.200.1 with a web browser (could be from a smartphone) to get the graphic visualization of the data stored in the gateway's MongoDB database.
 - there is the support of Bluetooth connection. A simple Android App running on Android smartphone displays the data stored in the gateway's MongoDB database.
-- a configuration script (scripts/config_gw.sh) helps you configure the gateway with MongoDB, WiFi and Bluetooth features. It is highly recommended to use this script to set your gateway once all the files have been copied.
-- Arduino code for gateway and interactive end-device
-	- code for gateway and interactive end-device are now separated in 2 sketches
-	- the old version is still in folder Arduino_LoRa_Gateway_1_4 and will not be maintained anymore. It will stay at v1.4
-	- Arduino_LoRa_Gateway now contains the gateway code. It is equivalent, in previous version v1.4, to compilation with IS_RCV_GATEWAY.
-	- Arduino_LoRa_InteractiveDevice contains the code for an interactive end-device.  It is equivalent, in previous version v1.4, to compilation with IS_SEND_GATEWAY
-- get the zipped SD card image (Raspbian Jessie)
-	- [raspberrypi-jessie-WAZIUP-demo.dmg.zip](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
-	- Based on Raspbian Jessie 
-	- Supports Raspberry 1B+, RPI2, RPI3, RPI0 and RPI0W. **For RPI1 and RPI0 you need to run "make lora_gateway" as the default version is built for RPI2&RPI3**. There is out-of-box WiFi support for RPI3 and RPI0W. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles.
-	- Get the zipped image, unzip it, install it on an **8GB** SD card (or bigger), see [this tutorial](https://www.raspberrypi.org/documentation/installation/installing-images/) from www.raspberrypi.org
-	- Plug the SD card into your Raspberry
-	- Connect a radio module (see http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)
-	- Power-on the Raspberry
-	- pi user
-		- login: pi
-		- password: loragateway
-		- **it is strongly advise to change the pi user's password**		
-	- The LoRa gateway starts automatically when RPI is powered on
-	- With an RPI3 and RPI0W, the Raspberry will automatically act as a WiFi access point
-		- SSID=WAZIUP_PI_GW_27EB27F90F for instance
-		- password=loragateway
-		- **it is strongly advise to change this WiFi password**
-	- Includes most of features described here but a full update with the latest version is **highly recommended, see below**	
-	- By default, incoming data are uploaded to our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794)
-	- Works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
+- by default, incoming data are uploaded to our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794)
+- works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
 
-		
 Installing the latest gateway version 
 =====================================
 
-The full, latest distribution of the low-cost gateway is available in the gw_full_latest folder of the github. It contains all the gateway control and post-processing software. The **simplest and recommended way** to install a new gateway is to use [our zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip) and perform a new install of the gateway from this image. In this way you don't need to install the various additional packages that are required (as explained in the various README files). Once you have burnt the SD image on a 8GB (minimum) SD card, insert it in your Raspberry and power it. 
+The full, latest distribution of the low-cost gateway is available in the gw_full_latest folder of the github repository: https://github.com/CongducPham/LowCostLoRaGw. It contains all the gateway control and post-processing software. 
 
+However, the **simplest and recommended way** to install a new gateway is to use [our zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip) based on the Jessie Raspbian OS and perform a new install of the gateway from this image. In this way you don't need to install the various additional packages that are required (as explained in an additional [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-manual-install.md) describing all manual installation steps if you want to install from scratch). Once you have burnt the SD image on a 8GB (minimum) SD card, insert it in your Raspberry and power it.
+
+The distribution supports Raspberry 1B+, RPI2, RPI3, RPI0 and RPI0W. **For RPI1 and RPI0 you need to run "make lora_gateway" as the default version is built for RPI2&RPI3**. There is out-of-the-box WiFi support for RPI3 and RPI0W. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles.
+
+
+Get our SD card image
+---------------------
+
+Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip). The current image has everything you need including:
+
+- the simple gateway web admin interface for easy configuration and management
+- mosquitto-clients package installed to have mosquitto_pub and mosquitto_sub commands
+- Node-Red and npm upgraded with node-red-contrib-thingspeak42 installed
+- a ready-to-use Node-Red flow to show how received data can be uploaded to MQTT brokers and ThingSpeak
+
+It is not a MacOS X DMG package as the extension may be misleading, simply unzip the file and burn the dmg file to an SD card. Use an SD card of a minimum of 8GB. Take also a class 10. If you have bigger SD card, e.g. 16GB, then after boot, use raspi-config (see [tutorial here](https://www.raspberrypi.org/documentation/configuration/raspi-config.md)) to resize the partition in order to use the extra space available (you will need to reboot but raspi-config will ask you for that). You can use "df -h" to verify that you have more space after reboot.  
+
+You can look at various tutorials on how to burn an image to an SD card. There is one [here from raspberrypi.org](https://www.raspberrypi.org/documentation/installation/installing-images/) and [here from elinux.org](http://elinux.org/RPi_Easy_SD_Card_Setup). I use a Mac to do so and [this is my preferred solution](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md). The [Linux version](https://www.raspberrypi.org/documentation/installation/installing-images/linux.md) is not very different. The Etcher tool is nice and you don't even need to unzip the SD card image.
+
+When booting from the provided SD card image
+============================================ 
+
+**Important notice**: the LoRa gateway program starts automatically when the Raspberry is powered on.
+	
 Connect to your new gateway
 ---------------------------
 
-With the default gateway configuration, the gateway acts as a WiFi access point. If you see the WiFi network WAZIUP_PI_GW_XXXXXXXXXX then connect to this WiFi network. The address of the Raspberry is then 192.168.200.1. If you see no WiFi access point (e.g. RP1/RPI2/RPI0 without WiFi dongle), then plug your Raspberry into a DHCP-enabled box/router/network to get an IP address or shared your laptop internet connection to make your laptop acting as a DHCP server. On a Mac, there is a very simple solution [here](https://mycyberuniverse.com/mac-os/connect-to-raspberry-pi-from-a-mac-using-ethernet.html). For Windows, you can follow [this tutorial](http://www.instructables.com/id/Direct-Network-Connection-between-Windows-PC-and-R/) or [this one](https://electrosome.com/raspberry-pi-ethernet-direct-windows-pc/). You can then use [Angry IP Scanner](http://angryip.org/) to determine the assigned IP address for the Raspberry.
+The SD card image defines a `pi` user:
+
+	- login: pi
+	- password: loragateway
+	- **it is strongly advise to change the pi user's password**
+		
+With the default gateway configuration, the gateway acts as a WiFi access point. If you see the WiFi network WAZIUP_PI_GW_XXXXXXXXXX then connect to this WiFi network. The WiFi password is `loragateway`. **It is strongly advise to change this WiFi password**. The address of the Raspberry is then 192.168.200.1. 
+
+If you see no WiFi access point (e.g. RP1/RPI2/RPI0 without WiFi dongle), then plug your Raspberry into a DHCP-enabled box/router/network to get an IP address or shared your laptop internet connection to make your laptop acting as a DHCP server. On a Mac, there is a very simple solution [here](https://mycyberuniverse.com/mac-os/connect-to-raspberry-pi-from-a-mac-using-ethernet.html). For Windows, you can follow [this tutorial](http://www.instructables.com/id/Direct-Network-Connection-between-Windows-PC-and-R/) or [this one](https://electrosome.com/raspberry-pi-ethernet-direct-windows-pc/). You can then use [Angry IP Scanner](http://angryip.org/) to determine the assigned IP address for the Raspberry.
 
 We will use in this example 192.168.2.8 for the gateway address (DHCP option in order to have Internet access from the Raspberry)
 
@@ -133,10 +120,29 @@ We will use in this example 192.168.2.8 for the gateway address (DHCP option in 
 Upgrade to the latest gateway version	
 -------------------------------------
 
-Once you have your SD card flashed with our image, to get directly to the full, latest gateway version, you can either (i) use the provided update script to be run from the gateway, or (ii) download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or, (iii) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. Option (i) is preferable and is basically an automatization of option (iii), however it needs Internet connectivity on the gateway.
+Once you have your SD card flashed with our image, to get directly to the full, latest gateway version, you can either use (i) the web admin interface, or (ii) the provided update script to be run from the gateway, or (iii) download (git clone) the whole repository and copy the entire content of the gw_full_latest folder on your Raspberry, in a folder named lora_gateway or, (iv) get only (svn checkout) the gw_full_latest folder in a folder named lora_gateway. Option (i) is recommended and simple while (ii) is basically an automatization of option (iii) in command line mode. Both options (i) and (ii) however need Internet connectivity on the gateway while option (iii) and (iv) can be done on a computer prior to copy the files on the Raspberry.
 
-First option
-------------
+Option (i)
+----------
+
+**It is the recommended option** but the Raspberry must have Internet connection.
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/gw-web-admin-update.png)
+
+Choose the `Gateway Update` menu of the left. Then, if you install a brand new gateway with our SD card image, use `New installation`. For future updates, use `Full update`.
+
+After `New installation` or `Full update`, run `Basic config`.
+
+When using the web interface, you don't need to perform the manual `Configuring your gateway after update` step below.
+
+It is also recommended to run `Update web admin interface` to update the web interface to the last version, after `New installation` or `Full update`.
+
+Then reboot.
+
+**The full LoRa gateway with post-processing stage starts automatically when the Raspberry is powered on**. By default, incoming data are uploaded to our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794). It will work out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp).
+
+Option (ii)
+-----------
 
 If your gateway has Internet connectivity (DHCP with Internet sharing for instance), you can use our update_gw.sh script. Even if the SD card image has a recent version of the gateway software the update_gw.sh script in the lora_gateway/scripts folder it is safer to get the latest version of this script. Simply do:
 
@@ -152,8 +158,8 @@ Otherwise, if it is really the first time you install the gateway, then you can 
 	> rm -rf lora_gateway
 	> ./update_gw.sh
 
-Second option
--------------
+Option (iii)
+------------
 
 This upgrade solution can be done on the Raspberry if it has Internet connectivity or on your laptop which is assumed to have Internet connectivity. If you don't have git installed on your laptop, you have to install it first. Then get all the repository:
 
@@ -185,8 +191,8 @@ If you download the repository from your laptop, then rename gw_full_latest into
 	
 If you don't want to use/install git, use your laptop to get the .zip file of the [entire github](https://github.com/CongducPham/LowCostLoRaGw) with the "Clone or download", unzip the package, rename the gw_full_latest folder as lora_gateway and perform the scp command.		  
 
-Third option
-------------
+Option (iv)
+-----------
 
 This upgrade solution can be done on the Raspberry if it has Internet connectivity or on your laptop which is assumed to have Internet connectivity. If you don't have svn installed on your laptop, you have to install it first. Then get only the gateway part:
 
@@ -219,108 +225,11 @@ or
 
 	> ./basic_config_gw.sh 27EBBEDA21
 
-If you need more advanced configuration, then run config_gw.sh as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#configure-your-gateway-with-config_gwsh). However, basic_config_gw.sh should be sufficient for most of the cases. The script also compile the gateway program. After configuration, reboot your Raspberry. 
+If you need more advanced configuration, then run config_gw.sh as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#configure-your-gateway-with-config_gwsh). However, basic_config_gw.sh should be sufficient for most of the cases. The script also compile the low-level gateway program corresponding to you Raspberry model. After configuration, reboot your Raspberry. 
 
 By default gateway_conf.json configures the gateway with a simple behavior: LoRa mode 1 (BW125SF12), no DHT sensor in gateway (so no MongoDB for DHT sensor), no downlink, no AES, no raw mode. clouds.json enables only the ThingSpeak demo channel (even the local MongoDB storage is disabled). You can customize your gateway later when you have more cloud accounts and when you know better what features you want to enable.
 
 The LoRa gateway starts automatically when RPI is powered on. Then use cmd.sh to execute the main operations on the gateway as described in [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#use-cmdsh-to-interact-with-the-gateway).	
-
-Upgrade notice
---------------
-
-Starting Apr 2nd 2017, the gateway configuration files have changed. There is now only one configuration file, gateway_conf.json, instead of two, global_conf.json and local_conf.json. If you have a gateway version prior to Apr 2nd, 2017, then you can still use the update_gw_sh scripts but then you have to manually enter your gateway configuration setting, in global_conf.json and local_conf.json, into the new gateway_conf.json file.
-
-Your global_conf.json file may look like:
-
-	{
-		"mode" : 1,
-		"bw" : 500,
-		"cr" : 5,
-		"sf" : 12,
-		"ch" : -1,
-		"freq" : -1,
-		"ignorecomment" : false,
-		"loggw" : false,
-		"wappkey" : false,
-		"raw" : false,
-		"aes" : false,
-		"log_post_processing" : true
-	}
-
-and your local_conf.json may look like:
-
-	{
-		"gateway_conf" : {
-			"gateway_ID" : "00000027EB27F90F",
-			"ref_latitude" : "my_lat",
-			"ref_longitude" : "my_long",
-			"dht22" : 0,
-			"dht22_mongo": false,
-			"downlink" : 0,
-			"status" : 600,
-			"aux_radio" : 0
-		},
-		"log_conf" : {
-			"log_weekly" : false
-		}
-	}
-
-The format of the new gateway_conf.json file is as follows:
-
-	{
-		"radio_conf" : {
-			"mode" : 1,
-			"bw" : 500,
-			"cr" : 5,
-			"sf" : 12,
-			"ch" : -1,
-			"freq" : -1
-		},
-		"gateway_conf" : {
-			"gateway_ID" : "00000027EB27F90F",
-			"ref_latitude" : "my_lat",
-			"ref_longitude" : "my_long",
-			"wappkey" : false,
-			"raw" : false,
-			"aes" : false,
-			"log_post_processing" : true,
-			"log_weekly" : false,				
-			"dht22" : 0,
-			"dht22_mongo": false,
-			"downlink" : 0,
-			"status" : 600,
-			"aux_radio" : 0
-		},
-		"alert_conf" : {
-			"use_mail" : false,
-			"contact_mail" : joejoejoe@gmail.com,jackjackjack@hotmail.com",
-			"mail_from" : "myorg.gmail.com",
-			"mail_server" : "smtp.gmail.com",
-			"mail_passwd" : "my_passwd",
-			"use_sms" : false,
-			"pin": "0000",
-			"contact_sms":["+33XXXXXXXXX","+33XXXXXXXXX"],
-			"gammurc_file":"/home/pi/.gammurc"
-		}	
-	}
-	
-Therefore, to upgrade, you have to (1) replace the whole "gateway_conf" section of gateway_conf.json by the "gateway_conf" section of local_conf_json, (2) report the first 6 fields of global_conf.json into the "radio_conf" section of gateway_conf.json, (3) report the last 4 fields of global_conf.json (thus omitting both "loggw" and "ignorecomment") into the "gateway_conf" section of gateway_conf.json and, (4) report the "log_weekly" field in the "log_conf" of local_conf.json into the "gateway_conf" section of gateway_conf.json.
-
-Install Raspbian Wheezy or Jessie
-=================================
-
-Fisrt install a Raspberry with Raspbian, Jessie is recommended.
-
-then (you need to have Internet access on your Raspberry):
-
-	> sudo apt-get update
-	> sudo apt-get upgrade
-
-Jessie has been tested on RPI1, RPI2 and RPI3, and works great.
-
-Wheezy has been tested on RPI1 and RPI2 and works great. Wheezy on RPI3 is not recommended because built-in WiFi and Bluetooth will not work properly.
-
-We recommend buying either RPI2 or RPI3. RPI3 with Jessie has built-in WiFi and Bluetooth so it is definitely a good choice. In addition RPI3 with Jessie will have a better support lifetime. 
 
 Connect a radio module to Raspberry
 ===================================
@@ -341,7 +250,7 @@ You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutor
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/connect-radio-rpi.png)
 	
-Compiling the low-level gateway program
+(Advanced) Compiling the low-level gateway program
 =======================================	 	
     
 DO NOT modify the lora_gateway.cpp file unless you know what you are doing. Check the radio.makefile file to indicate whether your radio module uses the PA_BOOST amplifier line or not (which means it uses the RFO line). HopeRF RFM92W/95W or inAir9B or NiceRF1276 or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it) need the -DPABOOST. Both Libelium SX1272 and inAir9 (not inAir9B) do not use PA_BOOST. You can also define a maximum output power to stay within transmission power regulations of your country. For instance, if you do not define anything, then the output power is set to 14dBm (ETSI european regulations), otherwise use -DMAX_DBM=10 for 10dBm. Then:
@@ -362,7 +271,7 @@ By default, the gateway runs in LoRa mode 1 and has address 1.
 
 You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository (https://github.com/CongducPham/tutorials).
 
-Adding LoRa gateway's post-processing features
+(Advanced) Adding LoRa gateway's post-processing features
 ==============================================
 
 A data post-processing stage in added after the low-level LoRa gateway program. The post_processing_gw.py script can be customized to process sensor raw data from the low-level LoRa gateway. A typical processing task is to push received data to Internet servers or dedicated (public or private) IoT clouds. post_processing_gw.py is a template that already implement data uploading to various public IoT clouds. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md) to know how to configure the cloud definition.
@@ -411,7 +320,8 @@ On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Startin
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/connect-radio-device.png)
 
 There is an important issue regarding the radio modules. The Semtech SX1272/76 has actually 2 lines of RF power amplification (PA): a high efficiency PA up to 14dBm (RFO) and a high power PA up to 20dBm (PA_BOOST). Setting transmission power to "L" (Low), "H" (High), and "M" (Max) only uses the RFO and delivers 2dBm, 6dBm and 14dBm respectively. "x" (extreme) and "X" (eXtreme) use the PA_BOOST and deliver 14dBm and 20dBm respectively.
-However even if the SX1272/76 chip has the PA_BOOST and the 20dBm features, not all radio modules (integrating these SX1272/76) do have the appropriate wiring and circuits to enable these features: it depends on the choice of the reference design that itself is guided by the main intended frequency band usage, and sometimes also by the target country's regulations (such as maximum transmitted power). So you have to check with the datasheet whether your radio module has PA_BOOST (usually check whether the PA_BOOST pin is wired) and 20dBm capability before using "x" or "X". Some other radio modules only wire the PA_BOOST and not the RFO resulting in very bad range when trying to use the RFO mode ("L", "H", and "M"). In this case, one has to use "x" to indicate PA_BOOST usage to get 14dBm.
+
+However even if the SX1272/76 chip has the PA_BOOST and the 20dBm features, not all radio modules (integrating these SX1272/76) do have the appropriate wiring and circuits to enable these features: it depends on the choice of the reference design that itself is guided by the main intended frequency band usage, and sometimes also by the target country's regulations (such as maximum transmitted power). So you have to check with the datasheet whether your radio module has PA_BOOST (usually check whether the PA_BOOST pin is wired) and 20dBm capability before using "x" or "X". Some other radio modules only wire the PA_BOOST and not the RFO resulting in very bad range when trying to use the RFO mode ("L", "H", and "M"). In this case, one has to use "x" to indicate PA_BOOST usage to get 14dBm.
 
 Practically, we only use either "M" (Max) or "x" (extreme) to have maximum range. They both deliver 14dBm but the difference is whether the RFO pin is used or the PA_BOOST. Therefore, when uploading a sketch on your board, you have to check whether your radio module needs the PA_BOOST in order to get significant output level in which case "x" should be used instead of "M". All the examples start with:
 

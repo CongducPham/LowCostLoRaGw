@@ -191,33 +191,34 @@ def store_gps_coordinate(src, SNR, RSSI, seq, lat, lgt, fxt, tdata, gwid):
 				try:
 					gammurc_file = cloud["gammurc_file"]
 				except KeyError:
-					print "GPS file: gammurc_file in clouds.json undefined"
-					
-		can_send_sms=True
+					gammurc_file="/home/pi/.gammurc"
+
+		try:
+			gammurc_file=key_GpsFile.gammurc_file
+		except AttributeError:
+			gammurc_file="/home/pi/.gammurc"
 		
 		print 'GPS file: SMS is requested'
 		#check Gammu configuration
 		if (not libSMS.gammuCheck()):
 			print 'GPS file: Gammu is not available'
-			can_send_sms=False
+			sys.exit()
 		else: 
 			if (not libSMS.gammurcCheck(gammurc_file)):
 				print 'GPS file: gammurc file is not available'
-				can_send_sms=False
+				sys.exit()
 
 		if (libSMS.phoneConnection(gammurc_file, key_GpsFile.PIN) == None):
 			print 'GPS file: Can not connect to cellular network'
-			can_send_sms=False
+			sys.exit()
 		else:	
 			sm = libSMS.phoneConnection(gammurc_file, key_GpsFile.PIN)
-			print 'GPS file: SMS can be sent'
 			
-		if (can_send_sms==True):
-			print "GPS file: Sending SMS"
-			success = libSMS.send_sms(sm, data, key_GpsFile.contacts)
+		print "GPS file: Sending SMS"
+		success = libSMS.send_sms(sm, data, key_GpsFile.contacts)
 		
-			if (success):
-				print "GPS file: Sending SMS done"
+		if (success):
+			print "GPS file: Sending SMS done"
 							
 #------------------------------------------------------------
 # main

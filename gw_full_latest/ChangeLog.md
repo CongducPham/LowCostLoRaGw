@@ -1,6 +1,11 @@
 Change logs
 ===========
 
+December 29th, 2017
+-------------------
+
+- It is recommended to only store in clouds.json minimum information, such as "name", "script", "type" and "enabled". Then store in the associated key* file additional information as needed. For instance, we removed the "gammurc_file" in clouds.json to put them in key_SMS.py.
+
 December 12th, 2017
 -------------------
 

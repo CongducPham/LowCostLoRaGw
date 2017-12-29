@@ -68,17 +68,29 @@ for cloud in clouds:
 		try:
 			gammurc_file = cloud["gammurc_file"]
 		except KeyError:
-			print "gammurc_file undefined"
+			gammurc_file="/home/pi/.gammurc"
 
-
+if not always_enabled:
+	if (libSMS.internet_ON()):
+		print('Internet is available, no need to use the SMS Service')
+		sys.exit()
+		
+try:
+	gammurc_file=key_OrionWAZIUP_SMS.gammurc_file
+except AttributeError:
+	gammurc_file="/home/pi/.gammurc"
+	
 #check Gammu configuration
 if (not libSMS.gammuCheck()):
+	print 'CloudOrionWAZIUP_SMS: Gammu is not available'
 	sys.exit()
 else: 
 	if (not libSMS.gammurcCheck(gammurc_file)):
+		print 'CloudOrionWAZIUP_SMS: gammurc file is not available'
 		sys.exit()
 
 if (libSMS.phoneConnection(gammurc_file, key_OrionWAZIUP_SMS.PIN) == None):
+	print 'CloudOrionWAZIUP_SMS: Can not connect to cellular network'
 	sys.exit()
 else:	
 	sm = libSMS.phoneConnection(gammurc_file, key_OrionWAZIUP_SMS.PIN)
@@ -188,16 +200,9 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	
 		# Send data to expected contacts
 		success = False
-		if(not always_enabled):
-			if (libSMS.internet_ON()):
-				print('Internet is available, no need to use the SMS Service')
-				sys.exit()
-			else:
-				print("rcv msg to send via the Orion WAZIUP SMS Service: "+sms_data)
-				success = libSMS.send_sms(sm, sms_data, key_OrionWAZIUP_SMS.contacts)
-		else:
-			print("rcv msg to send via the Orion WAZIUP SMS Service: "+sms_data)
-			success = libSMS.send_sms(sm, sms_data, key_OrionWAZIUP_SMS.contacts)
+		
+		print("rcv msg to send via the Orion WAZIUP SMS Service: "+sms_data)
+		success = libSMS.send_sms(sm, sms_data, key_OrionWAZIUP_SMS.contacts)
 	
 		if (success):
 				print "Sending SMS done"	

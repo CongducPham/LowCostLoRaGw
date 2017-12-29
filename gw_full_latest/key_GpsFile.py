@@ -20,8 +20,9 @@ sensor_name="Sensor"
 #source_list=["3", "255", "01020304"]
 source_list=[]
 
+gammurc_file="/home/pi/.gammurc"
 SMS=False 
-PIN= "0000"
-contacts=["+33XXXXXXXXX"]
+PIN="0000"
+contacts=["+1XXXXXXXXX"]
 
 ####################################################

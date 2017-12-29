@@ -27,12 +27,12 @@ import libSMS
 
 import key_SMS
 
+global sm, always_enabled, gammurc_file
+
 try:
 	key_SMS.source_list
 except AttributeError:
-	key_SMS.source_list=[]
-
-global sm, always_enabled, gammurc_file
+	key_SMS.source_list=[]	
 
 #------------------------------------------------------------
 # Open clouds.json file 
@@ -65,21 +65,29 @@ for cloud in clouds:
 		try:
 			gammurc_file = cloud["gammurc_file"]
 		except KeyError:
-			print "gammurc_file undefined"
+			gammurc_file="/home/pi/.gammurc"			
 
 if not always_enabled:
 	if (libSMS.internet_ON()):
 		print('Internet is available, no need to use the SMS Service')
 		sys.exit()
-		
+
+try:
+	gammurc_file=key_SMS.gammurc_file
+except AttributeError:
+	gammurc_file="/home/pi/.gammurc"
+			
 #check Gammu configuration
 if (not libSMS.gammuCheck()):
+	print 'CloudSMS: Gammu is not available'
 	sys.exit()
 else: 
 	if (not libSMS.gammurcCheck(gammurc_file)):
+		print 'CloudSMS: gammurc file is not available'
 		sys.exit()
 
 if (libSMS.phoneConnection(gammurc_file, key_SMS.PIN) == None):
+	print 'CloudSMS: Can not connect to cellular network'
 	sys.exit()
 else:	
 	sm = libSMS.phoneConnection(gammurc_file, key_SMS.PIN)
