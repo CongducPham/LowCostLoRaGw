@@ -92,7 +92,7 @@ MQTT
 	> sudo apt-get install mosquitto mosquitto-clients python-mosquitto
 	> sudo pip install paho-mqtt
 
-npm
+`npm`
 
 	> sudo apt-get install npm
 	> sudo npm i -g npm@2.x
@@ -105,7 +105,7 @@ gps
 
 	> sudo apt-get install gpsd gpsd-clients
 
-raspap-webgui (https://github.com/billz/raspap-webgui)
+`raspap-webgui` (https://github.com/billz/raspap-webgui)
 
 	> sudo apt-get install lighttpd
 	> sudo lighttpd-enable-mod fastcgi-php
@@ -120,7 +120,7 @@ First, install the required packages
 
 Set your hot-spot name (ssid) in `/etc/hostapd/hostapd.conf` (i.e. WAZIUP_PI_GW_27EBBEDA21 using the last 5 hex bytes of your eth0 mac address) and the password (wpa_passphrase)
 
-Replace in `/etc/default/hostapd` #DAEMON_CONF="" by DAEMON_CONF="/etc/hostapd/hostapd.conf"
+Replace in `/etc/default/hostapd` `#DAEMON_CONF=""` by `DAEMON_CONF="/etc/hostapd/hostapd.conf"`
 
 Add in `/etc/dnsmasq.conf`
 
