@@ -90,7 +90,6 @@ The SD card image defines a `pi` user:
 
 	- login: pi
 	- password: loragateway
-	- **it is strongly advise to change the pi user's password**
 		
 With the default gateway configuration, the gateway acts as a WiFi access point. If you see the WiFi network WAZIUP_PI_GW_XXXXXXXXXX then connect to this WiFi network. The WiFi password is `loragateway`. **It is strongly advise to change this WiFi password**. The address of the Raspberry is then 192.168.200.1.  
 
@@ -109,7 +108,7 @@ We will use in this example 192.168.2.8 for the gateway address (DHCP option in 
 	permitted by applicable law.
 	Last login: Thu Aug  4 18:04:41 2016
 
-You should see the text command interface described at the end of this document.
+You should see the text command interface described at the [end of this document](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest#use-cmdsh-to-interact-with-the-gateway).
 
 Configure your gateway with `basic_config_gw.sh` or `config_gw.sh`
 --------------------------------------------------------------
