@@ -25,25 +25,6 @@ There are additional dedicated README files
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
 - manual installation procedure
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-manual-install.md)	
-	
-Configuration files and startup procedure
------------------------------------------
-
-A `gateway_conf.json` file defines gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Both `basic_config_gw.sh` and `config_gw.sh` script can do it for you, see below. Starting from November 3rd, 2017, the gateway ID is re-created from the MAC address every time the Raspberry reboots. This is done in order to automatically have a valid gateway id when installing a new gateway with the provided SD card image.
-
-In `gateway_conf.json`, you can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
-
-A `start_gw.py` Python script runs the gateway, using the gateway configuration file to launch the low-level gateway with appropriate parameters and to log all outputs from the post-processing stage. As `start_gw.py` simply reads the configuration file to launch `lora_gateway` and the `post_processing_gw.py` script, it is just a simpler way to run the gateway. You can still use the corresponding command line. For instance, with the default configuration file:
-
-	> sudo python start_gw.py
-	
-is equivalent to:
-
-	> sudo ./lora_gateway --mode 1 | python ./post_processing_gw.py | python ./log_gw	
-
-Cloud support is separated into different external Python script file. We provide examples ThingSpeak with `CloudThinkSpeak.py`. See the dedicated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md) file on cloud management.
-
-A `cmd.sh` script can be used in an interactive way to launch various commands for the gateway. See at the end of this document.
 
 WiFi instructions on RPI1B+ and RPI2
 ------------------------------------
@@ -108,65 +89,34 @@ We will use in this example 192.168.2.8 for the gateway address (DHCP option in 
 	permitted by applicable law.
 	Last login: Thu Aug  4 18:04:41 2016
 
-You should see the text command interface described at the [end of this document](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest#use-cmdsh-to-interact-with-the-gateway).
+You should see the text command interface described at the [end of this document](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest#use-cmdsh-to-interact-with-the-gateway). The text command interface can be used in an interactive way to launch various commands for the gateway and can be easily customized.
 
-Configure your gateway with `basic_config_gw.sh` or `config_gw.sh`
---------------------------------------------------------------
+**Important notice**: the LoRa gateway program starts automatically when the Raspberry is powered on. To verify that you have a running gateway, use option 3.
 
-`basic_config_gw.sh` should be sufficient for most of the cases. The configuration script mainly assign the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will use the last 5 bytes of the Raspberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you.  
+	BEGIN OUTPUT
+	Check for lora_gateway process
+	##############################
+	root      4119  0.0  0.3   6780  3184 ?        S    10:21   0:00 sudo python start_gw.py
+	root      4123  0.0  0.5   9228  5180 ?        S    10:21   0:00 python start_gw.py
+	root      4124  0.0  0.0   1912   364 ?        S    10:21   0:00 sh -c sudo ./lora_gateway --mode 1 --ndl | python post_processing_gw.py | python log_gw.py
+	root      4125  0.0  0.3   6780  3188 ?        S    10:21   0:00 sudo ./lora_gateway --mode 1 --ndl
+	root      4131 88.5  0.2   3700  2176 ?        R    10:21   3:31 ./lora_gateway --mode 1 --ndl
+	pi        4176  0.0  0.2   4276  1948 pts/1    S+   10:25   0:00 grep -e start_gw -e lora_gateway -e post_processing -e log_gw
+	##############################
+	The gateway is running if you see the lora_gateway process
+	END OUTPUT
+	Press RETURN/ENTER...
 
-    > ifconfig
-    eth0  Link encap:Ethernet  HWaddr b8:27:eb:be:da:21  
-          inet addr:192.168.2.8  Bcast:192.168.2.255  Mask:255.255.255.0
-          inet6 addr: fe80::ba27:ebff:febe:da21/64 Scope:Link
-          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:16556 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:9206 errors:0 dropped:0 overruns:0 carrier:0
-          collisions:0 txqueuelen:1000 
-          RX bytes:6565141 (6.2 MiB)  TX bytes:1452497 (1.3 MiB)
-          
-In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "00000027EBBEDA21". There is an additional script called `test_gwid.sh` in the script folder to test whether the gateway id can be easily determined. In the `scripts` folder, simply run `test_gwid.sh`:
+To stop the gateway, use option K to kill all the gateway processes that are run at boot.
 
-	> cd /home/pi/lora_gateway/scripts
-	> ./test_gwid.sh
-	Detecting gw id as 00000027EBBEDA21
-	
-If you don't see something similar to 00000027EBBEDA21 (8 bytes in hex format) then you have to explicitly provide the **last 5 bytes** of the gw id to `basic_config_gw.sh`. Otherwise, in the `scripts` folder, simply run `basic_config_gw.sh` to automatically configure your gateway. 
+**IMPORTANT NOTICE**: Do not launch a new gateway instance with an existing one as there will be conflict on the SPI bus. When you need to perform some tests and start the gateway manually, use `K` to kill all processes first.
 
-	> cd /home/pi/lora_gateway/scripts
-	> ./basic_config_gw.sh
-	
-or
-
-	> ./basic_config_gw.sh 27EBBEDA21
-	
-`basic_config_gw.sh` takes care of:
-
-- determining the gateway id
-- compiling the `lora_gateway` program, the Raspberry board version will be checked automatically
-- creating a `gateway_id.txt` file containing the gateway id (e.g. "00000027EBBEDA21")
-- setting in `gateway_cong.json` the gateway id: "gateway_ID" : "00000027EBBEDA21"
-- creating the `/home/pi/Dropbox/LoRa-test` folder for log files (if it does not exist) 
-- creating a `log` symbolic link in the `lora_gateway` folder pointing to `/home/pi/Dropbox/LoRa-test` folder
-- configuring `/etc/hostapd/hostapd.conf` for WiFi access point 
-- configuring the gateway to run the `lora_gateway` program at boot
-
-If you need more advanced configuration, then run `config_gw.sh`. for advanced WiFi and Bluettoth configuration tasks (if you use our SD card image, otherwise, you need first to install some required packages). If you don't want some features, just skip them. The configuration script also automatically determines the gateway id like previously. `config_gw.sh` **takes care of:**
-
-- everything that `basic_config_gw.sh` is doing, **plus**
-- configuring `/etc/bluetooth/main.conf` for Bluetooth 
-- activating MongoDB storage 
-- compiling DHT22 support 
-
-**Even if you installed from the zipped SD card image `basic_config_gw.sh` or `config_gw.sh` is still needed to personalize your gateway to:**
-
-- compile the `lora_gateway` program for your the Raspberry board version
-- configure `/etc/hostapd/hostapd.conf` to advertise a WiFi SSID corresponding to last 5 hex-byte of your eth0 interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
+Use `Q` to quit the text command interface.
 
 Make your gateway a WiFi client
 ------------------------------
 
-As indicated previously, in the default gateway configuration (i.e. from the SD card image) the gateway acts as a WiFi access point and Internet connectivity is provided through the wire Ethernet interface. In case you want to make the gateway a WiFi client so that it connects to the Internet through an existing WiFi network you have to do the following steps. Note that this solution works even if you are logged (ssh) on the gateway using the gateway's access point WiFi network.
+In the default gateway configuration (i.e. from the SD card image) the gateway acts as a WiFi access point and Internet connectivity is provided through the wire Ethernet interface. In case you want to make the gateway a WiFi client so that it connects to the Internet through an existing WiFi network you have to do the following steps. Note that this solution works even if you are logged (ssh) on the gateway using the gateway's access point WiFi network.
 
 1. run in the `lora_gateway/scripts` folder the `prepare_wifi_client.sh` script
 2. run the following command:
@@ -251,6 +201,120 @@ Reboot and it should be up and running!
 	> sudo reboot
 
 The default username is 'admin' and the default password is 'secret'. RaspAp webgui can then be accessed at http://`gw_ip_address`/raspap-webgui. There is also a link from our web admin interface to RaspAp in the `System` menu.
+
+Compiling the low-level gateway program
+---------------------------------------	 	
+    
+DO NOT modify the `lora_gateway.cpp` file unless you know what you are doing. Check the `radio.makefile` file to indicate whether your radio module uses the PA_BOOST amplifier line or not (which means it uses the RFO line). HopeRF RFM92W/95W or inAir9B or NiceRF1276 or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it) need the `-DPABOOST`. Both Libelium SX1272 and inAir9 (not inAir9B) do not use PA_BOOST. You can also define a maximum output power to stay within transmission power regulations of your country. For instance, if you do not define anything, then the output power is set to 14dBm (ETSI european regulations), otherwise use `-DMAX_DBM=10` for 10dBm. Then:
+
+	> make lora_gateway
+
+If you are using a Raspberry v2 or v3:
+
+	> make lora_gateway_pi2
+
+On Raspberry v2 or v3 a symbolic link will be created that will point to `lora_gateway_pi2`.
+
+To launch the low-level gateway (use `K` to kill all processes started at boot first):
+
+	> sudo ./lora_gateway
+
+By default, the low-level gateway runs in LoRa mode 1 and has address 1. With the low-level gateway you can receive LoRa message to test the radio reception of you gateway.
+
+You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository https://github.com/CongducPham/tutorials.
+
+Adding LoRa gateway's post-processing features
+----------------------------------------------
+
+A data post-processing stage can be added after the low-level LoRa gateway program. This is usually how the gateway should be used in order to have advanced data management as a typical post-processing task is to push received data to Internet servers or dedicated (public or private) IoT clouds.
+
+The `post_processing_gw.py` script handles end-device's raw data from the low-level LoRa gateway. The template script already implements data uploading to various public IoT clouds. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md) to know how to configure the cloud definition. Adding the post-processing stage is realized as follows:
+
+	> sudo ./lora_gateway | python ./post_processing_gw.py
+
+To further log processing output in a file (in `/home/pi/Dropbox/LoRa-test/post_processing.log`)
+
+	> sudo ./lora_gateway | python ./post_processing_gw.py | python ./log_gw
+	
+**Note that if you want to run and test the above command now**, you have to create a `Dropbox` folder in your home directory with a subfolder `LoRa-test` that will be used locally. Please put attention to the name of the folders: they must be `Dropbox/LoRa-test` because the `post_processing_gw.py` Python script uses these paths. You can mount Dropbox later on if you want: the local folders and contents will be unchanged. **Otherwise, just run the `basic_config_gw.sh` configuration script as described [previously](https://github.com/CongducPham/LowCostLoRaGw#configuring-your-gateway-after-update) (recommended)**.
+
+    > mkdir -p Dropbox/LoRa-test 	
+	
+Actually, both `lora_gateway` can take additional parameters to configure the radio module. However, it is more convenient to use the `start_gw.py` script that will parse the gateway configuration file, see below, to launch the low-level gateway accordingly:
+
+	> sudo python start_gw.py
+
+This is the command that we recommend and it is actually how the gateway starts when the Raspberry is powered on. To test, just flash a temperature sensor and it should work out-of-the-box on our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794).
+
+As `start_gw.py` simply reads the configuration file to launch `lora_gateway` and the `post_processing_gw.py` script, it is just a simpler way to run the gateway. You can however still use the corresponding command line for test purposes. For instance, with the default configuration file `sudo python start_gw.py` is equivalent to:
+
+	> sudo ./lora_gateway --mode 1 | python ./post_processing_gw.py | python ./log_gw	
+
+You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository https://github.com/CongducPham/tutorials.
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/post-processing.png)
+
+Gateway configuration file
+--------------------------
+
+When using the full gateway with post-processing stage, a `gateway_conf.json` file defines the gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Both `basic_config_gw.sh` and `config_gw.sh` script can do it for you, see below. Starting from November 3rd, 2017, the gateway ID is re-created from the MAC address every time the Raspberry reboots. This is done in order to automatically have a valid gateway id when installing a new gateway with the provided SD card image.
+
+In `gateway_conf.json`, you can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
+
+Cloud support is separated into different external (Python) script files. There is for instance an example for ThingSpeak with `CloudThinkSpeak.py`. See the dedicated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md) file on cloud management.
+
+Configure your gateway with `basic_config_gw.sh` or `config_gw.sh`
+--------------------------------------------------------------
+
+`basic_config_gw.sh` should be sufficient for most of the cases. The configuration script mainly assign the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will use the last 5 bytes of the Raspberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you.  
+
+    > ifconfig
+    eth0  Link encap:Ethernet  HWaddr b8:27:eb:be:da:21  
+          inet addr:192.168.2.8  Bcast:192.168.2.255  Mask:255.255.255.0
+          inet6 addr: fe80::ba27:ebff:febe:da21/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:16556 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:9206 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:6565141 (6.2 MiB)  TX bytes:1452497 (1.3 MiB)
+          
+In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "00000027EBBEDA21". There is an additional script called `test_gwid.sh` in the script folder to test whether the gateway id can be easily determined. In the `scripts` folder, simply run `test_gwid.sh`:
+
+	> cd /home/pi/lora_gateway/scripts
+	> ./test_gwid.sh
+	Detecting gw id as 00000027EBBEDA21
+	
+If you don't see something similar to 00000027EBBEDA21 (8 bytes in hex format) then you have to explicitly provide the **last 5 bytes** of the gw id to `basic_config_gw.sh`. Otherwise, in the `scripts` folder, simply run `basic_config_gw.sh` to automatically configure your gateway. 
+
+	> cd /home/pi/lora_gateway/scripts
+	> ./basic_config_gw.sh
+	
+or
+
+	> ./basic_config_gw.sh 27EBBEDA21
+	
+`basic_config_gw.sh` takes care of:
+
+- determining the gateway id
+- compiling the `lora_gateway` program, the Raspberry board version will be checked automatically
+- creating a `gateway_id.txt` file containing the gateway id (e.g. "00000027EBBEDA21")
+- setting in `gateway_cong.json` the gateway id: "gateway_ID" : "00000027EBBEDA21"
+- creating the `/home/pi/Dropbox/LoRa-test` folder for log files (if it does not exist) 
+- creating a `log` symbolic link in the `lora_gateway` folder pointing to `/home/pi/Dropbox/LoRa-test` folder
+- configuring `/etc/hostapd/hostapd.conf` for WiFi access point 
+- configuring the gateway to run the `lora_gateway` program at boot
+
+If you need more advanced configuration, then run `config_gw.sh`. for advanced WiFi and Bluettoth configuration tasks (if you use our SD card image, otherwise, you need first to install some required packages). If you don't want some features, just skip them. The configuration script also automatically determines the gateway id like previously. `config_gw.sh` **takes care of:**
+
+- everything that `basic_config_gw.sh` is doing, **plus**
+- configuring `/etc/bluetooth/main.conf` for Bluetooth 
+- activating MongoDB storage 
+- compiling DHT22 support 
+
+**Even if you installed from the zipped SD card image `basic_config_gw.sh` or `config_gw.sh` is still needed to personalize your gateway to:**
+
+- compile the `lora_gateway` program for your the Raspberry board version
+- configure `/etc/hostapd/hostapd.conf` to advertise a WiFi SSID corresponding to last 5 hex-byte of your `eth0` interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
 
 `gateway_conf.json` options
 =========================

@@ -60,6 +60,25 @@ Features
 - by default, incoming data are uploaded to our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794)
 - works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
 
+Connect a radio module to the Raspberry
+=======================================
+
+You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). 
+
+```
+      RPI            Radio module
+   GND pin 25----------GND   (ground in)
+   3V3 pin 17----------3.3V  (3.3V in)
+CS/CE0 pin 24----------NSS   (CS chip select in)
+   SCK pin 23----------SCK   (SPI clock in)
+  MOSI pin 19----------MOSI  (SPI Data in)
+  MISO pin 21----------MISO  (SPI Data out)
+```
+
+You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository https://github.com/CongducPham/tutorials.
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/connect-radio-rpi.png)
+
 Installing the latest gateway version 
 =====================================
 
@@ -87,7 +106,11 @@ You can look at various tutorials on how to burn an image to an SD card. There i
 When booting from the provided SD card image
 ============================================ 
 
-**Important notice**: the LoRa gateway program starts automatically when the Raspberry is powered on.
+**Important notice**: the LoRa gateway program starts automatically when the Raspberry is powered on. 
+
+You can try your gateway right away now by building your end-device and jump directly to this [section](https://github.com/CongducPham/LowCostLoRaGw#connect-a-radio-module-to-your-end-device).
+
+If you want to connect (`ssh`) to the gateway and perform update procedure, read the rest of the section.
 	
 Connect to your new gateway
 ---------------------------
@@ -124,7 +147,7 @@ Once you have your SD card flashed with our image, to get directly to the full, 
 Option (i)
 ----------
 
-**It is the recommended option** but the Raspberry must have Internet connection.
+**It is the recommended option but the Raspberry must have Internet connection**.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/gw-web-admin-update.png)
 
@@ -143,7 +166,7 @@ Then reboot.
 Option (ii)
 -----------
 
-If your gateway has Internet connectivity (DHCP with Internet sharing for instance), you can use our `update_gw.sh` script. Even if the SD card image has a recent version of the gateway software with the `update_gw.sh` script in the `lora_gateway/scripts` folder it is safer to get the latest version of this script. Simply do:
+If your gateway has Internet connectivity (DHCP with Internet sharing on your laptop for instance), you can use our `update_gw.sh` script. Even if the SD card image has a recent version of the gateway software with the `update_gw.sh` script in the `lora_gateway/scripts` folder it is safer to get the latest version of this script. Simply do:
 
 	> cd /home/pi
 	> wget https://raw.githubusercontent.com/CongducPham/LowCostLoRaGw/master/gw_full_latest/scripts/update_gw.sh
@@ -209,7 +232,7 @@ Here, again, you can do all these steps on your laptop and then use `scp` to cop
 Configuring your gateway after update
 -------------------------------------
 
-After gateway update, you need to configure your new gateway with `basic_config_gw.sh`, that mainly assigns the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will be the last 5 bytes of the Rapberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you. There is an additional script called `test_gwid.sh` in the script folder to test whether the gateway id can be easily determined. In the `scripts` folder, simply run `test_gwid.sh`:
+After gateway update with option (ii), (iii) or (iv), you need to configure your new gateway with `basic_config_gw.sh`, that mainly assigns the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will be the last 5 bytes of the Rapberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you. There is an additional script called `test_gwid.sh` in the script folder to test whether the gateway id can be easily determined. In the `scripts` folder, simply run `test_gwid.sh`:
 
 	> cd /home/pi/lora_gateway/scripts
 	> ./test_gwid.sh
@@ -230,74 +253,6 @@ By default `gateway_conf.json` configures the gateway with a simple behavior: Lo
 
 The LoRa gateway starts automatically when RPI is powered on. Then use `cmd.sh` to execute the main operations on the gateway as described [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#use-cmdsh-to-interact-with-the-gateway).	
 
-Connect a radio module to Raspberry
-===================================
-
-You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). 
-
-```
-      RPI            Radio module
-   GND pin 25----------GND   (ground in)
-   3V3 pin 17----------3.3V  (3.3V in)
-CS/CE0 pin 24----------NSS   (CS chip select in)
-   SCK pin 23----------SCK   (SPI clock in)
-  MOSI pin 19----------MOSI  (SPI Data in)
-  MISO pin 21----------MISO  (SPI Data out)
-```
-
-You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository https://github.com/CongducPham/tutorials.
-
-![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/connect-radio-rpi.png)
-	
-(Advanced) Compiling the low-level gateway program
-=======================================	 	
-    
-DO NOT modify the `lora_gateway.cpp` file unless you know what you are doing. Check the `radio.makefile` file to indicate whether your radio module uses the PA_BOOST amplifier line or not (which means it uses the RFO line). HopeRF RFM92W/95W or inAir9B or NiceRF1276 or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it) need the `-DPABOOST`. Both Libelium SX1272 and inAir9 (not inAir9B) do not use PA_BOOST. You can also define a maximum output power to stay within transmission power regulations of your country. For instance, if you do not define anything, then the output power is set to 14dBm (ETSI european regulations), otherwise use `-DMAX_DBM=10` for 10dBm. Then:
-
-	> make lora_gateway
-
-If you are using a Raspberry v2 or v3 :
-
-	> make lora_gateway_pi2
-
-To launch the gateway
-
-	> sudo ./lora_gateway
-
-On Raspberry v2 or v3 a symbolic link will be created that will point to `lora_gateway_pi2`.
-
-By default, the gateway runs in LoRa mode 1 and has address 1.
-
-You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository https://github.com/CongducPham/tutorials.
-
-(Advanced) Adding LoRa gateway's post-processing features
-==============================================
-
-A data post-processing stage in added after the low-level LoRa gateway program. The `post_processing_gw.py` script can be customized to process sensor raw data from the low-level LoRa gateway. A typical processing task is to push received data to Internet servers or dedicated (public or private) IoT clouds. `post_processing_gw.py` is a template that already implement data uploading to various public IoT clouds. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md) to know how to configure the cloud definition.
-
-Adding the post-processing stage is done as follows:
-
-	> sudo ./lora_gateway | python ./post_processing_gw.py
-
-To log processing output in a file (in `/home/pi/Dropbox/LoRa-test/post_processing.log`)
-
-	> sudo ./lora_gateway | python ./post_processing_gw.py | python ./log_gw
-	
-**Note that if you want to run and test the above command now**, you have to create a `Dropbox` folder in your home directory with a subfolder `LoRa-test` that will be used locally. Please put attention to the name of the folders: they must be `Dropbox/LoRa-test` because the `post_processing_gw.py` Python script uses these paths. You can mount Dropbox later on if you want: the local folders and contents will be unchanged. **Otherwise, just run the `basic_config_gw.sh` configuration script as described [previously](https://github.com/CongducPham/LowCostLoRaGw#configuring-your-gateway-after-update) (recommended)**.
-
-    > mkdir -p Dropbox/LoRa-test 	
-	
-Actually, both `lora_gateway` can take additional parameters to configure the radio module. However, it is more convenient to use the `start_gw.py` script that will parse the gateway configuration file to launch the low-level gateway accordingly:
-
-	> sudo python start_gw.py
-
-This is the command that we recommend. To test, just flash a temperature sensor and it should work out-of-the-box on our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794).
-
-You can also customize the post-processing stage (`post_processing_gw.py`) at your convenience later.
-
-You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository https://github.com/CongducPham/tutorials.
-
-![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/post-processing.png)
 
 Connect a radio module to your end-device
 =========================================
