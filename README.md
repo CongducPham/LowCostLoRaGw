@@ -108,7 +108,7 @@ When booting from the provided SD card image
 
 **Important notice**: the LoRa gateway program starts automatically when the Raspberry is powered on. 
 
-You can try your gateway right away now by building your end-device and jump directly to this [section](https://github.com/CongducPham/LowCostLoRaGw#connect-a-radio-module-to-your-end-device).
+**You can try your gateway right away now by building your end-device and jump directly to this [section](https://github.com/CongducPham/LowCostLoRaGw#connect-a-radio-module-to-your-end-device)**.
 
 If you want to connect (`ssh`) to the gateway and perform update procedure, read the rest of the section.
 	

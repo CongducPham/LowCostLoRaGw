@@ -91,7 +91,7 @@ We will use in this example 192.168.2.8 for the gateway address (DHCP option in 
 
 You should see the text command interface described at the [end of this document](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest#use-cmdsh-to-interact-with-the-gateway). The text command interface can be used in an interactive way to launch various commands for the gateway and can be easily customized.
 
-**Important notice**: the LoRa gateway program starts automatically when the Raspberry is powered on. To verify that you have a running gateway, use option 3.
+**IMPORTANT NOTICE**: the LoRa gateway program starts automatically when the Raspberry is powered on. To verify that you have a running gateway, use option `3`.
 
 	BEGIN OUTPUT
 	Check for lora_gateway process
@@ -107,7 +107,7 @@ You should see the text command interface described at the [end of this document
 	END OUTPUT
 	Press RETURN/ENTER...
 
-To stop the gateway, use option K to kill all the gateway processes that are run at boot.
+To stop the gateway, use option `K` to kill all the gateway processes that are run at boot.
 
 **IMPORTANT NOTICE**: Do not launch a new gateway instance with an existing one as there will be conflict on the SPI bus. When you need to perform some tests and start the gateway manually, use `K` to kill all processes first.
 
@@ -116,7 +116,7 @@ Use `Q` to quit the text command interface.
 Make your gateway a WiFi client
 ------------------------------
 
-In the default gateway configuration (i.e. from the SD card image) the gateway acts as a WiFi access point and Internet connectivity is provided through the wire Ethernet interface. In case you want to make the gateway a WiFi client so that it connects to the Internet through an existing WiFi network you have to do the following steps. Note that this solution works even if you are logged (ssh) on the gateway using the gateway's access point WiFi network.
+In the default gateway configuration (i.e. from the SD card image) the gateway acts as a WiFi access point and Internet connectivity is provided through the wire Ethernet interface. In case you want to make the gateway a WiFi client so that it connects to the Internet through an existing WiFi network you have to do the following steps. Note that this solution works even if you are logged (`ssh`) on the gateway using the gateway's access point WiFi network.
 
 1. run in the `lora_gateway/scripts` folder the `prepare_wifi_client.sh` script
 2. run the following command:
@@ -257,11 +257,11 @@ You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutor
 Gateway configuration file
 --------------------------
 
-When using the full gateway with post-processing stage, a `gateway_conf.json` file defines the gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: "gateway_ID" : "00000027EBBEDA21". Both `basic_config_gw.sh` and `config_gw.sh` script can do it for you, see below. Starting from November 3rd, 2017, the gateway ID is re-created from the MAC address every time the Raspberry reboots. This is done in order to automatically have a valid gateway id when installing a new gateway with the provided SD card image.
+When using the full gateway with post-processing stage, a `gateway_conf.json` file defines the gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: `"gateway_ID" : "00000027EBBEDA21"`. Both `basic_config_gw.sh` and `config_gw.sh` script can do it for you, see below. Starting from November 3rd, 2017, the gateway ID is re-created from the MAC address every time the Raspberry reboots. This is done in order to automatically have a valid gateway id when installing a new gateway with the provided SD card image.
 
 In `gateway_conf.json`, you can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
 
-Cloud support is separated into different external (Python) script files. There is for instance an example for ThingSpeak with `CloudThinkSpeak.py`. See the dedicated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md) file on cloud management.
+Cloud support is separated into different external script files (mainly Python but other language can be used). There is for instance an example for ThingSpeak with `CloudThinkSpeak.py`. See the dedicated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md) file on cloud management.
 
 Configure your gateway with `basic_config_gw.sh` or `config_gw.sh`
 --------------------------------------------------------------
@@ -278,7 +278,7 @@ Configure your gateway with `basic_config_gw.sh` or `config_gw.sh`
           collisions:0 txqueuelen:1000 
           RX bytes:6565141 (6.2 MiB)  TX bytes:1452497 (1.3 MiB)
           
-In the example, we have "HWaddr b8:27:eb:be:da:21" then the gateway id will be "00000027EBBEDA21". There is an additional script called `test_gwid.sh` in the script folder to test whether the gateway id can be easily determined. In the `scripts` folder, simply run `test_gwid.sh`:
+In the example, we have `HWaddr b8:27:eb:be:da:21` then the gateway id will be `00000027EBBEDA21`. There is an additional script called `test_gwid.sh` in the script folder to test whether the gateway id can be easily determined. In the `scripts` folder, simply run `test_gwid.sh`:
 
 	> cd /home/pi/lora_gateway/scripts
 	> ./test_gwid.sh
@@ -317,7 +317,7 @@ If you need more advanced configuration, then run `config_gw.sh`. for advanced W
 - configure `/etc/hostapd/hostapd.conf` to advertise a WiFi SSID corresponding to last 5 hex-byte of your `eth0` interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
 
 `gateway_conf.json` options
-=========================
+===========================
 
 A typical `gateway_conf.json` is shown below:
 
@@ -475,9 +475,9 @@ You can use `cmd.sh` as follows:
 	> cat gateway_id.txt
 	00000027EBBEDA21
 	
-`cmd.sh` will also set the gateway id in the `gateway_conf.json` file: "gateway_ID" : "00000027EBBEDA21". 
+`cmd.sh` will also set the gateway id in the `gateway_conf.json` file: `"gateway_ID" : "00000027EBBEDA21"`. 
 
-Normally, the LoRa gateway starts automatically on boot. To verify that you have a running gateway, use option 3.
+Normally, the LoRa gateway starts automatically on boot. To verify that you have a running gateway, use option `3`.
 
 	BEGIN OUTPUT
 	Check for lora_gateway process
@@ -493,15 +493,15 @@ Normally, the LoRa gateway starts automatically on boot. To verify that you have
 	END OUTPUT
 	Press RETURN/ENTER...
 
-To stop the gateway, use option K. This option can also kill the gateway processes that are run at boot.
+To stop the gateway, use option `K`. This option can also kill the gateway processes that are run at boot.
 
 **IMPORTANT NOTICE**: Do not launch a new gateway instance with an existing one as there will be conflict on the SPI bus.
 
-You can start manually the gateway for test purposes with option 0. 
+You can start manually the gateway for test purposes with option `0`. 
 	
 **IMPORTANT NOTICE**: To run an operation gateway, it is better to reboot the gateway and let the LoRa gateway program start at boot. Manually lauching the gateway can be usefull for test purposes but we observed that redirections of LoRa gateway output to the post-processing stage can be broken thus leading to a not responding gateway.
 
-You can then use option 5 to see the logs in real time. To test the simple low-level gateway, use option 1. You can `ssh` at any time and use option 5 to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an `ssh` app to log on 192.168.200.1 and launch `cmd.sh` from your smartphone.	
+You can then use option `5` to see the logs in real time. To test the simple low-level gateway, use option `1`. You can `ssh` at any time and use option `5` to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an `ssh` app to log on 192.168.200.1 and launch `cmd.sh` from your smartphone.	
 
 You can easily add new useful commands to the `cmd.sh` shell script.
 	
