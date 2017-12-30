@@ -379,7 +379,7 @@ Depending on the sensor type, the computation to get the real temperature may be
 
 The default configuration also use the EEPROM to store the last packet sequence number in order to get it back when the sensor is restarted/rebooted. If you want to restart with a packet sequence number of 0, just comment the line `#define WITH_EEPROM`
 
-Once flashed, the Arduino temperature sensor will send to the gateway the following message `\\!#3#20.4` (20.4 is the measured temperature so you may not have the same value) prefixed by the application key every 10 minutes (with some randomization interval). This will trigger at the processing stage of the gateway the logging on the default ThinkSpeak channel (the test channel we provide) in field 3. At the gateway, 20.4 will be recorded on the provided ThingSpeak test channel in field 3 of the channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value. 
+Once flashed, the Arduino temperature sensor will send to the gateway the following message `\!#3#20.4` (20.4 is the measured temperature so you may not have the same value) prefixed by the application key every 10 minutes (with some randomization interval). This will trigger at the processing stage of the gateway the logging on the default ThinkSpeak channel (the test channel we provide) in field 3. At the gateway, 20.4 will be recorded on the provided ThingSpeak test channel in field 3 of the channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value. 
 
 The program has been tested on Arduino Uno, Mega2560, Nano, Pro Mini, Mini, Due, Zero.  We also tested on the TeensyLC/3.1/3.2, the Ideetron Nexus and the Feather32u4/M0. Starting from November 3rd, 2017, the SPI_SS pin (CS pin) is always pin number 10 on all Arduino and Teensy boards. 
 
@@ -393,7 +393,7 @@ With the Arduino IDE, open the `Arduino_LoRa_InteractiveDevice` sketch. Then com
 
 By default, the interactive end-device has address 6 and runs in LoRa mode 1.
 
-Enter `\\!SGSH52UGPVAUYG3S#1#21.6` in the input window and press RETURN
+Enter `\!SGSH52UGPVAUYG3S#1#21.6` in the input window and press RETURN
 
 The command will be sent to the gateway and you should see the gateway pushing the data to the ThingSpeak test channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value.
 
