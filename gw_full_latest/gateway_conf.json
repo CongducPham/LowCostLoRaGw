@@ -22,6 +22,10 @@
 		"status" : 600,
 		"aux_radio" : 0
 	},
+	"status_conf" : {
+		"dynamic_gps" : false,
+		"copy_post_processing_log" : false
+	},		
 	"alert_conf" : {
 		"use_mail" : false,
 		"contact_mail" : "the_contact_mail_address,another_contact_mail_address_if_needed",

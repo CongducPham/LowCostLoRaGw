@@ -69,10 +69,21 @@ require 'header.php';
                             	<div class="tab-pane fade in active" id="new_install-pills">
                                    	</br></br>
                                    
-                                   		<p>
-                                   			<button id="btn_gw_new_install" type="button" class="btn btn-primary" href="process.php?gw_new_install=true">   <span class="fa fa-upload"></button>
-                                   			Installing latest version of gateway, erasing existing configuration. May take 1 minute, wait for finish notification.
-                                   		</p>
+                                   		<table border="0">
+                                   		<tr>
+                                   			<td rowspan="2">
+                                   				<button id="btn_gw_new_install" type="button" class="btn btn-primary" href="process.php?gw_new_install=true">   <span class="fa fa-upload"></button>
+                                   			</td>
+                                   			<td>                                   				
+                                   				&nbsp;&nbsp;Install latest version of gateway, <strong>erasing</strong> all existing configuration file. 
+                                   			</td>	
+                                   		</tr>
+                                   		<tr>
+                                   			<td>	
+                                   				&nbsp;&nbsp;Custom SSID will be preserved. May take minutes, wait for finish notification.
+                                   			</td>
+                                   		</tr>		
+                                   		</table>
 
 										</br>
 										
@@ -90,10 +101,21 @@ require 'header.php';
                         		<div class="tab-pane fade" id="full_update-pills">
                                    	</br></br>
                                    
-                                   		<p>
-                                   			<button id="btn_gw_full_update" type="button" class="btn btn-primary" href="process.php?gw_full_update=true">   <span class="fa fa-upload"></button>
-                                   			Updating to latest version of gateway, preserving your local configuration files. May take 1 minute, wait for finish notification.
-                                   		</p>
+                                   		<table border="0">
+                                   		<tr>
+                                   			<td rowspan="2">
+                                   				<button id="btn_gw_full_update" type="button" class="btn btn-primary" href="process.php?gw_full_update=true"> <span class="fa fa-upload"></button>
+                                   			</td>
+                                   			<td>
+                                   				&nbsp;&nbsp;Update to latest version of gateway, <strong>preserving</strong> your local configuration files.
+                                   			</td>	
+                                   		</tr>
+                                   		<tr>
+                                   			<td>	
+                                   				&nbsp;&nbsp;Custom SSID will be preserved. May take minutes, wait for finish notification.
+                                   			</td>
+                                   		</tr>		
+                                   		</table>
 
 										</br>
 										<?php
@@ -113,12 +135,12 @@ require 'header.php';
                                    
                                    		<p>
                                    			<button id="btn_gw_basic_conf" type="button" class="btn btn-primary" href="process.php?gw_basic_conf=true">   <span class="fa fa-edit"></button>
-                                   			Configure your gateway after new installation/update or after changing PA_BOOST settings.
+                                   			Configure your gateway after new installation/update or after changing PA_BOOST/downlink settings.
                                    		</p>
 
 										</br>
 										<?php
-											$current_install_date=exec('stat --format=%y /home/pi/lora_gateway/gateway_id.txt 2>/dev/null');
+											$current_install_date=exec('stat --format=%y /home/pi/lora_gateway/lora_gateway 2>/dev/null');
 											
 											if ($current_install_date=='') {
 												echo "Date of last configuration undefined";
@@ -163,7 +185,7 @@ require 'header.php';
                     
                                    		<p>
                                    			<button id="btn_update_web_admin" type="button" class="btn btn-primary" href="process.php?update_web_admin=true">   <span class="fa fa-upload"></button>
-                                   			Updating to latest version of gateway web admin interface. May take 30s, wait for finish notification.
+                                   			Update to latest version of gateway web admin interface. May take 1 minute, wait for finish notification.
                                    		</p>    
 
 										</br>

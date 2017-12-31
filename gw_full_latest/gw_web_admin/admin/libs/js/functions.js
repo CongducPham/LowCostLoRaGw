@@ -1123,10 +1123,10 @@ $(function () {
             //erase message after 5 seconds
 	    setTimeout(function() {
   		$('#system_msg').html("");
+  		window.location.reload();
 	     },5000);
         });
         $('#hostapd_form')[0].reset();
-        
     });
 
 //#######################

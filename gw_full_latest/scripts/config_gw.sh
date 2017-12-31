@@ -177,7 +177,15 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		ln -s /home/pi/Dropbox/LoRa-test /home/pi/lora_gateway/log
 		echo "Done"		
 fi	
-	
+
+echo "***********************************"
+if [ -f /etc/hostapd/custom_ssid.txt ];
+then
+	echo "Customized hot-spot ssid detected: `cat /etc/hostapd/custom_ssid.txt`"
+	echo "Configuring hostapd.conf will replace with WAZIUP_PI_GW_$gwid"
+	echo "Password will also be reset to loragateway"		
+fi
+
 echo "***********************************"
 echo "*** configure hostapd.conf Y/N  ***"
 echo "***********************************"
@@ -202,7 +210,10 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 		read ouinon
 
 		if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
-			then			
+			then
+				echo "Removing /etc/hostapd/custom_ssid.txt if any"
+				sudo rm -rf /etc/hostapd/custom_ssid.txt
+				echo "Done"			
 				echo "Indicating in /etc/default/hostapd that /etc/hostapd/hostapd.conf is the config file"
 				# here we replace #DAEMON_CONF to DAEMON_CONF in case DAEMON_CONF was commented
 				sudo sed -i 's/^#DAEMON_CONF.*/DAEMON_CONF="/etc/hostapd/hostapd.conf"/g' /etc/default/hostapd
@@ -215,6 +226,7 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 				echo "Add in /etc/dnsmasq.conf DHCP lease IP range, the RPI acces-point will have IP 192.168.200.1"
 				echo "interface=wlan0" >>  /etc/dnsmasq.conf
 				echo "dhcp-range=192.168.200.100,192.168.200.120,255.255.255.0,1h" >>  /etc/dnsmasq.conf
+				echo "Done"
 		fi
 
 fi

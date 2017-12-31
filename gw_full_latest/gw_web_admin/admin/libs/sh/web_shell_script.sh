@@ -222,7 +222,9 @@ then
 	#Replacing hot-spot ssid in /etc/hostapd/hostapd.conf
 	sudo sed -i 's/^ssid.*/ssid='"$2"'/g' /etc/hostapd/hostapd.conf
 	#Setting wpa_passphrase in /etc/hostapd/hostapd.conf
-	sudo sed -i 's/^wpa_passphrase.*/wpa_passphrase='"$2"'/g' /etc/hostapd/hostapd.conf
+	sudo sed -i 's/^wpa_passphrase.*/wpa_passphrase='"$3"'/g' /etc/hostapd/hostapd.conf
+	#indicate that a custom ssid has been defined by the user
+	echo "$2" | sudo tee /etc/hostapd/custom_ssid.txt > /dev/null
 fi
 
 if [ "$1" = "wificlient" ]

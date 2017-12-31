@@ -84,15 +84,21 @@ echo "Creating log -> /home/pi/Dropbox/LoRa-test"
 ln -s /home/pi/Dropbox/LoRa-test /home/pi/lora_gateway/log
 echo "Done"
 
-echo "Replacing hot-spot ssid in /etc/hostapd/hostapd.conf"
-sudo sed -i 's/^ssid.*/ssid=WAZIUP_PI_GW_'"$gwid"'/g' /etc/hostapd/hostapd.conf
-echo "Done"
-echo "Gateway WiFi ssid is WAZIUP_PI_GW_$gwid"
+if [ -f /etc/hostapd/custom_ssid.txt ];
+then
+	echo "customized hot-spot ssid detected"
+	echo "keep customized hot-spot ssid and password"
+else	
+	echo "Replacing hot-spot ssid in /etc/hostapd/hostapd.conf"
+	sudo sed -i 's/^ssid.*/ssid=WAZIUP_PI_GW_'"$gwid"'/g' /etc/hostapd/hostapd.conf
+	echo "Done"
+	echo "Gateway WiFi ssid is WAZIUP_PI_GW_$gwid"
 		
-echo "Setting wpa_passphrase in /etc/hostapd/hostapd.conf"
-sudo sed -i 's/^wpa_passphrase.*/wpa_passphrase=loragateway/g' /etc/hostapd/hostapd.conf
-echo "Done"
-echo "Gateway WiFi wpa_passphrase is loragateway"		
+	echo "Setting wpa_passphrase in /etc/hostapd/hostapd.conf"
+	sudo sed -i 's/^wpa_passphrase.*/wpa_passphrase=loragateway/g' /etc/hostapd/hostapd.conf
+	echo "Done"
+	echo "Gateway WiFi wpa_passphrase is loragateway"		
+fi
 
 echo "Setting gateway to run at boot"
 # we always remove so that there will be no duplicate lines
