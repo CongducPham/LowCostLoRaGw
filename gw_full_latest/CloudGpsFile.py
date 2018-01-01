@@ -18,16 +18,21 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
-
 import os
 import sys
 import os.path
-import json
 import re
 import libSMS
 from math import radians, cos, sin, asin, sqrt, atan2, degrees
+import json
+import codecs
+#import code
+import datetime
+import dateutil.tz
+from dateutil import parser
 
 _gps_jsonfile = "gps/gps.json"
+_active_gps_jsonfile = "gps/active_gps.json"
 _gps_file = "gps/gps.txt"
 
 # get key definition from external file to ease
@@ -55,6 +60,21 @@ for line in lines :
 
 #change it into a python array
 gw_json_array = json.loads(array)
+
+#------------------------------------------------------------
+# Open gps.json file 
+#------------------------------------------------------------
+
+#open json file to retrieve active devices
+f = open(os.path.expanduser(_gps_jsonfile),"r")
+string = f.read()
+f.close()
+
+#change it into a python array
+gps_json_array = json.loads(string)
+
+#retrieving all gps devices declarations
+gps_devices = gps_json_array["devices"]
 
 #------------------------------------------------------------
 #get from https://stackoverflow.com/questions/4913349/haversine-formula-in-python-bearing-and-distance-between-two-gps-points
@@ -112,10 +132,82 @@ def initial_bearing(pointA, pointB):
 #------------------------------------------------------------
 
 #------------------------------------------------------------
+#update list of gps remote devices 
+#------------------------------------------------------------
+
+def update_gps_device(src, SNR, RSSI, seq, bc, lat, lgt, fxt, distance, tdata, gwid):
+
+	found_device=False
+
+	#search in current list
+	for device in gps_devices:
+		#found it
+		if src==device["src"]:
+			found_device=True
+			device["snr"]=SNR
+			device["rssi"]=RSSI
+			device["seq"]=seq
+			device["bc"]=bc			
+			device["time"]=tdata
+			device["gw"]=gwid
+			device["fxt"]=int(fxt)
+			device["lat"]=float(lat)
+			device["lgt"]=float(lgt)
+			device["distance"]=float(distance)
+			device["active"]='yes'
+	
+	#new device
+	if found_device==False:
+		new_device={}
+		new_device["src"]=src
+		new_device["snr"]=SNR
+		new_device["rssi"]=RSSI
+		new_device["seq"]=seq
+		new_device["bc"]=bc
+		new_device["time"]=tdata
+		new_device["gw"]=gwid
+		new_device["fxt"]=int(fxt)
+		new_device["lat"]=float(lat)
+		new_device["lgt"]=float(lgt)
+		new_device["distance"]=float(distance)
+		new_device["active"]='yes'
+		#append in list
+		gps_devices.append(new_device)			
+    
+	#create a new array	
+	active_gps_json_array = json.loads('{ "devices":[]}')
+	#in "devices" section
+	active_gps_devices = active_gps_json_array["devices"]
+
+	#get current time
+	localdt = datetime.datetime.now(dateutil.tz.tzlocal())
+	tnow = localdt.replace(microsecond=0).isoformat()
+	now = parser.parse(tnow)
+
+	#search for device that were active in the time window
+	for device in gps_devices:
+		t1=parser.parse(device['time'])
+		diff=now-t1
+	
+		if diff.total_seconds() < key_GpsFile.active_interval_minutes*60:
+			device['active']=u'yes'
+			active_gps_devices.append(device)
+		else:
+			device['active']=u'no'	
+
+	#update the list of remote devices	
+	with open(os.path.expanduser(_gps_jsonfile), 'w') as f:
+		json.dump(gps_json_array, codecs.getwriter('utf-8')(f), ensure_ascii=False, indent=4)
+	
+	#update the list of active remote devices		
+	with open(os.path.expanduser(_active_gps_jsonfile), 'w') as f:
+		json.dump(active_gps_json_array, codecs.getwriter('utf-8')(f), ensure_ascii=False, indent=4)    						
+			
+#------------------------------------------------------------
 #store gps coordinate from remote devices 
 #------------------------------------------------------------
 
-def store_gps_coordinate(src, SNR, RSSI, seq, lat, lgt, fxt, tdata, gwid):
+def store_gps_coordinate(src, SNR, RSSI, seq, bc, lat, lgt, fxt, tdata, gwid):
 
 	#print "Reading GPS file"
 
@@ -158,40 +250,19 @@ def store_gps_coordinate(src, SNR, RSSI, seq, lat, lgt, fxt, tdata, gwid):
 	#open gps file to store the GPS coordinate and the calculated distance
 	f = open(os.path.expanduser(_gps_file),"a")
 	
-	data = 'src '+src+' snr '+str(SNR)+' rssi '+str(RSSI)+' time '+tdata+' gw '+gwid+' fxt '+fxt+' lat '+lat+' lgt '+lgt+' distance '+str("%.4f" % distance)
+	data = 'src '+src+' seq '+str(seq)+' bc '+str(bc)+' snr '+str(SNR)+' rssi '+str(RSSI)+' time '+tdata+' gw '+gwid+' fxt '+fxt+' lat '+lat+' lgt '+lgt+' distance '+str("%.4f" % distance)
 	f.write(data+'\n')	
 	f.close()
 	
 	print 'GPS file: lat='+lat
 	print 'GPS file: lgt='+lgt
 	print 'GPS file: d='+"%.4f" % distance
+	
+	#update the list of remote GPS device
+	#information from device older than key_GpsFile.active_interval_minutes will be marked not active
+	update_gps_device(src, SNR, RSSI, seq, bc, lat, lgt, fxt, str("%.4f" % distance), tdata, gwid)
 
 	if (key_GpsFile.SMS==True):
-		#------------------------------------------------------------
-		# Open clouds.json file 
-		#------------------------------------------------------------
-
-		#name of json file containing the cloud declarations
-		cloud_filename = "clouds.json"
-
-		#open json file to retrieve enabled clouds
-		f = open(os.path.expanduser(cloud_filename),"r")
-		string = f.read()
-		f.close()
-	
-		#change it into a python array
-		cloud_json_array = json.loads(string)
-
-		#retrieving all cloud declarations
-		clouds = cloud_json_array["clouds"]
-
-		#here we check for our own script entry
-		for cloud in clouds:
-			if "CloudSMS.py" in cloud["script"]:
-				try:
-					gammurc_file = cloud["gammurc_file"]
-				except KeyError:
-					gammurc_file="/home/pi/.gammurc"
 
 		try:
 			gammurc_file=key_GpsFile.gammurc_file
@@ -262,6 +333,16 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		except ValueError:
 			fxt_index=-1			
 			
+		try:			
+			bc_index=ldata_array.index("BC")
+		except ValueError:
+			bc_index=-1
+			
+		if (bc_index == -1):
+			bc=-1	
+		else:
+			bc=int(ldata_array[bc_index+1]) 
+						
 		if (lat_index == -1) or (lgt_index == -1) or (fxt_index == -1):
 			print "GPS file: No GPS fields"
 		else:
@@ -271,11 +352,10 @@ def main(ldata, pdata, rdata, tdata, gwid):
 				lat=ldata_array[lat_index+1]
 				lgt=ldata_array[lgt_index+1]
 				fxt=ldata_array[fxt_index+1]
-				store_gps_coordinate(key_GpsFile.project_name+'_'+key_GpsFile.organization_name+'_'+key_GpsFile.sensor_name+src_str, SNR, RSSI, seq, lat, lgt, fxt, tdata, gwid)				
+				store_gps_coordinate(key_GpsFile.project_name+'_'+key_GpsFile.organization_name+'_'+key_GpsFile.sensor_name+src_str, SNR, RSSI, seq, bc, lat, lgt, fxt, tdata, gwid)				
 
-# you can call CloudGpsFile.py in standalone mode with
+# you can test CloudGpsFile.py in standalone mode with
 # python CloudGpsFile.py "BC/9/LAT/43.31402/LGT/-0.36370/FXT/4180" "1,16,6,0,9,8,-45" "125,5,12" "2017-11-20T14:18:54+01:00" "00000027EBBEDA21"
-# for testing
 		
 if __name__ == "__main__":
         main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])

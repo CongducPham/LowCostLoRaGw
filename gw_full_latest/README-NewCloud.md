@@ -47,19 +47,19 @@ Note that storage on the local MongoDB is declared as a cloud, among others that
 Recall that a message will be upload to cloud only if it is prefixed with `\!`. So assuming that you are sending `\!#4#TC/21.5` when your script is launched, `post_processing_gw.py` provides 5 parameters. 
 
 - ldata: the received data (without the prefix)
-	- e.g. #4#TC/21.5 as 1t argument (sys.argv[1] in python)
+	- e.g. `#4#TC/21.5` as 1t argument (sys.argv[1] in python)
 - pdata: packet information
-	- e.g. "1,16,3,0,10,8,-45" as 2nd argument (sys.argv[2] in python)
-	- interpreted as dst,ptype,src,seq,len,SNR,RSSI for the last received packet
+	- e.g. `1,16,3,0,10,8,-45` as 2nd argument (sys.argv[2] in python)
+	- interpreted as `dst`, `ptype`, `src`, `seq`, `len`, `SNR`, `RSSI` for the last received packet
 - rdata: the LoRa radio information
-	- e.g. "500,5,12" as 3rd argument (sys.argv[3] in python)
-	- interpreted as bw,cr,sf for the last received packet
+	- e.g. `500,5,12` as 3rd argument (sys.argv[3] in python)
+	- interpreted as `bw`, `cr`, `sf` for the last received packet
 - tdata: the timestamp information
-	- e.g. "2016-10-04T02:03:28.783385" as 4th argument (sys.argv[4] in python)
+	- e.g. `2016-10-04T02:03:28.783385` as 4th argument (sys.argv[4] in python)
 - gwid: the gateway id
-	- e.g. 00000027EBBEDA21 as 5th argument (sys.argv[5] in python)	
+	- e.g. `00000027EBBEDA21` as 5th argument (sys.argv[5] in python)	
 	
-These parameters are passed to the script. It is up to the cloud script to use these parameters or not. The main structure of a python cloud script to handle a particular cloud can therefore be as follows:
+These parameters are passed to the script. **It is up to the cloud script to use these parameters or not**. The main structure of a python cloud script to handle a particular cloud can therefore be summarized as follows:
 
 	IMPORT-AS-MANY-PACKAGES-AS-YOU-NEED
 	DEFINE-AS-MANY-FUNCTIONS-AS-YOU-NEED
@@ -88,7 +88,7 @@ These parameters are passed to the script. It is up to the cloud script to use t
 
 This cloud design approach allows for:
 
-- a very generic `post_processing_gw.py` script that handles the interface with the low-level lora_gateway program
+- a very generic `post_processing_gw.py` script that handles the interface with the low-level `lora_gateway` program
 - the end-user to have the entire responsability (through a cloud script) to decode the raw data provided by the end-device
 
 Assuming that `_enabled_clouds` contains: 
@@ -114,7 +114,7 @@ The main data upload processing task in `post_processing_gw.py` is very simple a
 Good practice for storing keys or identification information
 ------------------------------------------------------------
 
-Most of cloud platforms use some kind of keys for write access. These keys should be stored in a separate Python file so that updates on the cloud script can be realized independently from the existing keys (for instance if you already customized from a previous install). In the provided examples, `key_FireBase.py`, `key_GroveStreams.py` and `key_ThingSpeak.py` contain keys for their corresponding clouds. For instance, `CloudThingSpeak.py` starts with an `import key_ThingSpeak` statement. Only `key_ThingSpeak.py` has a usable key, which is our LoRa demo channel write key: SGSH52UGPVAUYG3S. 
+Most of cloud platforms use some kind of keys for write access. These keys should be stored in a separate Python file so that updates on the cloud script can be realized independently from the existing keys (for instance if you already customized from a previous install). In the provided examples, `key_FireBase.py`, `key_GroveStreams.py` and `key_ThingSpeak.py` contain keys for their corresponding clouds. For instance, `CloudThingSpeak.py` starts with an `import key_ThingSpeak` statement. Only `key_ThingSpeak.py` has a usable key, which is our LoRa demo channel write key: `SGSH52UGPVAUYG3S`. 
 
 	> cat key_ThingSpeak.py
 	# LoRa demo channel
@@ -148,7 +148,7 @@ The code of the CloudThingSpeak.py scripts looks like:
 	else:
 		print "Source is not is source list, not sending with CloudThingSpeak.py"
 		
-This feature is quite useful when you want to upload data to various different clouds, depending on the device. Suppose that you have 10 devices whose addresses are from 1 to 10. You want to upload data from sensors 1..5 to a ThingSpeak channel and data from sensors 6..10 to GroveStreams. Then you need to activate in clouds.json both clouds and specify in `key_ThingSpeak.py` `source_list=["1","2","3","4","5"]` and in `key_GroveStreams.py` `source_list=["6","7","8","9","10"]`. 
+This feature is quite useful when you want to upload data to various different clouds, depending on the device. Suppose that you have 10 devices whose addresses are from 1 to 10. You want to upload data from sensors 1..5 to a ThingSpeak channel and data from sensors 6..10 to GroveStreams. Then you need to activate in `clouds.json` both clouds and specify in `key_ThingSpeak.py` `source_list=["1","2","3","4","5"]` and in `key_GroveStreams.py` `source_list=["6","7","8","9","10"]`. 
 
 Note that you can also upload to 2 different ThingSpeak channels by duplicating the `CloudThingSpeak.py` script into `CloudThingSpeak_1.py`, creating a new `key_ThingSpeak_1.py` file to store both the other ThingSpeak write key and `source_list`, changing in `CloudThingSpeak_1.py` the `import key_ThingSpeak` into `import key_ThingSpeak_1 as key_ThingSpeak` and then activating both `CloudThingSpeak.py` and `CloudThingSpeak_1.py` in `clouds.json` as follows:
 
@@ -181,16 +181,16 @@ Some words about data format
 	
 If several cloud systems is used, each with some specific features, then the raw data format can be complex and the decoding tasks of these data by the various scripts may need to be also more complex. This is exactely the case with our example templates where we want to be able to specify a particular write key and field when uploading to ThingSpeak and still be able to use the dynamic field creation feature of Grovestreams platform. For example, we want to be able to send various message formats such as:
 
-- SGSH52UGPVAUYG3S##22.5 : specified a ThingSpeak write key with a the default field, value is 22.5
-- SGSH52UGPVAUYG3S#4#22.5 : specified both a ThingSpeak write key and a field, value is 22.5
-- #4#22.5 : specified a field when using the default ThingSpeak write key, value is 22.5
-- ##22.5 : use default value for both ThingSpeak write key and field
-- 22.5 : use default value for both ThingSpeak write key and field; or use default nomenclature (i.e. DEF) for Grovestreams and MongoDB
-- ##TC/22.5 : use the possibility to define a particular nomenclature with Grovestreams and MongoDB (e.g. TC for temperature in Celsius)
-- TC/22.5 : use the possibility to define a particular nomenclature with Grovestreams and MongoDB (e.g. TC for temperature in Celsius)
-- TC/22.5/HU/85/LU/78 : use the possibility to define multiple nomenclatures and values with Grovestreams and MongoDB
+- `SGSH52UGPVAUYG3S##22.5` : specified a ThingSpeak write key with a the default field, value is 22.5
+- `SGSH52UGPVAUYG3S#4#22.5` : specified both a ThingSpeak write key and a field, value is 22.5
+- `#4#22.5` : specified a field when using the default ThingSpeak write key, value is 22.5
+- `##22.5` : use default value for both ThingSpeak write key and field
+- `22.5` : use default value for both ThingSpeak write key and field; or use default nomenclature (i.e. DEF) for Grovestreams and MongoDB
+- `##TC/22.5` : use the possibility to define a particular nomenclature with Grovestreams and MongoDB (e.g. TC for temperature in Celsius)
+- `TC/22.5` : use the possibility to define a particular nomenclature with Grovestreams and MongoDB (e.g. TC for temperature in Celsius)
+- `TC/22.5/HU/85/LU/78` : use the possibility to define multiple nomenclatures and values with Grovestreams and MongoDB
 	
-If you look at the provided example for ThingSpeak, Grovestreams and MongoDB clouds, you can see how we handle/decode/process these various data formats (by looking for delimiters) so that data from an end-device can sequentially be uploaded on various clouds platforms. For instance, '#' delimiters are not relevant for both Grovestreams and MongoDB (these cloud scripts will simply ignore them) while they are for ThingSpeak. If you only use one cloud platform then the data format and the cloud script can be much more simple.
+If you look at the provided example for ThingSpeak, Grovestreams and MongoDB clouds, you can see how we handle/decode/process these various data formats (by looking for delimiters) so that data from an end-device can sequentially be uploaded on various clouds platforms. For instance, `#` delimiters are not relevant for both Grovestreams and MongoDB (these cloud scripts will simply ignore them) while they are for ThingSpeak. If you only use one cloud platform then the data format and the cloud script can be much more simple.
 
 Output examples
 ---------------
@@ -227,7 +227,7 @@ When incoming data with `\!` prefix is processed, `post_processing_gw.py` will l
 Remotely editing the `clouds.json` file
 -------------------------------------
 
-The gateway has a simple web admin interface that allows you to configure the ThingSpeak cloud and the WAZIUP Orion cloud (used by the WAZIUP european project). For all advanced editing of clouds.json file there are 2 possibilities. The first one is to use `ssh` to log into the gateway and then use the `nano` editor to edit the clouds.json file. Use `CTRL-O+RETURN` to save the file and then `CTRL-X` to quit.
+The gateway has a simple web admin interface that allows you to configure the ThingSpeak cloud and the WAZIUP Orion cloud (used by the WAZIUP european project). For all advanced editing of `clouds.json` file there are 2 possibilities. The first one is to use `ssh` to log into the gateway and then use the `nano` editor to edit the clouds.json file. Use `CTRL-O+RETURN` to save the file and then `CTRL-X` to quit.
 
 	> ssh pi@192.168.200.1
 	> cd lora_gateway

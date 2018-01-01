@@ -15,19 +15,21 @@ MISO pin D12----------MISO  (SPI Data out)
 
 On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino and Teensy boards. You can have a look at the [Low-cost-LoRa-IoT-step-by-step](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-outdoor-step-by-step.pdf) tutorial in the tutorial repository (https://github.com/CongducPham/tutorials).
 
-All the examples uses so-called LoRa mode 1 (BW125, CR45, SF12) on 865.2Mhz to work with the default gateway configuration.
+All the examples uses so-called LoRa mode 1 (BW125, CR45, SF12) at 865.2 Mhz (`CH_10_868`) to work with the default gateway configuration.
 
-**Arduino_LoRa_Ping_Pong** shows a simple ping-pong communication between a LoRa device and a gateway by requesting an acknowlegment for data messages sent to the gateway.
+**`Arduino_LoRa_Ping_Pong`** shows a simple ping-pong communication between a LoRa device and a gateway by requesting an acknowlegment for data messages sent to the gateway.
 
-**Arduino_LoRa_Simple_temp** illustrates how a simple LoRa device with temperature data can be flashed to an Arduino board. The example illustrates in a simple manner how to implement most of the features of a real IoT device: periodic sensing, transmission to gateway, duty-cycle and low-power mode to run on battery for months.
+**`Arduino_LoRa_Simple_temp`** illustrates how a simple LoRa device with temperature data can be flashed to an Arduino board. The example illustrates in a simple manner how to implement most of the features of a real IoT device: periodic sensing, transmission to gateway, duty-cycle and low-power mode to run on battery for months.
  
-**Arduino_LoRa_temp** illustrates a more complex example with AES encryption and the possibility to send LoRaWAN packet. It can also open a receive window after every transmission to wait for downlink message coming from the gateway. The template shows for instance how an '/@Ax#' command can be parsed to set the node's address to 'x'. It can serve as a template for a more complex LoRa IoT device.
+**`Arduino_LoRa_temp`** illustrates a more complex example with AES encryption and the possibility to send LoRaWAN packet. It can also open a receive window after every transmission to wait for downlink message coming from the gateway (uncomment `#define WTH_RCVW`). The template shows for instance how an '/@Ax#' command from the gateway can be parsed to set the node's address to 'x'. It can serve as a template for a more complex LoRa IoT device.
 
-**Arduino_LoRa_Simple_BeaconCollar** is a simple beacon system to build a collar device intended for Cattle Rustling applications. The device will periodically send a beacon message with a sequence number to track at the gateway the beacon's RSSI and beacon losses to trigger alarms. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system.
+**`Arduino_LoRa_Simple_BeaconCollar`** is a simple beacon system to build a collar device intended for Cattle Rustling applications. The device will periodically send a beacon message with a sequence number to track at the gateway the beacon's RSSI and beacon losses to trigger alarms. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system.
 
-**Arduino_LoRa_GPS** is a more elaborated GPS beacon system where a GPS module (UBlox 6M/7M/M8N) is used to get the coordinates of the collar device. The device will periodically send a beacon message with a sequence number and the GPS coordinates in the following format \\!BC/0/LAT/43.31408/LGT/-0.36362/FXT/4172. This example can served as a basis for a tracking device that parses in a very light-weight manner the GPGGA NMEA message. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system. In the tutorial, the GPS device can use an open source PCB board designed by Fabien Ferrero from LEAT laboratory, University of Nice, France, to easily integrate an Arduino Pro Mini and an RFM95W radio module. The PCB has an integrated antenna to avoid external fragile part. The PCB Gerber layout file can be obtained from [https://github.com/FabienFerrero/UCA_Board](https://github.com/FabienFerrero/UCA_Board). Here is a [1-click order link](https://www.pcbway.com/project/shareproject/W48634ASK5_UCA_reverse.html) on PCBWAY.com.
+**`Arduino_LoRa_GPS`** is a more elaborated GPS beacon system where a GPS module (UBlox 6M/7M/M8N) is used to get the coordinates of the collar device. The device will periodically send a beacon message with a sequence number and the GPS coordinates in the following format `\!BC/0/LAT/43.31408/LGT/-0.36362/FXT/4172`. This example can served as a basis for a tracking device that parses in a very light-weight manner the GPGGA NMEA message. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system. In the tutorial, the GPS device can use an open source PCB board designed by Fabien Ferrero from LEAT laboratory, University of Nice, France, to easily integrate an Arduino Pro Mini and an RFM95W radio module. The PCB has an integrated antenna to avoid external fragile part. The PCB Gerber layout file can be obtained from [https://github.com/FabienFerrero/UCA_Board](https://github.com/FabienFerrero/UCA_Board). Here is a [1-click order link](https://www.pcbway.com/project/shareproject/W48634ASK5_UCA_reverse.html) on PCBWAY.com.
 
-**Arduino_LoRa_Generic_Sensor** is a very generic sensor template where a large variety of new physical sensors can be added. All physical sensors must be derived from a base Sensor class (defined in Sensor.cpp and Sensor.h) and should provide a get_value() and get_nomenclature() function. All the periodic task loop with duty-cycle low-power management is already there as in previous examples. Some predefined physical sensors are also already defined:
+This example also shows how a dedicated "cloud" task, `CloudGpsFile.py`, is implemented and enabled in `clouds.json` to process GPS messages from remote GPS devices and to compute their distance to the gateway. More details are provided in this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf).
+
+**`Arduino_LoRa_Generic_Sensor`** is a very generic sensor template where a large variety of new physical sensors can be added. All physical sensors must be derived from a base Sensor class (defined in `Sensor.cpp` and `Sensor.h`) and should provide a `get_value()` and `get_nomenclature()` function. All the periodic task loop with duty-cycle low-power management is already there as in previous examples. Some predefined physical sensors are also already defined:
 
 - very simple LM35DZ analog temperature sensor
 - digital DHT22 temperature and humidity sensor
@@ -49,17 +51,17 @@ Add the sensors:
 	//////////////////////////////////////////////////////////////////
 	// ADD YOUR SENSORS HERE   
 	// Sensor(nomenclature, is_analog, is_connected, is_low_power, pin_read, pin_power, pin_trigger=-1)
-	  sensor_ptrs[0] = new LM35("tc", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 8);
-	  sensor_ptrs[1] = new DHT22_Temperature("TC", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 9);
-	  sensor_ptrs[2] = new DHT22_Humidity("HU", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 9);
-	  sensor_ptrs[3] = new LeafWetness("lw", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7);
-	  sensor_ptrs[4] = new DS18B20("DS", IS_NOT_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) 4, (uint8_t) 7);
-	  sensor_ptrs[5] = new rawAnalog("SH", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 6);
-	  sensor_ptrs[6] = new HCSR04("DIS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 39, (uint8_t) 41, (uint8_t) 40);
+	sensor_ptrs[0] = new LM35("tc", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 8);
+	sensor_ptrs[1] = new DHT22_Temperature("TC", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 9);
+	sensor_ptrs[2] = new DHT22_Humidity("HU", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 9);
+	sensor_ptrs[3] = new LeafWetness("lw", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7);
+	sensor_ptrs[4] = new DS18B20("DS", IS_NOT_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) 4, (uint8_t) 7);
+	sensor_ptrs[5] = new rawAnalog("SH", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 6);
+	sensor_ptrs[6] = new HCSR04("DIS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 39, (uint8_t) 41, (uint8_t) 40);
 	
-	  // for non connected sensors, indicate whether you want some fake data, for test purposes for instance
-	  sensor_ptrs[3]->set_fake_data(true);
-	  sensor_ptrs[4]->set_fake_data(true); 
+	// for non connected sensors, indicate whether you want some fake data, for test purposes for instance
+	sensor_ptrs[3]->set_fake_data(true);
+	sensor_ptrs[4]->set_fake_data(true); 
 	
 	//////////////////////////////////////////////////////////////////  	
 	
@@ -89,11 +91,11 @@ With the declared sensors, the transmitted data string can be as follows:
 
 	\!tc/19.52/TC/19.62/HU/45/lw/3.53/DS/19.8/SH/500.56/DIS/56.78      
 	
-You can look at the provided examples to see how you can write a specific sensor class for a specific physical sensor. The previous simple temperature example Arduino_LoRa_Simple_temp can be obtained from the generic example by simply using a single sensor declaration with the LM35 class (i.e. sensor_ptrs[0]).	
+You can look at the provided examples to see how you can write a specific sensor class for a specific physical sensor. The previous simple temperature example `Arduino_LoRa_Simple_temp` can be obtained from the generic example by simply using a single sensor declaration with the LM35 class (i.e. `sensor_ptrs[0]`).	
 
-**Arduino_LoRa_InteractiveDevice** is a tool that turns an Arduino board to an interactive device where a user can interactively enter data to be sent to the gateway. There are also many parameters that can dynamically be configured. This example can serve for test and debug purposes as well.
+**`Arduino_LoRa_InteractiveDevice`** is a tool that turns an Arduino board to an interactive device where a user can interactively enter data to be sent to the gateway. There are also many parameters that can dynamically be configured. This example can serve for test and debug purposes as well.
 
-**Arduino_LoRa_ucamII** is the image IoT sensor device for multimedia sensing. Read [this specific page](http://cpham.perso.univ-pau.fr/WSN-MODEL/tool-html/imagesensor.html) and this [specific tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-ImageIoT-step-by-step.pdf) for more informations on how to build and run the image sensor.
+**`Arduino_LoRa_ucamII`** is the image IoT sensor device for multimedia sensing. Read [this specific page](http://cpham.perso.univ-pau.fr/WSN-MODEL/tool-html/imagesensor.html) and this [specific tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-ImageIoT-step-by-step.pdf) for more informations on how to build and run the image sensor.
 
 What Arduino boards are supported?
 ==================================
@@ -106,7 +108,7 @@ One main issue for a eligible board is to have a 3.3v pin to power the radio mod
 - Teensy LC/31/32/35/36
 - Ideetron Nexus (which is an ATmega328P at 3.3v, select as Arduino Mini in IDE)  
 - Adafruit Feather32u4 and FeatherM0
-- Expressif ESP8266 (only the **Arduino_LoRa_Simple_temp** has been modified to support the ESP8266)
+- Expressif ESP8266 (only the **`Arduino_LoRa_Simple_temp`** has been modified to support the ESP8266)
 
 **Uno/MEGA form factor**
 
@@ -168,7 +170,7 @@ Here is a reminder of the pre-defined radio frequency channels in the library:
 | 18 | 868.1* |  - |   -    |  - |   -    |
 |  - |   -    |  - |   -    |  - |   -    |
 
-If you select ETSI_EUROPE_REGULATION then available channels are channel CH_10_868 to CH_18_868 and the default channel will be CH_10_868. If you select SENEGAL_REGULATION then available channels are channel CH_04_868 to CH_09_868 and the default channel will be CH_04_868. There are also regulation concerning the maximum transmit power which 14dBm (25mW) for ETSI and 10dBm (10mW) in Senegal as shown below: 
+If you select `ETSI_EUROPE_REGULATION` then available channels are channels `CH_10_868` to `CH_18_868` and the default channel will be `CH_10_868`. If you select `SENEGAL_REGULATION` then available channels are channels `CH_04_868` to `CH_09_868` and the default channel will be `CH_04_868`. There are also regulation concerning the maximum transmit power which 14dBm (25mW) for ETSI and 10dBm (10mW) in Senegal as shown below: 
 
 	#ifdef ETSI_EUROPE_REGULATION
 	#define MAX_DBM 14
@@ -188,7 +190,7 @@ If you select ETSI_EUROPE_REGULATION then available channels are channel CH_10_8
 	const uint32_t DEFAULT_CHANNEL=CH_00_433;
 	#endif
 	
-Although 900MHz band is supported (mostly for the US ISM band) by using CH_05_900 as default channel, the library does not implement the frequency hopping mechanism nor the limited dwell time (e.g. 400ms per transmission). Therefore, for the moment, FCC_US_REGULATION is not implemented.
+Although 900MHz band is supported (mostly for the US ISM band) by using `CH_05_900` as default channel, the library does not implement the frequency hopping mechanism nor the limited dwell time (e.g. 400ms per transmission). It is up to the programmer to ensure, by using appropriate LoRa settings and message size, that the 400ms limit is satisfied. Therefore, for the moment, `FCC_US_REGULATION` is not implemented.
 
 Adapting frequency for your country
 -----------------------------------
@@ -271,7 +273,7 @@ then the default channel declaration:
 	uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_433,CH_01_433,CH_02_433,CH_03_433};                                              
 	#endif
 
-However, it is **highly** advised to rather change the frequency setting at the gateway by editing the gateway_conf.json file:
+However, it is **highly** advised to rather change the frequency setting at the gateway by editing the `gateway_conf.json` file:
 
 	"radio_conf" : {
 		"mode" : 1,
@@ -323,7 +325,7 @@ Here is a reminder of the pre-defined LoRa modes as defined by the library.
 Low-power
 ---------
 
-Low-power management is handled by various low-power libraries. For Arduino boards, it is the LowPower library from Rocket Scream. For TeensyLC/31/32, it is the Snooze library. As indicated previously, if you use another board, you may need to use a specific low-power library, or disable low-power management. By default in the example, the device will wake up every 10 minutes. You can changed it to another value, expressed in minutes. If low power is not used, the duty-cycle behavior will still be implemented but with the delay() function which is not energy-efficient.
+Low-power management is handled by various low-power libraries. For Arduino boards, it is the `LowPower` library from Rocket Scream. For TeensyLC/31/32, it is the `Snooze` library. As indicated previously, if you use another board, you may need to use a specific low-power library, or disable low-power management. By default in the example, the device will wake up every 10 minutes. You can changed it to another value, expressed in minutes. If low power is not used, the duty-cycle behavior will still be implemented but with the `delay()` function which is not energy-efficient.
 
 	#define LOW_POWER
 	#define LOW_POWER_HIBERNATE
@@ -346,16 +348,16 @@ Also, when your micro controller does not have built-in EEPROM, you should disab
 AES encryption
 --------------
 
-AES encryption can be enabled in Arduino_LoRa_temp and Arduino_LoRa_Generic_Sensor with the following define statement:
+AES encryption can be enabled in `Arduino_LoRa_temp` and `Arduino_LoRa_Generic_Sensor` with the following define statement:
 	
 	#define WITH_AES
 
-Please refer to the README file in the gw_advanced/aes_lorawan folder.
+Please refer to the [README-aes_lorawan](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md) file.
 
 Receive window
 --------------
 
-A receive window can be enabled in Arduino_LoRa_temp with the following define statement:
+A receive window can be enabled in `Arduino_LoRa_temp` with the following define statement:
 	
 	#define WITH_RCVW
 	
@@ -363,25 +365,25 @@ A receive window is opened after every transmission to wait for downlink message
 
 	//#define FORCE_DEFAULT_VALUE
 	
-For more information on dynamic configuration of end-device, please read carefully the information in the Arduino_LoRa_temp template.	
+For more information on dynamic configuration of end-device, please read carefully the information in the `Arduino_LoRa_temp` template.	
 	
 For more information on how to perform downlink transmission from the gateway, please refer to the following [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md).
 
 LoRaWAN support
 ---------------
 
-Limited LoRaWAN support is provided in Arduino_LoRa_temp and Arduino_LoRa_Generic_Sensor with the following define statements:
+Limited LoRaWAN support is provided in `Arduino_LoRa_temp` and `Arduino_LoRa_Generic_Sensor` with the following define statements:
 
 	#define LORAWAN
 	
-Please refer to the README file in the gw_advanced/aes_lorawan folder.
+Please refer to the [README-aes_lorawan](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md) file.
 
 Using the RadioHead library for the end-device
 ----------------------------------------------
 
-Although not recommended as you won't benefit from the advanced features proposed by our library, it is possible to use the RadioHead library to build an end-device that can send data to our gateway. The radio driver is RH_RF95 which is primarily intended for the HopeRF RFM95/96/97/98 but other SX1276/77/78/79-based radio module will work. For instance both the Modtronix inAir9 and inAir9B. Care must be taken to correctly define the PA_BOOST support. Both RFM95W and inAir9B need PA_BOOST while the inAir9 uses the RFO instead. Also, the RadioHead library needs the radio's DIO 0 pin to be connected to an interrupt-enabled pin of the Arduino board. The RadioHead lib can be downloaded from [http://www.airspayce.com/mikem/arduino/RadioHead/](http://www.airspayce.com/mikem/arduino/RadioHead/).
+Although not recommended as you won't benefit from the advanced features proposed by our library, it is possible to use the RadioHead library to build an end-device that can send data to our gateway. The radio driver is `RH_RF95` which is primarily intended for the HopeRF RFM95/96/97/98 but other SX1276/77/78/79-based radio module will work. For instance both the Modtronix inAir9 and inAir9B. Care must be taken to correctly define the PA_BOOST support. Both RFM95W and inAir9B need PA_BOOST while the inAir9 uses the RFO instead. Also, the RadioHead library needs the radio's DIO 0 pin to be connected to an interrupt-enabled pin of the Arduino board. The RadioHead lib can be downloaded from [http://www.airspayce.com/mikem/arduino/RadioHead/](http://www.airspayce.com/mikem/arduino/RadioHead/).
 
-Our library uses the following 4-byte header: dst(1B) ptype(1B) src(1B) seq(1B). ptype is decomposed in 2 parts type(4bits) flags(4bits); type can take current value of DATA=0001 and ACK=0010. The flags are from left to right: ack_requested|encrypted|with_appkey|is_binary. Fortunately the RH lib also use a 4-byte header: to, from, id, flags. It is therefore easy to have the following correspondance: to <-> dst and from <-> src; and use id for ptype and flags for seq. However, in RH_RF95, the field insertion order is: to, from, id, flags so to avoid changing the RH lib, we chose to use the following mapping:
+Our library uses the following 4-byte header: `dst(1B)` `ptype(1B)` `src(1B)` `seq(1B)`. `ptype` is decomposed in 2 parts `type(4bits)` and `flags(4bits)`; `type` can take current value of `DATA=0001` and `ACK=0010`. The flags are from left to right: `ack_requested|encrypted|with_appkey|is_binary`. Fortunately the RH lib also use a 4-byte header: `to`, `from`, `id`, `flags`. It is therefore easy to have the following correspondance: `to <-> dst` and `from <-> src`; and use `id` for `ptype` and `flags` for `seq`. However, in RH_RF95, the field insertion order is: `to`, `from`, `id`, `flags` so to avoid changing the RH lib, we chose to use the following mapping:
  
 ```
    to <-> dst
@@ -390,5 +392,5 @@ Our library uses the following 4-byte header: dst(1B) ptype(1B) src(1B) seq(1B).
 flags <-> seq 
 ``` 
 
-These variables will be set using the RHDatagram.h functions: setHeaderTo, setHeaderfrom, setHeaderId, setHeaderFlags. The **Arduino_LoRa_Radiohead_Example** provides an example sending "hello" using so-called LoRa mode 1 (BW125, CR45, SF12) on 865.2Mhz. PA_BOOST is activated by default and the DI0 pin is connected to Arduino digital pin 2.
+These variables will be set using the `RHDatagram.h` functions: `setHeaderTo`, `setHeaderfrom`, `setHeaderId`, `setHeaderFlags`. The **`Arduino_LoRa_Radiohead_Example`** provides an example sending "hello" using so-called LoRa mode 1 (BW125, CR45, SF12) on 865.2Mhz. PA_BOOST is activated by default and the DI0 pin is connected to Arduino digital pin 2.
 
