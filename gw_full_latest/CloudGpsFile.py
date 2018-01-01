@@ -18,6 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #-------------------------------------------------------------------------------
+
 import os
 import sys
 import os.path
@@ -195,11 +196,11 @@ def update_gps_device(src, SNR, RSSI, seq, bc, lat, lgt, fxt, distance, tdata, g
 		else:
 			device['active']=u'no'	
 
-	#update the list of remote devices	
+	#update the list of remote devices on file	
 	with open(os.path.expanduser(_gps_jsonfile), 'w') as f:
 		json.dump(gps_json_array, codecs.getwriter('utf-8')(f), ensure_ascii=False, indent=4)
 	
-	#update the list of active remote devices		
+	#update the list of active remote devices on file		
 	with open(os.path.expanduser(_active_gps_jsonfile), 'w') as f:
 		json.dump(active_gps_json_array, codecs.getwriter('utf-8')(f), ensure_ascii=False, indent=4)    						
 			
@@ -208,16 +209,6 @@ def update_gps_device(src, SNR, RSSI, seq, bc, lat, lgt, fxt, distance, tdata, g
 #------------------------------------------------------------
 
 def store_gps_coordinate(src, SNR, RSSI, seq, bc, lat, lgt, fxt, tdata, gwid):
-
-	#print "Reading GPS file"
-
-	#open json file to retrieve enabled clouds
-	#f = open(os.path.expanduser(_gps_file),"r")
-	#json_string = f.read()
-	#f.close()
-
-	#change it into a python array
-	#json_array = json.loads(json_string)
 	
 	try:
 		_gw_lat = gw_json_array["gateway_conf"]["ref_latitude"]

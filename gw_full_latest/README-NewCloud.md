@@ -4,7 +4,7 @@ Cloud support module for the low-cost LoRa gateway
 Description 
 -----------
 
-`clouds.json` contains a list of clouds where you want your data to be uploaded. Here is an example with 5 clouds: local MongoDB, WAZIUP Orion, ThingSpeak, MQTT (test.mosquitto.org) and Grovestreams.
+`clouds.json` contains a list of clouds where you want your data to be uploaded. Here is an example with 5 clouds: local MongoDB, WAZIUP Orion, ThingSpeak, MQTT (test.mosquitto.org) and GroveStreams.
 
 	{
 		"clouds" : [
@@ -44,22 +44,22 @@ Description
 
 Note that storage on the local MongoDB is declared as a cloud, among others that you can declare. You should not remove this cloud declaration and leave it in first position even if position has no real matter. `clouds.json` is parsed by `post_processing_gw.py` using `clouds_parser.py`. For each cloud declaration, there are only 2 relevant fields: `script` and `enabled`. `script` is used for you to provide the name of a script. You have also to indicate which launcher will be used. In this way, you can use several script languages (including shell scripts or executables provided that they read parameters that are passed by their command line). For instance, if the script is a python script, enter `python my_script_filename`. `enabled` set to true indicates that you want this cloud to be active so that` post_processing_gw.py` will call the associated script to perform upload of the received data. All the other fields are not relevant for `post_processing_gw.py` but can be used by the associated script to get additional information that you may want to provide through the `clouds.json` file. Otherwise, you can always provide these additional information statically in the script.
 
-Recall that a message will be upload to cloud only if it is prefixed with `\!`. So assuming that you are sending `\!#4#TC/21.5` when your script is launched, `post_processing_gw.py` provides 5 parameters. 
+Recall that a message will be upload to cloud only if it is prefixed with `\!`. So assuming that you are sending `\!#4#TC/21.5` when your script is launched, `post_processing_gw.py` provides 5 parameters to your script. 
 
-- ldata: the received data (without the prefix)
+- `ldata`: the received data (without the prefix)
 	- e.g. `#4#TC/21.5` as 1t argument (sys.argv[1] in python)
-- pdata: packet information
+- `pdata`: packet information
 	- e.g. `1,16,3,0,10,8,-45` as 2nd argument (sys.argv[2] in python)
 	- interpreted as `dst`, `ptype`, `src`, `seq`, `len`, `SNR`, `RSSI` for the last received packet
-- rdata: the LoRa radio information
+- `rdata`: the LoRa radio information
 	- e.g. `500,5,12` as 3rd argument (sys.argv[3] in python)
 	- interpreted as `bw`, `cr`, `sf` for the last received packet
-- tdata: the timestamp information
+- `tdata`: the timestamp information
 	- e.g. `2016-10-04T02:03:28.783385` as 4th argument (sys.argv[4] in python)
-- gwid: the gateway id
+- `gwid`: the gateway id
 	- e.g. `00000027EBBEDA21` as 5th argument (sys.argv[5] in python)	
 	
-These parameters are passed to the script. **It is up to the cloud script to use these parameters or not**. The main structure of a python cloud script to handle a particular cloud can therefore be summarized as follows:
+These parameters are passed to the script and **it is up to the cloud script to use these parameters or not**. The main structure of a Python cloud script to handle a particular cloud can therefore be summarized as follows:
 
 	IMPORT-AS-MANY-PACKAGES-AS-YOU-NEED
 	DEFINE-AS-MANY-FUNCTIONS-AS-YOU-NEED
