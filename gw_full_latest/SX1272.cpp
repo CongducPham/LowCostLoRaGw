@@ -6781,8 +6781,8 @@ void SX1272::CarrierSense2() {
               printf("--> counting for ");
               // count for random number of CAD/SIFS/DIFS?   
               // SIFS=3CAD
-              // DIFS=9CAD            
-              uint8_t w = random(0,W*_send_cad_number);
+              // DIFS=9CAD
+              uint8_t w = rand() % (W*_send_cad_number) + 1;            
 
               printf("%d\n", w);             
 
@@ -6830,14 +6830,14 @@ void SX1272::CarrierSense2() {
               
               if (_extendedIFS)  {          
                 // wait for random number of CAD         
-                uint8_t w = random(1,8);
+                uint8_t w = rand() % 8 + 1;
     
                 printf("--> extended waiting for ");
                 printf("%d\n",w);
                 printf(" CAD = ");
                 printf("%d\n",sx1272_CAD_value[_loraMode]*w);
                 
-                delay(sx1272_CAD_value[loraMode]*w);
+                delay(sx1272_CAD_value[_loraMode]*w);
                 
                 // check for free channel (SIFS/DIFS) once again
                 _startDoCad=millis();
