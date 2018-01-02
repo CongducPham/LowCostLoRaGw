@@ -6633,7 +6633,7 @@ void SX1272::CarrierSense(uint8_t cs) {
     	CarrierSense2(); 
     	
     if (cs==3)
-    	CarrierSense2();     	
+    	CarrierSense3();     	
 }    	  	   	
 
 // need to set _send_cad_number to a value > 0
