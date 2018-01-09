@@ -24,6 +24,7 @@
 	},
 	"status_conf" : {
 		"dynamic_gps" : false,
+		"gps_port" : "/dev/ttyACM0",		
 		"copy_post_processing_log" : false
 	},		
 	"alert_conf" : {

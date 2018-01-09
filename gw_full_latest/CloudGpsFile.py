@@ -29,7 +29,6 @@ import json
 import codecs
 #import code
 import datetime
-import dateutil.tz
 from dateutil import parser
 
 _gps_jsonfile = "gps/gps.json"
@@ -44,38 +43,6 @@ try:
 	key_GpsFile.source_list
 except AttributeError:
 	key_GpsFile.source_list=[]
-		
-#------------------------------------------------------------
-#open gateway_conf.json file 
-#------------------------------------------------------------
-
-gwconf_filename = "gateway_conf.json"
-
-f = open(os.path.expanduser(gwconf_filename),"r")
-lines = f.readlines()
-f.close()
-array = ""
-#get all the lines in a string
-for line in lines :
-	array += line
-
-#change it into a python array
-gw_json_array = json.loads(array)
-
-#------------------------------------------------------------
-# Open gps.json file 
-#------------------------------------------------------------
-
-#open json file to retrieve active devices
-f = open(os.path.expanduser(_gps_jsonfile),"r")
-string = f.read()
-f.close()
-
-#change it into a python array
-gps_json_array = json.loads(string)
-
-#retrieving all gps devices declarations
-gps_devices = gps_json_array["devices"]
 
 #------------------------------------------------------------
 #get from https://stackoverflow.com/questions/4913349/haversine-formula-in-python-bearing-and-distance-between-two-gps-points
@@ -138,6 +105,27 @@ def initial_bearing(pointA, pointB):
 
 def update_gps_device(src, SNR, RSSI, seq, bc, lat, lgt, fxt, distance, tdata, gwid):
 
+	#------------------------------------------------------------
+	# Open gps.json file 
+	#------------------------------------------------------------
+
+	#open json file to retrieve active devices
+	try:
+		f = open(os.path.expanduser(_gps_jsonfile),"r")
+		string = f.read()
+		f.close()
+		
+		#change it into a python array
+		gps_json_array = json.loads(string)
+
+		#retrieving all gps devices declarations
+		gps_devices = gps_json_array["devices"]		
+	except IOError:	
+		#create a new array	
+		gps_json_array = json.loads('{ "devices":[]}')
+		#in "devices" section
+		gps_devices = gps_json_array["devices"]		
+
 	found_device=False
 
 	#search in current list
@@ -180,8 +168,8 @@ def update_gps_device(src, SNR, RSSI, seq, bc, lat, lgt, fxt, distance, tdata, g
 	#in "devices" section
 	active_gps_devices = active_gps_json_array["devices"]
 
-	#get current time
-	localdt = datetime.datetime.now(dateutil.tz.tzlocal())
+
+	localdt = datetime.datetime.now()		
 	tnow = localdt.replace(microsecond=0).isoformat()
 	now = parser.parse(tnow)
 
@@ -209,6 +197,23 @@ def update_gps_device(src, SNR, RSSI, seq, bc, lat, lgt, fxt, distance, tdata, g
 #------------------------------------------------------------
 
 def store_gps_coordinate(src, SNR, RSSI, seq, bc, lat, lgt, fxt, tdata, gwid):
+
+	#------------------------------------------------------------
+	#open gateway_conf.json file 
+	#------------------------------------------------------------
+
+	gwconf_filename = "gateway_conf.json"
+
+	f = open(os.path.expanduser(gwconf_filename),"r")
+	lines = f.readlines()
+	f.close()
+	array = ""
+	#get all the lines in a string
+	for line in lines :
+		array += line
+
+	#change it into a python array
+	gw_json_array = json.loads(array)
 	
 	try:
 		_gw_lat = gw_json_array["gateway_conf"]["ref_latitude"]
@@ -343,6 +348,11 @@ def main(ldata, pdata, rdata, tdata, gwid):
 				lat=ldata_array[lat_index+1]
 				lgt=ldata_array[lgt_index+1]
 				fxt=ldata_array[fxt_index+1]
+				
+				the_time=parser.parse(tdata)
+				#replace in naive format because we don't know if we have time zone info or not
+				tdata = the_time.replace(microsecond=0,tzinfo=None).isoformat()
+				
 				store_gps_coordinate(key_GpsFile.project_name+'_'+key_GpsFile.organization_name+'_'+key_GpsFile.sensor_name+src_str, SNR, RSSI, seq, bc, lat, lgt, fxt, tdata, gwid)				
 
 # you can test CloudGpsFile.py in standalone mode with

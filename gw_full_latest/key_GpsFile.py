@@ -20,6 +20,8 @@ sensor_name="Sensor"
 #source_list=["3", "255", "01020304"]
 source_list=[]
 
+active_interval_minutes=20
+
 gammurc_file="/home/pi/.gammurc"
 SMS=False 
 PIN="0000"
