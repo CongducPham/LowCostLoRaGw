@@ -3,14 +3,13 @@ import codecs
 import os
 import code
 import datetime
-import dateutil.tz
 from dateutil import parser
 
 # when gw receive GPS message from a device, it will update/add info from that device into the existing list of devices: gps.json
 # then, it will update the "active" field for devices within a given time windows
 # then, it will extract those that active in active_gps.json
 
-now=parser.parse('2017-12-31T17:25:05+01:00')
+now=parser.parse('2017-12-31T17:25:05')
 
 #------------------------------------------------------------
 # Open gps.json file 
@@ -48,7 +47,7 @@ new_device["snr"]=0
 new_device["rssi"]=0
 new_device["seq"]=0
 new_device["bc"]=0
-new_device["time"]=u'2017-12-31T17:25:05+01:00'
+new_device["time"]=u'2017-12-31T17:25:05'
 new_device["gw"]=u'000000XXXXXXXXXX'
 new_device["fxt"]=0
 new_device["lat"]=0.0
@@ -58,7 +57,7 @@ new_device["active"]='yes'
 
 gps_devices.append(new_device)
 
-#localdt = datetime.datetime.now(dateutil.tz.tzlocal())
+#localdt = datetime.datetime.now()
 #tnow = localdt.replace(microsecond=0).isoformat()
 
 #code.interact(local=locals())
