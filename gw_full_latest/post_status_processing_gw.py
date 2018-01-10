@@ -77,8 +77,11 @@ for line in lines :
 gw_json_array = json.loads(array)
 
 #------------------------------------------------------------
-#add you own function here 
+#add you own functions here 
 #------------------------------------------------------------
+
+#------------------------------------------------------------
+#show GPS coordinates stored in gateway_conf.json
 
 def show_gps():
 
@@ -104,6 +107,10 @@ def show_gps():
 		_gw_long = "undef"
 		
 	print 'post status show GPS: current GPS coordinate: gw lat '+_gw_lat+' long '+_gw_long	
+
+#------------------------------------------------------------
+#get GPS coordinates using sensors_in_raspi/get_gps.py with a USB GPS module
+#update the gateway's position in gateway_conf.json
 
 def get_gps():
 
@@ -133,19 +140,19 @@ def get_gps():
 		cmd="""sed -i -- 's/"ref_latitude.*,/"ref_latitude" : """+'"'+lat_str+'"'+""",/g' /home/pi/lora_gateway/gateway_conf.json"""
     	
 		try:
-			print 'post status get GPS: replacing GPS latitude in gateway.conf'
+			print 'post status get GPS: replacing GPS latitude in gateway_conf.json'
 			os.system(cmd)
 		except:
-			print 'post status get GPS: Error when replacing GPS latitude in gateway.conf'
+			print 'post status get GPS: Error when replacing GPS latitude in gateway_conf.json'
 			return
 	
 		cmd="""sed -i -- 's/"ref_longitude.*,/"ref_longitude" : """+'"'+lgt_str+'"'+""",/g' /home/pi/lora_gateway/gateway_conf.json"""
     	
 		try:
-			print 'post status get GPS: replacing GPS longitude in gateway.conf'
+			print 'post status get GPS: replacing GPS longitude in gateway_conf.json'
 			os.system(cmd)
 		except:
-			print 'post status get GPS: Error when replacing GPS longitude in gateway.conf'
+			print 'post status get GPS: Error when replacing GPS longitude in gateway_conf.json'
 			return
 							
 	else:
@@ -158,7 +165,8 @@ def get_gps():
 def main():
 
 	print 'post status: start running'
-
+	sys.stdout.flush()
+	
 	#------------------------------------------------------------
 	#HERE ADD what ever you want
 	#------------------------------------------------------------
@@ -187,6 +195,7 @@ def main():
 
 	#------------------------------------------------------------	
 	print 'post status: exiting'
+	sys.stdout.flush()
 	
 	
 if __name__ == "__main__":

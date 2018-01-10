@@ -411,11 +411,11 @@ def status_target():
 	while True:
 		print datetime.datetime.now()
 		print 'post status: gw ON, executing periodic tasks'
+		sys.stdout.flush()		
 		try:
 			os.system('python post_status_processing_gw.py')
 		except:
 			print "Error when executing status_processing_gw.py"			
-		sys.stdout.flush()
 		global _gw_status
 		time.sleep(_gw_status)
 
