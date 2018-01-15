@@ -18,7 +18,7 @@ then
 fi
 
 #create the gw id so that a newly installed gateway is always configured with a correct id
-./script/create_gwid.sh
+./scripts/create_gwid.sh
 
 #run the gateway
 python start_gw.py &
