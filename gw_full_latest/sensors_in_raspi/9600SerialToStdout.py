@@ -2,7 +2,7 @@ import serial
 import sys
 
 if len(sys.argv) < 2:
-    thePort = "/dev/ttyUSB0"
+    thePort = "/dev/ttyACM0"
 else:
     thePort = sys.argv[1]
 

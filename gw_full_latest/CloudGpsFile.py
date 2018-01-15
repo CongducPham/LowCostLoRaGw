@@ -311,7 +311,11 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		src_str=str(src)	
 
 	if (src_str in key_GpsFile.source_list) or (len(key_GpsFile.source_list)==0):	
-		
+
+		#remove any space in the message as we use '/' as the delimiter
+		#any space characters will introduce error in the json structure and then the curl command will fail
+		ldata=ldata.replace(' ', '')
+				
 		ldata_array = re.split("/", ldata)
 		
 		try:

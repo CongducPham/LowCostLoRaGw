@@ -29,6 +29,7 @@ import sys
 import os
 import json
 import re
+import shlex
 
 # get key definition from external file to ease
 # update of cloud script in the future
@@ -90,16 +91,16 @@ def send_data(data, src, nomenclatures, tdata):
 		#be sure to have run sudo apt-get install mosquitto-clients
 		#the topic will be for instance waziup_UPPA_Sensor2/TC
 		if nomenclatures=='':
-			cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'/'+data[1]+'/'+src+' -m '+data[i+2]			
+			cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'/'+data[1]+'/'+src+' -m \"'+data[i+2]+'\"'			
 		else:		
-			cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'/'+data[1]+'/'+src+'/'+nomenclatures[i]+' -m '+data[i+2]
+			cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'/'+data[1]+'/'+src+'/'+nomenclatures[i]+' -m \"'+data[i+2]+'\"'
 
 		i += 1
 						
 		print "CloudMQTT: will issue cmd"
 		
 		print(cmd)
-		args = cmd.split()
+		args = shlex.split(cmd)
 		print args
 		
 		try:
@@ -169,7 +170,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 			data.append(ldata)		
 			MQTT_uploadData(nomenclatures, data, key_MQTT.sensor_name+src_str, tdata)
 		else:
-				
+						
 			# this part depends on the syntax used by the end-device
 			# we use: TC/22.4/HU/85...
 			#

@@ -297,7 +297,11 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		src_str=str(src)	
 
 	if (src_str in key_ThingSpeak.source_list) or (len(key_ThingSpeak.source_list)==0):
-	
+
+		#remove any space in the message as we use '/' as the delimiter
+		#any space characters may introduce error
+		ldata=ldata.replace(' ', '')
+				
 		#this part depends on the syntax used by the end-device
 		#we use: thingspeak_channel#thingspeak_field#TC/22.4/HU/85... 
 		#ex: ##TC/22.4/HU/85... or TC/22.4/HU/85... or thingspeak_channel##TC/22.4/HU/85... 

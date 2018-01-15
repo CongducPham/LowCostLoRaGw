@@ -166,7 +166,11 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		src_str=str(src)	
 
 	if (src_str in key_GroveStreams.source_list) or (len(key_GroveStreams.source_list)==0):
-		
+
+		#remove any space in the message as we use '/' as the delimiter
+		#any space characters may introduce error
+		ldata=ldata.replace(' ', '')
+				
 		# this part depends on the syntax used by the end-device
 		# we use: TC/22.4/HU/85...
 		#

@@ -30,6 +30,7 @@ import os
 import json
 import re
 import md5
+import shlex
 
 # get key definition from external file to ease
 # update of cloud script in the future
@@ -42,11 +43,11 @@ except AttributeError:
 
 ####################################################
 # To create a new entitiy
-# curl -X POST "http://www.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors" -H "accept:application/json" -H "content-type:application/json" -d @- <<EOF 
+# curl -X POST "http://dev.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors" -H "accept:application/json" -H "content-type:application/json" -d @- <<EOF 
 # {
-#  "Id": "UPPA_Sensor2_4b13a223f24d3dba5403c2727fa92e62",
-#  "Gateway_id": "4b13a223f24d3dba5403c2727fa92e62",
-#  "Measurements": [ 
+#  "id": "UPPA_Sensor2",
+#  "gateway_id": "4b13a223f24d3dba5403c2727fa92e62",
+#  "measurements": [ 
 #    { 
 #      "id": "TC",
 #      "values": [
@@ -60,12 +61,18 @@ except AttributeError:
 # }
 # EOF
 
+# Note that if organization_name is 'ORG' (default value), then 'Id' will be appended with the gw's md5 hash: "Id": "ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62"
+
+# curl -X POST "http://dev.waziup.io:80/api/v1/domains/waziup-UPPA-TESTS/sensors" -H "accept:application/json" -H "content-type:application/json" -d '{"id":"UPPA_Sensor2","gateway_id":"4b13a223f24d3dba5403c2727fa92e62","measurements":[{"id":"TC","values":[{"value": "25.6","timestamp":"2016-06-08T18:20:27.873Z"}]}]}'
+
 # Further updates of the values are like that:
-# curl -X POST "http://www.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors/UPPA_Sensor2_4b13a223f24d3dba5403c2727fa92e62/measurements/TC/values" -H  "accept:application/json" -H  "content-type:application/json" -d @- <<EOF
+# curl -X POST "http://dev.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors/UPPA_Sensor2/measurements/TC/values" -H  "accept:application/json" -H  "content-type:application/json" -d @- <<EOF
 # {  
 #    "value": "25.6",
 #    "timestamp": "2016-06-08T18:20:27.873Z"
 # }
+
+# curl -X POST "http://dev.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors/UPPA_Sensor2/measurements/TC/values" -H  "accept:application/json" -H  "content-type:application/json" -d '{"value":"25.6","timestamp":"2016-06-08T18:20:27.873Z"}'
 
 #To retrieve the last data point inserted:
 
@@ -84,6 +91,8 @@ retry = False
 gw_id_md5=''
 
 global CloudNoInternet_enabled
+
+num_format = re.compile("^[\-]?[1-9][0-9]*\.?[0-9]+$")
 
 #------------------------------------------------------------
 # Open clouds.json file 
@@ -148,20 +157,35 @@ def create_new_entity(data, src, nomenclatures, tdata):
 	
 	print "Orion: create new entity"
 	
-	cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors -H accept:application/json -H content-type:application/json -d {\"id\":\"'+key_Orion.organization_name+"_"+src+'_'+gw_id_md5+'\",\"gateway_id\":\"'+gw_id_md5+'\",\"measurements\":['
-						
+	#default organization name?
+	if key_Orion.organization_name=='ORG':
+		#we append the md5 hasg to the sensor name: ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62
+		cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors -H accept:application/json -H content-type:application/json -d \'{\"id\":\"'+key_Orion.organization_name+'_'+src+'_'+gw_id_md5+'\",\"gateway_id\":\"'+gw_id_md5+'\",\"measurements\":['
+	else:
+		#we just use UPPA_Sensor2 for instance
+		cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors -H accept:application/json -H content-type:application/json -d \'{\"id\":\"'+key_Orion.organization_name+'_'+src+'\",\"gateway_id\":\"'+gw_id_md5+'\",\"measurements\":['
+										
 	i=0
 	while i < len(data)-2 :
-		cmd = cmd+'{\"id\":\"'+nomenclatures[i]+'\",\"values\":[{\"value\":'+data[i+2]+',\"timestamp\":\"'+tdata+'\"}]}'
+		
+		cmd = cmd+'{\"id\":\"'+nomenclatures[i]+'\",\"values\":[{\"value\":'
+		
+		isnumber = re.match(num_format,data[i+2])
+		isnumber = False
+		
+		if isnumber:
+			cmd = cmd+data[i+2]+',\"timestamp\":\"'+tdata+'\"}]}'
+		else:	
+			cmd = cmd+'\"'+data[i+2]+'\",\"timestamp\":\"'+tdata+'\"}]}'
 		i += 1
 		if i < len(data)-2:
 			cmd = cmd+','
 	cmd = cmd+']'
-	cmd = cmd+'}' 	
+	cmd = cmd+'}\'' 	
 	
 	print "CloudOrion: will issue curl cmd"
 	print(cmd)
-	args = cmd.split()
+	args = shlex.split(cmd)
 	print args	
 
 	try:
@@ -185,6 +209,8 @@ def send_data(data, src, nomenclatures, tdata):
 	
 	entity_need_to_be_created=False
 	
+	append_gw_str=''
+	
 	i=0
 	
 	if data[0]=='':
@@ -195,15 +221,27 @@ def send_data(data, src, nomenclatures, tdata):
 			
 	while i < len(data)-2  and not entity_need_to_be_created:
 
-		#we now push data with a timestamp value
-		cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors/'+key_Orion.organization_name+"_"+src+'_'+gw_id_md5+'/measurements/'+nomenclatures[i]+'/values -H accept:application/json -H content-type:application/json -d {\"value\":'+data[i+2]+',\"timestamp\":\"'+tdata+'\"}'
+		#default organization name?
+		if key_Orion.organization_name=='ORG':
+			#we append the md5 hasg to the sensor name: ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62
+			append_gw_str='_'+gw_id_md5
+			
+		isnumber = re.match(num_format,data[i+2])
+		isnumber = False
+		
+		cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors/'+key_Orion.organization_name+"_"+src+append_gw_str+'/measurements/'+nomenclatures[i]+'/values -H accept:application/json -H content-type:application/json -d \'{\"value\":'
+		
+		if isnumber:
+			cmd = cmd+data[i+2]+',\"timestamp\":\"'+tdata+'\"}\''
+		else:
+			cmd = cmd+'\"'+data[i+2]+'\",\"timestamp\":\"'+tdata+'\"}\''
 
 		i += 1
 						
 		print "CloudOrion: will issue curl cmd"
 		
 		print(cmd)
-		args = cmd.split()
+		args = shlex.split(cmd)
 		print args
 		
 		# retry enabled
@@ -299,7 +337,11 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		src_str=str(src)	
 
 	if (src_str in key_Orion.source_list) or (len(key_Orion.source_list)==0):
-	
+
+		#remove any space in the message as we use '/' as the delimiter
+		#any space characters will introduce error in the json structure and then the curl command will fail
+		ldata=ldata.replace(' ', '')
+			
 		# this part depends on the syntax used by the end-device
 		# we use: TC/22.4/HU/85...
 		#

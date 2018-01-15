@@ -29,6 +29,7 @@ import sys
 import os
 import json
 import re
+import shlex
 
 # get key definition from external file to ease
 # update of cloud script in the future
@@ -61,6 +62,8 @@ connection_failure = False
 retry = False
 
 global CloudNoInternet_enabled
+
+num_format = re.compile("^[\-]?[1-9][0-9]*\.?[0-9]+$")
 
 #------------------------------------------------------------
 # Open clouds.json file 
@@ -125,19 +128,28 @@ def create_new_entity(data, src, nomenclatures, tdata):
 	
 	print "Orion: create new entity"
 	
-	cmd = 'curl '+key_Orion.orion_server+'/entities -s -S --header Content-Type:application/json --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d {\"id\":\"'+key_Orion.organization_name+"_"+src+'\",\"type\":\"SensingDevice\",'
+	cmd = 'curl '+key_Orion.orion_server+'/entities -s -S --header Content-Type:application/json --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d \'{\"id\":\"'+key_Orion.organization_name+"_"+src+'\",\"type\":\"SensingDevice\",'
 						
 	i=0
 	while i < len(data)-2 :
-		cmd = cmd+'\"'+nomenclatures[i]+'\":{\"value\":'+data[i+2]+',\"type\":\"Number\",\"metadata\":{\"timestamp\":{\"type\":\"DateTime\",\"value\":\"'+tdata+'\"}}}'
+		cmd = cmd+'\"'+nomenclatures[i]+'\":{\"value\":'
+		
+		isnumber = re.match(num_format,data[i+2])
+		
+		if isnumber:
+			cmd = cmd+data[i+2]+',\"type\":\"Number\"'
+		else:
+			cmd = cmd+'\"'+data[i+2]+'\",\"type\":\"String\"'
+		
+		cmd=cmd+',\"metadata\":{\"timestamp\":{\"type\":\"DateTime\",\"value\":\"'+tdata+'\"}}}'
 		i += 1
 		if i < len(data)-2:
 			cmd = cmd+","
-	cmd = cmd+"}" 	
+	cmd = cmd+"}\'" 	
 	
 	print "CloudOrion: will issue curl cmd"
 	print(cmd)
-	args = cmd.split()
+	args = shlex.split(cmd)
 	print args	
 
 	try:
@@ -174,14 +186,23 @@ def send_data(data, src, nomenclatures, tdata):
 		#cmd = 'curl '+key_Orion.orion_server+'/entities/'+src+'/attrs/'+nomenclatures[i]+'/value -s -S --header Content-Type:text/plain --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d '+data[i+2]
 
 		#we now push data with a timestamp value
-		cmd = 'curl '+key_Orion.orion_server+'/entities/'+key_Orion.organization_name+"_"+src+'/attrs/ -s -S --header Content-Type:application/json --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d {\"'+nomenclatures[i]+'\":{\"value\":'+data[i+2]+',\"metadata\":{\"timestamp\":{\"type\":\"DateTime\",\"value\":\"'+tdata+'\"}}}}'
+		cmd = 'curl '+key_Orion.orion_server+'/entities/'+key_Orion.organization_name+"_"+src+'/attrs/ -s -S --header Content-Type:application/json --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d \'{\"'+nomenclatures[i]+'\":{\"value\":'
+		
+		isnumber = re.match(num_format,data[i+2])
+		
+		if isnumber:
+			cmd = cmd+data[i+2]+',\"type\":\"Number\"'
+		else:
+			cmd = cmd+'\"'+data[i+2]+'\",\"type\":\"String\"'
+		
+		cmd = cmd+',\"metadata\":{\"timestamp\":{\"type\":\"DateTime\",\"value\":\"'+tdata+'\"}}}}\''
 
 		i += 1
 						
 		print "CloudOrion: will issue curl cmd"
 		
 		print(cmd)
-		args = cmd.split()
+		args = shlex.split(cmd)
 		print args
 		
 		# retry enabled
@@ -273,7 +294,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		src_str=str(src)	
 
 	if (src_str in key_Orion.source_list) or (len(key_Orion.source_list)==0):
-	
+			
 		# this part depends on the syntax used by the end-device
 		# we use: TC/22.4/HU/85...
 		#

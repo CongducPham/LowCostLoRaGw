@@ -26,6 +26,8 @@ import datetime
 import sys
 import re
 
+num_format = re.compile("^[\-]?[1-9][0-9]*\.?[0-9]+$")
+
 global add_document, remove_if_new_month, mongodb_set_max_months
 from MongoDB import add_document, remove_if_new_month, mongodb_set_max_months
 
@@ -128,11 +130,11 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\0', '')	
 	
 	#test if there are characters at the end of each value, then delete these characters
-	i = 3
-	while i < len(data_array) :
-		while not data_array[i][len(data_array[i])-1].isdigit() :
-			data_array[i] = data_array[i][:-1]
-		i += 2
+	#i = 3
+	#while i < len(data_array) :
+	#	while not data_array[i][len(data_array[i])-1].isdigit() :
+	#		data_array[i] = data_array[i][:-1]
+	#	i += 2
 
 	print("MongoDB: removing obsolete entries")
 	
@@ -142,42 +144,56 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	print("MongoDB: saving the document in the collection...")
 	
 	#saving data in a JSON var
-	str_json_data = "{"
+	str_json_data = '{'
 	
 	# add here the SNR
-	str_json_data += "\"SNR\" : "+str(SNR)+", "
+	str_json_data += '\"SNR\":'+str(SNR)+','
 	
 	# and here the RSSI
-	str_json_data += "\"RSSI\" : "+str(RSSI)+", "
+	str_json_data += '\"RSSI\":'+str(RSSI)+','
 	
 	#start from the first nomenclature
 	iteration = 2
 	
 	if nslash==0:
-		# no nomenclature, use DEF
-		str_json_data += "\"DEF\" : "+data_array[iteration]
+		isnumber = re.match(num_format,data_array[iteration])
+		
+		if isnumber:
+			# no nomenclature, use DEF
+			str_json_data += '\"DEF\":'+data_array[iteration]
+		else:
+			str_json_data += '\"DEF\":\"'+data_array[iteration]+'\"'
 	else:
-		while iteration < len(data_array)-1 :
-			#last iteration, do not add "," at the end
-			if iteration == len(data_array)-2 :
-				str_json_data += "\""+data_array[iteration]+"\" : "+data_array[iteration+1]
-			else :
-				str_json_data += "\""+data_array[iteration]+"\" : "+data_array[iteration+1]+", "
+		while iteration < len(data_array)-1:
+			
+			isnumber = re.match(num_format,data_array[iteration+1])
+			
+			if isnumber:
+				str_json_data += '\"'+data_array[iteration]+'\":'+data_array[iteration+1]
+			else:
+				str_json_data += '\"'+data_array[iteration]+'\":\"'+data_array[iteration+1]+'\"'	
+		
+			#not last iteration, add "," at the end
+			if iteration != len(data_array)-2:
+				str_json_data += ','
+				
 			iteration += 2
 		
-	str_json_data += "}"
+	str_json_data += '}'
+	
+	print str_json_data
 	
 	#creating document to add
 	doc = {
-		"type" : ptype,
-		"gateway_eui" : gwid, 
-		"node_eui" : src,
-		"snr" : SNR, 
-		"rssi" : RSSI, 
-		"cr" : cr, 
-		"datarate" : "SF"+str(sf)+"BW"+str(bw),
-		"time" : now,
-		"data" : json.dumps(json.loads(str_json_data))
+		"type":ptype,
+		"gateway_eui":gwid, 
+		"node_eui":src,
+		"snr":SNR, 
+		"rssi":RSSI, 
+		"cr":cr, 
+		"datarate":"SF"+str(sf)+"BW"+str(bw),
+		"time":now,
+		"data":json.dumps(json.loads(str_json_data))
 	}
 
 	#adding the document

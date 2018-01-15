@@ -59,7 +59,7 @@ def NodeRed_generateData(data, src, nomenclatures, tdata):
 		if nomenclatures=='':
 			entry = "{\"source\":\""+data[0]+"/"+data[1]+"/"+src+"\",\"measure\":\"\",\"value\":\""+data[i+2]+"\"}"
 		else:
-			entry = "{\"source\":\""+data[0]+"/"+data[1]+"/"+src+"\",\"measure\":\""+nomenclatures[i]+"\",\"value\":"+data[i+2]+"}"						
+			entry = "{\"source\":\""+data[0]+"/"+data[1]+"/"+src+"\",\"measure\":\""+nomenclatures[i]+"\",\"value\":\""+data[i+2]+"\"}"						
 
 		print "CloudNodeRed: will generate json entry"
 		print entry
@@ -109,6 +109,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 			data.append(ldata)		
 			NodeRed_generateData(data, key_NodeRed.sensor_name+src_str, nomenclatures, tdata)
 		else:
+					
 			# this part depends on the syntax used by the end-device
 			# we use: TC/22.4/HU/85...
 			#
