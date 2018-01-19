@@ -1,7 +1,8 @@
 /*
  *  simple ping-pong test by requesting an ACK from the gateway
- *
- *  Copyright (C) 2016 Congduc Pham, University of Pau, France
+ *  version with an LCD display using the U8g2 library
+ *  
+ *  Copyright (C) 2018 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,6 +23,11 @@
 #include <SPI.h>  
 // Include the SX1272
 #include "SX1272.h"
+
+#include <U8x8lib.h>
+
+// the OLED used
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -106,8 +112,14 @@ void setup()
   Serial.begin(38400);  
 #endif 
 
+  u8x8.begin();
+  u8x8.setFont(u8x8_font_chroma48medium8_r);
+  
   // Print a start message
   PRINT_CSTSTR("%s","Simple LoRa ping-pong with the gateway\n");  
+
+   u8x8.drawString(0, 1, "Simple PingPong");
+   u8x8.drawString(0, 2, "LoRa mode 1");
 
 #ifdef ARDUINO_AVR_PRO
   PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");  
@@ -165,6 +177,9 @@ void setup()
   PRINT_CSTSTR("%s","SAM3X8E ARM Cortex-M3 detected\n");
 #endif
 
+  // for the Heltec ESP32 WiFi LoRa module
+  sx1272.setCSPin(18);
+    
   // Power ON the module
   sx1272.ON();
   
@@ -229,6 +244,9 @@ void loop(void)
 
       PRINT_CSTSTR("%s","Sending Ping");  
       PRINTLN;
+
+      u8x8.drawString(0, 3, "Sending Ping....");
+      u8x8.drawString(0, 4, "                ");
             
       e = sx1272.sendPacketTimeoutACK(DEFAULT_DEST_ADDR, message, r_size);
 
@@ -239,8 +257,11 @@ void loop(void)
       PRINT_VALUE("%d", e);
       PRINTLN;
       
-      if (e==3)
+      if (e==3) {
           PRINT_CSTSTR("%s","No Pong from gw!");
+          u8x8.drawString(0, 3, "No Pong from gw!");
+          u8x8.drawString(0, 4, "SNR at gw=N/A");
+      }
         
       if (e==0) {
           char message[20];
@@ -248,10 +269,12 @@ void loop(void)
           PRINT_CSTSTR("%s","Pong received from gateway!");
           PRINTLN;
           PRINT_STR("%s", message);      
-      }      
+          u8x8.drawString(0, 3, "Get Pong from gw");
+          u8x8.drawString(0, 4, message);
+      }
 
       PRINTLN;
       
-      delay(10000);    
+      delay(10000);   
   }          
 }

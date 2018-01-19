@@ -57,7 +57,7 @@
 //we take pin 4 as it is available on many boards
 #define SX1272_RST  4
 
-#ifdef ARDUINO_AVR_FEATHER32U4 || defined ARDUINO_SAMD_FEATHER_M0
+#if defined ARDUINO_AVR_FEATHER32U4 || defined ARDUINO_SAMD_FEATHER_M0
 // on the Adafruit Feather, the RFM95W is embeded and CS pin is normally on pin 8
 #define SX1272_SS 8
 #elif defined ARDUINO_ESP8266_ESP01
@@ -1188,11 +1188,13 @@ public:
     long getRemainingToA();
     long removeToA(uint16_t toa);
     int8_t setFreqHopOn();
+    void setCSPin(uint8_t cs);
 
     // SX1272 or SX1276?
     uint8_t _board;
     uint8_t _syncWord;
     uint8_t _defaultSyncWord;
+    uint8_t _SX1272_SS;
     unsigned long _starttime;
     unsigned long _stoptime;
     unsigned long _startDoCad;

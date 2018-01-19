@@ -17,7 +17,11 @@ On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Startin
 
 All the examples uses so-called LoRa mode 1 (BW125, CR45, SF12) at 865.2 Mhz (`CH_10_868`) to work with the default gateway configuration.
 
-**`Arduino_LoRa_Ping_Pong`** shows a simple ping-pong communication between a LoRa device and a gateway by requesting an acknowlegment for data messages sent to the gateway.
+**`Arduino_LoRa_Ping_Pong`** shows a simple ping-pong communication between a LoRa device and a gateway by requesting an acknowlegment for data messages sent to the gateway. This example can serve as a simple range test as the device displays back the SNR of the received packet on the gateway.
+
+**`Arduino_LoRa_Ping_Pong_LCD`** is an extended version that uses an OLED display to show in real-time the results of the range test. The pictures below show our simple range tester built from an Heltec ESP32 WiFi LoRa with OLED display. Plenty of information on this nice board are available from https://robotzero.one/heltec-wifi-lora-32/ and https://github.com/darthm0e/esp32-101 to name a few.
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/pingpong.png)
 
 **`Arduino_LoRa_Simple_temp`** illustrates how a simple LoRa device with temperature data can be flashed to an Arduino board. The example illustrates in a simple manner how to implement most of the features of a real IoT device: periodic sensing, transmission to gateway, duty-cycle and low-power mode to run on battery for months.
  
@@ -109,6 +113,7 @@ One main issue for a eligible board is to have a 3.3v pin to power the radio mod
 - Ideetron Nexus (which is an ATmega328P at 3.3v, select as Arduino Mini in IDE)  
 - Adafruit Feather32u4 and FeatherM0
 - Expressif ESP8266 (only the **`Arduino_LoRa_Simple_temp`** has been modified to support the ESP8266)
+- Expressif ESP32 (tested but support is not integrated into library, so you need to change the CS pin according to your board model)
 
 **Uno/MEGA form factor**
 
@@ -122,9 +127,10 @@ Note that there might be current limitation issues on some boards. The radio mod
 What about other boards?
 ------------------------
 
-Other boards may be supported as well with only very few modifications. However, for all the other boards, low-power features may need to use specific libraries depending on the microcontroller. If you have compilation issues, try to compile with low-power disabled:
+Other boards may be supported as well with only very few modifications. However, for all the other boards, low-power features may need to use specific libraries depending on the microcontroller. If you have compilation issues, try to compile with low-power and EEPROM disabled:
 
 	//#define LOW_POWER
+	//#define WITH_EEPROM
 
 Configuring the device
 ======================

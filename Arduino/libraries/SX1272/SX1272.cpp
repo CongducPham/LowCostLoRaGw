@@ -30,6 +30,10 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
+ *	Jan 19th, 2018
+ *		- add a setCSPin(uint8_t cs) function to set the Chip Select (CS) pin
+ *		- call sx1272.setCSPin(18) for instance before calling sx1272.ON()
+ *		- by default, the CS pin will be set to SX1272_SS defined in SX1272.h
  *  November 10th, 2017
  *		- change the way packet's RSSI is computed
  *  November 7th, 2017
@@ -116,6 +120,9 @@ uint8_t sx1272_CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
 
 SX1272::SX1272()
 {
+	//set the Chip Select pin
+	_SX1272_SS=SX1272_SS;
+	
     // Initialize class variables
     _bandwidth = BW_125;
     _codingRate = CR_5;
@@ -207,8 +214,8 @@ uint8_t SX1272::ON()
 #endif
 
     // Powering the module
-    pinMode(SX1272_SS,OUTPUT);
-    digitalWrite(SX1272_SS,HIGH);
+    pinMode(_SX1272_SS,OUTPUT);
+    digitalWrite(_SX1272_SS,HIGH);
     delay(100);
 
     //#define USE_SPI_SETTINGS
@@ -449,8 +456,8 @@ void SX1272::OFF()
 
     SPI.end();
     // Powering the module
-    pinMode(SX1272_SS,OUTPUT);
-    digitalWrite(SX1272_SS,LOW);
+    pinMode(_SX1272_SS,OUTPUT);
+    digitalWrite(_SX1272_SS,LOW);
 #if (SX1272_debug_mode > 1)
     Serial.println(F("## Setting OFF ##"));
     Serial.println();
@@ -467,11 +474,11 @@ byte SX1272::readRegister(byte address)
 {
     byte value = 0x00;
 
-    digitalWrite(SX1272_SS,LOW);
+    digitalWrite(_SX1272_SS,LOW);
     bitClear(address, 7);		// Bit 7 cleared to write in registers
     SPI.transfer(address);
     value = SPI.transfer(0x00);
-    digitalWrite(SX1272_SS,HIGH);
+    digitalWrite(_SX1272_SS,HIGH);
 
 #if (SX1272_debug_mode > 1)
     Serial.print(F("## Reading:  ##\t"));
@@ -494,11 +501,11 @@ byte SX1272::readRegister(byte address)
 */
 void SX1272::writeRegister(byte address, byte data)
 {
-    digitalWrite(SX1272_SS,LOW);
+    digitalWrite(_SX1272_SS,LOW);
     bitSet(address, 7);			// Bit 7 set to read from registers
     SPI.transfer(address);
     SPI.transfer(data);
-    digitalWrite(SX1272_SS,HIGH);
+    digitalWrite(_SX1272_SS,HIGH);
 
 #if (SX1272_debug_mode > 1)
     Serial.print(F("## Writing:  ##\t"));
@@ -7405,9 +7412,12 @@ int8_t SX1272::setFreqHopOn() {
     bw=(_bandwidth==BW_125)?125e3:((_bandwidth==BW_250)?250e3:500e3);
     // Symbol rate : time for one symbol (secs)
     double rs = bw / ( 1 << _spreadingFactor);
-    double ts = 1 / rs;
+    double ts = 1 / rs;        
+}
 
-        
+void SX1272::setCSPin(uint8_t cs) {
+	//need to call this function before the ON() function
+	_SX1272_SS=cs;
 }
 
 SX1272 sx1272 = SX1272();

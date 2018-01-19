@@ -337,14 +337,13 @@ $(function () {
     		$('#freq_select').html("<option>863.2</option><option>863.5</option><option>863.8</option>"+
     								"<option>864.1</option><option>864.4</option><option>864.7</option>"+
     								"<option selected>865.2</option><option>865.5</option><option>865.8</option>"+
-    								"<option>865.2</option><option>865.5</option><option>865.8</option>"+
     								"<option>866.1</option><option>866.4</option><option>866.7</option>"+
     								"<option>867.0</option><option>868.0</option><option>868.1</option>");
     	}
     	else{ // 915 MHz
     		$('#freq_select').html("<option>903.08</option><option>905.24</option><option>907.40</option>"+
     								"<option>909.56</option><option>911.72</option><option selected>913.88</option>"+
-    								"<option>915.0</option><option>916.04</option><option>918.20</option>"+
+    								"<option>915.0</option><option>916.04</option><option>918.20</option><option>920.36</option>"+
     								"<option>922.52</option><option>924.68</option><option>926.84</option>");
     	}
     	
