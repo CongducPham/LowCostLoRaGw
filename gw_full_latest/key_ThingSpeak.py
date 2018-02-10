@@ -6,3 +6,7 @@ _def_thingspeak_channel_key='SGSH52UGPVAUYG3S'
 #leave empty to allow all devices
 #source_list=["3", "255", "01020304"]
 source_list=[]
+
+field_association=[]
+# (6,2) means data from sensor 6 will use starting field index of 2
+#field_association=[(6,2)]

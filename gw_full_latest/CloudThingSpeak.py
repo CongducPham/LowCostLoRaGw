@@ -43,6 +43,11 @@ try:
 except AttributeError:
 	key_ThingSpeak.source_list=[]
 
+try:
+	key_ThingSpeak.field_association
+except AttributeError:
+	key_ThingSpeak.field_association=[]
+	
 # didn't get a response from thingspeak server?
 connection_failure = False
 
@@ -170,7 +175,7 @@ def thingspeak_uploadSingleData(data, second_data):
 		print("ThingSpeak: not uploading")
 	
 # upload multiple data
-def thingspeak_uploadMultipleData(data_array):
+def thingspeak_uploadMultipleData(src, data_array):
 	global connection_failure
 	
 	connected = test_network_available()
@@ -180,7 +185,7 @@ def thingspeak_uploadMultipleData(data_array):
 		connection_failure = False
 		
 		print("ThingSpeak: uploading (multiple)")
-		print 'rcv msg to log (\!) on ThingSpeak (',		
+		print 'rcv msg to log (\!) on ThingSpeak (',			
 	
 		#use default channel?
 		if data_array[0]=='':
@@ -190,16 +195,38 @@ def thingspeak_uploadMultipleData(data_array):
 			print data_array[0],
 			
 		print ',',
-		
-		#use default field?
-		if data_array[1]=='':
-			fieldNumber = 1
-			print 'default',
+
+		if (len(key_ThingSpeak.field_association)==0):
+			defined_field_association=False
 		else:
-			fieldNumber = int(data_array[1])
-			print data_array[1],				
+			defined_field_association=True
+			
+		found_field_association=False
+			
+		#do we have key_ThingSpeak.field_association defined?
+		if defined_field_association==True:
+			i = 0
+			while i < len(key_ThingSpeak.field_association):
+				if key_ThingSpeak.field_association[i][0]==src:
+					#found a field for that sensor
+					found_field_association=True
+					fieldNumber=key_ThingSpeak.field_association[i][1]
+					print fieldNumber,
+				i = i+1
+					
+		if (defined_field_association==False) or (found_field_association==False):
+			#use default field?
+			if data_array[1]=='':
+				fieldNumber = 1
+				print 'default',
+			else:
+				fieldNumber = int(data_array[1])
+				print data_array[1],				
 	
 		print '): '
+		
+		if found_field_association==True:
+			print 'field index set by field association'
 		
 		#we skip the thingspeak channel and field index when iterating
 		#if there is only 1 data, and without the nomemclature
@@ -210,8 +237,10 @@ def thingspeak_uploadMultipleData(data_array):
 			iteration = 3
 
 		cmd = 'curl -s -k -X POST --data '
+								
 		while(iteration<len(data_array)):
-			if(iteration == 3):
+					
+			if (iteration == 3):
 				cmd += 'field'+str(fieldNumber)+'='+data_array[iteration]
 			else:
 				cmd += '&field'+str(fieldNumber)+'='+data_array[iteration]
@@ -372,7 +401,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		#thingspeak_uploadSingleData(data, second_data)   
 
 		#to upload multiple data with nomenclature fields, comment the previous line and uncomment the following line
-		thingspeak_uploadMultipleData(data_array)
+		thingspeak_uploadMultipleData(src, data_array)
 	else:
 		print "Source is not is source list, not sending with CloudThingSpeak.py"				
 	

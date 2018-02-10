@@ -20,6 +20,7 @@
 #-------------------------------------------------------------------------------
 
 import urllib2
+import requests
 import subprocess
 import time
 import ssl
@@ -30,7 +31,7 @@ import os
 import json
 import re
 import md5
-import shlex
+#import shlex
 
 # get key definition from external file to ease
 # update of cloud script in the future
@@ -79,14 +80,8 @@ except AttributeError:
 
 ####################################################
 
-#error messages from server
-Orion_entity_not_created="The requested entity has not been found"
-
 # didn't get a response from server?
 connection_failure = False
-
-# retry if return from server is 0?
-retry = False
 
 gw_id_md5=''
 
@@ -157,49 +152,103 @@ def create_new_entity(data, src, nomenclatures, tdata):
 	
 	print "Orion: create new entity"
 	
+	append_gw_str=''
+	
+	if key_Orion.organization_name=='':
+		key_Orion.organization_name='ORG'
+		
 	#default organization name?
 	if key_Orion.organization_name=='ORG':
-		#we append the md5 hasg to the sensor name: ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62
-		cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors -H accept:application/json -H content-type:application/json -d \'{\"id\":\"'+key_Orion.organization_name+'_'+src+'_'+gw_id_md5+'\",\"gateway_id\":\"'+gw_id_md5+'\",\"measurements\":['
-	else:
-		#we just use UPPA_Sensor2 for instance
-		cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors -H accept:application/json -H content-type:application/json -d \'{\"id\":\"'+key_Orion.organization_name+'_'+src+'\",\"gateway_id\":\"'+gw_id_md5+'\",\"measurements\":['
-										
+		#we append the md5 hash to the sensor name: ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62
+		append_gw_str='_'+gw_id_md5		
+
+	orion_headers = {'accept':'application/json','content-type':'application/json'}
+	
+	orion_url=key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors' 
+	
+	orion_data = '{"id":"'+key_Orion.organization_name+'_'+src+append_gw_str+'","gateway_id":"'+gw_id_md5+'","measurements":['
+	
 	i=0
-	while i < len(data)-2 :
+	
+	while i < len(data)-2:
 		
-		cmd = cmd+'{\"id\":\"'+nomenclatures[i]+'\",\"values\":[{\"value\":'
+		orion_data = orion_data+'{"id":"'+nomenclatures[i]+'","values":[{"value":'
 		
 		isnumber = re.match(num_format,data[i+2])
 		isnumber = False
 		
 		if isnumber:
-			cmd = cmd+data[i+2]+',\"timestamp\":\"'+tdata+'\"}]}'
+			orion_data = orion_data+data[i+2]+',"timestamp":"'+tdata+'"}]}'
 		else:	
-			cmd = cmd+'\"'+data[i+2]+'\",\"timestamp\":\"'+tdata+'\"}]}'
+			orion_data = orion_data+'"'+data[i+2]+'","timestamp":"'+tdata+'"}]}'
 		i += 1
 		if i < len(data)-2:
-			cmd = cmd+','
-	cmd = cmd+']'
-	cmd = cmd+'}\'' 	
-	
-	print "CloudOrion: will issue curl cmd"
-	print(cmd)
-	args = shlex.split(cmd)
-	print args	
-
-	try:
-		out = subprocess.check_output(args, shell=False)
-		
-		if out != '':
-			print 'Orion: returned msg from server is'
-			print out					
-		else :
-			print 'Orion: entity creation success'
+			orion_data = orion_data+','
 			
-	except subprocess.CalledProcessError:
-		print "Orion: curl command failed (maybe a disconnection)"
-		connection_failure = True	
+	orion_data = orion_data+']'
+	orion_data = orion_data+'}'
+	
+	print "CloudNewOrion: will issue requests with"
+		
+	print 'url: '+orion_url
+	#print 'headers: '+json.dumps(orion_headers)
+	print 'data: '+orion_data
+	
+	try:
+		response = requests.post(orion_url, headers=orion_headers, data=orion_data, timeout=30)
+
+		print 'Orion: returned msg from server is ',
+		print response.status_code	
+						
+		if response.ok:
+			print 'Orion: entity creation success'
+	except ConnectTimeout:
+		print 'Orion: requests command failed (maybe a disconnection)'
+		connection_failure = True 	
+		
+	
+# 	if key_Orion.organization_name=='ORG':
+# 		#we append the md5 hasg to the sensor name: ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62
+# 		cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors -H accept:application/json -H content-type:application/json -d \'{\"id\":\"'+key_Orion.organization_name+'_'+src+'_'+gw_id_md5+'\",\"gateway_id\":\"'+gw_id_md5+'\",\"measurements\":['
+# 	else:
+# 		#we just use UPPA_Sensor2 for instance
+# 		cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors -H accept:application/json -H content-type:application/json -d \'{\"id\":\"'+key_Orion.organization_name+'_'+src+'\",\"gateway_id\":\"'+gw_id_md5+'\",\"measurements\":['
+# 										
+# 	i=0
+# 	while i < len(data)-2 :
+# 		
+# 		cmd = cmd+'{\"id\":\"'+nomenclatures[i]+'\",\"values\":[{\"value\":'
+# 		
+# 		isnumber = re.match(num_format,data[i+2])
+# 		isnumber = False
+# 		
+# 		if isnumber:
+# 			cmd = cmd+data[i+2]+',\"timestamp\":\"'+tdata+'\"}]}'
+# 		else:	
+# 			cmd = cmd+'\"'+data[i+2]+'\",\"timestamp\":\"'+tdata+'\"}]}'
+# 		i += 1
+# 		if i < len(data)-2:
+# 			cmd = cmd+','
+# 	cmd = cmd+']'
+# 	cmd = cmd+'}\'' 	
+# 	
+# 	print "CloudOrion: will issue curl cmd"
+# 	print(cmd)
+# 	args = shlex.split(cmd)
+# 	print args	
+# 
+# 	try:
+# 		out = subprocess.check_output(args, shell=False)
+# 		
+# 		if out != '':
+# 			print 'Orion: returned msg from server is'
+# 			print out					
+# 		else :
+# 			print 'Orion: entity creation success'
+# 			
+# 	except subprocess.CalledProcessError:
+# 		print "Orion: curl command failed (maybe a disconnection)"
+# 		connection_failure = True	
 	
 	
 # send a data to the server
@@ -221,71 +270,109 @@ def send_data(data, src, nomenclatures, tdata):
 			
 	while i < len(data)-2  and not entity_need_to_be_created:
 
+		if key_Orion.organization_name=='':
+			key_Orion.organization_name='ORG'
+		
 		#default organization name?
 		if key_Orion.organization_name=='ORG':
-			#we append the md5 hasg to the sensor name: ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62
+			#we append the md5 hash to the sensor name: ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62
 			append_gw_str='_'+gw_id_md5
-			
+		
+		#with NewOrion, it is always a string	
 		isnumber = re.match(num_format,data[i+2])
 		isnumber = False
 		
-		cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors/'+key_Orion.organization_name+"_"+src+append_gw_str+'/measurements/'+nomenclatures[i]+'/values -H accept:application/json -H content-type:application/json -d \'{\"value\":'
+		orion_headers = {'accept':'application/json','content-type':'application/json'}
+		
+		orion_url=key_Orion.orion_server + '/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors/'+key_Orion.organization_name+"_"+src+append_gw_str+'/measurements/'+nomenclatures[i]+'/values' 
+		
+		orion_data = '{"value":'
 		
 		if isnumber:
-			cmd = cmd+data[i+2]+',\"timestamp\":\"'+tdata+'\"}\''
+			orion_data = orion_data+data[i+2]+',"timestamp":"'+tdata+'"}'
 		else:
-			cmd = cmd+'\"'+data[i+2]+'\",\"timestamp\":\"'+tdata+'\"}\''
+			orion_data = orion_data+'"'+data[i+2]+'","timestamp":"'+tdata+'"}'
 
 		i += 1
-						
-		print "CloudOrion: will issue curl cmd"
+					
+		print "CloudNewOrion: will issue requests with"
 		
-		print(cmd)
-		args = shlex.split(cmd)
-		print args
+		print 'url: '+orion_url
+		#print 'headers: '+json.dumps(orion_headers)
+		print 'data: '+orion_data
 		
-		# retry enabled
-		if (retry) :
-			out = 'something'
-			iteration = 0
-			
-			while(out != '' and iteration < 6 and not connection_failure) :
-				try:
-					out = subprocess.check_output(args, shell=False)
-	
-					# if server return 0, we didn't wait 15sec, wait then
-					if out != '':
-						print 'Orion: returned msg from server is'
-						print out
-						print('Orion: retrying in 3sec')
-						iteration += 1
-						time.sleep( 3 )
-					else:
-						'Orion: upload success'
-						
-				except subprocess.CalledProcessError:
-					print "Orion: curl command failed (maybe a disconnection)"
-					connection_failure = True
-					
-		# retry disabled
-		else :
-			try:
-				out = subprocess.check_output(args, shell=False)
-				
-				if out != '':
-					print 'Orion: returned msg from server is'
-					print out
-					
-					# the entity has not been created before
-					if Orion_entity_not_created in out:
-						entity_need_to_be_created=True
-						create_new_entity(data, src, nomenclatures, tdata)						
-				else :
-					print 'Orion: upload success'
-					
-			except subprocess.CalledProcessError:
-				print "Orion: curl command failed (maybe a disconnection)"
-				connection_failure = True
+		try:
+			response = requests.post(orion_url, headers=orion_headers, data=orion_data, timeout=30)
+
+			print 'Orion: returned msg from server is ',
+			print response.status_code	
+		
+			if response.status_code==403:
+				entity_need_to_be_created=True
+				create_new_entity(data, src, nomenclatures, tdata)						
+			if response.ok:
+				print 'Orion: upload success'
+		except ConnectTimeout:
+			print 'Orion: requests command failed (maybe a disconnection)'
+			connection_failure = True			
+		
+#		cmd = 'curl -s -X POST '+key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors/'+key_Orion.organization_name+"_"+src+append_gw_str+'/measurements/'+nomenclatures[i]+'/values -H accept:application/json -H content-type:application/json -d \'{\"value\":'
+		
+#		if isnumber:
+#			cmd = cmd+data[i+2]+',\"timestamp\":\"'+tdata+'\"}\''
+#		else:
+#			cmd = cmd+'\"'+data[i+2]+'\",\"timestamp\":\"'+tdata+'\"}\''
+#
+#		i += 1
+#						
+#		print "CloudOrion: will issue curl cmd"
+#		
+#		print(cmd)
+#		args = shlex.split(cmd)
+#		print args
+#		
+#		# retry enabled
+#		if (retry) :
+#			out = 'something'
+#			iteration = 0
+#			
+#			while(out != '' and iteration < 6 and not connection_failure) :
+#				try:
+#					out = subprocess.check_output(args, shell=False)
+#	
+#					# if server return 0, we didn't wait 15sec, wait then
+#					if out != '':
+#						print 'Orion: returned msg from server is'
+#						print out
+#						print('Orion: retrying in 3sec')
+#						iteration += 1
+#						time.sleep( 3 )
+#					else:
+#						'Orion: upload success'
+#						
+#				except subprocess.CalledProcessError:
+#					print "Orion: curl command failed (maybe a disconnection)"
+#					connection_failure = True
+#					
+#		# retry disabled
+#		else :
+#			try:
+#				out = subprocess.check_output(args, shell=False)
+#				
+#				if out != '':
+#					print 'Orion: returned msg from server is'
+#					print out
+# 					
+# 					# the entity has not been created before
+# 					if Orion_entity_not_created in out:
+# 						entity_need_to_be_created=True
+# 						create_new_entity(data, src, nomenclatures, tdata)						
+# 				else :
+# 					print 'Orion: upload success'
+# 					
+# 			except subprocess.CalledProcessError:
+# 				print "Orion: curl command failed (maybe a disconnection)"
+# 				connection_failure = True
 
 #no used in this new version, we call directly send_data(data, src, nomenclatures, tdata)
 def Orion_uploadData(nomenclatures, data, src, tdata):
