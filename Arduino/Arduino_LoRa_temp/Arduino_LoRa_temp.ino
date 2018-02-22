@@ -1,8 +1,8 @@
 /*
- *  temperature sensor on analog 8 to test the LoRa gateway
+ *  temperature sensor on analog A0 to test the LoRa gateway
  *  extended version with AES and custom Carrier Sense features
  *  
- *  Copyright (C) 2016 Congduc Pham, University of Pau, France
+ *  Copyright (C) 2016-2018 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Sept 29th, 2017 by C. Pham
+ * last update: Feb 17th, 2018 by C. Pham
  */
 #include <SPI.h> 
 // Include the SX1272
@@ -62,6 +62,8 @@ const uint32_t DEFAULT_CHANNEL=CH_10_868;
 #endif
 #elif defined BAND900
 const uint32_t DEFAULT_CHANNEL=CH_05_900;
+// For HongKong, Japan, Malaysia, Singapore, Thailand, Vietnam: 920.36MHz     
+//const uint32_t DEFAULT_CHANNEL=CH_08_900;
 #elif defined BAND433
 const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
@@ -79,16 +81,16 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
 #define WITH_EEPROM
 #define WITH_APPKEY
-#define FLOAT_TEMP
-#define NEW_DATA_FIELD
+//if you are low on program memory, comment STRING_LIB to save about 2K
+//#define STRING_LIB
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
-//#define WITH_AES
+#define WITH_AES
 //#define LORAWAN
 //#define TO_LORAWAN_GW
 //#define WITH_ACK
 //this will enable a receive window after every transmission
-//#define WITH_RCVW
+#define WITH_RCVW
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -109,7 +111,7 @@ uint8_t node_addr=6;
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 4
+// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 8
 #define field_index 1
 ///////////////////////////////////////////////////////////////////
 
@@ -122,7 +124,7 @@ uint8_t node_addr=6;
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 10;
+unsigned int idlePeriodInMin = 30;
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -152,6 +154,11 @@ unsigned int idlePeriodInMin = 10;
 uint8_t my_appKey[4]={5, 6, 7, 8};
 ///////////////////////////////////////////////////////////////////
 #endif
+
+///////////////////////////////////////////////////////////////////
+// IF YOU SEND A LONG STRING, INCREASE THE SIZE OF MESSAGE
+uint8_t message[80];
+///////////////////////////////////////////////////////////////////
 
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
@@ -244,10 +251,7 @@ uint16_t Frame_Counter_Up = 0x0000;
 unsigned char Direction = 0x00;
 #endif
 
-double temp;
 unsigned long nextTransmissionTime=0L;
-char float_str[20];
-uint8_t message[80];
 
 #ifdef TO_LORAWAN_GW
 int loraMode=1;
@@ -352,7 +356,7 @@ void setup()
 #ifdef __MKL26Z64__
   PRINT_CSTSTR("%s","TeensyLC MKL26Z64 detected\n");
 #endif
-#ifdef ARDUINO_SAMD_ZERO 
+#if defined ARDUINO_SAMD_ZERO && not defined ARDUINO_SAMD_FEATHER_M0
   PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
 #endif
 #ifdef ARDUINO_AVR_FEATHER32U4 
@@ -375,7 +379,7 @@ void setup()
   PRINT_CSTSTR("%s","ATmega2560 detected\n");
 #endif 
 #ifdef __SAMD21G18A__ 
-  PRINT_CSTSTR("%s","ATSAMD21G18A detected\n");
+  PRINT_CSTSTR("%s","SAMD21G18A ARM Cortex-M0+ detected\n");
 #endif
 #ifdef __SAM3X8E__ 
   PRINT_CSTSTR("%s","SAM3X8E ARM Cortex-M3 detected\n");
@@ -508,6 +512,8 @@ void setup()
   delay(500);
 }
 
+#ifndef STRING_LIB
+
 char *ftoa(char *a, double f, int precision)
 {
  long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
@@ -524,6 +530,7 @@ char *ftoa(char *a, double f, int precision)
  itoa(desimal, a, 10);
  return ret;
 }
+#endif
 
 void loop(void)
 {
@@ -531,7 +538,8 @@ void loop(void)
   long endSend;
   uint8_t app_key_offset=0;
   int e;
-
+  float temp;
+  
 #ifndef LOW_POWER
   // 600000+random(15,60)*1000
   if (millis() > nextTransmissionTime) {
@@ -550,17 +558,25 @@ void loop(void)
       /////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // change here how the temperature should be computed depending on your sensor type
       //  
-      temp = value*TEMP_SCALE/1024.0;
     
       PRINT_CSTSTR("%s","Reading ");
       PRINT_VALUE("%d", value);
       PRINTLN;
-      
-      //temp = temp - 0.5;
-      temp = temp / 10.0;
+
+      //LM35DZ
+      //the LM35DZ needs at least 4v as supply voltage
+      //can be used on 5v board
+      //temp = (value*TEMP_SCALE/1024.0)/10;
+
+      //TMP36
+      //the TMP36 can work with supply voltage of 2.7v-5.5v
+      //can be used on 3.3v board
+      //we use a 0.95 factor when powering with less than 3.3v, e.g. 3.1v in the average for instance
+      //this setting is for 2 AA batteries
+      temp = ((value*0.95*TEMP_SCALE/1024.0)-500)/10;      
 
       // for testing
-      //temp = 28.45;
+      //temp = 22.45;
         
       PRINT_CSTSTR("%s","Temp is ");
       PRINT_VALUE("%f", temp);
@@ -578,25 +594,15 @@ void loop(void)
 
       uint8_t r_size;
 
-      // then use app_key_offset to skip the app key
-#ifdef FLOAT_TEMP
-      ftoa(float_str,temp,2);
-
-#ifdef NEW_DATA_FIELD
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#TC/%s", field_index, float_str);
+      // the recommended format if now \!TC/22.5
+#ifdef STRING_LIB
+      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#TC/%s",field_index,String(temp).c_str());
 #else
+      char float_str[10];
+      ftoa(float_str,temp,2);
       // this is for testing, uncomment if you just want to test, without a real temp sensor plugged
       //strcpy(float_str, "21.55567");
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#%s", field_index, float_str);
-#endif
-      
-#else
-      
-#ifdef NEW_DATA_FIELD      
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#TC/%d", field_index, (int)temp);   
-#else
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#%d", field_index, (int)temp);
-#endif         
+      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#TC/%s",field_index,float_str);
 #endif
 
       PRINT_CSTSTR("%s","Sending ");
@@ -938,7 +944,6 @@ void loop(void)
       
 #ifdef __SAMD21G18A__
       // For Arduino M0 or Zero we use the built-in RTC
-      //LowPower.standby();
       rtc.setTime(17, 0, 0);
       rtc.setDate(1, 1, 2000);
       rtc.setAlarmTime(17, idlePeriodInMin, 0);
@@ -947,6 +952,8 @@ void loop(void)
       rtc.enableAlarm(rtc.MATCH_HHMMSS);
       //rtc.attachInterrupt(alarmMatch);
       rtc.standbyMode();
+      
+      LowPower.standby();
 
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT

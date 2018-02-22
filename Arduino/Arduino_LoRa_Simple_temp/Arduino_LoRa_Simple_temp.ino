@@ -1,7 +1,7 @@
 /*
  *  temperature sensor on analog A0 to test the LoRa gateway
  *
- *  Copyright (C) 2016 Congduc Pham, University of Pau, France
+ *  Copyright (C) 2016-2018 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Sep. 29th, 2017 by C. Pham
+ * last update: Feb. 17th, 2018 by C. Pham
  */
 #include <SPI.h> 
 // Include the SX1272
@@ -62,7 +62,9 @@ const uint32_t DEFAULT_CHANNEL=CH_04_868;
 const uint32_t DEFAULT_CHANNEL=CH_10_868;
 #endif
 #elif defined BAND900
-const uint32_t DEFAULT_CHANNEL=CH_05_900;
+//const uint32_t DEFAULT_CHANNEL=CH_05_900;
+// For HongKong, Japan, Malaysia, Singapore, Thailand, Vietnam: 920.36MHz     
+const uint32_t DEFAULT_CHANNEL=CH_08_900;
 #elif defined BAND433
 const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
@@ -78,10 +80,10 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
-#define WITH_EEPROM
+//#define WITH_EEPROM
 #define WITH_APPKEY
-#define FLOAT_TEMP
-#define NEW_DATA_FIELD
+//if you are low on program memory, comment STRING_LIB to save about 2K
+#define STRING_LIB
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //#define WITH_ACK
@@ -106,7 +108,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 4
+// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 8
 #define field_index 1
 ///////////////////////////////////////////////////////////////////
 
@@ -134,6 +136,11 @@ unsigned int idlePeriodInMin = 1;
 uint8_t my_appKey[4]={5, 6, 7, 8};
 ///////////////////////////////////////////////////////////////////
 #endif
+
+///////////////////////////////////////////////////////////////////
+// IF YOU SEND A LONG STRING, INCREASE THE SIZE OF MESSAGE
+uint8_t message[50];
+///////////////////////////////////////////////////////////////////
 
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
@@ -202,10 +209,7 @@ RTCZero rtc;
 unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
 
-double temp;
 unsigned long nextTransmissionTime=0L;
-char float_str[20];
-uint8_t message[100];
 int loraMode=LORAMODE;
 
 #ifdef WITH_EEPROM
@@ -401,6 +405,8 @@ void setup()
   delay(500);
 }
 
+#ifndef STRING_LIB
+
 char *ftoa(char *a, double f, int precision)
 {
  long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
@@ -418,12 +424,15 @@ char *ftoa(char *a, double f, int precision)
  return ret;
 }
 
+#endif
+
 void loop(void)
 {
   long startSend;
   long endSend;
   uint8_t app_key_offset=0;
   int e;
+  float temp;
 
 #ifndef LOW_POWER
   // 600000+random(15,60)*1000
@@ -436,14 +445,25 @@ void loop(void)
       delay(200);   
 #endif
 
-      temp = 0;
+      temp = 0.0;
       int value;
       
-      for (int i=0; i<10; i++) {
+      for (int i=0; i<5; i++) {
           // change here how the temperature should be computed depending on your sensor type
           // 
-           value = analogRead(TEMP_PIN_READ);
-          temp += (value*TEMP_SCALE/1024.0)/10;
+          value = analogRead(TEMP_PIN_READ);
+
+          //LM35DZ
+          //the LM35DZ needs at least 4v as supply voltage
+          //can be used on 5v board
+          //temp += (value*TEMP_SCALE/1024.0)/10;
+
+          //TMP36
+          //the TMP36 can work with supply voltage of 2.7v-5.5v
+          //can be used on 3.3v board
+          //we use a 0.95 factor when powering with less than 3.3v, e.g. 3.1v in the average for instance
+          //this setting is for 2 AA batteries
+          temp += ((value*0.95*TEMP_SCALE/1024.0)-500)/10;
         
           PRINT_CSTSTR("%s","Reading ");
           PRINT_VALUE("%d", value);
@@ -456,7 +476,7 @@ void loop(void)
 #endif
 
       PRINT_CSTSTR("%s","Mean temp is ");
-      temp = temp/10;
+      temp = temp/5;
       PRINT_VALUE("%f", temp);
       PRINTLN;
       
@@ -468,26 +488,15 @@ void loop(void)
 
       uint8_t r_size;
       
-#ifdef FLOAT_TEMP
+      // the recommended format if now \!TC/22.5
+#ifdef STRING_LIB
+      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#TC/%s",field_index,String(temp).c_str());
+#else
+      char float_str[10];
       ftoa(float_str,temp,2);
-
-#ifdef NEW_DATA_FIELD
       // this is for testing, uncomment if you just want to test, without a real temp sensor plugged
       //strcpy(float_str, "21.55567");
       r_size=sprintf((char*)message+app_key_offset,"\\!#%d#TC/%s",field_index,float_str);
-#else
-      // this is for testing, uncomment if you just want to test, without a real temp sensor plugged
-      //strcpy(float_str, "21.55567");
-      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#%s",field_index,float_str);
-#endif
-      
-#else
-      
-#ifdef NEW_DATA_FIELD      
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#TC/%d", field_index, (int)temp);   
-#else
-      r_size=sprintf((char*)message+app_key_offset, "\\!#%d#%d", field_index, (int)temp);
-#endif         
 #endif
 
       PRINT_CSTSTR("%s","Sending ");
@@ -603,7 +612,7 @@ void loop(void)
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT
 #else
-      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
+      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD; //+ random(2,4);
 
 #if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
       // warning, setTimer accepts value from 1ms to 65535ms max
