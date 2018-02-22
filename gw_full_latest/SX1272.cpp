@@ -30,6 +30,8 @@
 #include <math.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  Feb 13th, 2018
+ *      - fix bug in availableData() to set back the LoRa module into standby mode. This affected only some radio modules
  *  November 10th, 2017
  *		- change the way packet's RSSI is computed
  *  November 7th, 2017
@@ -2721,7 +2723,8 @@ uint8_t SX1272::getPower()
     // get only the OutputPower
     _power = value & 0B00001111;
 
-    if( (value > -1) & (value < 16) )
+    //if( (value > -1) & (value < 16) )
+    if( _power < 16 )
     {
         state = 0;
 #if (SX1272_debug_mode > 1)
@@ -2902,7 +2905,7 @@ int8_t SX1272::setPowerNum(uint8_t pow)
         writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);
     }
 
-    if ( (pow >= 0) & (pow < 15) )
+    if ( (pow >= 0) && (pow < 15) )
     {
         _power = pow;
     }
@@ -4447,19 +4450,21 @@ boolean	SX1272::availableData(uint16_t wait)
             printf("## Packet received is not for me ##\n");
             printf("\n");
 #endif
-            if( _modem == LORA )	// STANDBY PARA MINIMIZAR EL CONSUMO
-            { // LoRa mode
-                //writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);	// Setting standby LoRa mode
-            }
-            else
-            { //  FSK mode
-                writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);	// Setting standby FSK mode
-            }
         }
     }
-    //----else
-    //	{
-    //	}
+
+    // added by C. Pham
+    if (_hreceived==false || forme==false) {
+        if( _modem == LORA )	// STANDBY PARA MINIMIZAR EL CONSUMO
+        { // LoRa mode
+            writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);	// Setting standby LoRa mode
+        }
+        else
+        { //  FSK mode
+            writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);	// Setting standby FSK mode
+        }
+    }
+
     return forme;
 }
 

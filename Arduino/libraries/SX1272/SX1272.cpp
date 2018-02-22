@@ -30,6 +30,8 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  Feb 13th, 2018
+ *      - fix bug in availableData() to set back the LoRa module into standby mode. This affected only some radio modules
  *	Jan 19th, 2018
  *		- add a setCSPin(uint8_t cs) function to set the Chip Select (CS) pin
  *		- call sx1272.setCSPin(18) for instance before calling sx1272.ON()
@@ -579,11 +581,12 @@ uint8_t SX1272::setLORA()
         st0 = readRegister(REG_OP_MODE);
         Serial.println(F("..."));
 
-        if ((retry % 2)==0)
+        if ((retry % 2)==0) {
             if (retry==20)
                 retry=0;
             else
                 retry++;
+        }       
         /*
         if (st0!=LORA_STANDBY_MODE) {
             pinMode(SX1272_RST,OUTPUT);
@@ -1327,8 +1330,8 @@ int8_t	SX1272::setHeaderON()
                 state = 1;
             }
         }
-        return state;
     }
+	return state;
 }
 
 /*
@@ -2764,7 +2767,8 @@ uint8_t SX1272::getPower()
     // get only the OutputPower
     _power = value & B00001111;
 
-    if( (value > -1) & (value < 16) )
+    //if( (value > -1) & (value < 16) )
+    if( _power < 16 )
     {
         state = 0;
 #if (SX1272_debug_mode > 1)
@@ -2945,7 +2949,7 @@ int8_t SX1272::setPowerNum(uint8_t pow)
         writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);
     }
 
-    if ( (pow >= 0) & (pow < 15) )
+    if ( (pow >= 0) && (pow < 15) )
     {
         _power = pow;
     }
@@ -4247,6 +4251,7 @@ uint8_t SX1272::receivePacketTimeoutACK(uint16_t wait)
     }
     return state_f;
     */
+    return 0;
 }
 
 /*
@@ -4475,19 +4480,21 @@ boolean	SX1272::availableData(uint16_t wait)
             Serial.println(F("## Packet received is not for me ##"));
             Serial.println();
 #endif
-            if( _modem == LORA )	// STANDBY PARA MINIMIZAR EL CONSUMO
-            { // LoRa mode
-                //writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);	// Setting standby LoRa mode
-            }
-            else
-            { //  FSK mode
-                writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);	// Setting standby FSK mode
-            }
         }
     }
-    //----else
-    //	{
-    //	}
+
+    // added by C. Pham
+    if (_hreceived==false || forme==false) {
+        if( _modem == LORA )	// STANDBY PARA MINIMIZAR EL CONSUMO
+        { // LoRa mode
+            writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);	// Setting standby LoRa mode
+        }
+        else
+        { //  FSK mode
+            writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);	// Setting standby FSK mode
+        }
+    }
+
     return forme;
 }
 
@@ -5745,6 +5752,7 @@ uint8_t SX1272::sendPacketTimeout(uint8_t dest, uint8_t *payload, uint16_t lengt
 #endif
 
     state = truncPayload(length16);
+
     if( state == 0 )
     {
         state_f = setPacket(dest, payload);	// Setting a packet with 'dest' destination
@@ -7412,7 +7420,9 @@ int8_t SX1272::setFreqHopOn() {
     bw=(_bandwidth==BW_125)?125e3:((_bandwidth==BW_250)?250e3:500e3);
     // Symbol rate : time for one symbol (secs)
     double rs = bw / ( 1 << _spreadingFactor);
-    double ts = 1 / rs;        
+    double ts = 1 / rs;
+    
+    return 0;        
 }
 
 void SX1272::setCSPin(uint8_t cs) {

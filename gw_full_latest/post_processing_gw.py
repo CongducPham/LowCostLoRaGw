@@ -976,7 +976,7 @@ while True:
 						cloud_script=_enabled_clouds[cloud_index]
 						print "uploading with "+cloud_script
 						sys.stdout.flush()
-						cmd_arg=cloud_script+" \""+ldata.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
+						cmd_arg=cloud_script+" \""+ldata.replace('\n','').replace('\0','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
 					except UnicodeDecodeError, ude:
 						print ude
 					else:

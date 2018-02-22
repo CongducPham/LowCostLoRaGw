@@ -24,10 +24,36 @@
 // Include the SX1272
 #include "SX1272.h"
 
-#include <U8x8lib.h>
+#define OLED
+//#define HITACHI
 
+// uncomment if you are sure you have an Heltec LoRa board and that it is not detected
+//#define HELTEC_LORA
+
+#ifdef OLED
+
+#include <U8x8lib.h>
 // the OLED used
+#if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
 U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
+#else
+//reset is not used, but don't know what the lib will do with that pin, so better to indicate a pn that you do not use
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ A5, /* data=*/ A4, /* reset=*/ A3);
+#endif
+
+#elif defined HITACHI
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x20,16,2);  // set the LCD address to 0x20 for a 16 chars and 2 line display
+
+void printLCD(int theLine, const char* theInfo, boolean clearFirst=true) {
+        if (clearFirst)
+              lcd.clear();
+        lcd.setCursor(0, theLine);
+        lcd.print(theInfo);
+}  
+#endif
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,6 +69,7 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/
 //
 // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+// Note the Heltec WIFI LoRa needs PABOOST
 #define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
@@ -70,6 +97,8 @@ const uint32_t DEFAULT_CHANNEL=CH_10_868;
 #endif
 #elif defined BAND900
 const uint32_t DEFAULT_CHANNEL=CH_05_900;
+// For HongKong, Japan, Malaysia, Singapore, Thailand, Vietnam: 920.36MHz     
+//const uint32_t DEFAULT_CHANNEL=CH_08_900;
 #elif defined BAND433
 const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
@@ -97,13 +126,15 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 
 #define DEFAULT_DEST_ADDR 1
 
-uint8_t message[100];
+uint8_t message[30];
 
 int loraMode=LORAMODE;
 
 void setup()
 {
   int e;
+
+  delay(2000);
   
   // Open serial communications and wait for port to open:
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0 
@@ -112,14 +143,22 @@ void setup()
   Serial.begin(38400);  
 #endif 
 
+  // Print a start message
+  PRINT_CSTSTR("%s","Simple LoRa ping-pong with the gateway\n"); 
+  
+#ifdef OLED
   u8x8.begin();
   u8x8.setFont(u8x8_font_chroma48medium8_r);
-  
-  // Print a start message
-  PRINT_CSTSTR("%s","Simple LoRa ping-pong with the gateway\n");  
-
-   u8x8.drawString(0, 1, "Simple PingPong");
-   u8x8.drawString(0, 2, "LoRa mode 1");
+  u8x8.drawString(0, 1, "Simple PingPong");
+  u8x8.drawString(0, 2, "LoRa mode 1");   
+#elif defined HITACHI
+  lcd.begin();
+  lcd.backlight();
+  lcd.home();
+  lcd.print("Setup");
+  printLCD(0,"Simple PingPong", true);
+  printLCD(1,"LoRa mode 1", false);  
+#endif
 
 #ifdef ARDUINO_AVR_PRO
   PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");  
@@ -157,6 +196,9 @@ void setup()
 #ifdef  ARDUINO_SAMD_FEATHER_M0
   PRINT_CSTSTR("%s","Adafruit FeatherM0 detected\n");
 #endif
+#if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32  || defined HELTEC_LORA
+  PRINT_CSTSTR("%s","Heltec WiFi LoRa 32 detected\n");
+#endif
 
 // See http://www.nongnu.org/avr-libc/user-manual/using_tools.html
 // for the list of define from the AVR compiler
@@ -176,9 +218,14 @@ void setup()
 #ifdef __SAM3X8E__ 
   PRINT_CSTSTR("%s","SAM3X8E ARM Cortex-M3 detected\n");
 #endif
+#ifdef ESP32 
+  PRINT_CSTSTR("%s","ESP32 detected\n");
+#endif
 
+#if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
   // for the Heltec ESP32 WiFi LoRa module
   sx1272.setCSPin(18);
+#endif
     
   // Power ON the module
   sx1272.ON();
@@ -237,16 +284,18 @@ void loop(void)
   sx1272.CarrierSense();
 
   sx1272.setPacketType(PKT_TYPE_DATA);
-
-  r_size=sprintf((char*)message, "Ping");
       
   while (1) {
-
+      r_size=sprintf((char*)message, "Ping");
       PRINT_CSTSTR("%s","Sending Ping");  
       PRINTLN;
 
+#ifdef OLED
       u8x8.drawString(0, 3, "Sending Ping....");
       u8x8.drawString(0, 4, "                ");
+#elif defined HITACHI
+      printLCD(0, "Sending Ping....", true);
+#endif
             
       e = sx1272.sendPacketTimeoutACK(DEFAULT_DEST_ADDR, message, r_size);
 
@@ -256,21 +305,45 @@ void loop(void)
       PRINT_CSTSTR("%s","Packet sent, state ");
       PRINT_VALUE("%d", e);
       PRINTLN;
+
+      if (e==1) {
+#ifdef OLED          
+          u8x8.drawString(0, 3, "Error sending=1 ");
+#elif defined HITACHI
+          printLCD(0,"Error sending=1 ", true);        
+#endif          
+      }      
       
       if (e==3) {
           PRINT_CSTSTR("%s","No Pong from gw!");
+#ifdef OLED          
           u8x8.drawString(0, 3, "No Pong from gw!");
+#elif defined HITACHI
+          printLCD(0,"No Pong from gw!", true);         
+#endif          
+      }
+
+      if (e==1 || e==3) {
+#ifdef OLED          
           u8x8.drawString(0, 4, "SNR at gw=N/A");
+#elif defined HITACHI
+          printLCD(1,"SNR at gw=N/A", false);          
+#endif          
       }
         
       if (e==0) {
-          char message[20];
-          sprintf(message,"SNR at gw=%d   ", sx1272._rcv_snr_in_ack);
+          char msg[20];
+          sprintf(msg,"SNR at gw=%d   ", sx1272._rcv_snr_in_ack);
           PRINT_CSTSTR("%s","Pong received from gateway!");
           PRINTLN;
-          PRINT_STR("%s", message);      
+          PRINT_STR("%s", msg);   
+#ifdef OLED             
           u8x8.drawString(0, 3, "Get Pong from gw");
-          u8x8.drawString(0, 4, message);
+          u8x8.drawString(0, 4, msg);
+#elif defined HITACHI
+          printLCD(0, "Get Pong from gw", true);
+          printLCD(1, msg, false);
+#endif
       }
 
       PRINTLN;
