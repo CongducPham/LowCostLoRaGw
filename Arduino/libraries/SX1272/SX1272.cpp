@@ -30,6 +30,9 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  Feb 25th, 2018
+ *      - use shared payload buffer for packet_sent and packet_received
+ *      - use dedicated smaller buffer for ACK
  *  Feb 13th, 2018
  *      - fix bug in availableData() to set back the LoRa module into standby mode. This affected only some radio modules
  *	Jan 19th, 2018
@@ -162,6 +165,11 @@ SX1272::SX1272()
     _my_netkey[0] = net_key_0;
     _my_netkey[1] = net_key_1;
 #endif
+    // we use the same memory area to reduce memory footprint
+    packet_sent.data=packet_data;
+    packet_received.data=packet_data;
+    // ACK packet has a very small separate memory area
+    ACK.data=ack_data;
     // end
     // modified by C. Pham
     _maxRetries = 0;
@@ -1755,8 +1763,8 @@ uint8_t	SX1272::setSF(uint8_t spr)
 {
     byte st0;
     int8_t state = 2;
-    byte config1;
-    byte config2;
+    byte config1=0;
+    byte config2=0;
 
 #if (SX1272_debug_mode > 1)
     Serial.println();
@@ -3944,6 +3952,7 @@ uint8_t SX1272::receive()
 
     // Initializing packet_received struct
     memset( &packet_received, 0x00, sizeof(packet_received) );
+    packet_received.data=packet_data;
 
     // Setting Testmode
     // commented by C. Pham

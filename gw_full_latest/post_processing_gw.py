@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v3.7 - image modification and need to incorporate aux_radio features
+# v3.8 - image modification and need to incorporate aux_radio features
 # + copy post-processing feature
 #------------------------------------------------------------
 
@@ -91,7 +91,7 @@ PKT_TYPE_ACK=0x20
 PKT_FLAG_ACK_REQ=0x08
 PKT_FLAG_DATA_ENCRYPTED=0x04
 PKT_FLAG_DATA_WAPPKEY=0x02
-PKT_FLAG_DATA_ISBINARY=0x01
+PKT_FLAG_DATA_DOWNLINK=0x01
 
 LORAWAN_HEADER_SIZE=13
 
@@ -728,7 +728,10 @@ if (_gw_downlink):
 			print downlink_request.replace('\n','')
 	else:
 		print "post downlink: none existing downlink-post-queued.txt"			
-	
+
+	print "Loading lib to compute downlink MIC"
+	from loraWAN import loraWAN_get_MIC
+
 	print "Starting thread to check for downlink requests"
 	sys.stdout.flush()
 	t_downlink = threading.Thread(target=downlink_target)
@@ -828,8 +831,8 @@ while True:
 			ptypestr="N/A"
 			if ((ptype & 0xF0)==PKT_TYPE_DATA):
 				ptypestr="DATA"
-				if (ptype & PKT_FLAG_DATA_ISBINARY)==PKT_FLAG_DATA_ISBINARY:
-					ptypestr = ptypestr + " IS_BINARY"
+				if (ptype & PKT_FLAG_DATA_DOWNLINK)==PKT_FLAG_DATA_DOWNLINK:
+					ptypestr = ptypestr + " DOWNLINK"
 				if (ptype & PKT_FLAG_DATA_WAPPKEY)==PKT_FLAG_DATA_WAPPKEY:
 					ptypestr = ptypestr + " WAPPKEY"
 				if (ptype & PKT_FLAG_DATA_ENCRYPTED)==PKT_FLAG_DATA_ENCRYPTED:
@@ -837,7 +840,7 @@ while True:
 				if (ptype & PKT_FLAG_ACK_REQ)==PKT_FLAG_ACK_REQ:
 					ptypestr = ptypestr + " ACK_REQ"														
 			if ((ptype & 0xF0)==PKT_TYPE_ACK):
-				ptypestr="ACK"					
+				ptypestr="ACK"
 			src=arr[2]
 			seq=arr[3]
 			datalen=arr[4]
@@ -861,18 +864,38 @@ while True:
 					else:
 						print "in unicast mode"	
 					print "post downlink: downlink data is \"%s\"" % request_json["data"]
-					print "post downlink: generate "+_gw_downlink_file
-					print downlink_request
+					print "post downlink: generate "+_gw_downlink_file+" from entry"
+					print downlink_request.replace('\n','')
+					
+					#generate the MIC corresponding to the clear data and the destination device address
+					MIC=loraWAN_get_MIC(src,request_json["data"])
+					#add the 4 byte MIC information into the json line
+					request_json['MIC0']=hex(MIC[0])
+					request_json['MIC1']=hex(MIC[1])
+					request_json['MIC2']=hex(MIC[2])
+					request_json['MIC3']=hex(MIC[3])
+					
+					downlink_json=[]
+					downlink_json.append(request_json)
+					
 					f = open(os.path.expanduser(_gw_downlink_file),"a")
-					f.write(downlink_request)
+					
+					print "post downlink: write"
+					for downlink_json_line in downlink_json:
+						#print downlink_json_line
+						print json.dumps(downlink_json_line)
+						f.write(json.dumps(downlink_json_line)+'\n')
+					
 					f.close()
+					
 					pending_downlink_requests.remove(downlink_request)
+					
 					#update downlink-post-queued.txt
 					f = open(os.path.expanduser(_post_downlink_queued_file),"w")
 					for downlink_request in pending_downlink_requests:
 						f.write("%s" % downlink_request)
 					#TODO: should we write all pending request for this node
-					#or only the first one?
+					#or only the first one that we found?
 					#currently, we do only the first one					
 					break;
 	

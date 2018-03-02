@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.75
+ *  Version:                1.8
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -72,6 +72,10 @@
 */
 
 /*  Change logs
+ *  Feb, 28th, 2018. v1.8 
+ *        add a 4-byte MIC when sending downlink packet: uncomment #define INCLUDE_MIC_IN_DOWNLINK
+ *		  packet type is then set to PKT_TYPE_DATA | PKT_FLAG_DATA_ENCRYPTED | PKT_FLAG_DATA_DOWNLINK
+ *		  the 4-byte MIC comes right after the payload		
  *  July, 4th, 2017. v1.75 
  *        receive window set to MAX_TIMEOUT (10000ms defined in SX1272.h)
  *  June, 19th, 2017. v1.74
@@ -83,7 +87,8 @@
  *        Add reset of radio module when receive error from radio is detected
  *        Change receive windows from 1000ms, or 2500ms in mode 1, to 10000ms for all modes, reducing overheads of receive loop 
  *  Mar, 2nd, 2017. v1.71
- *        Add preamble length verification and correction to the default value of 8 if it is not the case    
+ *        Add preamble length verification and correction to the default value of 8 if it is not the case
+ *        Note that in most cases, a wrong preamble usually means more than one running instance of the low-level program
  *  Dec, 14st, 2016. v1.7   
  *        Reduce dynamic memory usage for having a simple relay gateway running on an Arduino Pro Mini
  *          - about 600B of free memory should be available
@@ -238,7 +243,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <termios.h> 
-#include  <signal.h>
+#include <signal.h>
 #include <sys/time.h>
 #include <time.h>
 #include <math.h>
@@ -308,6 +313,10 @@ unsigned long interDownlinkCheckTime=5000L;
 unsigned long lastDownlinkSendTime=0;
 // 20s between 2 downlink transmissions when there are queued requests
 unsigned long interDownlinkSendTime=20000L;
+
+//#define INCLUDE_MIC_IN_DOWNLINK
+
+int xtoi(const char *hexstring);
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -1654,13 +1663,49 @@ void loop(void)
     						
     				gettimeofday(&tv, NULL);
     				
-    				sx1272.setPacketType(PKT_TYPE_DATA);
+    				sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_DOWNLINK);
+
+#ifdef INCLUDE_MIC_IN_DOWNLINK    				
+    				// we test if we have MIC data in the json entry
+    				if (document["MIC0"].IsString() && document["MIC0"]!="") {
+    					uint8_t downlink_message[100];
+    					
+    					// indicate a downlink packet with a 4-byte MIC after the payload
+    					sx1272.setPacketType(PKT_TYPE_DATA | PKT_FLAG_DATA_ENCRYPTED | PKT_FLAG_DATA_DOWNLINK);
+    					
+    					uint8_t l=document["data"].GetStringLength();
+    					
+    					memcpy(downlink_message, (uint8_t*)document["data"].GetString(), l);
+    					
+    					// set the 4-byte MIC after the payload
+    					downlink_message[l]=(uint8_t)xtoi(document["MIC0"].GetString());
+    					downlink_message[l+1]=(uint8_t)xtoi(document["MIC1"].GetString());
+    					downlink_message[l+2]=(uint8_t)xtoi(document["MIC2"].GetString());
+    					downlink_message[l+3]=(uint8_t)xtoi(document["MIC3"].GetString());
+
+						l += 4;
+						
+    					// here we sent the downlink packet with the 4-byte MIC
+    					//
+    					e = sx1272.sendPacketTimeout(document["dst"].GetInt(), downlink_message, l, 10000);    	
+    					// at the device, the expected behavior is to test for the packet type, then remove 4 bytes from the payload length to get the real payload
+    					// use AES encryption on the clear payload to compute the MIC and compare with the MIC sent in the downlink packet
+    					// if both MIC are equal, then accept the downlink packet as a valid downlink packet				
+    				}
+    				else {
+    					// here we sent the downlink packet
+    					//
+    					e = sx1272.sendPacketTimeout(document["dst"].GetInt(), (uint8_t*)document["data"].GetString(), document["data"].GetStringLength(), 10000);
+    				}
+#else    				
+    				// here we sent the downlink packet
+    				//
+    				e = sx1272.sendPacketTimeout(document["dst"].GetInt(), (uint8_t*)document["data"].GetString(), document["data"].GetStringLength(), 10000);    
+#endif    				
     				
-    				e = sx1272.sendPacketTimeout(document["dst"].GetInt(), (uint8_t*)document["data"].GetString(), document["data"].GetStringLength(), 10000);
-    				
-    				PRINT_CSTSTR("%s","Packet sent, state ");
-    	      PRINT_VALUE("%d",e);
-    	      PRINTLN;
+					PRINT_CSTSTR("%s","Packet sent, state ");
+					PRINT_VALUE("%d",e);
+					PRINTLN;
     				
     				if (!e)
     					document["status"].SetString("sent", document.GetAllocator());
@@ -1746,6 +1791,26 @@ void  INThandler(int sig)
     exit(0);
 }
 #endif
+
+int
+xtoi(const char *hexstring)
+{
+	int	i = 0;
+	
+	if ((*hexstring == '0') && (*(hexstring+1) == 'x'))
+		  hexstring += 2;
+	while (*hexstring)
+	{
+		char c = toupper(*hexstring++);
+		if ((c < '0') || (c > 'F') || ((c > '9') && (c < 'A')))
+			break;
+		c -= '0';
+		if (c > 9)
+			c -= 7;
+		i = (i << 4) + c;
+	}
+	return i;
+}
 
 int main (int argc, char *argv[]){
 

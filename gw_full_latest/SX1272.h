@@ -366,7 +366,7 @@ const uint8_t INCORRECT_PACKET = 1;
 #define PKT_FLAG_ACK_REQ            0x08
 #define PKT_FLAG_DATA_ENCRYPTED     0x04
 #define PKT_FLAG_DATA_WAPPKEY       0x02
-#define PKT_FLAG_DATA_ISBINARY      0x01
+#define PKT_FLAG_DATA_DOWNLINK      0x01
 
 #define SX1272_ERROR_ACK        3
 #define SX1272_ERROR_TOA        4
@@ -411,7 +411,7 @@ struct pack
 	//! Structure Variable : Packet payload
 	/*!
  	*/
-	uint8_t data[MAX_PAYLOAD];
+    uint8_t* data;
 
     // modified by C. Pham
     // will not be used in the transmitted packet
@@ -1372,6 +1372,12 @@ public:
   	/*!
    	*/
 	pack ACK;
+
+    //! Structure Variable : Packet payload
+    /*!
+    */
+    uint8_t packet_data[MAX_PAYLOAD];
+    uint8_t ack_data[2];
 
 	//! Variable : temperature module.
 	//!

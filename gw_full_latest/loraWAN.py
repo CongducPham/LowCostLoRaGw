@@ -109,7 +109,41 @@ def loraWAN_process_pkt(lorapkt):
 		else:
 			return "###BADMIC###"
 	else:
-		return "###BADMIC###"		
+		return "###BADMIC###"	
+		
+def loraWAN_get_MIC(device, lorapktstr):
+
+	appskey=bytearray.fromhex(loraWAN_config.AppSKey)
+	appskeylist=[]
+	for i in range (0,len(appskey)):
+		appskeylist.append(appskey[i])
+
+	nwkskey=bytearray.fromhex(loraWAN_config.NwkSKey)
+	nwkskeylist=[]
+	for i in range (0,len(nwkskey)):
+		nwkskeylist.append(nwkskey[i])
+	
+	deviceHex = "%0.8X" % device
+	deviceArray=bytearray.fromhex(deviceHex)
+	devaddr=[]
+
+	for i in range (0,len(deviceArray)):
+		devaddr.append(deviceArray[len(deviceArray)-1-i])
+
+	#print devaddr
+	#print '[{}]'.format(', '.join(hex(x) for x in devaddr))
+	
+	lorawan = LoRaWAN.new(appskey)
+	
+	lorawan.create(MHDR.UNCONF_DATA_UP, {'devaddr': devaddr, 'data': list(map(ord, lorapktstr)) })
+	
+	lorawan.__init__(nwkskey)
+	MIC=lorawan.compute_mic()	
+	
+	#print '[{}]'.format(', '.join(hex(x) for x in MIC))
+	
+	return MIC
+					
 		
 if __name__ == "__main__":
 	

@@ -1,6 +1,6 @@
 ####################################################
 #server: CAUTION must exist
-orion_server="http://18.194.211.208:80/api/v1"
+orion_server="http://dev.waziup.io:80/api/v1"
 
 #project name
 project_name="waziup"
@@ -14,8 +14,8 @@ organization_name="ORG"
 #should start with -
 #service_tree='-LIUPPA-T2I-CPHAM'
 #can be empty
-#service_tree=''
-service_tree='-TESTS'
+#service_tree='-TESTS'
+service_tree=''
 
 #sensor name: CHANGE HERE but maybe better to leave it as Sensor
 #the final name will contain the sensor address

@@ -12,7 +12,6 @@
 			"name":"SMS Service",
 			"script":"python CloudSMS.py",
 			"type":"smsservice",
-			"gammurc_file":"/home/pi/.gammurc",
 			"enabled":false,
 			"always_enabled":false
 		},	
@@ -20,7 +19,6 @@
 			"name":"WAZIUP SMS Service ",
 			"script":"python CloudOrionWAZIUP_SMS.py",
 			"type":"smsservice",
-			"gammurc_file":"/home/pi/.gammurc",
 			"enabled":false,
 			"always_enabled":false
 		},	
@@ -29,19 +27,25 @@
 			"script":"python CloudNoInternet.py",
 			"type":"file",            
 			"enabled":false
-        },
+        },	
 		{	
 			"name":"GPS",
 			"script":"python CloudGpsFile.py",
 			"type":"file",			
 			"enabled":false
-		},	        								
+		},	        							
 		{	
 			"name":"WAZIUP Orion cloud",
 			"script":"python CloudOrion.py",
 			"type":"iotcloud",			
 			"enabled":false
-		},				
+		},
+		{
+			"name":"WAZIUP Orion cloud new API",
+			"script":"python CloudNewOrion.py",
+			"type":"iotcloud",
+			"enabled":false
+		},						
 		{	
 			"name":"ThingSpeak cloud",
 			"script":"python CloudThingSpeak.py",

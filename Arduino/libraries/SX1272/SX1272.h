@@ -422,10 +422,12 @@ struct pack
  	*/
 	uint8_t length;
 
+    // modified by C. Pham
+    // use a pointer instead of static variable to same memory footprint
 	//! Structure Variable : Packet payload
 	/*!
  	*/
-	uint8_t data[MAX_PAYLOAD];
+    uint8_t* data;
 
     // modified by C. Pham
     // will not be used in the transmitted packet
@@ -1397,6 +1399,12 @@ public:
   	/*!
    	*/
 	pack ACK;
+
+    //! Structure Variable : Packet payload
+    /*!
+    */
+    uint8_t packet_data[MAX_PAYLOAD];
+    uint8_t ack_data[2];
 
 	//! Variable : temperature module.
 	//!
