@@ -300,7 +300,7 @@ Run the gateway with:
 	
 With the Arduino IDE, open the `Arduino_LoRa_Ping_Pong` sketch compile it and upload to an Arduino board. Check your radio module first, see `Connect a radio module to your end-device` above.
 
-The end-device runs in LoRa mode 1 and has address 8. Open the Serial Monitor (38400 bauds) to see the output of the Arduino. It will send "Ping" to the gateway by requesting an ACK every 10s. If the ACK is received then it will display "Pong received from gateway!" otherwise it displays "No Pong from gw!". There is a version using an OLED display (we use the Heltec ESP32 WiFi LoRa OLED board) that can be used as a simple range tester.
+The end-device runs in LoRa mode 1 and has address 8. Open the Serial Monitor (38400 bauds) to see the output of the Arduino. It will send "Ping" to the gateway by requesting an ACK every 10s. If the ACK is received then it will display "Pong received from gateway!" otherwise it displays "No Pong from gw!". There is a version using an OLED display, `Arduino_LoRa_Ping_Pong_LCD`, that can be compiled for the Heltec ESP32 WiFi LoRa OLED board or a regular Arduino Pro Mini board (we use a Pro Mini or a Nano) with a 0.96inch OLED I2C display. Sucu device can be used as a very convenient simple range tester.
 
 Note that in most operational scenarios, requesting ACK from the gateway is costly. Look at the next examples to see how we usually send data without requesting ACK.
 
@@ -334,7 +334,9 @@ Depending on the sensor type, the computation to get the real temperature may be
 
 The default configuration also use the EEPROM to store the last packet sequence number in order to get it back when the sensor is restarted/rebooted. If you want to restart with a packet sequence number of 0, just comment the line `#define WITH_EEPROM`
 
-Once flashed, the Arduino temperature sensor will send to the gateway the following message `\!#3#20.4` (20.4 is the measured temperature so you may not have the same value) prefixed by the application key every 10 minutes (with some randomization interval). This will trigger at the processing stage of the gateway the logging on the default ThinkSpeak channel (the test channel we provide) in field 3. At the gateway, 20.4 will be recorded on the provided ThingSpeak test channel in field 3 of the channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value. 
+Once flashed, the Arduino temperature sensor will send to the gateway the following message `\!#3#TC/20.4` (TC is used as the nomenclature code and 20.4 is the measured temperature so you may not have the same value) prefixed by the application key every 10 minutes (with some randomization interval). This will trigger at the processing stage of the gateway the logging on the default ThinkSpeak channel (the test channel we provide) in field 3. At the gateway, 20.4 will be recorded on the provided ThingSpeak test channel in field 3 of the channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value. 
+
+At the gateway side, the cloud script that handles the `ThingSpeak` cloud is `CloudThingSpeak.py`. As `ThingSpeak` is a very simple and popular IoT cloud, we enhanced `CloudThingSpeak.py` to be able to assign a specific chart (field index) depending on the sensor source address. It is also possible to assign a specific field offset depending on the nomenclature. For more detail, read the examples provided in the [`CloudThingSpeak.py`](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/CloudThingSpeak.py) script. 
 
 The program has been tested on Arduino Uno, Mega2560, Nano, Pro Mini, Mini, Due, Zero.  We also tested on the TeensyLC/3.1/3.2, the Ideetron Nexus and the Feather32u4/M0. Starting from November 3rd, 2017, the SPI_SS pin (CS pin) is always pin number 10 on all Arduino and Teensy boards. 
 

@@ -109,7 +109,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 8
-#define field_index 1
+#define field_index 3
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -126,7 +126,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 1;
+unsigned int idlePeriodInMin = 10;
 ///////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
@@ -456,14 +456,14 @@ void loop(void)
           //LM35DZ
           //the LM35DZ needs at least 4v as supply voltage
           //can be used on 5v board
-          //temp += (value*TEMP_SCALE/1024.0)/10;
+          temp += (value*TEMP_SCALE/1024.0)/10;
 
           //TMP36
           //the TMP36 can work with supply voltage of 2.7v-5.5v
           //can be used on 3.3v board
           //we use a 0.95 factor when powering with less than 3.3v, e.g. 3.1v in the average for instance
           //this setting is for 2 AA batteries
-          temp += ((value*0.95*TEMP_SCALE/1024.0)-500)/10;
+          //temp += ((value*0.95*TEMP_SCALE/1024.0)-500)/10;
         
           PRINT_CSTSTR("%s","Reading ");
           PRINT_VALUE("%d", value);
