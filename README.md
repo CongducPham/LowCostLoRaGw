@@ -300,7 +300,7 @@ Run the gateway with:
 	
 With the Arduino IDE, open the `Arduino_LoRa_Ping_Pong` sketch compile it and upload to an Arduino board. Check your radio module first, see `Connect a radio module to your end-device` above.
 
-The end-device runs in LoRa mode 1 and has address 8. Open the Serial Monitor (38400 bauds) to see the output of the Arduino. It will send "Ping" to the gateway by requesting an ACK every 10s. If the ACK is received then it will display "Pong received from gateway!" otherwise it displays "No Pong from gw!". There is a version using an OLED display, `Arduino_LoRa_Ping_Pong_LCD`, that can be compiled for the Heltec ESP32 WiFi LoRa OLED board or a regular Arduino Pro Mini board (we use a Pro Mini or a Nano) with a 0.96inch OLED I2C display. Sucu device can be used as a very convenient simple range tester.
+The end-device runs in LoRa mode 1 and has address 8. Open the Serial Monitor (38400 bauds) to see the output of the Arduino. It will send "Ping" to the gateway by requesting an ACK every 10s. If the ACK is received then it will display "Pong received from gateway!" otherwise it displays "No Pong from gw!". There is a version using an OLED display, `Arduino_LoRa_Ping_Pong_LCD`, that can be compiled for the Heltec ESP32 WiFi LoRa OLED board or a regular Arduino Pro Mini board (we use a Pro Mini or a Nano) with a 0.96inch OLED I2C display. Such device can be used as a very convenient simple range tester.
 
 Note that in most operational scenarios, requesting ACK from the gateway is costly. Look at the next examples to see how we usually send data without requesting ACK.
 
