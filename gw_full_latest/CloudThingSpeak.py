@@ -23,22 +23,34 @@
 # nicolas.bertuol@etud.univ-pau.fr
 #
 # Oct/2016. re-designed by C. Pham to use self-sufficient script per cloud
-# Feb/2018. add field association and nomemclature association
+# Feb/2018. add key association, field association and nomemclature association features
 #
 # general format of data is now thingspeak_channel#thingspeak_field#TC/22.5/HU/24/LU/345/CO2/456... 
-# ex: ##TC/22.5/HU/24... or TC/22.5/HU/24... or thingspeak_channel##TC/22.5/HU/24 or #thingspeak_field#TC/22.5/HU/24... 
+# ex: ##TC/22.5/HU/24... or TC/22.5/HU/24... or thingspeak_channel##TC/22.5/HU/24... or thingspeak_channel#TC/22.5/HU/24... or 
+#	  #thingspeak_field#TC/22.5/HU/24... or thingspeak_field#TC/22.5/HU/24... 
 # where some default value can be used
 #
-# key_ThingSpeak.py provides: _def_thingspeak_channel_key, source_list, field_association and nomenclature_association
-# for instance
+# key_ThingSpeak.py defines: 
+#	- _def_thingspeak_channel_key
+#	- source_list
+#	- key_association
+#	- field_association
+#	- nomenclature_association
+# for instance:
 #	- _def_thingspeak_channel_key='SGSH52UGPVAUYG3S'
 #	- source_list=["6", "7", "8"]
+#	- key_association=[('AAAAAAAAAAAAAAAA', 9), ('BBBBBBBBBBBBBBBB', 10, 11)]
+#		- node 9 will use channel AAAAAAAAAAAAAAAA
+#		- node 10 and 11 will use channel BBBBBBBBBBBBBBBB
+# 		- other nodes will use default channel
+#		- note that priority is given to key association defined on gateway
+#		- key association can leverage the limitation of 8 charts per channel, if you have many sensors, you can assign several channels
 #	- field_association=[(6,1),(7,5)]
-#		- [(6,1),(7,5)] means data from sensor 6/7 will use starting field index of 1/5 
+#		- [(6,1),(7,5)] means data from respectively sensor 6/7 will use starting field index of 1/5 
 #	- nomenclature_association=[("TC",0),("HU",1),("LU",2),("CO2",3)]
 #		- ("TC",0) means that if nomemclature is "TC" then the offset for field index will be 0
 #		
-# Examples:	
+# Examples with the above definitions, each sensor node has 4 physical sensors: TC, HU, LU, CO2 
 #	- if we receive "TC/22.5/HU/24/LU/345/CO2/456" from sensor 6
 #		- data will be accepted
 #		- starting field index for the channel will be 1
@@ -49,12 +61,12 @@
 #		- data will be accepted
 #		- starting field index for the channel will be 5
 #		- TC will be uploaded on field 5, HU on field 6, LU on field 7 and CO2 on field 8	
-#	- if we receive "AAAAAAAAAAAAAAAA#TC/22.5/HU/24/LU/345/CO2/456" from sensor 8
+#	- if we receive "AAAAAAAAAAAAAAAA#TC/22.5/HU/24/LU/345/CO2/456" from sensor 8, and there is no key association
 #		- data will be accepted
 #		- data will be uploaded on the channel which write key is "AAAAAAAAAAAAAAAA"
 #		- starting field index will be the default value, i.e. 1
 #		- TC will be uploaded on field 1, HU on field 2, LU on field 3 and CO2 on field 4
-#	- if we receive "AAAAAAAAAAAAAAAA#5#TC/22.5/HU/24/LU/345/CO2/456" from sensor 8	
+#	- if we receive "AAAAAAAAAAAAAAAA#5#TC/22.5/HU/24/LU/345/CO2/456" from sensor 8, and there is no key association	
 #		- data will be accepted
 #		- data will be uploaded on the channel which write key is "AAAAAAAAAAAAAAAA"
 #		- starting field index will be 5
@@ -101,7 +113,12 @@ try:
 	key_ThingSpeak.nomenclature_association
 except AttributeError:
 	key_ThingSpeak.nomenclature_association=[]
-		
+
+try:
+	key_ThingSpeak.key_association
+except AttributeError:
+	key_ThingSpeak.key_association=[]
+			
 # didn't get a response from thingspeak server?
 connection_failure = False
 
@@ -152,13 +169,26 @@ def thingspeak_uploadMultipleData(data, src, nomenclatures):
 		
 		print("ThingSpeak: uploading (multiple)")
 		print 'rcv msg to log (\!) on ThingSpeak (',			
-	
-		#use default channel?
-		if data[0]=='':
-			data[0]=key_ThingSpeak._def_thingspeak_channel_key
-			print 'default',
-		else:
-			print data[0],
+
+		found_key_association=False
+
+		# check if we have a key_association field
+		# priority is given to key association defined on gateway
+		if (len(key_ThingSpeak.key_association)!=0):
+			for k in (0, len(key_ThingSpeak.key_association)-1):
+				# found a key for this source node
+				if src in key_ThingSpeak.key_association[k][1:]:
+					found_key_association=True
+					data[0]=key_ThingSpeak.key_association[k][0]
+					print data[0],
+
+		if (len(key_ThingSpeak.key_association)==0 or found_key_association==False):
+			#use default channel?
+			if data[0]=='':
+				data[0]=key_ThingSpeak._def_thingspeak_channel_key
+				print 'default',
+			else:	
+				print data[0],
 			
 		print ',',
 
@@ -175,6 +205,7 @@ def thingspeak_uploadMultipleData(data, src, nomenclatures):
 		found_field_association=False
 			
 		#do we have key_ThingSpeak.field_association defined?
+		#again, priority is given to field association defined on gateway
 		if defined_field_association==True:
 			i = 0
 			while i < len(key_ThingSpeak.field_association):

@@ -1,6 +1,12 @@
 Change logs
 ===========
 
+March 4th, 2018
+---------------
+- post-processing_gw.py.
+	* fix a bug when locally decrypting received data. Now the packet type is updated to remove the `PKT_FLAG_DATA_ENCRYPTED` flag
+	* this bug mainly affected `CloudMQTT.py` that can both publish clear and encrypted data
+	
 February 28th, 2018
 -------------------
 - v3.8 post-processing_gw.py.

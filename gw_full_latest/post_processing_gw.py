@@ -1219,7 +1219,12 @@ while True:
 							#	print plain_payload
 							_linebuf = plain_payload
 							_has_linebuf=1
-							_hasClearData=1						
+							_hasClearData=1
+							
+							#remove the data encrypted flag
+							ptype = ptype & (~PKT_FLAG_DATA_ENCRYPTED)
+							pdata="%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,datalen,SNR,RSSI)	
+							print '--> changed packet type to clear data' 					
 						
 				else:
 						print "--> DATA encrypted: local aes not activated"
