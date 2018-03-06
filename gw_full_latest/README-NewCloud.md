@@ -4,7 +4,7 @@ Cloud support module for the low-cost LoRa gateway
 Description 
 -----------
 
-`clouds.json` contains a list of clouds where you want your data to be uploaded. Here is an example with 5 clouds: local MongoDB, WAZIUP Orion, ThingSpeak, MQTT (test.mosquitto.org) and GroveStreams.
+`clouds.json` contains a list of clouds where you want your data to be uploaded. Here is an example with 5 clouds: local MongoDB, WAZIUP Orion (based on FiWare), `ThingSpeak`, MQTT (with `test.mosquitto.org` broker) and `GroveStreams`.
 
 	{
 		"clouds" : [
@@ -44,7 +44,7 @@ Description
 
 Note that storage on the local MongoDB is declared as a cloud, among others that you can declare. You should not remove this cloud declaration and leave it in first position even if position has no real matter. `clouds.json` is parsed by `post_processing_gw.py` using `clouds_parser.py`. For each cloud declaration, there are only 2 relevant fields: `script` and `enabled`. `script` is used for you to provide the name of a script. You have also to indicate which launcher will be used. In this way, you can use several script languages (including shell scripts or executables provided that they read parameters that are passed by their command line). For instance, if the script is a python script, enter `python my_script_filename`. `enabled` set to true indicates that you want this cloud to be active so that` post_processing_gw.py` will call the associated script to perform upload of the received data. All the other fields are not relevant for `post_processing_gw.py` but can be used by the associated script to get additional information that you may want to provide through the `clouds.json` file. Otherwise, you can always provide these additional information statically in the script.
 
-Recall that a message will be upload to cloud only if it is prefixed with `\!`. So assuming that you are sending `\!#4#TC/21.5` when your script is launched, `post_processing_gw.py` provides 5 parameters to your script. 
+Recall that a message will be upload to cloud only if it is prefixed with `\!`. So assuming that you are sending `\!#4#TC/21.5` (the data format will be explained in following paragraphs) `post_processing_gw.py` provides 5 parameters to your script when it is launched. 
 
 - `ldata`: the received data (without the prefix)
 	- e.g. `#4#TC/21.5` as 1t argument (sys.argv[1] in python)
@@ -120,10 +120,10 @@ Most of cloud platforms use some kind of keys for write access. These keys shoul
 	# LoRa demo channel
 	_def_thingspeak_channel_key='SGSH52UGPVAUYG3S'
 
-For the other clouds, you have to create your own account in order to get your private key before being able to upload data to FireBase or GroveStreams.
+For the other clouds, you have to create your own account in order to get your private key before being able to upload data to `FireBase` or `GroveStreams`.
 
-Indicate a list of allowed source addresses
--------------------------------------------
+Indicate a list of allowed source addresses and other advanced features
+-----------------------------------------------------------------------
 
 We also define in the key file a list of allowed device source address:
 
@@ -136,9 +136,9 @@ We also define in the key file a list of allowed device source address:
 	#source_list=["3", "255", "01020304"]	
 	source_list=["3","10"]
  
-When `source_list` is set to `[]` then all device are accepted. If it specifies a list of device address, then the `CloudThingSpeak.py` will only upload data from these devices.
+When `source_list` is set to `[]` then all device are accepted. If it specifies a list of device address, then `CloudThingSpeak.py` will only upload data from these devices.
 
-The code of the CloudThingSpeak.py scripts looks like:
+The code of `CloudThingSpeak.py` scripts looks like:
 
 	if (src_str in key_ThingSpeak.source_list) or (len(key_ThingSpeak.source_list)==0):
 	
@@ -150,7 +150,7 @@ The code of the CloudThingSpeak.py scripts looks like:
 		
 This feature is quite useful when you want to upload data to various different clouds, depending on the device. Suppose that you have 10 devices whose addresses are from 1 to 10. You want to upload data from sensors 1..5 to a ThingSpeak channel and data from sensors 6..10 to GroveStreams. Then you need to activate in `clouds.json` both clouds and specify in `key_ThingSpeak.py` `source_list=["1","2","3","4","5"]` and in `key_GroveStreams.py` `source_list=["6","7","8","9","10"]`. 
 
-Note that you can also upload to 2 different ThingSpeak channels by duplicating the `CloudThingSpeak.py` script into `CloudThingSpeak_1.py`, creating a new `key_ThingSpeak_1.py` file to store both the other ThingSpeak write key and `source_list`, changing in `CloudThingSpeak_1.py` the `import key_ThingSpeak` into `import key_ThingSpeak_1 as key_ThingSpeak` and then activating both `CloudThingSpeak.py` and `CloudThingSpeak_1.py` in `clouds.json` as follows:
+If you want to upload to 2 different ThingSpeak channels, you can do so by duplicating the `CloudThingSpeak.py` script into `CloudThingSpeak_1.py`, creating a new `key_ThingSpeak_1.py` file to store both the other ThingSpeak write key and `source_list`, changing in `CloudThingSpeak_1.py` the `import key_ThingSpeak` into `import key_ThingSpeak_1 as key_ThingSpeak` and then activating both `CloudThingSpeak.py` and `CloudThingSpeak_1.py` in `clouds.json` as follows:
 
 	{
 		"clouds" : [
@@ -175,22 +175,89 @@ Note that you can also upload to 2 different ThingSpeak channels by duplicating 
 			}
 	}
 		
+However, as `ThingSpeak` is a simple and very popular IoT cloud, we enhanced `CloudThingSpeak.py` with many useful features such as: be able to assign a specific channel write key, a specific chart (field index) and a specific field offset (depending a nomenclature code) according to the sensor source address. In addition to `_def_thingspeak_channel_key` and `source_list`, `key_ThingSpeak.py` defines: 
+
+- `key_association`
+- `field_association`
+- `nomenclature_association`
+
+for instance:
+
+- `key_association=[('AAAAAAAAAAAAAAAA', 9), ('BBBBBBBBBBBBBBBB', 10, 11)]`
+	- node 9 will use channel AAAAAAAAAAAAAAAA
+	- node 10 and 11 will use channel BBBBBBBBBBBBBBBB
+	- other nodes will use default channel
+	- note that priority is given to key association defined on gateway	
+	- with key association you can go beyond the limitation of 8 charts per channel: if you have many sensors, you can assign specific channel's write key to specific sensors
+- `field_association=[(6,1),(7,5)]`
+	- [(6,1),(7,5)] means data from respectively sensor 6/7 will use starting field index of 1/5 
+- `nomenclature_association=[("TC",0),("HU",1),("LU",2),("CO2",3)]`
+	- ("TC",0) means that if nomemclature is "TC" then the offset for field index will be 0
+
+More details are given below.
 
 Some words about data format
 ----------------------------
 	
-If several cloud systems is used, each with some specific features, then the raw data format can be complex and the decoding tasks of these data by the various scripts may need to be also more complex. This is exactely the case with our example templates where we want to be able to specify a particular write key and field when uploading to ThingSpeak and still be able to use the dynamic field creation feature of Grovestreams platform. For example, we want to be able to send various message formats such as:
+If several cloud systems is used, each with some specific features, then the raw data format can be complex and the decoding tasks of these data by the various scripts may need to be also more complex. This is exactely the case with our example templates where we want to be able to specify a particular write key and field when uploading to `ThingSpeak` and still be able to use the dynamic field creation feature of `Grovestreams` or WAZIUP Orion platform. For example, we want to be able to send various message formats such as:
 
-- `SGSH52UGPVAUYG3S##22.5` : specified a ThingSpeak write key with a the default field, value is 22.5
+- `SGSH52UGPVAUYG3S##22.5` or `SGSH52UGPVAUYG3S#22.5` : specified a ThingSpeak write key with a the default field, value is 22.5
+- `#4#22.5` or `4#22.5` : specified a field when using the default ThingSpeak write key, value is 22.5
 - `SGSH52UGPVAUYG3S#4#22.5` : specified both a ThingSpeak write key and a field, value is 22.5
-- `#4#22.5` : specified a field when using the default ThingSpeak write key, value is 22.5
 - `##22.5` : use default value for both ThingSpeak write key and field
 - `22.5` : use default value for both ThingSpeak write key and field; or use default nomenclature (i.e. DEF) for Grovestreams and MongoDB
 - `##TC/22.5` : use the possibility to define a particular nomenclature with Grovestreams and MongoDB (e.g. TC for temperature in Celsius)
 - `TC/22.5` : use the possibility to define a particular nomenclature with Grovestreams and MongoDB (e.g. TC for temperature in Celsius)
 - `TC/22.5/HU/85/LU/78` : use the possibility to define multiple nomenclatures and values with Grovestreams and MongoDB
+
+Even for ThingSpeak, we recommend now to use the following format example: `TC/22.5/HU/24/LU/345/CO2/456...`. Heere is a detailed example with  `CloudThingSpeak.py`. Assuming that `key_ThingSpeak.py` contains:
+
+	_def_thingspeak_channel_key='SGSH52UGPVAUYG3S'
+	source_list=["6", "7", "8", "9"]
+	key_association=[('AAAAAAAAAAAAAAAA', 9), ('BBBBBBBBBBBBBBBB', 10, 11)]
+	field_association=[(6,1),(7,5)]
+	nomenclature_association=[("TC",0),("HU",1),("LU",2),("CO2",3)]
+
+and assuming that each sensor node has 4 physical sensors: TC, HU, LU, CO2
+
+- if we receive "TC/22.5/HU/24/LU/345/CO2/456" from sensor 6
+	- data will be accepted
+	- starting field index for the channel will be 1
+	- TC will be uploaded on field 1, HU on field 2, LU on field 3 and CO2 on field 4
+- if we receive only "HU/24/LU/345" from sensor 6 because these physical measures are sent at higher frequency
+	- HU and LU will still be respectively uploaded on field 2 and 3
+- if we receive "TC/22.5/HU/24/LU/345/CO2/456" from sensor 7
+	- data will be accepted
+	- starting field index for the channel will be 5
+	- TC will be uploaded on field 5, HU on field 6, LU on field 7 and CO2 on field 8
+	- in this example, with 4 physical sensors per node, then a ThingSpeak channel can handle 2 nodes	
+- if we receive "CCCCCCCCCCCCCCCC#TC/22.5/HU/24/LU/345/CO2/456" from sensor 8
+	- data will be accepted
+	- data will be uploaded on the channel which write key is "CCCCCCCCCCCCCCCC" as there is no key association defined
+	- starting field index will be the default value, i.e. 1
+	- TC will be uploaded on field 1, HU on field 2, LU on field 3 and CO2 on field 4
+- if we receive "CCCCCCCCCCCCCCCC#5#TC/22.5/HU/24/LU/345/CO2/456" from sensor 8
+	- data will be accepted
+	- data will be uploaded on the channel which write key is "CCCCCCCCCCCCCCCC"
+	- starting field index will be 5
+	- TC will be uploaded on field 5, HU on field 6, LU on field 7 and CO2 on field 8
+- if we receive "CCCCCCCCCCCCCCCC#TC/22.5/HU/24/LU/345/CO2/456" from sensor 9
+	- data will be accepted
+	- data will be uploaded on the channel which write key is "AAAAAAAAAAAAAAAA" as there **is** a key association that has priority
+	- starting field index will be the default value, i.e. 1
+	- TC will be uploaded on field 1, HU on field 2, LU on field 3 and CO2 on field 4	
+- if we receive "TC/22.5/HU/24/AA/345/BB/456" from sensor 6
+	- data will be accepted
+	- starting field index for the channel will be 1
+	- TC will be uploaded on field 1, HU on field 2, AA on field 3 and BB on field 4 even if AA and BB have no nomenclature association
+- if we receive "YY/30/TC/22.5/AA/345/BB/456" from sensor 6
+	- data will be accepted
+	- starting field index for the channel will be 1
+	- YY will be uploaded on field 1, TC on field 1, AA on field 3 and BB on field 4. Here YY has no nomenclature association and you can see that TC overwrite YY on field 1
+- if we receive "TC/22.5/HU/24/LU/345/CO2/456" from sensor 10
+	- data will be discarded by CloudThingSpeak.py
 	
-If you look at the provided example for ThingSpeak, Grovestreams and MongoDB clouds, you can see how we handle/decode/process these various data formats (by looking for delimiters) so that data from an end-device can sequentially be uploaded on various clouds platforms. For instance, `#` delimiters are not relevant for both Grovestreams and MongoDB (these cloud scripts will simply ignore them) while they are for ThingSpeak. If you only use one cloud platform then the data format and the cloud script can be much more simple.
+If you look at the provided example for `ThingSpeak`, `Grovestreams` and `MongoDB` clouds, you can see how we handle/decode/process these various data formats (by looking for delimiters) so that data from an end-device can sequentially be uploaded on various clouds platforms. For instance, `#` delimiters are not relevant for both Grovestreams and MongoDB (these cloud scripts will simply ignore them) while they are for `ThingSpeak`. If you only use one cloud platform then the data format and the cloud script can be much more simple.
 
 Output examples
 ---------------

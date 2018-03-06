@@ -23,7 +23,7 @@
 # nicolas.bertuol@etud.univ-pau.fr
 #
 # Oct/2016. re-designed by C. Pham to use self-sufficient script per cloud
-# Feb/2018. add key association, field association and nomemclature association features
+# Feb/2018. add key association, field association and nomenclature association features
 #
 # general format of data is now thingspeak_channel#thingspeak_field#TC/22.5/HU/24/LU/345/CO2/456... 
 # ex: ##TC/22.5/HU/24... or TC/22.5/HU/24... or thingspeak_channel##TC/22.5/HU/24... or thingspeak_channel#TC/22.5/HU/24... or 
@@ -38,13 +38,13 @@
 #	- nomenclature_association
 # for instance:
 #	- _def_thingspeak_channel_key='SGSH52UGPVAUYG3S'
-#	- source_list=["6", "7", "8"]
+#	- source_list=["6", "7", "8", "9"]
 #	- key_association=[('AAAAAAAAAAAAAAAA', 9), ('BBBBBBBBBBBBBBBB', 10, 11)]
 #		- node 9 will use channel AAAAAAAAAAAAAAAA
 #		- node 10 and 11 will use channel BBBBBBBBBBBBBBBB
 # 		- other nodes will use default channel
 #		- note that priority is given to key association defined on gateway
-#		- key association can leverage the limitation of 8 charts per channel, if you have many sensors, you can assign several channels
+#		- with key association you can go beyond the limitation of 8 charts per channel: if you have many sensors, you can assign specific channel's write key to specific sensors
 #	- field_association=[(6,1),(7,5)]
 #		- [(6,1),(7,5)] means data from respectively sensor 6/7 will use starting field index of 1/5 
 #	- nomenclature_association=[("TC",0),("HU",1),("LU",2),("CO2",3)]
@@ -61,16 +61,22 @@
 #		- data will be accepted
 #		- starting field index for the channel will be 5
 #		- TC will be uploaded on field 5, HU on field 6, LU on field 7 and CO2 on field 8	
-#	- if we receive "AAAAAAAAAAAAAAAA#TC/22.5/HU/24/LU/345/CO2/456" from sensor 8, and there is no key association
+#		- in this example, with 4 physical sensors per node, then a ThingSpeak channel can handle 2 nodes
+#	- if we receive "CCCCCCCCCCCCCCCC#TC/22.5/HU/24/LU/345/CO2/456" from sensor 8
 #		- data will be accepted
-#		- data will be uploaded on the channel which write key is "AAAAAAAAAAAAAAAA"
+#		- data will be uploaded on the channel which write key is "CCCCCCCCCCCCCCCC" as there is no key association defined
 #		- starting field index will be the default value, i.e. 1
 #		- TC will be uploaded on field 1, HU on field 2, LU on field 3 and CO2 on field 4
-#	- if we receive "AAAAAAAAAAAAAAAA#5#TC/22.5/HU/24/LU/345/CO2/456" from sensor 8, and there is no key association	
+#	- if we receive "CCCCCCCCCCCCCCCC#5#TC/22.5/HU/24/LU/345/CO2/456" from sensor 8
 #		- data will be accepted
-#		- data will be uploaded on the channel which write key is "AAAAAAAAAAAAAAAA"
+#		- data will be uploaded on the channel which write key is "CCCCCCCCCCCCCCCC"
 #		- starting field index will be 5
 #		- TC will be uploaded on field 5, HU on field 6, LU on field 7 and CO2 on field 8
+#	- if we receive "CCCCCCCCCCCCCCCC#TC/22.5/HU/24/LU/345/CO2/456" from sensor 9
+#		- data will be accepted
+#		- data will be uploaded on the channel which write key is "AAAAAAAAAAAAAAAA" as there **is** a key association that has priority
+#		- starting field index will be the default value, i.e. 1
+#		- TC will be uploaded on field 1, HU on field 2, LU on field 3 and CO2 on field 4
 #	- if we receive "TC/22.5/HU/24/AA/345/BB/456" from sensor 6
 #		- data will be accepted
 #		- starting field index for the channel will be 1
@@ -81,7 +87,7 @@
 #		- starting field index for the channel will be 1
 #		- YY will be uploaded on field 1, TC on field 1, AA on field 3 and BB on field 4
 #		  here YY has no nomenclature association and you can see that TC overwrite YY on field 1
-#	- if we receive "TC/22.5/HU/24/LU/345/CO2/456" from sensor 9
+#	- if we receive "TC/22.5/HU/24/LU/345/CO2/456" from sensor 10
 #		- data will be discarded by CloudThingSpeak.py
 #
 # Congduc.Pham@univ-pau.fr
