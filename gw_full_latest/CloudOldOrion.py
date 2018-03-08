@@ -147,7 +147,7 @@ def create_new_entity(data, src, nomenclatures, tdata):
 			cmd = cmd+","
 	cmd = cmd+"}\'" 	
 	
-	print "CloudOrion: will issue curl cmd"
+	print "CloudOldOrion: will issue curl cmd"
 	print(cmd)
 	args = shlex.split(cmd)
 	print args	
@@ -199,7 +199,7 @@ def send_data(data, src, nomenclatures, tdata):
 
 		i += 1
 						
-		print "CloudOrion: will issue curl cmd"
+		print "CloudOldOrion: will issue curl cmd"
 		
 		print(cmd)
 		args = shlex.split(cmd)

@@ -188,7 +188,7 @@ def create_new_entity(data, src, nomenclatures, tdata):
 	orion_data = orion_data+']'
 	orion_data = orion_data+'}'
 	
-	print "CloudNewOrion: will issue requests with"
+	print "CloudOrion: will issue requests with"
 		
 	print 'url: '+orion_url
 	#print 'headers: '+json.dumps(orion_headers)
@@ -251,7 +251,7 @@ def send_data(data, src, nomenclatures, tdata):
 
 		i += 1
 					
-		print "CloudNewOrion: will issue requests with"
+		print "CloudOrion: will issue requests with"
 		
 		print 'url: '+orion_url
 		#print 'headers: '+json.dumps(orion_headers)
