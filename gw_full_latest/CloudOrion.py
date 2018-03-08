@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright 2017 Congduc Pham, University of Pau, France.
+# Copyright 2016 Congduc Pham, University of Pau, France.
 # 
 # Congduc.Pham@univ-pau.fr
 #
@@ -20,6 +20,7 @@
 #-------------------------------------------------------------------------------
 
 import urllib2
+import requests
 import subprocess
 import time
 import ssl
@@ -29,7 +30,8 @@ import sys
 import os
 import json
 import re
-import shlex
+import md5
+#import shlex
 
 # get key definition from external file to ease
 # update of cloud script in the future
@@ -41,25 +43,47 @@ except AttributeError:
 	key_Orion.source_list=[]
 
 ####################################################
-#To create a new entitiy
-# curl http://broker.waziup.io/v2/entities -s -S --header 'Content-Type: application/json' --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X POST -d '{ "id": "UPPA_Sensor2", "type": "SensingDevice", "TC": { "value": 23, "type": "Number" }, "PR": { "value": 720, "type": "Number" } }'
+# To create a new entitiy
+# curl -X POST "http://dev.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors" -H "accept:application/json" -H "content-type:application/json" -d @- <<EOF 
+# {
+#  "id": "UPPA_Sensor2",
+#  "gateway_id": "4b13a223f24d3dba5403c2727fa92e62",
+#  "measurements": [ 
+#    { 
+#      "id": "TC",
+#      "values": [
+#           {
+#             "value": "25.6",
+#             "timestamp": "2016-06-08T18:20:27.873Z"
+#           }
+#		]
+#    }
+#   ]
+# }
+# EOF
 
-#Further updates of the values are like that:
-# curl http://broker.waziup.io/v2/entities/UPPASensor2/attrs/TC/value -s -S --header 'Content-Type: text/plain' --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X POST -d 27
-# curl http://broker.waziup.io/v2/entities/UPPASensor2/attrs/PR/value -s -S --header 'Content-Type: text/plain' --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X POST -d 722
+# Note that if organization_name is 'ORG' (default value), then 'Id' will be appended with the gw's md5 hash: "Id": "ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62"
+
+# curl -X POST "http://dev.waziup.io:80/api/v1/domains/waziup-UPPA-TESTS/sensors" -H "accept:application/json" -H "content-type:application/json" -d '{"id":"UPPA_Sensor2","gateway_id":"4b13a223f24d3dba5403c2727fa92e62","measurements":[{"id":"TC","values":[{"value": "25.6","timestamp":"2016-06-08T18:20:27.873Z"}]}]}'
+
+# Further updates of the values are like that:
+# curl -X POST "http://dev.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors/UPPA_Sensor2/measurements/TC/values" -H  "accept:application/json" -H  "content-type:application/json" -d @- <<EOF
+# {  
+#    "value": "25.6",
+#    "timestamp": "2016-06-08T18:20:27.873Z"
+# }
+
+# curl -X POST "http://dev.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors/UPPA_Sensor2/measurements/TC/values" -H  "accept:application/json" -H  "content-type:application/json" -d '{"value":"25.6","timestamp":"2016-06-08T18:20:27.873Z"}'
 
 #To retrieve the last data point inserted:
-# curl http://broker.waziup.io/v2/entities/UPPA_Sensor2/attrs/TC/value --header 'Fiware-Service:waziup' --header 'Fiware-ServicePath:/UPPA' -X GET
-####################################################
 
-#error messages from server
-Orion_entity_not_created="The requested entity has not been found"
+
+####################################################
 
 # didn't get a response from server?
 connection_failure = False
 
-# retry if return from server is 0?
-retry = False
+gw_id_md5=''
 
 global CloudNoInternet_enabled
 
@@ -103,7 +127,7 @@ def test_network_available():
 	while(not connection and iteration < 4) :
 		try:
 			# 3sec timeout in case of server available but overcrowded
-			response=urllib2.urlopen(key_Orion.orion_server, timeout=3)
+			response=urllib2.urlopen(key_Orion.orion_server+'/domains/waziup/sensors', timeout=3)
 			connection = True
 		except urllib2.URLError, e: pass
 		except socket.timeout: pass
@@ -128,50 +152,69 @@ def create_new_entity(data, src, nomenclatures, tdata):
 	
 	print "Orion: create new entity"
 	
-	cmd = 'curl '+key_Orion.orion_server+'/entities -s -S --header Content-Type:application/json --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d \'{\"id\":\"'+key_Orion.organization_name+"_"+src+'\",\"type\":\"SensingDevice\",'
-						
+	append_gw_str=''
+	
+	if key_Orion.organization_name=='':
+		key_Orion.organization_name='ORG'
+		
+	#default organization name?
+	if key_Orion.organization_name=='ORG':
+		#we append the md5 hash to the sensor name: ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62
+		append_gw_str='_'+gw_id_md5		
+
+	orion_headers = {'accept':'application/json','content-type':'application/json'}
+	
+	orion_url=key_Orion.orion_server+'/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors' 
+	
+	orion_data = '{"id":"'+key_Orion.organization_name+'_'+src+append_gw_str+'","gateway_id":"'+gw_id_md5+'","measurements":['
+	
 	i=0
-	while i < len(data)-2 :
-		cmd = cmd+'\"'+nomenclatures[i]+'\":{\"value\":'
+	
+	while i < len(data)-2:
+		
+		orion_data = orion_data+'{"id":"'+nomenclatures[i]+'","values":[{"value":'
 		
 		isnumber = re.match(num_format,data[i+2])
+		isnumber = False
 		
 		if isnumber:
-			cmd = cmd+data[i+2]+',\"type\":\"Number\"'
-		else:
-			cmd = cmd+'\"'+data[i+2]+'\",\"type\":\"String\"'
-		
-		cmd=cmd+',\"metadata\":{\"timestamp\":{\"type\":\"DateTime\",\"value\":\"'+tdata+'\"}}}'
+			orion_data = orion_data+data[i+2]+',"timestamp":"'+tdata+'"}]}'
+		else:	
+			orion_data = orion_data+'"'+data[i+2]+'","timestamp":"'+tdata+'"}]}'
 		i += 1
 		if i < len(data)-2:
-			cmd = cmd+","
-	cmd = cmd+"}\'" 	
-	
-	print "CloudOrion: will issue curl cmd"
-	print(cmd)
-	args = shlex.split(cmd)
-	print args	
-
-	try:
-		out = subprocess.check_output(args, shell=False)
-		
-		if out != '':
-			print 'Orion: returned msg from server is'
-			print out					
-		else :
-			print 'Orion: entity creation success'
+			orion_data = orion_data+','
 			
-	except subprocess.CalledProcessError:
-		print "Orion: curl command failed (maybe a disconnection)"
-		connection_failure = True	
+	orion_data = orion_data+']'
+	orion_data = orion_data+'}'
 	
+	print "CloudNewOrion: will issue requests with"
+		
+	print 'url: '+orion_url
+	#print 'headers: '+json.dumps(orion_headers)
+	print 'data: '+orion_data
 	
+	try:
+		response = requests.post(orion_url, headers=orion_headers, data=orion_data, timeout=30)
+
+		print 'Orion: returned msg from server is ',
+		print response.status_code	
+						
+		if response.ok:
+			print 'Orion: entity creation success'
+	except ConnectTimeout:
+		print 'Orion: requests command failed (maybe a disconnection)'
+		connection_failure = True 	
+		
+		
 # send a data to the server
 def send_data(data, src, nomenclatures, tdata):
 
 	global connection_failure
 	
 	entity_need_to_be_created=False
+	
+	append_gw_str=''
 	
 	i=0
 	
@@ -182,87 +225,54 @@ def send_data(data, src, nomenclatures, tdata):
 		data[1]=key_Orion.service_path
 			
 	while i < len(data)-2  and not entity_need_to_be_created:
-	
-		#cmd = 'curl '+key_Orion.orion_server+'/entities/'+src+'/attrs/'+nomenclatures[i]+'/value -s -S --header Content-Type:text/plain --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d '+data[i+2]
 
-		#we now push data with a timestamp value
-		cmd = 'curl '+key_Orion.orion_server+'/entities/'+key_Orion.organization_name+"_"+src+'/attrs/ -s -S --header Content-Type:application/json --header Fiware-Service:'+data[0]+' --header Fiware-ServicePath:'+data[1]+' -X POST -d \'{\"'+nomenclatures[i]+'\":{\"value\":'
+		if key_Orion.organization_name=='':
+			key_Orion.organization_name='ORG'
 		
+		#default organization name?
+		if key_Orion.organization_name=='ORG':
+			#we append the md5 hash to the sensor name: ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62
+			append_gw_str='_'+gw_id_md5
+		
+		#with NewOrion, it is always a string	
 		isnumber = re.match(num_format,data[i+2])
+		isnumber = False
+		
+		orion_headers = {'accept':'application/json','content-type':'application/json'}
+		
+		orion_url=key_Orion.orion_server + '/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors/'+key_Orion.organization_name+"_"+src+append_gw_str+'/measurements/'+nomenclatures[i]+'/values' 
+		
+		orion_data = '{"value":'
 		
 		if isnumber:
-			cmd = cmd+data[i+2]+',\"type\":\"Number\"'
+			orion_data = orion_data+data[i+2]+',"timestamp":"'+tdata+'"}'
 		else:
-			cmd = cmd+'\"'+data[i+2]+'\",\"type\":\"String\"'
-		
-		cmd = cmd+',\"metadata\":{\"timestamp\":{\"type\":\"DateTime\",\"value\":\"'+tdata+'\"}}}}\''
+			orion_data = orion_data+'"'+data[i+2]+'","timestamp":"'+tdata+'"}'
 
 		i += 1
-						
-		print "CloudOrion: will issue curl cmd"
+					
+		print "CloudNewOrion: will issue requests with"
 		
-		print(cmd)
-		args = shlex.split(cmd)
-		print args
+		print 'url: '+orion_url
+		#print 'headers: '+json.dumps(orion_headers)
+		print 'data: '+orion_data
 		
-		# retry enabled
-		if (retry) :
-			out = 'something'
-			iteration = 0
-			
-			while(out != '' and iteration < 6 and not connection_failure) :
-				try:
-					out = subprocess.check_output(args, shell=False)
-	
-					# if server return 0, we didn't wait 15sec, wait then
-					if out != '':
-						print 'Orion: returned msg from server is'
-						print out
-						print('Orion: retrying in 3sec')
-						iteration += 1
-						time.sleep( 3 )
-					else:
-						'Orion: upload success'
-						
-				except subprocess.CalledProcessError:
-					print "Orion: curl command failed (maybe a disconnection)"
-					connection_failure = True
-					
-		# retry disabled
-		else :
-			try:
-				out = subprocess.check_output(args, shell=False)
-				
-				if out != '':
-					print 'Orion: returned msg from server is'
-					print out
-					
-					# the entity has not been created before
-					if Orion_entity_not_created in out:
-						entity_need_to_be_created=True
-						create_new_entity(data, src, nomenclatures, tdata)						
-				else :
-					print 'Orion: upload success'
-					
-			except subprocess.CalledProcessError:
-				print "Orion: curl command failed (maybe a disconnection)"
-				connection_failure = True
+		try:
+			response = requests.post(orion_url, headers=orion_headers, data=orion_data, timeout=30)
 
-#no used in this new version, we call directly send_data(data, src, nomenclatures, tdata)	
-def Orion_uploadData(nomenclatures, data, src, tdata):
-	
-	connected = test_network_available()
-	
-	#if we got a response from the server, send the data to it	
-	if(connected):
-		print("Orion: uploading")
-		send_data(data, src, nomenclatures, tdata)
-	else:
-		print("Orion: not uploading")
+			print 'Orion: returned msg from server is ',
+			print response.status_code	
 		
-	# update connection_failure value
-	global connection_failure
-	connection_failure = not connected
+			if response.status_code==403:
+				entity_need_to_be_created=True
+				create_new_entity(data, src, nomenclatures, tdata)						
+			if response.ok:
+				print 'Orion: upload success'
+		except ConnectTimeout:
+			print 'Orion: requests command failed (maybe a disconnection)'
+			connection_failure = True			
+		
+
 
 # main
 # -------------------
@@ -287,6 +297,10 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	SNR=arr[5]
 	RSSI=arr[6]
 	
+	#compute the MD5 digest (hash) from the clear gw id provided by post_processing_gw.py
+	global gw_id_md5
+	gw_id_md5=md5.new(gwid).hexdigest()
+	
 	#LoRaWAN packet
 	if dst==256:
 		src_str="%0.8X" % src
@@ -294,6 +308,10 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		src_str=str(src)	
 
 	if (src_str in key_Orion.source_list) or (len(key_Orion.source_list)==0):
+
+		#remove any space in the message as we use '/' as the delimiter
+		#any space characters will introduce error in the json structure and then the curl command will fail
+		ldata=ldata.replace(' ', '')
 			
 		# this part depends on the syntax used by the end-device
 		# we use: TC/22.4/HU/85...
@@ -389,12 +407,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		# update connection_failure value
 		global connection_failure
 		connection_failure = not connected
-		
-		#upload data to Orion
-		#here we append the device's address to get for instance Sensor2
-		#if packet come from a LoRaWAN device with 4-byte devAddr then we will have for instance Sensor01020304
-		#where the devAddr is expressed in hex format			
-		#Orion_uploadData(nomenclatures, data, key_Orion.sensor_name+src_str, tdata)
+			
 	else:
 		print "Source is not is source list, not sending with CloudOrion.py"				
 

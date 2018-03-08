@@ -325,6 +325,16 @@ _gw_downlink_file = "downlink/downlink.txt"
 
 pending_downlink_requests = []
 
+#actually, periodic output for downlink may be not very convenient
+#as typical value for checking downlink is 1 to 5 minutes
+#so we disable it here
+_verbose_downlink=False
+
+#if we check every hour, then switch output on
+#you can also disable this behavior
+if _gw_downlink > 3600:
+	_verbose_downlink=True
+
 def check_downlink():
 
 	# - post_processing_gw.py checks and uses downlink/downlink_post.txt as input
@@ -332,9 +342,11 @@ def check_downlink():
 	# - valid requests will be appended to downlink/downlink-post_queued.txt
 	# - after reading downlink/downlink_post.txt, post_processing_gw.py deletes it
 	# - when a packet from device i is processed by post_processing_gw.py, it will check whether there is a queued message for i
-	# - if yes, then it generates a downlink/downlink.txt file with the queue message as content	
-	print datetime.datetime.now()
-	print "post downlink: checking for "+_post_downlink_file
+	# - if yes, then it generates a downlink/downlink.txt file with the queue message as content
+	
+	if _verbose_downlink:	
+		print datetime.datetime.now()
+		print "post downlink: checking for "+_post_downlink_file
 	
 	if os.path.isfile(os.path.expanduser(_post_downlink_file)):
 
@@ -368,15 +380,17 @@ def check_downlink():
 		os.remove(os.path.expanduser(_post_downlink_file))	
 		
 	else:
-		print "post downlink: no downlink requests"
+		if _verbose_downlink:
+			print "post downlink: no downlink requests"
 
-	print "post downlink: list of pending downlink requests"
+	if _verbose_downlink:
+		print "post downlink: list of pending downlink requests"
 	
-	if len(pending_downlink_requests) == 0:
-		print "None"
-	else:	
-		for downlink_request in pending_downlink_requests:
-			print downlink_request.replace('\n','')		
+		if len(pending_downlink_requests) == 0:
+			print "None"
+		else:	
+			for downlink_request in pending_downlink_requests:
+				print downlink_request.replace('\n','')		
 	
 def downlink_target():
 	while True:
@@ -410,12 +424,15 @@ if _gw_status < 0:
 def status_target():
 	while True:
 		print datetime.datetime.now()
-		print 'post status: gw ON, executing periodic tasks'
+		print 'post status: gw ON'
+		if _gw_downlink:
+			print 'post status: will check for downlink requests every %d seconds' % _gw_downlink
+		print 'post status: executing periodic tasks	
 		sys.stdout.flush()		
 		try:
 			os.system('python post_status_processing_gw.py')
 		except:
-			print "Error when executing status_processing_gw.py"			
+			print "Error when executing post_status_processing_gw.py"			
 		global _gw_status
 		time.sleep(_gw_status)
 
@@ -732,7 +749,7 @@ if (_gw_downlink):
 	print "Loading lib to compute downlink MIC"
 	from loraWAN import loraWAN_get_MIC
 
-	print "Starting thread to check for downlink requests"
+	print "Starting thread to check for downlink requests every %d seconds" % _gw_downlink
 	sys.stdout.flush()
 	t_downlink = threading.Thread(target=downlink_target)
 	t_downlink.daemon = True
@@ -868,6 +885,9 @@ while True:
 					print downlink_request.replace('\n','')
 					
 					#generate the MIC corresponding to the clear data and the destination device address
+					#it is possible to have a broadcast address but since the only device that is listening 
+					#is the one that has sent a packet, there is little interest in doing so
+					#so currently, we use the sending device's address to compute the MIC
 					MIC=loraWAN_get_MIC(src,request_json["data"])
 					#add the 4 byte MIC information into the json line
 					request_json['MIC0']=hex(MIC[0])
