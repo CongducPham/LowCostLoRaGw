@@ -427,7 +427,7 @@ def status_target():
 		print 'post status: gw ON'
 		if _gw_downlink:
 			print 'post status: will check for downlink requests every %d seconds' % _gw_downlink
-		print 'post status: executing periodic tasks	
+		print 'post status: executing periodic tasks'
 		sys.stdout.flush()		
 		try:
 			os.system('python post_status_processing_gw.py')
