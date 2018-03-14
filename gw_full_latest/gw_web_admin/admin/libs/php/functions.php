@@ -77,13 +77,13 @@ function update_contact_mail($contacts){
 
 function waziup_key($key_name, $key_value){
 	if($key_name == "service_tree"){
-		$tree = explode("/", $key_value);
+		$tree = explode("-", $key_value);
 		$key_value = "";
 		for($i=0; $i < sizeof($tree); $i++){
 			if($tree[$i] != '')
-				$key_value .= "\/".$tree[$i];
+				$key_value .= "\-".$tree[$i];
 		}
-		$key_value = addslashes($key_value);
+		//$key_value = addslashes($key_value);
 	}
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh waziup_key ".$key_name." ".$key_value);
 }
@@ -100,6 +100,11 @@ function thingspeak_conf($key, $value){
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh thingspeak_conf ".$key." ".$value);
 }
 
+/*For other clouds***************/
+function clouds_conf($key, $value,$conf){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh ".$conf." ".$key." ".$value);
+}
+/********************************/
 function read_gw_conf_json(){
 	$json_src = file_get_contents(LORA_GATEWAY.'/gateway_conf.json');
 	return json_decode($json_src, true);

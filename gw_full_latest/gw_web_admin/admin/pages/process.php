@@ -254,6 +254,188 @@ if (isset($_GET["gateway_ID"])) {
 	}
 }
 
+###################### LAST UPDATE ########################
+
+/*************************
+ * Setting raw
+ *************************/
+
+
+if (isset($_GET["raw"])) {
+    
+    $raw = htmlspecialchars($_GET["raw"]);
+	$output = update_gw_conf("gateway_conf","raw", $raw);
+	
+		if($output == 0){
+			echo '<p><center><font color="green">Raw setting updated</font></center></p>';
+		}
+		else{
+			echo '<p><center><font color="red">Failed to update raw setting.</font></center></p>';	
+		}
+}
+
+
+
+/*************************
+ * Setting wappkey
+ *************************/
+
+
+if (isset($_GET["wappkey"])) {
+    
+    $wappkey = htmlspecialchars($_GET["wappkey"]);
+	$output = update_gw_conf("gateway_conf","wappkey", $wappkey);
+	
+		if($output == 0){
+			echo '<p><center><font color="green">Wappkey setting updated</font></center></p>';
+		}
+		else{
+			echo '<p><center><font color="red">Failed to update wappkey setting.</font></center></p>';	
+		}
+}
+
+/*************************
+ * Setting localization
+ *************************/
+ 
+ if (isset($_GET["ref_latitude"])&&isset($_GET["ref_longitude"])) {
+    
+    $ref_latitude = htmlspecialchars($_GET["ref_latitude"]);
+	$ref_latitude = '\"'.$ref_latitude.'\"';
+	$output = update_gw_conf("gateway_conf","ref_latitude", $ref_latitude);
+	if($output == 0){
+		echo '<p><center><font color="green">Latitude setting updated</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to update latitude setting.</font></center></p>';	
+	}
+	$ref_longitude = htmlspecialchars($_GET["ref_longitude"]);
+	$ref_longitude = '\"'.$ref_longitude.'\"';
+	$output = update_gw_conf("gateway_conf","ref_longitude", $ref_longitude);
+	
+	if($output == 0){
+		echo '<p><center><font color="green">Longitude setting updated</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to update longitude setting.</font></center></p>';	
+	}
+}
+ 
+################### 
+#Status of other clouds
+#	-cloudNoInternet
+# 	-cloudGpsFile
+# 	-cloudMQTT
+# 	-cloudNodeRed
+ ###################
+if (
+	isset($_GET["cloud_status"]) && (! empty($_GET["cloud_status"])) &&
+	isset($_GET["cloud_name"]) && (! empty($_GET["cloud_name"]))
+){
+	$cloud_status = htmlspecialchars($_GET["cloud_status"]);
+	$cloud_name = htmlspecialchars($_GET["cloud_name"]);
+	
+	$output =clouds_conf("enabled", $cloud_status,$cloud_name);
+	
+	if($output == 0){
+		echo '<p><center><font color="green">Cloud status updated.</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to update cloud status.</font></center></p>';	
+	}
+} 
+ 
+################### 
+#Keys of other clouds
+#	-cloudNoInternet
+# 	-cloudGpsFile
+# 	-cloudMQTT
+# 	-cloudNodeRed
+ ###################
+if(
+	isset($_GET["clouds_key_name"]) && (! empty($_GET["clouds_key_name"])) &&
+	isset($_GET["clouds_key"]) && (! empty($_GET["clouds_key"])) &&
+	isset($_GET["clouds_key_value"]) && (! empty($_GET["clouds_key_value"]))
+){
+	$cloud_key  = htmlspecialchars($_GET["clouds_key"]);
+	$cloud_key_name = htmlspecialchars($_GET["clouds_key_name"]);
+	$cloud_key_value =  htmlspecialchars($_GET["clouds_key_value"]);
+
+
+	$output =clouds_conf($cloud_key ,$cloud_key_value,$cloud_key_name );
+
+	if($output == 0){
+		switch($cloud_key_name){
+			case "gpsfile_key":
+				echo '<p><center><font color="green">Cloud gps file updated.</font></center></p>';
+				break;
+			case "nointernet_key":
+				echo '<p><center><font color="green">Cloud no internet updated.</font></center></p>';
+				break;
+			case "mqtt_key":
+				echo '<p><center><font color="green">Cloud MQTT updated.</font></center></p>';
+				break;
+			case "nodered_key":
+				echo '<p><center><font color="green">Cloud node-RED updated.</font></center></p>';
+				break;
+			default :
+				echo '<p><center><font color="green">Cloud updated.</font></center></p>';
+		}	
+	}
+	else{
+		switch($cloud_key_name){
+			case "gpsfile_key":
+				echo '<p><center><font color="red">Failed to update cloud gps file.</font></center></p>';	
+				break;
+			case "nointernet_key":
+				echo '<p><center><font color="red">Failed to update cloud no internet.</font></center></p>';	
+				break;
+			case "mqtt_key":
+				echo '<p><center><font color="red">Failed to update cloud mqtt.</font></center></p>';	
+				break;
+			case "nodered_key":
+				echo '<p><center><font color="red">Failed to update cloud node-red.</font></center></p>';	
+				break;
+			default :
+				echo '<p><center><font color="red">Failed to update cloud.</font></center></p>';
+		}
+	}
+}
+
+
+if(
+	isset($_GET["clouds_list"]) && (! empty($_GET["clouds_list"])) &&
+	isset($_GET["clouds_key"]) && (! empty($_GET["clouds_key"])) &&
+	isset($_GET["clouds_key_value"]) && (! empty($_GET["clouds_key_value"]))
+){
+	$cloud_key  = htmlspecialchars($_GET["clouds_key"]);
+	$cloud_key_name = htmlspecialchars($_GET["clouds_list"]);
+	$cloud_key_value =  json_decode($_GET["clouds_key_value"]);
+	
+	if((count($cloud_key_value) == 1) && ($cloud_key_value[0] =="")){
+		$str = '[]';
+	}else{
+		$str = '[';
+			for($i = 0; $i < sizeof($cloud_key_value); $i++ ){	
+				if($i == (sizeof($cloud_key_value)-1))		
+					$str .= '\"'.$cloud_key_value[$i].'\"';
+				else
+					$str .= '\"'.$cloud_key_value[$i].'\",';
+			}
+		$str .= ']';
+	}
+	$output =clouds_conf($cloud_key ,$str,$cloud_key_name );
+	if($output == 0){
+		echo '<p><center><font color="green">Cloud  list updated.</font></center></p>';
+	}else{
+		echo '<p><center><font color="red">Failed to update cloud list.</font></center></p>';
+	}
+}
+
+###########################################################
+
+
+
 /*************************
  * Setting AES
  *************************/
@@ -306,6 +488,12 @@ if (isset($_GET["thingspeak_status"]) && (! empty($_GET["thingspeak_status"]))) 
 		echo '<p><center><font color="red">Failed to update ThingSpeak status.</font></center></p>';	
 	}
 }
+
+
+
+
+
+
 
 /*************************
  * Setting Waziup status

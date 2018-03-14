@@ -1,5 +1,864 @@
 // shorter syntax for document.ready
 $(function () {
+//####################### LAST UPDATE #######################
+//#######################
+//# Setting Cloud No Internet status
+//#######################
+	$('#td_edit_cloudNoInternet_status').hide();
+	$('#cloudNoInternet_status_msg').hide();
+	$('#td_cloudNoInternet_status_submit').hide();
+	
+	$('#btn_edit_cloudNoInternet_status').click(function() {	
+		$('#td_edit_cloudNoInternet_status').show();
+		$('#td_cloudNoInternet_status_submit').show();
+	});
+	
+	$('#btn_cloudNoInternet_status_submit').click(function(){
+	    	var cloud_status = $( "#div_cloudNoInternet_status_options input:checked" ).val();
+	    	var cloud_name = "cloudnointernet_conf";
+	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+				$('#cloud_msg').html(data);
+		    		//erase message after 5 seconds
+		   		 setTimeout(function() {
+	  				$('#cloud_msg').html("");
+		   		 },5000);
+		});
+	   	
+		if(cloud_status != ''){
+			$('#cloudNoInternet_status_value').html(cloud_status);
+			$('#td_edit_cloudNoInternet_status').hide();
+	    		$('#td_cloudNoInternet_status_submit').hide();
+		}	
+	});
+	
+//#######################
+//# Setting Cloud Gps File status
+//#######################
+
+
+	$('#td_edit_cloudGpsFile_status').hide();
+	$('#td_cloudGpsFile_status_submit').hide();
+	
+	$('#btn_edit_cloudGpsFile_status').click(function(){
+		$('#td_edit_cloudGpsFile_status').show();
+		$('#td_cloudGpsFile_status_submit').show();
+	});
+	
+	$('#btn_cloudGpsFile_status_submit').click(function(){
+	    	var cloud_status = $( "#div_cloudGpsFile_status_options input:checked" ).val();
+	    	var cloud_name = "cloudgpsfile_conf";
+	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+				$('#cloud_msg').html(data);
+		    		//erase message after 5 seconds
+		   		 setTimeout(function() {
+	  				$('#cloud_msg').html("");
+		   		 },5000);
+		});
+	    	
+		if(cloud_status != '' ){
+			$('#cloudGpsFile_status_value').html(cloud_status);
+			$('#td_edit_cloudGpsFile_status').hide();
+	    		$('#td_cloudGpsFile_status_submit').hide();
+		}	
+	});
+	
+//#######################
+//# Setting Cloud Gps File project name
+//#######################
+	$('#td_edit_cloudGpsFile_project_name').hide();
+	$('#td_cloudGpsFile_project_name_submit').hide();
+
+	$('#btn_edit_cloudGpsFile_project_name').click(function(){
+		$('#td_edit_cloudGpsFile_project_name').show();
+		$('#td_cloudGpsFile_project_name_submit').show();
+	});
+
+
+ 	$('#btn_cloudGpsFile_project_name_submit').click(function(){
+		var cloud_key_value = $('#cloudGpsFile_project_name_input').val();
+		var cloud_key_name = "gpsfile_key";
+		var cloud_key = "project_name";
+	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#cloudGpsFile_project_name_value').html(cloud_key_value );
+			$('#td_edit_cloudGpsFile_project_name').hide();
+			$('#td_cloudGpsFile_project_name_submit').hide();
+		}	
+	});
+//#######################
+//# Setting Cloud Gps File organization name
+//#######################
+	$('#td_edit_cloudGpsFile_organization_name').hide();
+	$('#td_cloudGpsFile_organization_name_submit').hide();
+
+	$('#btn_edit_cloudGpsFile_organization_name').click(function(){
+		$('#td_edit_cloudGpsFile_organization_name').show();
+		$('#td_cloudGpsFile_organization_name_submit').show();
+	});
+
+ 	$('#btn_edit_cloudGpsFile_organization_name').click(function(){
+		var cloud_key_value = $('#cloudGpsFile_organization_name_input').val();
+		var cloud_key_name = "gpsfile_key";
+		var cloud_key = "organization_name";
+	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#cloudGpsFile_project_name_value').html(cloud_key_value );
+			$('#td_edit_cloudGpsFile_organization_name').hide();
+			$('#td_cloudGpsFile_organization_name_submit').hide();
+		}	
+	});
+
+//#######################
+//# Setting Cloud Gps File sensor name
+//#######################
+	$('#td_edit_cloudGpsFile_sensor_name').hide();
+	$('#td_cloudGpsFile_sensor_name_submit').hide();
+
+	$('#btn_edit_cloudGpsFile_sensor_name').click(function(){
+		$('#td_edit_cloudGpsFile_sensor_name').show();
+		$('#td_cloudGpsFile_sensor_name_submit').show();
+	});
+ 	$('#btn_edit_cloudGpsFile_sensor_name').click(function(){
+		var cloud_key_value = $('#cloudGpsFile_sensor_name_input').val();
+		var cloud_key_name = "gpsfile_key";
+		var cloud_key = "sensor_name";
+	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#cloudGpsFile_sensor_name_value').html(cloud_key_value );
+			$('#td_edit_cloudGpsFile_sensor_name').hide();
+			$('#td_cloudGpsFile_sensor_name_submit').hide();
+		}	
+	});
+
+//#######################
+//# Setting Cloud Gps File source list
+//#######################
+	$('#td_edit_cloudGpsFile_source_list').hide();
+	$('#td_cloudGpsFile_source_list_submit').hide();
+
+	$('#btn_edit_cloudGpsFile_source_list').click(function(){
+		$('#td_edit_cloudGpsFile_source_list').show();
+		$('#td_cloudGpsFile_source_list_submit').show();
+	});
+ 	$('#btn_cloudGpsFile_source_list_submit').click(function(){
+		var cloud_key_value = $('#cloudGpsFile_source_list_input').val();
+		var cloud_key_name = "gpsfile_key";
+		var cloud_key = "source_list";
+
+		
+		cloud_key_value = String(cloud_key_value);
+		var buffer = cloud_key_value.split(",");
+		for(x in buffer){
+			buffer[x] = buffer[x].split(' ').join("");
+			var n = parseInt(buffer[x]);
+			if(n === NaN || n < 2 || n > 254){
+				console.log(n);
+				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and 254");
+				return -1;
+			}					
+		}
+		var keyJSON = JSON.stringify(buffer);
+		cloud_key_value = keyJSON;		
+
+	    	$.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html();
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#cloudGpsFile_source_list_value').html(cloud_key_value);
+			$('#td_edit_cloudGpsFile_source_list').hide();
+			$('#td_cloudGpsFile_source_list_submit').hide();
+		}
+	});
+
+//#######################
+//# Setting Cloud Gps File active interval
+//#######################
+	$('#td_edit_cloudGpsFile_active_interval').hide();
+	$('#td_cloudGpsFile_active_interval_submit').hide();
+
+	$('#btn_edit_cloudGpsFile_active_interval').click(function(){
+		$('#td_edit_cloudGpsFile_active_interval').show();
+		$('#td_cloudGpsFile_active_interval_submit').show();
+	});
+ 	$('#btn_cloudGpsFile_active_interval_submit').click(function(){
+		var cloud_key_value = $('#cloudGpsFile_active_interval_input').val();
+		var cloud_key_name = "gpsfile_key";
+		var cloud_key = "active_interval_minutes";
+
+		var test = parseInt(cloud_key_value); 
+		if (test == NaN){
+			$('#cloud_msg').html("It is not a number !");
+			return -1; 
+		}
+	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:clouds_key_value}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#cloudGpsFile_active_interval_value').html(cloud_key_value );
+			$('#td_edit_cloudGpsFile_active_interval').hide();
+			$('#td_cloudGpsFile_active_interval_submit').hide();
+		}	
+	});
+//#######################
+//# Setting Cloud Gps File sms
+//#######################
+	$('#td_edit_cloudGpsFile_sms').hide();
+	$('#td_cloudGpsFile_sms_submit').hide();
+
+	$('#btn_edit_cloudGpsFile_sms').click(function(){
+		$('#td_edit_cloudGpsFile_sms').show();
+		$('#td_cloudGpsFile_sms_submit').show();
+	});
+ 	$('#btn_cloudGpsFile_sms_submit').click(function(){
+		var cloud_key_value = $('#div_cloudGpsFile_sms input:checked').val();
+		var cloud_key_name = "gpsfile_key";
+		var cloud_key = "sms";
+		
+	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			if(cloud_key_value === "true"){
+				$('#cloudGpsFile_sms_value').html("Enable");
+			}else{
+				$('#cloudGpsFile_sms_value').html("Disable");
+			}			
+			$('#td_edit_cloudGpsFile_sms').hide();
+			$('#td_cloudGpsFile_sms_submit').hide();
+		}	
+	});
+//#######################
+//# Setting Cloud Gps File pin
+//#######################
+	$('#td_edit_cloudGpsFile_pin').hide();
+	$('#td_cloudGpsFile_pin_submit').hide();
+
+	$('#btn_edit_cloudGpsFile_pin').click(function(){
+		$('#td_edit_cloudGpsFile_pin').show();
+		$('#td_cloudGpsFile_pin_submit').show();
+	});
+ 	$('#btn_cloudGpsFile_pin_submit').click(function(){
+		var cloud_key_value = $('#cloudGpsFile_pin_input').val();
+		var cloud_key_name = "gpsfile_key";
+		var cloud_key = "sms";
+		
+	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#cloudGpsFile_pin_value').html(cloud_key_value );
+			$('#td_edit_cloudGpsFile_pin').hide();
+			$('#td_cloudGpsFile_pin_submit').hide();
+		}	
+	});
+
+//#######################
+//# Setting Cloud Gps Contacts
+//#######################
+
+	$('#td_edit_cloudGpsFile_contacts').hide();
+	$('#td_cloudGpsFile_contacts_submit').hide();
+
+	$('#btn_edit_cloudGpsFile_contacts').click(function(){
+		$('#td_edit_cloudGpsFile_contacts').show();
+		$('#td_cloudGpsFile_contacts_submit').show();
+	});
+ 	$('#btn_cloudGpsFile_contacts_submit').click(function(){
+		var cloud_key_value = $('#cloudGpsFile_contacts_input').val();
+		var cloud_key_name = "gpsfile_key";
+		var cloud_key = "contacts";
+		
+
+		cloud_key_value = String(cloud_key_value);
+		var buffer = cloud_key_value.split(",");
+		var valid = true;
+		for(x in buffer){
+			buffer[x] = buffer[x].split(' ').join("");
+			if (! /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,9}$/.test(buffer[x]))
+			{
+				$('#cloud_msg').html("Error : "+buffer[x]+", must be a phone number");	
+				return -1;
+			}
+			console.log(buffer[x]);
+		}
+		var keyJSON = JSON.stringify(buffer);
+		cloud_key_value = keyJSON;
+
+	    	$.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : cloud_key_value}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#cloudGpsFile_contacts_value').html(cloud_key_value );
+			$('#td_edit_cloudGpsFile_contacts').hide();
+			$('#td_cloudGpsFile_contacts_submit').hide();
+		}	
+	});
+
+//#######################
+//# Setting Cloud MQTT status
+//#######################
+
+
+	$('#td_edit_cloudMQTT_status').hide();
+	$('#td_cloudMQTT_status_submit').hide();
+
+	$('#btn_edit_cloudMQTT_status').click(function(){
+		$('#td_edit_cloudMQTT_status').show();
+		$('#td_cloudMQTT_status_submit').show();
+	});
+	
+	$('#btn_cloudMQTT_status_submit').click(function(){
+	    	var cloud_status = $( "#div_cloudMQTT_status_options input:checked" ).val();
+	    	var cloud_name = "cloudmqtt_conf";
+	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+				$('#cloud_msg').html(data);
+		    		//erase message after 5 seconds
+		   		 setTimeout(function() {
+	  				$('#cloud_msg').html("");
+		   		 },5000);
+		});
+	    	
+		if(cloud_status != ''){
+			$('#cloudMQTT_status_value').html(cloud_status);
+			$('#td_edit_cloudMQTT_status').hide();
+	    		$('#td_cloudMQTT_status_submit').hide();
+		}
+	});
+	
+//#######################
+//# Setting Cloud Node Red status
+//#######################
+
+
+	$('#td_edit_cloudNodeRed_status').hide();
+	$('#td_cloudNodeRed_status_submit').hide();
+	
+	$('#btn_edit_cloudNodeRed_status').click(function(){
+		$('#td_edit_cloudNodeRed_status').show();
+		$('#td_cloudNodeRed_status_submit').show();
+	});
+	
+	$('#btn_cloudNodeRed_status_submit').click(function(){
+	    	var cloud_status = $( "#div_cloudNodeRed_status_options input:checked" ).val();
+	    	var cloud_name = "cloudnodered_conf";
+	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+				$('#cloud_msg').html(data);
+		    		//erase message after 5 seconds
+		   		 setTimeout(function() {
+	  				$('#cloud_msg').html("");
+		   		 },5000);
+		});
+	    	
+		if(cloud_status != ''){
+			$('#cloudNodeRed_status_value').html(cloud_status);
+			$('#td_edit_cloudNodeRed_status').hide();
+	    		$('#td_cloudNodeRed_status_submit').hide();
+		}
+	
+	});
+	
+//#######################
+//# Gateway settings localization 
+//#######################	
+	$('#td_edit_gw_position').hide();
+	$('#td_format_position_dd').hide();
+	$('#td_format_position_dms').hide();
+	$('#td_submit_position').hide();
+	$('#div_info_format').hide();
+
+	$('#btn_edit_gw_position').click(function(){
+		$('#td_edit_gw_position').show();
+		$('#td_submit_position').show();
+	});
+	$('#format_dd').click(function(){
+		//$('#div_info_format').html("");
+		$('#div_info_format').hide();
+		$('#td_format_position_dd').show();
+		$('#td_format_position_dms').hide();
+	});
+	$('#format_dms').click(function(){
+
+		var info = "Negative numbers are not allowed</br>Separate integral part from decimal with a dot"+
+					", i-e : 42.36</p></br>Minimum of five numbers after the dot for more accuracy. ";
+		$('#div_info_format').html(info);
+		$('#div_info_format').show();
+		$('#td_format_position_dms').show();
+		$('#td_format_position_dd').hide();
+	});
+	
+	$('#btn_submit_position').click(function(){
+		var ref_latitude = 0;
+		var ref_longitude = 0;
+		if($('#div_update_format_position input:checked').val() === "dd"){
+			ref_latitude = parseFloat($("#latitude_dd_input").val());
+			ref_longitude = parseFloat($("#longitude_dd_input").val());
+			if(ref_longitude === NaN || ref_latitude ===NaN){
+				$('#gw_config_msg').html("invalid coordinates");
+			}
+		}
+		if($('#div_update_format_position input:checked').val() === "dms"){
+			
+			var latitude_degree = parseFloat($('#latitude_degree_input').val()); 
+			var latitude_minutes = parseFloat($('#latitude_minute_input').val()); 
+			var latitude_seconds = parseFloat($('#latitude_second_input').val()); 
+
+			var longitude_degree = parseFloat($('#longitude_degree_input').val()); 
+			var longitude_minutes = parseFloat($('#longitude_minute_input').val()); 
+			var longitude_seconds = parseFloat($('#longitude_second_input').val()); 
+		
+			if($('#latitude_group input:checked').val() ==="S")
+			{
+				latitude_degree = -latitude_degree ;
+			}
+			if($('#latitude_group input:checked').val() ==="W")
+			{
+				longitude_degree= -longitude_degree;
+			}
+		
+			if(latitude_degree >= 0){
+			  	ref_latitude = latitude_seconds/3600 + latitude_minutes/60 + latitude_degree ;
+			}else{
+				ref_latitude = - ( latitude_seconds/3600) - ( latitude_minutes/60) + latitude_degree;
+			}
+			
+			if(longitude_degree < 0){
+			  	ref_longitude = longitude_seconds/3600 + longitude_minutes/60 +longitude_degree;
+			}else{
+				ref_longitude = - (longitude_seconds/3600) - (longitude_minutes/60) + longitude_degree; 
+			}	
+		}
+		//alert("ref_latitude : "+ref_latitude+"ref_longitude : "+ref_longitude );
+		$.get("process.php", {ref_latitude: ref_latitude.toString(),ref_longitude: ref_longitude.toString()}, function(data){	
+				$("#gw_config_msg").html(data);
+		    			//erase message after 5 seconds
+		   			setTimeout(function() {
+	  					$('#gw_config_msg').html("");
+		     			},5000);
+		});
+		$('#latitude_gw_conf').html(ref_latitude);
+		$('#longitude_gw_conf').html(ref_longitude);
+		$('#latitude_value').html("Latitude :"+ref_latitude);
+		$('#longitude_value').html("Longitude :"+ref_longitude);
+		$('#td_edit_gw_position').hide();
+		$('#td_format_position_dd').hide();
+		$('#td_format_position_dms').hide();
+		$('#td_submit_position').hide();
+	});
+	
+//#######################
+//# Gateway display localization 
+//#######################
+
+	$('#latitude_gw_conf').hide();
+	$('#longitude_gw_conf').hide();
+/*
+	$('#display_format_dms').click(function(){
+		var val_latitude = parseFloat($('#latitude_gw_conf').html());
+		var val_longitude = parseFloat($('#longitude_gw_conf').html());
+
+		var latitude_dms = convertDdToDms(val_latitude);
+		var longitude_dms = convertDdToDms(val_longitude);
+	
+		$('#latitude_value').html("Latitude : "+latitude_dms);
+		$('#longitude_value').html("Longitude : "+longitude_dms);
+	
+	});
+*/
+
+	function convertDdToDms(val){
+		var val_abs = Math.abs(val)
+		var degree = Math.trunc(val_abs);
+		var minutes = Math.trunc((val_abs - degree) * 60);
+		var seconds = (val_abs - degree - (minutes/60)) * 3600;
+		var display ="";
+		if(val < 0){
+			display = "-"+degree+"° "+minutes+"\' "+seconds+"\"";
+		}else{
+			display = degree+"° "+minutes+"\' "+seconds+"\"";
+		}
+	
+		return display;
+	}
+/*
+	$('#display_format_dd').click(function(){
+		$('#latitude_value').html("Latitude : "+$('#latitude_gw_conf').html());
+		$('#longitude_value').html("Longitude : "+$('#longitude_gw_conf').html());
+	});
+*/		
+//#######################
+//# Setting raw
+//#######################	
+ 	$('#td_edit_raw').hide();
+	$('#td_raw_submit').hide();
+	
+	$('#btn_edit_raw').click(function(){
+		$('#td_edit_raw').show();
+		$('#td_raw_submit').show();
+	});
+	
+	$('#btn_raw_submit').click(function(){
+		raw = $( "#raw_group input:checked" ).val();
+		alert(raw);
+		$.get("process.php", {raw: raw}, function(data){	
+			$("#gw_config_msg").html(data);
+            			//erase message after 5 seconds
+	   			setTimeout(function() {
+  					$('#gw_config_msg').html("");
+	     			},5000);
+        });
+    	
+		if(raw != ''){
+    		$('#raw_value').html(raw);
+        	$('#td_edit_raw').hide();
+    		$('#td_raw_submit').hide();
+    	}
+	});
+
+//#######################
+//# Setting wappkey
+//#######################	
+ 	$('#td_edit_wappkey').hide();
+	$('#td_wappkey_submit').hide();
+	
+	$('#btn_edit_wappkey').click(function(){
+		$('#td_edit_wappkey').show();
+		$('#td_wappkey_submit').show();
+	});
+	
+	$('#btn_wappkey_submit').click(function(){
+		wappkey = $( "#wappkey_group input:checked" ).val();
+		alert(wappkey);
+		$.get("process.php", {wappkey: wappkey}, function(data){	
+			$("#gw_config_msg").html(data);
+            			//erase message after 5 seconds
+	   			setTimeout(function() {
+  					$('#gw_config_msg').html("");
+	     			},5000);
+        });
+    	
+		if(wappkey != ''){
+    		$('#wappkey_value').html(wappkey);
+        	$('#td_edit_wappkey').hide();
+    		$('#td_wappkey_submit').hide();
+    	}
+	});
+
+
+
+
+
+//######################
+//# thingspeak_source_list
+//######################
+
+$('#td_edit_thingspeak_source_list').hide();
+$('#td_thingspeak_source_list_submit').hide();
+
+$('#btn_edit_thingspeak_source_list').click(function(){
+	$('#td_edit_thingspeak_source_list').show();
+	$('#td_thingspeak_source_list_submit').show();
+});
+
+$('#btn_thingspeak_source_list_submit').click(function(){
+		var cloud_key_value = $('#thingspeak_source_list_input').val();
+		var cloud_key_name = "thingspeak_key";
+		var cloud_key = "source_list";
+
+		
+		cloud_key_value = String(cloud_key_value);
+		var buffer = cloud_key_value.split(",");
+		for(x in buffer){
+			buffer[x] = buffer[x].split(' ').join("");
+			var n = parseInt(buffer[x]);
+			if(n === NaN || n < 2 || n > 254){
+				console.log(n);
+				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and 254");
+				return -1;
+			}					
+		}
+		var keyJSON = JSON.stringify(buffer);
+		cloud_key_value = keyJSON;		
+
+	    	$.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html();
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#td_thingspeak_source_list_value').html(cloud_key_value);
+			$('#td_edit_thingspeak_source_list').hide();
+			$('#td_thingspeak_source_list_submit').hide();
+		}
+});
+
+//######################
+//# Waziup_source_list
+//######################
+
+$('#td_edit_waziup_source_list').hide();
+$('#td_waziup_source_list_submit').hide();
+
+$('#btn_edit_waziup_source_list').click(function(){
+	$('#td_edit_waziup_source_list').show();
+	$('#td_waziup_source_list_submit').show();
+});
+
+$('#btn_waziup_source_list_submit').click(function(){
+		var cloud_key_value = $('#waziup_source_list_input').val();
+		var cloud_key_name = "waziup_key";
+		var cloud_key = "source_list";
+
+		
+		cloud_key_value = String(cloud_key_value);
+		var buffer = cloud_key_value.split(",");
+		for(x in buffer){
+			buffer[x] = buffer[x].split(' ').join("");
+			var n = parseInt(buffer[x]);
+			if(n === NaN || n < 2 || n > 254){
+				console.log(n);
+				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and 254");
+				return -1;
+			}					
+		}
+		var keyJSON = JSON.stringify(buffer);
+		cloud_key_value = keyJSON;		
+
+	    	$.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html();
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#td_waziup_source_list_value').html(cloud_key_value);
+			$('#td_edit_waziup_source_list').hide();
+			$('#td_waziup_source_list_submit').hide();
+		}
+});
+
+//#######################
+//#	CloudMQTT MQTT server
+//#######################
+	$('#td_edit_cloudMQTT_MQTT_server').hide();
+	$('#td_cloudMQTT_MQTT_server_submit').hide();
+
+	$('#btn_edit_cloudMQTT_MQTT_server').click(function(){
+		$('#td_edit_cloudMQTT_MQTT_server').show();
+		$('#td_cloudMQTT_MQTT_server_submit').show();
+	});
+
+
+ 	$('#btn_cloudMQTT_MQTT_server_submit').click(function(){
+		var cloud_key_value = $('#cloudMQTT_MQTT_server_input').val();
+		var cloud_key_name = "mqtt_key";
+		var cloud_key = "MQTT_server";
+	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#td_cloudMQTT_MQTT_server_value').html(cloud_key_value );
+			$('#td_edit_cloudMQTT_MQTT_server').hide();
+			$('#td_cloudMQTT_MQTT_server_submit').hide();
+		}	
+	});
+
+
+//#######################
+//#	CloudMQTT project name
+//#######################
+	$('#td_edit_cloudMQTT_project_name').hide();
+	$('#td_cloudMQTT_project_name_submit').hide();
+
+	$('#btn_edit_cloudMQTT_project_name').click(function(){
+		$('#td_edit_cloudMQTT_project_name').show();
+		$('#td_cloudMQTT_project_name_submit').show();
+	});
+
+
+ 	$('#btn_cloudMQTT_project_name_submit').click(function(){
+		var cloud_key_value = $('#cloudMQTT_project_name_input').val();
+		var cloud_key_name = "mqtt_key";
+		var cloud_key = "project_name";
+	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#td_cloudMQTT_project_name_value').html(cloud_key_value );
+			$('#td_edit_cloudMQTT_project_name').hide();
+			$('#td_cloudMQTT_project_name_submit').hide();
+		}	
+	});
+
+//#######################
+//#	CloudMQTT oraganization name
+//#######################
+	$('#td_edit_cloudMQTT_organization_name').hide();
+	$('#td_cloudMQTT_organization_name_submit').hide();
+
+	$('#btn_edit_cloudMQTT_organization_name').click(function(){
+		$('#td_edit_cloudMQTT_organization_name').show();
+		$('#td_cloudMQTT_organization_name_submit').show();
+	});
+
+
+ 	$('#btn_cloudMQTT_organization_name_submit').click(function(){
+		var cloud_key_value = $('#cloudMQTT_organization_name_input').val();
+		var cloud_key_name = "mqtt_key";
+		var cloud_key = "organization_name";
+	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#td_cloudMQTT_organization_name_value').html(cloud_key_value );
+			$('#td_edit_cloudMQTT_organization_name').hide();
+			$('#td_cloudMQTT_organization_name_submit').hide();
+		}	
+	});
+
+//#######################
+//#	CloudMQTT sensor  name
+//#######################
+	$('#td_edit_cloudMQTT_sensor_name').hide();
+	$('#td_cloudMQTT_sensor_name_submit').hide();
+
+	$('#btn_edit_cloudMQTT_sensor_name').click(function(){
+		$('#td_edit_cloudMQTT_sensor_name').show();
+		$('#td_cloudMQTT_sensor_name_submit').show();
+	});
+
+
+ 	$('#btn_cloudMQTT_sensor_name_submit').click(function(){
+		var cloud_key_value = $('#cloudMQTT_sensor_name_input').val();
+		var cloud_key_name = "mqtt_key";
+		var cloud_key = "sensor_name";
+	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#td_cloudMQTT_sensor_name_value').html(cloud_key_value );
+			$('#td_edit_cloudMQTT_sensor_name').hide();
+			$('#td_cloudMQTT_sensor_name_submit').hide();
+		}	
+	});
+
+//#######################
+//#	CloudMQTT source list
+//#######################
+$('#td_edit_cloudMQTT_source_list').hide();
+$('#td_cloudMQTT_source_list_submit').hide();
+
+$('#btn_edit_cloudMQTT_source_list').click(function(){
+	$('#td_edit_cloudMQTT_source_list').show();
+	$('#td_cloudMQTT_source_list_submit').show();
+});
+
+$('#btn_cloudMQTT_source_list_submit').click(function(){
+		var cloud_key_value = $('#cloudMQTT_source_list_input').val();
+		var cloud_key_name = "mqtt_key";
+		var cloud_key = "source_list";
+
+		
+		cloud_key_value = String(cloud_key_value);
+		var buffer = cloud_key_value.split(",");
+		for(x in buffer){
+			buffer[x] = buffer[x].split(' ').join("");
+			var n = parseInt(buffer[x]);
+			if(n === NaN || n < 2 || n > 254){
+				console.log(n);
+				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and 254");
+				return -1;
+			}					
+		}
+		var keyJSON = JSON.stringify(buffer);
+		cloud_key_value = keyJSON;		
+
+	    	$.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
+			$('#cloud_msg').html(data);
+	    		//erase message after 5 seconds
+	   		 setTimeout(function() {
+  				$('#cloud_msg').html();
+	   		 },5000);
+		});
+	    	
+		if(cloud_key_value  != ''){
+			$('#td_cloudMQTT_source_list_value').html(cloud_key_value);
+			$('#td_edit_cloudMQTT_source_list').hide();
+			$('#td_cloudMQTT_source_list_submit').hide();
+		}
+});
+//##########################################################	
+	
 	
 //######################
 //# Reboot
@@ -152,7 +1011,7 @@ $(function () {
   					$('#gw_update_msg').html("");
   					window.location.reload();  					
 	    		},5000);
-        	})
+        	});
 		}
 		else{ 
 			// Cancel clicked
@@ -287,7 +1146,10 @@ $(function () {
     	
     	if(mode == ''){
     		//alert("Please select one mode!");
-		setTimeout(function(){$('#radio_msg').html("Please select one mode!");}, 3000);
+		setTimeout(function(){
+			$('#radio_msg').html("Please select one mode!");
+		
+}, 3000);
     	}
     	else{ 
     		$.get("process.php", {mode: mode}, function(data){
@@ -367,8 +1229,9 @@ $(function () {
 	     	},5000);
         });
 	
-	if(freq != '' && band != '')
+	if(freq != '' && band != ''){
 		$('#freq_value').html(freq);
+	}
         $('#td_edit_freq').hide();
     	$('#freq_submit').hide();
 	
@@ -493,7 +1356,7 @@ $(function () {
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},5000); 	
         });
     	
 	if(aes != '') 
@@ -1247,3 +2110,5 @@ $(function () {
     });
 
 });
+
+

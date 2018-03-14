@@ -21,9 +21,6 @@ $orion = is_file($key_orion_file);
 
 require 'header.php';
 ?>
-
-
-
             <div class="navbar-default sidebar" role="navigation">
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
@@ -63,11 +60,19 @@ require 'header.php';
                             <ul class="nav nav-pills">
                                 <li class="active"><a href="#thingSpeak-pills" data-toggle="tab">ThingSpeak</a>
                                 </li>
-				<?php
-					if($orion){	
-                                		echo '<li><a href="#waziup-pills" data-toggle="tab">Waziup Orion</a></li>';
-					}
-				?>
+								<?php
+									if($orion){	
+                            			echo '<li><a href="#waziup-pills" data-toggle="tab">Waziup Orion</a></li>';
+									}
+								?>
+								<li><a href="#cloudNoInternet-pills" data-toggle="tab">Cloud No Internet</a>
+								</li>
+								<li><a href="#cloudGpsFile-pills" data-toggle="tab">Cloud Gps File</a>
+								</li>
+								<li><a href="#cloudMQTT-pills" data-toggle="tab">Cloud MQTT</a>
+								</li>
+								<li><a href="#cloudNodeRed-pills" data-toggle="tab">Cloud Node-RED </a>
+								</li>
                             </ul>
 
                             <!-- Tab panes -->
@@ -118,25 +123,81 @@ require 'header.php';
    										    <td id="td_write_key_submit" align="right">
    										    		<button id="write_key_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
-   										   </tr>
+   										   	</tr>
+											
+											<tr>
+												<td>source list</td>
+												<td id="td_thingspeak_source_list_value">
+													<?php 
+														$array = $key_clouds['thingspeak_source_list'];
+														$size = count($key_clouds['thingspeak_source_list']);
+														$i = 0;
+														if($size == 0) echo "Empty";
+														foreach( $array as $cel){
+															if(($size-1) == $i){
+																echo $cel;
+															}else{
+																echo $cel . ",";
+															}
+															$i++;
+														}
+													?>
+												</td>
+												<td align="right">
+													<button id="btn_edit_thingspeak_source_list" type="button" class="btn btn-primary">
+														<span class="fa fa-edit"></span>
+													</button>
+												</td>
+												<td id="td_edit_thingspeak_source_list">
+													<div id="div_edit_thingspeak_source_list" class="form-group">
+														<label>Add a sensor to your list</label>
+														<input id="thingspeak_source_list_input" class="form-control" placeholder="Write source addresses" type="text"
+														value="<?php 
+															$array = $key_clouds['thingspeak_source_list'];
+															$size = count($key_clouds['thingspeak_source_list']);
+															$i = 0;
+															if($size == 0) echo "Empty";
+															foreach( $array as $cel){
+																if(($size-1) == $i){
+																	echo $cel;
+																}else{
+																	echo $cel . ",";
+																}
+																$i++;
+															}
+														?>" autofocus>
+													</div>
+												</td>
+												<td id="td_thingspeak_source_list_submit" align="right">
+													<button id="btn_thingspeak_source_list_submit" type="submit" class="btn btn-primary">
+														Submit
+														<span class="fa fa-arrow-right"></span>
+													</button>
+												</td>
+											</tr>
 										 </tbody>
     								    </table>
     							      </div>
     							    </div>
     							    
                                 </div>
-                                
+                                <!-- tab-pane -->
+									<?php 
+										if($orion){
+                                			require 'orion.php';
+										}
+									?>
+    								
+                                </div>
+                                <?php require 'cloudNoInternet.php'; ?>
+                                <?php require 'cloudGpsFile.php'; ?> 
+                                <?php require 'cloudMQTT.php'; ?>
+                                <?php require 'cloudNodeRed.php'; ?>
+
                                 <!-- tab-pane -->
                                
-				<?php 
-					if($orion){
-                                		require 'orion.php';
-					}
-				?>
-    				
-                                </div>
-                                <!-- tab-pane --> 
-                                
+                                	
+                      			
                                 <!-- tab-pane -->  
                         </div>        
                         <!-- /.panel-body -->

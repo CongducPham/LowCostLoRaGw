@@ -15,9 +15,6 @@ process_gw_conf_json($radio_conf, $gw_conf, $alert_conf);
 
 require 'header.php';
 ?>
-
-
-
             <div class="navbar-default sidebar" role="navigation">
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
@@ -66,7 +63,8 @@ require 'header.php';
                                 <li><a href="#downlink-pills" data-toggle="tab">Downlink Request</a>
                                 </li>
                                 <li><a href="#copy-log-pills" data-toggle="tab">Get post-processing.log file</a>
-                                </li>                                
+                                </li>       
+                                                        
                             </ul>
 
                             <!-- Tab panes -->
@@ -262,8 +260,216 @@ require 'header.php';
    										    <td id="td_downlink_submit" align="right">
    										    		<button id="btn_downlink_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
-   										   </tr>  										   
+   										   </tr>  	
+   										   <!-- ajout de l'adresse ip et de l'adresse mac -->
+   										   <tr>
+   										   <td>IP address</td>
+   										   <td id="ip_address_value">
+   										   		<?php 
+													ob_start(); 
+													system("ifconfig eth0");
+													$mycom=ob_get_contents(); 
+													ob_clean(); 
+													$findme = "inet addr"; 
+													$pip = strpos($mycom, $findme); 
+													$next = "Bcast";
+													$nextword = strpos($mycom, $next);
+													$length = $nextword - $pip - strlen($findme) - strlen($next) +3;
+													$ip=substr($mycom,($pip+(strlen($findme)+1)),$length); 
+													echo $ip; 
+												?>
+   										   </td>
+   										   <td align="right">not editable</td>
+   										   </tr>	
    										   
+   										   <tr>
+   										   	<td>Mac addresss</td>
+   										   	<td id="mac_address_value">
+   										   		<?php 
+													ob_start(); 
+													system("ifconfig eth0"); 
+													$mycom=ob_get_contents(); 
+													ob_clean(); 
+													$findme = "HWaddr"; 
+													$pmac = strpos($mycom, $findme); 
+													$mac=substr($mycom,($pmac+7),17); 
+													echo $mac; 
+												?>
+   										   	</td> 
+   										   	<td align="right">not editable</td>
+   										   </tr>	
+   										   <tr>
+   										   		<td>GPS coordinates</td>
+   										   		<td>
+   										   			<div id="latitude_gw_conf">
+   										   				<?php echo  $gw_conf['ref_latitude'];?>
+   										   			</div>
+   										   			<div id="longitude_gw_conf" >
+   										   			 	<?php echo  $gw_conf['ref_longitude'];?>
+   										   			</div>
+   										   			<!--
+													<div id="div_select_display_format" class="btn-group" data-toggle="buttons">
+   										   				<div id="div_update_display_format" class="form-group">
+   										   				<label>
+                                                    		<input type="radio" name="optionsRadios" id="display_format_dd" value="dd" checked> Decimal degree
+                                                		</label>
+                                                		</br>
+                                                		<label>
+                                                    		<input type="radio" name="optionsRadios" id="display_format_dms" value="dms" > Degree, minute, second
+                                                		</label>
+                                                		</div>
+   										   			</div>
+													-->
+   										   			<div id="latitude_value" class="display:inline">
+   														<?php echo  "Latitude : " . $gw_conf['ref_latitude'];?>
+   										   			</div>
+   										   			</br>
+   										   			<div id="longitude_value" class="display:inline	">
+   										   			 	<?php echo  "Longitude : " . $gw_conf['ref_longitude'];?>
+   										   			</div>
+   										   			
+   										   			
+   										   		</td>
+   										   		<td align="right" id="td_settings_gw_position">
+   										   			<button id="btn_edit_gw_position" type="button" class="btn btn-primary">
+   										   				<span class="fa fa-edit"></span>
+   										   			</button>
+   										   		</td>
+   										   	</tr>
+   										   	<tr>
+   										   		<td id="td_edit_gw_position">
+   										   			<div id="div_select_format_position" class="btn-group" data-toggle="buttons">
+   										   				<div id="div_update_format_position" class="form-group">
+   										   				<label>
+                                                    		<input type="radio" name="optionsRadios" id="format_dd" value="dd" checked> Decimal degree
+                                                		</label>
+                                                		</br>
+                                                		<label>
+                                                    		<input type="radio" name="optionsRadios" id="format_dms" value="dms" > Degree, minute, second
+                                                		</label>
+                                                		</div>
+								<div id="div_info_format" class="alert alert-danger"></div>
+   										   			</div>
+   										   		</td>
+   										   		<td id="td_format_position_dd">
+   										   			<div id="div_update_dd_position" class="form-group">
+   										   				<div class="radio">
+   										   				<label>Latitude</label>
+   										   				<input id="latitude_dd_input" class="form-control" placeholder="43.2951" name="latitude" type="number_dd" value=""  autofocus>
+   										   				</br>
+   										   				<label>Longitude</label>
+   										   				<input id="longitude_dd_input" class="form-control" placeholder="-0.3707970000000387" name="longitude_dd" type="number" value="" >
+   										 				</br>		
+   										 				</div>	
+   										   			</div>
+													
+   										   		</td>
+   										   		<td id="td_format_position_dms">
+   										   			<div id="div_update_dms_position" class="form-group">				
+   										   				<label>Latitude</label>
+   										   				<div class="radio" align="left">
+   										   				<fieldset id="latitude_group" >	
+   										   					<label>
+   										   					<input type="radio" name="latitude_group" id="latitude_north" value="N" checked>N
+   										   					</label>
+   										   					<label>
+   										   					<input type="radio" name="latitude_group" id="latitude_south" value="S" >S
+   										   					</label>
+   										   					</br>
+   										   				</fieldset>
+   										   				</div>
+   										   				<input id="latitude_degree_input" class="form-control" placeholder="43" name="latitude_degree" type="number" value="">
+   										   				<input id="latitude_minute_input" class="form-control" placeholder="17" name="latitude_minute" type="number" value="">
+   										   				<input id="latitude_second_input" class="form-control" placeholder="42.36" name="latitude_second" type="number" value="">
+   										   				</br>			   			
+   										   				<label>Longitude</label>
+   										   				<div class="radio" align="left" >
+   										   				<fieldset id="longitude_group">	
+   										   					<label>
+   										   					<input type="radio" name="longitude_group" id="longitude_east" value="E" checked>E
+   										   					</label>
+   										   					<label>
+   										   					<input type="radio" name="longitude_group" id="latitude_west" value="W" >W
+   										   					</label>
+   										   					</br>
+   										   				</fieldset>
+   										   				</div>
+   										   				<input id="longitude_degree_input" class="form-control" placeholder="0" name="longitude_degree" type="number" value="">
+   										   				<input id="longitude_minute_input" class="form-control" placeholder="22" name="longitude_minute" type="number" value="">
+   										   				<input id="longitude_second_input" class="form-control" placeholder="14.869" name="longitude_second" type="number" value="">
+   										   				</br>
+   										   			</div>
+   										   		</td> 
+   										   		<td  id="td_submit_position" align="right">
+   										   			<button align="right" id="btn_submit_position" class="btn btn-primary">Submit<span class="fa fa-arrow-right"></span></button>
+   										   		</td>
+   										   </tr>
+   										   <tr>
+   										   		<td>raw format</td>
+   										   		<td id="raw_value">
+   										   		<?php 
+    												if($gw_conf['raw'])
+													{
+    													echo "true";    
+													}
+													else {
+   					 									echo "false";   
+													}
+   										   		?>
+   										   		</td>
+   										   		<td align="right" ><button id="btn_edit_raw" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   		<td id="td_edit_raw">
+   										   			<div id="div_edit_raw" class="form-group">
+   										   				<div class="radio">
+   										   				<fieldset id="raw_group" >	
+   										   				<label>
+   										   					<input type="radio" name="raw_group" id="raw_true" value="true" >True
+   										   				</label>
+   										   				</br>
+   										   				<label>
+   										   					<input type="radio" name="raw_group" id="raw_false" value="false" checked>False
+   										   				</label>
+   										   				</fieldset>
+   										   				</div>
+   										   			</div>
+   										   		</td>
+   										   		<td id="td_raw_submit" align="right">
+   										   			<button id="btn_raw_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										   		</td>
+   										   </tr>							   
+    										   <tr>
+   										   		<td>wappkey</td>
+   										   		<td id="wappkey_value">
+   										   		<?php 
+    												if($gw_conf['wappkey'])
+													{
+    													echo "true";    
+													}
+													else {
+   					 									echo "false";   
+													}
+   										   		?>
+   										   		</td>
+   										   		<td align="right" ><button id="btn_edit_wappkey" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   		<td id="td_edit_wappkey">
+   										   			<div id="div_wappkey" class="form-group">
+   										   				<div class="radio">
+   										   				<fieldset id="wappkey_group" >	
+   										   				<label>
+   										   					<input type="radio" name="wappkey_group" id="wappkey_true" value="true" >True
+   										   				</label>
+   										   				</br>
+   										   				<label>
+   										   					<input type="radio" name="wappkey_group" id="wappkey_false" value="false" checked >False
+   										   				</label>
+   										   				</fieldset>
+   										   				</div>
+   										   			</div>
+   										   		</td>
+   										   		<td id="td_wappkey_submit" align="right">
+   										   			<button id="btn_wappkey_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										   		</td>
+   										   </tr>  										   
 										 </tbody>
     								    </table>
     							      </div>
