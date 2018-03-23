@@ -30,7 +30,7 @@
 // Include sensors
 #include "Sensor.h"
 #include "rawAnalog.h"
-#include "DS18B20.h"
+//#include "DS18B20.h"
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -257,7 +257,7 @@ void setup()
   //sensor_ptrs[2] = new rawAnalog("SM3", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A3, (uint8_t) 7);
 
   sensor_ptrs[0]->set_n_sample(10);
-  sensor_ptrs[1]->set_n_sample(10);   
+  //sensor_ptrs[1]->set_n_sample(10);   
   //sensor_ptrs[2]->set_n_sample(10);
   
   delay(3000);
@@ -297,7 +297,7 @@ void setup()
 #ifdef __MKL26Z64__
   PRINT_CSTSTR("%s","TeensyLC MKL26Z64 detected\n");
 #endif
-#ifdef ARDUINO_SAMD_ZERO 
+#if defined ARDUINO_SAMD_ZERO && not defined ARDUINO_SAMD_FEATHER_M0
   PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
 #endif
 #ifdef ARDUINO_AVR_FEATHER32U4 
@@ -656,7 +656,6 @@ void loop(void)
       
 #ifdef __SAMD21G18A__
       // For Arduino M0 or Zero we use the built-in RTC
-      //LowPower.standby();
       rtc.setTime(17, 0, 0);
       rtc.setDate(1, 1, 2000);
       rtc.setAlarmTime(17, idlePeriodInMin, 0);
@@ -666,6 +665,8 @@ void loop(void)
       //rtc.attachInterrupt(alarmMatch);
       rtc.standbyMode();
 
+      LowPower.standby();
+      
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT
 #else
