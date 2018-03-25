@@ -120,7 +120,7 @@ The SD card image defines a `pi` user:
 	- login: pi
 	- password: loragateway
 		
-With the default gateway configuration, the gateway acts as a WiFi access point. If you see the WiFi network `WAZIUP_PI_GW_XXXXXXXXXX` then connect to this WiFi network. The WiFi password is `loragateway`. **It is strongly advise to change this WiFi password**. The address of the Raspberry is then 192.168.200.1. 
+With the default gateway configuration, the gateway acts as a WiFi access point. If you see the WiFi network `WAZIUP_PI_GW_XXXXXXXXXX` then connect to this WiFi network. The WiFi password is `loragateway`. **It is strongly advise to change this WiFi password**. The address of the Raspberry is then 192.168.200.1. Note that it is very convenient to use a smartphone or a tablet to connect to your gateway with `ssh`. On iOS we tested `Termius`  and on Android we tested `JuiceSSH`.
 
 If you see no WiFi access point (e.g. RP1/RPI2/RPI0 without WiFi dongle), then plug your Raspberry into a DHCP-enabled box/router/network to get an IP address or shared your laptop internet connection to make your laptop acting as a DHCP server. On a Mac, there is a very simple solution [here](https://mycyberuniverse.com/mac-os/connect-to-raspberry-pi-from-a-mac-using-ethernet.html). For Windows, you can follow [this tutorial](http://www.instructables.com/id/Direct-Network-Connection-between-Windows-PC-and-R/) or [this one](https://electrosome.com/raspberry-pi-ethernet-direct-windows-pc/). You can then use [Angry IP Scanner](http://angryip.org/) available on Windows/Mac/Linux/Android to determine the assigned IP address for the Raspberry.
 
