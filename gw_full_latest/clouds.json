@@ -36,13 +36,13 @@
 		},	        							
 		{	
 			"name":"WAZIUP Orion cloud old API",
-			"script":"python CloudOldOrion.py",
+			"script":"python CloudOrion.py",
 			"type":"iotcloud",			
 			"enabled":false
 		},
 		{
-			"name":"WAZIUP Orion cloud new API",
-			"script":"python CloudOrion.py",
+			"name":"WAZIUP cloud new API",
+			"script":"python CloudWAZIUP.py",
 			"type":"iotcloud",
 			"enabled":false
 		},						

@@ -1,6 +1,6 @@
 ####################################################
 #server: CAUTION must exist
-orion_server="http://broker.waziup.io/v2"
+waziup_server="http://api.waziup.io/api/v1"
 
 #project name
 project_name="waziup"
@@ -11,9 +11,10 @@ project_name="waziup"
 organization_name="ORG"
 
 #service tree: CHANGE HERE at your convenience
-#should start with /
-#service_tree='/LIUPPA/T2I/CPHAM'
+#should start with -
+#service_tree='-LIUPPA-T2I-CPHAM'
 #can be empty
+#service_tree='-TESTS'
 service_tree=''
 
 #sensor name: CHANGE HERE but maybe better to leave it as Sensor
@@ -21,17 +22,16 @@ service_tree=''
 sensor_name="Sensor"
 
 #service path: DO NOT CHANGE HERE
-service_path='/'+organization_name+service_tree
+service_path='-'+organization_name+service_tree
 
 #SUMMARY
-#the Fiware-Service will be project_name, e.g. "waziup"
 #
-#the Fiware-ServicePath will be service_path which is based on both organization_name and service_tree, e.g. "/UPPA/LIUPPA/T2I/CPHAM"
+#with a domain vision, the domain will be project_name+service_path, e.g waziup-UPPA-TESTS
 #
 #the entity name will then be organization_name+"_"+sensor_name+scr_addr, e.g. "UPPA_Sensor2"
 #
 
-orion_token = "this_is_my_authorization_token"
+auth_token = "this_is_my_authorization_token"
 
 #Note how we can indicate a device source addr that are allowed to use the script
 #Use decimal between 2-255 and use 4-byte hex format for LoRaWAN devAddr
