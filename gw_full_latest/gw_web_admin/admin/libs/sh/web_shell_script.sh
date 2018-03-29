@@ -252,7 +252,7 @@ then
 	tmp=$(mktemp)
 	if [ $# == 3 ] 
 	then
-		jq '.clouds=([.clouds[]  | select(.script == "python CloudOrion.py") .'$2' = '$3'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
+		jq '.clouds=([.clouds[]  | select(.script == "python CloudWAZIUP.py") .'$2' = '$3'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
 		sudo chown -R pi:pi /home/pi/lora_gateway/
 		sudo chmod +r /home/pi/lora_gateway/clouds.json
 	fi
@@ -288,19 +288,19 @@ then
 	#Replacing data in /home/pi/lora_gateway/key_Orion.p
 	if [ $2 = "source_list" ]
 	then
-		sudo sed -i 's/^source_list.*/source_list='"$3"'/g'''  /home/pi/lora_gateway/key_Orion.py
+		sudo sed -i 's/^source_list.*/source_list='"$3"'/g'''  /home/pi/lora_gateway/key_WAZIUP.py
 	elif [ $2 == "project_name" ] 
 	then
-		sudo sed -i 's/^project_name.*/project_name=\"'"$3"'\"/g' /home/pi/lora_gateway/key_Orion.py
+		sudo sed -i 's/^project_name.*/project_name=\"'"$3"'\"/g' /home/pi/lora_gateway/key_WAZIUP.py
 	elif [ $2 == "organization_name" ]
 	then
-		sudo sed -i 's/^organization_name.*/organization_name=\"'"$3"'\"/g' /home/pi/lora_gateway/key_Orion.py
+		sudo sed -i 's/^organization_name.*/organization_name=\"'"$3"'\"/g' /home/pi/lora_gateway/key_WAZIUP.py
 	elif [ $2 == "service_tree" ]
 	then
-		sudo sed -i 's/^service_tree.*/service_tree=\"'"$3"'\"/g' /home/pi/lora_gateway/key_Orion.py
-	elif [ $2 == "orion_token" ]
+		sudo sed -i 's/^service_tree.*/service_tree=\"'"$3"'\"/g' /home/pi/lora_gateway/key_WAZIUP.py
+	elif [ $2 == "auth_token" ]
 	then
-		sudo sed -i 's/^orion_token.*/orion_token=\"'"$3"'\"/g' /home/pi/lora_gateway/key_Orion.py	
+		sudo sed -i 's/^auth_token.*/auth_token=\"'"$3"'\"/g' /home/pi/lora_gateway/key_WAZIUP.py	
 	fi
 fi
 

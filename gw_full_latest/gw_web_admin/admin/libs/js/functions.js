@@ -1,6 +1,9 @@
 // shorter syntax for document.ready
 $(function () {
 //####################### LAST UPDATE #######################
+
+var maxAddr = 255;
+
 //#######################
 //# Setting Cloud No Internet status
 //#######################
@@ -103,7 +106,7 @@ $(function () {
 		$('#td_cloudGpsFile_organization_name_submit').show();
 	});
 
- 	$('#btn_edit_cloudGpsFile_organization_name').click(function(){
+ 	$('#btn_cloudGpsFile_organization_name_submit').click(function(){
 		var cloud_key_value = $('#cloudGpsFile_organization_name_input').val();
 		var cloud_key_name = "gpsfile_key";
 		var cloud_key = "organization_name";
@@ -132,7 +135,7 @@ $(function () {
 		$('#td_edit_cloudGpsFile_sensor_name').show();
 		$('#td_cloudGpsFile_sensor_name_submit').show();
 	});
- 	$('#btn_edit_cloudGpsFile_sensor_name').click(function(){
+ 	$('#btn_cloudGpsFile_sensor_name_submit').click(function(){
 		var cloud_key_value = $('#cloudGpsFile_sensor_name_input').val();
 		var cloud_key_name = "gpsfile_key";
 		var cloud_key = "sensor_name";
@@ -166,15 +169,14 @@ $(function () {
 		var cloud_key_name = "gpsfile_key";
 		var cloud_key = "source_list";
 
-		
 		cloud_key_value = String(cloud_key_value);
 		var buffer = cloud_key_value.split(",");
 		for(x in buffer){
 			buffer[x] = buffer[x].split(' ').join("");
 			var n = parseInt(buffer[x]);
-			if(n === NaN || n < 2 || n > 254){
+			if(n === NaN || n < 2 || n > maxAddr){
 				console.log(n);
-				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and 254");
+				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
 				return -1;
 			}					
 		}
@@ -185,7 +187,7 @@ $(function () {
 			$('#cloud_msg').html(data);
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
-  				$('#cloud_msg').html();
+  				$('#cloud_msg').html("");
 	   		 },5000);
 		});
 	    	
@@ -206,6 +208,7 @@ $(function () {
 		$('#td_edit_cloudGpsFile_active_interval').show();
 		$('#td_cloudGpsFile_active_interval_submit').show();
 	});
+	
  	$('#btn_cloudGpsFile_active_interval_submit').click(function(){
 		var cloud_key_value = $('#cloudGpsFile_active_interval_input').val();
 		var cloud_key_name = "gpsfile_key";
@@ -240,6 +243,7 @@ $(function () {
 		$('#td_edit_cloudGpsFile_sms').show();
 		$('#td_cloudGpsFile_sms_submit').show();
 	});
+	
  	$('#btn_cloudGpsFile_sms_submit').click(function(){
 		var cloud_key_value = $('#div_cloudGpsFile_sms input:checked').val();
 		var cloud_key_name = "gpsfile_key";
@@ -273,6 +277,7 @@ $(function () {
 		$('#td_edit_cloudGpsFile_pin').show();
 		$('#td_cloudGpsFile_pin_submit').show();
 	});
+	
  	$('#btn_cloudGpsFile_pin_submit').click(function(){
 		var cloud_key_value = $('#cloudGpsFile_pin_input').val();
 		var cloud_key_name = "gpsfile_key";
@@ -616,9 +621,9 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 		for(x in buffer){
 			buffer[x] = buffer[x].split(' ').join("");
 			var n = parseInt(buffer[x]);
-			if(n === NaN || n < 2 || n > 254){
+			if(n === NaN || n < 2 || n > maxAddr){
 				console.log(n);
-				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and 254");
+				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
 				return -1;
 			}					
 		}
@@ -629,7 +634,7 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 			$('#cloud_msg').html(data);
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
-  				$('#cloud_msg').html();
+  				$('#cloud_msg').html("");
 	   		 },5000);
 		});
 	    	
@@ -663,9 +668,9 @@ $('#btn_waziup_source_list_submit').click(function(){
 		for(x in buffer){
 			buffer[x] = buffer[x].split(' ').join("");
 			var n = parseInt(buffer[x]);
-			if(n === NaN || n < 2 || n > 254){
+			if(n === NaN || n < 2 || n > maxAddr){
 				console.log(n);
-				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and 254");
+				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
 				return -1;
 			}					
 		}
@@ -676,7 +681,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 			$('#cloud_msg').html(data);
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
-  				$('#cloud_msg').html();
+  				$('#cloud_msg').html("");
 	   		 },5000);
 		});
 	    	
@@ -834,9 +839,9 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 		for(x in buffer){
 			buffer[x] = buffer[x].split(' ').join("");
 			var n = parseInt(buffer[x]);
-			if(n === NaN || n < 2 || n > 254){
+			if(n === NaN || n < 2 || n > maxAddr){
 				console.log(n);
-				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and 254");
+				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
 				return -1;
 			}					
 		}
@@ -847,7 +852,7 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 			$('#cloud_msg').html(data);
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
-  				$('#cloud_msg').html();
+  				$('#cloud_msg').html("");
 	   		 },5000);
 		});
 	    	
@@ -1929,21 +1934,21 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 
     
 //##############################
-//# Setting Waziup Orion token
+//# Setting Waziup auth token
 //##############################
-    $('#td_edit_orion_token').hide();
-    $('#td_orion_token_submit').hide();
+    $('#td_edit_auth_token').hide();
+    $('#td_auth_token_submit').hide();
     $("#waziup_status_msg").hide();
     
-    $('#btn_edit_orion_token').click(function() {	
-    	$('#td_edit_orion_token').show();
-    	$('#td_orion_token_submit').show();
+    $('#btn_edit_auth_token').click(function() {	
+    	$('#td_edit_auth_token').show();
+    	$('#td_auth_token_submit').show();
     });
  
-    $('#orion_token_submit').click(function() {	
-    	orion_token = $('#orion_token_input').val();
+    $('#auth_token_submit').click(function() {	
+    	auth_token = $('#auth_token_input').val();
     	//alert(serv);
-    	$.get("process.php", {orion_token: orion_token}, function(data){	
+    	$.get("process.php", {auth_token: auth_token}, function(data){	
 			//$('#waziup_status_msg').html(data);
 			//$('#waziup_status_msg').show();
 			$('#cloud_msg').html(data);
@@ -1953,11 +1958,11 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 	    		},5000);
         });
     	
-	if(orion_token !='')		
-        	$('#orion_token_value').html(orion_token);
-        $('#orion_token_input').val("");
-        $('#td_edit_orion_token').hide();
-    	$('#td_orion_token_submit').hide();
+	if(auth_token !='')		
+        	$('#auth_token_value').html(auth_token);
+        $('#auth_token_input').val("");
+        $('#td_edit_auth_token').hide();
+    	$('#td_auth_token_submit').hide();
     });
     
 //#######################

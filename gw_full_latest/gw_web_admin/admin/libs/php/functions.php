@@ -145,8 +145,8 @@ function process_clouds_json(&$clouds, &$encrypted_clouds, &$lorawan_encrypted_c
 }
 
 function process_key_clouds(){
-	$key_orion = "/home/pi/lora_gateway/key_Orion.py";
-	if(is_file($key_orion)){	
+	$key_waziup = "/home/pi/lora_gateway/key_WAZIUP.py";
+	if(is_file($key_waziup)){	
 		return json_decode(exec('python /var/www/html/admin/libs/python/key_clouds.py'), true);
 	}
 	else{

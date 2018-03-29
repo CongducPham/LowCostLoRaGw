@@ -13,7 +13,7 @@
 			<tbody>
 			<tr>
 			<td>Enabled</td>
-			<td id="waziup_status_value"><?php cloud_status($clouds, "python CloudOrion.py"); ?></td>
+			<td id="waziup_status_value"><?php cloud_status($clouds, "python CloudWAZIUP.py"); ?></td>
 			<td align="right"><button id="btn_edit_waziup_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
 			<td id="td_edit_waziup_status">
 				<div id="div_waziup_status_options" class="form-group">
@@ -79,16 +79,16 @@
 			</tr>
 
 			<tr>
-			<td>Orion token</td>
-			<td id="orion_token_value"><?php echo $key_clouds['orion_token']; ?></td>
-			<td align="right"><button id="btn_edit_orion_token" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
-			<td id="td_edit_orion_token">
-				<div id="div_update_orion_token" class="form-group">
-					<label>Orion token</label>
-					<input id="orion_token_input" class="form-control" placeholder="Orion token" name="orion_token" type="text" value="" autofocus></div>
+			<td>auth token</td>
+			<td id="auth_token_value"><?php echo $key_clouds['auth_token']; ?></td>
+			<td align="right"><button id="btn_edit_auth_token" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+			<td id="td_edit_auth_token">
+				<div id="div_update_auth_token" class="form-group">
+					<label>auth token</label>
+					<input id="auth_token_input" class="form-control" placeholder="auth token" name="auth_token" type="text" value="" autofocus></div>
 			</td> 
-			<td id="td_orion_token_submit" align="right">
-					<button id="orion_token_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+			<td id="td_auth_token_submit" align="right">
+					<button id="auth_token_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
 			</td>
 			</tr>
 			<tr>
@@ -143,13 +143,13 @@
 			</tr>										
 			</tbody>
 		</table>
-		<p>The WAZIUP cloud uses the FIWARE Orion broker and adopts a domain approach: the domain will be defined as <tt>project_name+'-'+organization_name+service_tree</tt>, e.g. <tt>waziup-UPPA-OFFICE1-TESTS</tt> if <tt>project_name</tt> is <tt>waziup</tt>, <tt>organization_name</tt> is <tt>UPPA</tt> and <tt>service_tree</tt> is <tt>-OFFICE1-TESTS</tt> (<tt>service_tree</tt> can be empty otherwise it must begin with a '-'). The device id will be <tt>organization_name+"Sensor"+device_addr</tt>. For instance, for sensor 2 hosted by <tt>UPPA</tt>: <tt>UPPA_Sensor2</tt>.</p>
+		<p>The WAZIUP cloud uses FIWARE platform and adopts a domain approach: the domain will be defined as <tt>project_name+'-'+organization_name+service_tree</tt>, e.g. <tt>waziup-UPPA-OFFICE1-TESTS</tt> if <tt>project_name</tt> is <tt>waziup</tt>, <tt>organization_name</tt> is <tt>UPPA</tt> and <tt>service_tree</tt> is <tt>-OFFICE1-TESTS</tt> (<tt>service_tree</tt> can be empty otherwise it must begin with a '-'). The device id will be <tt>organization_name+"Sensor"+device_addr</tt>. For instance, for sensor 2 hosted by <tt>UPPA</tt>: <tt>UPPA_Sensor2</tt>.</p>
 		
-		<p>With the domain approach, the URL will be for instance <tt>http://dev.waziup.io/api/v1/domains/<font color="red">waziup-UPPA-OFFICE1-TESTS</font>/sensors</tt>.</p>
+		<p>With the domain approach, the URL will be for instance <tt>http://api.waziup.io/api/v1/domains/<font color="red">waziup-UPPA-OFFICE1-TESTS</font>/sensors</tt>.</p>
 		
 		<p>The default <tt>organization_name</tt> is 'ORG'. It is necessary to change it to your organization name.</p>
 		
-		<p><b>Do not use space</b> in any of these parameters, use '_' or '-' instead.</p>
+		<p><b>Do not use space nor '/'</b> in any of these parameters, use '_' or '-' instead.</p>
 		
 		</div>
 	</div>

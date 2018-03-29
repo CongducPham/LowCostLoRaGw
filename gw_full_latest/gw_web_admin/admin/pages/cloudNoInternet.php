@@ -33,7 +33,7 @@
 			   </tr>
 			 </tbody>
 			</table>
-			<p>Cloud No Internet is used with WAZIUP Orion cloud only.</pp>
+			<p>Cloud No Internet is used with WAZIUP cloud only.</pp>
 		  </div>
 		</div>
 </div>		

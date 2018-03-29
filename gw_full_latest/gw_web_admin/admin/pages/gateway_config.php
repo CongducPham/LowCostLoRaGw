@@ -323,7 +323,6 @@ require 'header.php';
    										   			<div id="latitude_value" class="display:inline">
    														<?php echo  "Latitude : " . $gw_conf['ref_latitude'];?>
    										   			</div>
-   										   			</br>
    										   			<div id="longitude_value" class="display:inline	">
    										   			 	<?php echo  "Longitude : " . $gw_conf['ref_longitude'];?>
    										   			</div>

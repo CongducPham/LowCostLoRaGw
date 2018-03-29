@@ -16,8 +16,8 @@ process_clouds_json($clouds, $encrypted_clouds, $lorawan_encrypted_clouds);
 
 $key_clouds = process_key_clouds();
 
-$key_orion_file = "/home/pi/lora_gateway/key_Orion.py";	
-$orion = is_file($key_orion_file);
+$key_waziup_file = "/home/pi/lora_gateway/key_WAZIUP.py";	
+$waziup = is_file($key_waziup_file);
 
 require 'header.php';
 ?>
@@ -61,8 +61,8 @@ require 'header.php';
                                 <li class="active"><a href="#thingSpeak-pills" data-toggle="tab">ThingSpeak</a>
                                 </li>
 								<?php
-									if($orion){	
-                            			echo '<li><a href="#waziup-pills" data-toggle="tab">Waziup Orion</a></li>';
+									if($waziup){	
+                            			echo '<li><a href="#waziup-pills" data-toggle="tab">Cloud WAZIUP</a></li>';
 									}
 								?>
 								<li><a href="#cloudNoInternet-pills" data-toggle="tab">Cloud No Internet</a>
@@ -183,8 +183,8 @@ require 'header.php';
                                 </div>
                                 <!-- tab-pane -->
 									<?php 
-										if($orion){
-                                			require 'orion.php';
+										if($waziup){
+                                			require 'waziup.php';
 										}
 									?>
     								

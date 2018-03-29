@@ -2,18 +2,18 @@ import json
 import sys
 
 sys.path.insert(0, '/home/pi/lora_gateway')
-import key_Orion
+import key_WAZIUP
 import key_ThingSpeak
 import key_NoInternet
 import key_GpsFile
 import key_MQTT
 import key_NodeRed
 
-key_data = {'project_name':key_Orion.project_name, 
-		'organization_name':key_Orion.organization_name, 
-		'service_tree':key_Orion.service_tree,
-		'orion_token':key_Orion.orion_token, 
-		'waziup_source_list':key_Orion.source_list,
+key_data = {'project_name':key_WAZIUP.project_name, 
+		'organization_name':key_WAZIUP.organization_name, 
+		'service_tree':key_WAZIUP.service_tree,
+		'auth_token':key_WAZIUP.auth_token, 
+		'waziup_source_list':key_WAZIUP.source_list,
 		'thingspeak_channel_key':key_ThingSpeak._def_thingspeak_channel_key,
 		'thingspeak_source_list':key_ThingSpeak.source_list,
 		'mqtt_server':key_MQTT.MQTT_server,
