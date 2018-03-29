@@ -30,6 +30,11 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  March 28th, 2018
+ *		- check at packet reception that the packet type is correct, otherwise discard the packet and returned error code is 5
+ *  Feb 28th, 2018
+ *		- there is no longer is_binary flag, replaced by is_downlink flag
+ *		- the flags are then from left to right: ack_requested|encrypted|with_appkey|is_downlink
  *  Feb 25th, 2018
  *      - use shared payload buffer for packet_sent and packet_received
  *      - use dedicated smaller buffer for ACK
@@ -4033,6 +4038,9 @@ uint8_t SX1272::receivePacketTimeout()
 /*
  Function: Configures the module to receive information.
  Returns: Integer that determines if there has been any error
+   state = 5  --> The packet header (packet type) has not been recognized
+   state = 4  --> The packet has been incorrectly received (CRC for instance)
+   state = 3  --> No packet has been received during the receive windows 
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
@@ -4047,7 +4055,6 @@ uint8_t SX1272::receivePacketTimeout(uint16_t wait)
 {
     uint8_t state = 2;
     uint8_t state_f = 2;
-
 
 #if (SX1272_debug_mode > 1)
     Serial.println();
@@ -4079,7 +4086,11 @@ uint8_t SX1272::receivePacketTimeout(uint16_t wait)
         {
             state_f = 4;  // The packet has been incorrectly received
         }
-        else
+        else if ( _reception == INCORRECT_PACKET_TYPE )
+        {
+            state_f = 5;  // The packet type has not been recognized
+        }
+        else        
         {
             state_f = 0;  // The packet has been correctly received
             // added by C. Pham
@@ -4689,6 +4700,15 @@ int8_t SX1272::getPacket(uint16_t wait)
         // modified by C. Pham
         if (!_rawFormat) {
             packet_received.type = readRegister(REG_FIFO);		// Reading second byte of the received packet
+            // check packet type to discard unknown packet type
+            if ( (packet_received.type & PKT_TYPE_MASK != PKT_TYPE_DATA) && (packet_received.type & PKT_TYPE_MASK != PKT_TYPE_ACK) ) {
+                _reception = INCORRECT_PACKET_TYPE;
+                state = 3;
+#if (SX1272_debug_mode > 0)
+                Serial.println(F("** The packet type is incorrect **"));
+#endif            	
+				return state;	
+            }             
             packet_received.src = readRegister(REG_FIFO);		// Reading second byte of the received packet
             packet_received.packnum = readRegister(REG_FIFO);	// Reading third byte of the received packet
             //packet_received.length = readRegister(REG_FIFO);	// Reading fourth byte of the received packet
@@ -6234,56 +6254,56 @@ uint8_t SX1272::getACK(uint16_t wait)
                             else
                             {
                                 state = 1;
-                                //#if (SX1272_debug_mode > 0)
+                                #if (SX1272_debug_mode > 0)
                                 Serial.println(F("** N-ACK received **"));
                                 Serial.println();
-                                //#endif
+                                #endif
                             }
                         }
                         else
                         {
                             state = 1;
-                            //#if (SX1272_debug_mode > 0)
+                            #if (SX1272_debug_mode > 0)
                             Serial.println(F("** ACK length incorrectly received **"));
                             Serial.println();
-                            //#endif
+                            #endif
                         }
                     }
                     else
                     {
                         state = 1;
-                        //#if (SX1272_debug_mode > 0)
+                        #if (SX1272_debug_mode > 0)
                         Serial.println(F("** ACK number incorrectly received **"));
                         Serial.println();
-                        //#endif
+                        #endif
                     }
                 }
                 else
                 {
                     state = 1;
-                    //#if (SX1272_debug_mode > 0)
+                    #if (SX1272_debug_mode > 0)
                     Serial.println(F("** ACK source incorrectly received **"));
                     Serial.println();
-                    //#endif
+                    #endif
                 }
             }
         }
         else
         {
             state = 1;
-            //#if (SX1272_debug_mode > 0)
+            #if (SX1272_debug_mode > 0)
             Serial.println(F("** ACK destination incorrectly received **"));
             Serial.println();
-            //#endif
+            #endif
         }
     }
     else
     {
         state = 1;
-        //#if (SX1272_debug_mode > 0)
+        #if (SX1272_debug_mode > 0)
         Serial.println(F("** ACK lost **"));
         Serial.println();
-        //#endif
+        #endif
     }
     clearFlags();	// Initializing flags
     return state;

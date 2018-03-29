@@ -417,14 +417,14 @@ We plan in the future to send appropriate message to a LoRaWAN network server (s
 Adding new features
 ===================
 
-The gateway architecture is flexible on purpose for adding or customizing your gateway by modifying the `post_processing_gw.py` script or the `post_status_processing_gw.py` script or by adding now cloud scripts. To add new options, you can either add new fields in one of the current sections in `gateway_conf.json`, or add a brand new section. 
+The gateway architecture is flexible on purpose for adding or customizing your gateway by modifying the `post_processing_gw.py` script or the `post_status_processing_gw.py` script or by adding new cloud scripts. To add new options, you can either add new fields in one of the current sections in `gateway_conf.json`, or add a brand new section. 
 
 New cloud platforms can be added by writing new cloud scripts and adding them to `clouds.json`. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md).
 
 Use `cmd.sh` to interact with the gateway
 =======================================
 
-You can use `cmd.sh` as follows:
+When you connect with `ssh` to the gateway, a text command interface, `cmd.sh`, is launched. If you have the WiFi access point enabled you can use a smartphone with an `ssh` app to log on 192.168.200.1. On iOS we tested with `Termius` and on Android we tested with `JuiceSSH`. You can use `cmd.sh` as follows:
 
 	> ./cmd.sh
 	=======================================* Gateway 00000027EBBEDA21 *===
@@ -501,7 +501,7 @@ You can start manually the gateway for test purposes with option `0`.
 	
 **IMPORTANT NOTICE**: To run an operation gateway, it is better to reboot the gateway and let the LoRa gateway program start at boot. Manually lauching the gateway can be usefull for test purposes but we observed that redirections of LoRa gateway output to the post-processing stage can be broken thus leading to a not responding gateway.
 
-You can then use option `5` to see the logs in real time. To test the simple low-level gateway, use option `1`. You can `ssh` at any time and use option `5` to see the latest packets that have been received. If you have the WiFi access point enabled you can use a smartphone with an `ssh` app to log on 192.168.200.1 and launch `cmd.sh` from your smartphone.	
+You can then use option `5` to see the logs in real time. To test the simple low-level gateway, use option `1` (after killing all gateway's processes with option `K`. You can `ssh` at any time and use option `5` to see the latest packets that have been received. 	
 
 You can easily add new useful commands to the `cmd.sh` shell script.
 	

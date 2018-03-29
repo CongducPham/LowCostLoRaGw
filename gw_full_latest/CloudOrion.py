@@ -76,7 +76,7 @@ except AttributeError:
 # curl -X POST "http://dev.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors/UPPA_Sensor2/measurements/TC/values" -H  "accept:application/json" -H  "content-type:application/json" -d '{"value":"25.6","timestamp":"2016-06-08T18:20:27.873Z"}'
 
 #To retrieve the last data point inserted:
-
+#curl -X GET "http://dev.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors/UPPA_Sensor2/measurements/TC" -H  "accept:application/json" -H  "content-type:application/json"
 
 ####################################################
 
@@ -248,11 +248,8 @@ def send_data(data, src, nomenclatures, tdata):
 			orion_data = orion_data+data[i+2]+',"timestamp":"'+tdata+'"}'
 		else:
 			orion_data = orion_data+'"'+data[i+2]+'","timestamp":"'+tdata+'"}'
-
-		i += 1
 					
 		print "CloudOrion: will issue requests with"
-		
 		print 'url: '+orion_url
 		#print 'headers: '+json.dumps(orion_headers)
 		print 'data: '+orion_data
@@ -261,28 +258,53 @@ def send_data(data, src, nomenclatures, tdata):
 			response = requests.post(orion_url, headers=orion_headers, data=orion_data, timeout=30)
 
 			print 'Orion: returned msg from server is ',
-			print response.status_code	
-		
-			if response.status_code==403:
-				entity_need_to_be_created=True
-				create_new_entity(data, src, nomenclatures, tdata)						
+			print response.status_code
+
 			if response.ok:
 				print 'Orion: upload success'
+				i += 1
+			elif response.status_code==403 or response.status_code==404:
+				#we try to (re-)create the measurement first
+				orion_url=key_Orion.orion_server + '/domains/'+key_Orion.project_name+key_Orion.service_path+'/sensors/'+key_Orion.organization_name+"_"+src+append_gw_str+'/measurements'
+				orion_data = '{"id":"'+nomenclatures[i]+'"}'
+				print "CloudOrion: will try to create measurement and issue requests with"
+				print 'url: '+orion_url
+				print 'data: '+orion_data	
+				
+				try:
+					response = requests.post(orion_url, headers=orion_headers, data=orion_data, timeout=30)
+								
+					print 'Orion: returned msg from server is ',
+					print response.status_code		
+					
+					if response.ok:
+						print 'Orion: measurement creation success'
+						print 'Orion: retry upload'
+					else:	
+						entity_need_to_be_created=True
+
+				except ConnectTimeout:
+					print 'Orion: requests command failed (maybe a disconnection)'
+					connection_failure = True						
+				
+			if entity_need_to_be_created:
+				create_new_entity(data, src, nomenclatures, tdata)
+				
 		except ConnectTimeout:
 			print 'Orion: requests command failed (maybe a disconnection)'
 			connection_failure = True			
-		
-
 
 # main
 # -------------------
 #
-# ldata can be formatted to indicate a specifc Fiware-Service and Fiware-ServicePath. Options are:
-# 	TC/22.4/HU/85 -> use default Fiware-Service and Fiware-ServicePath
-#	/UPPA/test#TC/22.4/HU/85 -> use default Fiware-Service and Fiware-ServicePath=/UPPA/test
-#	mywaziup#/UPPA/test#TC/22.4/HU/85 -> Fiware-Service=mywaziup and Fiware-ServicePath=/UPPA/test
+# ldata can be formatted to indicate a specific project_name and service_path. Options are:
+# 	TC/22.4/HU/85 -> use default project_name and service_path
+#	-UPPA-TESTS#TC/22.4/HU/85 -> use default project_name and service_path=-UPPA-TESTS
+#	waziup#-UPPA-TEST#TC/22.4/HU/85 -> project_name=waziup and service_path=-UPPA-TESTS
 #
-#	Fiware-Service and Fiware-ServicePath must BOTH have more than 2 characters
+#	project_name and service_path must BOTH have more than 2 characters
+#
+#   the final domain will be project_name+service_path, e.g waziup-UPPA-TESTS
 #
 def main(ldata, pdata, rdata, tdata, gwid):
 
@@ -316,7 +338,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		# this part depends on the syntax used by the end-device
 		# we use: TC/22.4/HU/85...
 		#
-		# but we accept also a_str#b_str#TC/22.4/HU/85... to indicate a Fiware-Service and Fiware-ServicePath
+		# but we accept also a_str#b_str#TC/22.4/HU/85... to indicate a project_name and a service_path
 		# or simply 22.4 in which case, the nomemclature will be DEF
 		 		
 		# get number of '#' separator
@@ -325,7 +347,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 				
 		# no separator
 		if nsharp==0:
-			# will use default Fiware-Service and Fiware-ServicePath
+			# will use default project_name and service_path
 			data=['','']
 
 			# get number of '/' separator on ldata
@@ -338,8 +360,8 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		
 			# only 1 separator
 			if nsharp==1:
-				# insert '' to indicate default Fiware-Service
-				# as we assume that the only parameter indicate the Fiware-ServicePath
+				# insert '' to indicate default project name
+				# as we assume that the only parameter indicate the service_path
 				data_array.insert(0,'');
 				# if the length is greater than 2
 				if len(data_array[1])<3:
@@ -354,14 +376,14 @@ def main(ldata, pdata, rdata, tdata, gwid):
 					data_array[1]=''
 									
 			# get number of '/' separator on data_array[2]
-			# because ldata may contain '/' as Fiware-ServicePath name
+			# because ldata may contain '/' in service_path name
 			nslash = data_array[2].count('/')
 	
 			# then reconstruct data_array
 			data_array=[data_array[0],data_array[1]]+re.split("/", data_array[2])
 				
 			# at the end data_array contains
-			# ["Fiware-Service", "Fiware-ServicePath", "s1", s1value, "s2", s2value, ...]
+			# ["project_name", "service_path", "s1", s1value, "s2", s2value, ...]
 		
 		# just in case we have an ending CR or 0
 		data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\n', '')
@@ -370,8 +392,8 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		nomenclatures = []
 		# data to send
 		data = []
-		data.append(data_array[0]) #Fiware-service (if '' default)
-		data.append(data_array[1]) #Fiware-servicePath (if '' default)
+		data.append(data_array[0]) #project_name (if '' default)
+		data.append(data_array[1]) #service_path (if '' default)
 		
 		if nslash==0:
 			# old syntax without nomenclature key, so insert only one key

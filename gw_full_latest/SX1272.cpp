@@ -30,6 +30,11 @@
 #include <math.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  March 28th, 2018
+ *		- check at packet reception that the packet type is correct, otherwise discard the packet and returned error code is 5
+ *  Feb 28th, 2018
+ *		- there is no longer is_binary flag, replaced by is_downlink flag
+ *		- the flags are then from left to right: ack_requested|encrypted|with_appkey|is_downlink
  *  Feb 25th, 2018
  *      - use shared payload buffer for packet_sent and packet_received
  *      - use dedicated smaller buffer for ACK
@@ -3993,6 +3998,9 @@ uint8_t SX1272::receivePacketTimeout()
 /*
  Function: Configures the module to receive information.
  Returns: Integer that determines if there has been any error
+   state = 5  --> The packet header (packet type) has not been recognized
+   state = 4  --> The packet has been incorrectly received (CRC for instance)
+   state = 3  --> No packet has been received during the receive windows 
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
@@ -4041,7 +4049,11 @@ uint8_t SX1272::receivePacketTimeout(uint16_t wait)
         {
             state_f = 4;  // The packet has been incorrectly received
         }
-        else
+        else if ( _reception == INCORRECT_PACKET_TYPE )
+        {
+            state_f = 5;  // The packet type has not been recognized
+        }
+        else        
         {
             state_f = 0;  // The packet has been correctly received
             // added by C. Pham
@@ -4658,9 +4670,20 @@ int8_t SX1272::getPacket(uint16_t wait)
         // modified by C. Pham
         if (!_rawFormat) {
             packet_received.type = readRegister(REG_FIFO);		// Reading second byte of the received packet
-            packet_received.src = readRegister(REG_FIFO);		// Reading second byte of the received packet
-            packet_received.packnum = readRegister(REG_FIFO);	// Reading third byte of the received packet
-            //packet_received.length = readRegister(REG_FIFO);	// Reading fourth byte of the received packet
+            
+            // check packet type to discard unknown packet type
+            if ( ((packet_received.type & PKT_TYPE_MASK) != PKT_TYPE_DATA) && ((packet_received.type & PKT_TYPE_MASK) != PKT_TYPE_ACK) ) {
+                _reception = INCORRECT_PACKET_TYPE;
+                state = 3;
+#if (SX1272_debug_mode > 0)
+                printf("** The packet type is incorrect **\n");
+#endif	
+            }    
+            else {          
+            	packet_received.src = readRegister(REG_FIFO);		// Reading second byte of the received packet
+            	packet_received.packnum = readRegister(REG_FIFO);	// Reading third byte of the received packet
+            	//packet_received.length = readRegister(REG_FIFO);	// Reading fourth byte of the received packet
+            }
         }
         else {
             packet_received.type = 0;
@@ -4668,68 +4691,71 @@ int8_t SX1272::getPacket(uint16_t wait)
             packet_received.packnum = 0;
         }
 
-        packet_received.length = readRegister(REG_RX_NB_BYTES);
+		if (_reception == CORRECT_PACKET) {
+		
+        	packet_received.length = readRegister(REG_RX_NB_BYTES);
 
-        if( _modem == LORA )
-        {
-            if (_rawFormat) {
-                _payloadlength=packet_received.length;
-            }
-            else
-                _payloadlength = packet_received.length - OFFSET_PAYLOADLENGTH;
-        }
-        if( packet_received.length > (MAX_LENGTH + 1) )
-        {
+        	if( _modem == LORA )
+			{
+				if (_rawFormat) {
+					_payloadlength=packet_received.length;
+				}
+				else
+					_payloadlength = packet_received.length - OFFSET_PAYLOADLENGTH;
+			}
+			if( packet_received.length > (MAX_LENGTH + 1) )
+			{
 #if (SX1272_debug_mode > 0)
-            printf("Corrupted packet, length must be less than 256\n");
+            	printf("Corrupted packet, length must be less than 256\n");
 #endif
-        }
-        else
-        {
-            for(unsigned int i = 0; i < _payloadlength; i++)
-            {
-                packet_received.data[i] = readRegister(REG_FIFO); // Storing payload
-            }
+			}
+			else
+			{
+				for(unsigned int i = 0; i < _payloadlength; i++)
+				{
+					packet_received.data[i] = readRegister(REG_FIFO); // Storing payload
+				}
 
-            // commented by C. Pham
-            //packet_received.retry = readRegister(REG_FIFO);
+				// commented by C. Pham
+				//packet_received.retry = readRegister(REG_FIFO);
 
-            // Print the packet if debug_mode
+				// Print the packet if debug_mode
 #if (SX1272_debug_mode > 0)
-            printf("## Packet received:\n");
-            printf("Destination: ");
-            printf("%d\n", packet_received.dst);			 	// Printing destination
-	    printf("Type: ");
-            printf("%d\n", packet_received.type);			 	// Printing type    
-            printf("Source: ");
-            printf("%d\n", packet_received.src);			 	// Printing source
-            printf("Packet number: ");
-            printf("%d\n", packet_received.packnum);			// Printing packet number
-            printf("Packet length: ");
-            printf("%d\n", packet_received.length);			// Printing packet length
-            printf("Data: ");
-            for(unsigned int i = 0; i < _payloadlength; i++)
-            {
-                printf("%c", packet_received.data[i]);		// Printing payload
-            }
-            printf("\n");
-            //printf("Retry number: ");
-            //printf("%d\n", packet_received.retry);			// Printing number retry
-            printf(" ##\n");
-            printf("\n");
+				printf("## Packet received:\n");
+				printf("Destination: ");
+				printf("%d\n", packet_received.dst);			 	// Printing destination
+				printf("Type: ");
+				printf("%d\n", packet_received.type);			 	// Printing type    
+				printf("Source: ");
+				printf("%d\n", packet_received.src);			 	// Printing source
+				printf("Packet number: ");
+				printf("%d\n", packet_received.packnum);			// Printing packet number
+				printf("Packet length: ");
+				printf("%d\n", packet_received.length);			// Printing packet length
+				printf("Data: ");
+				for(unsigned int i = 0; i < _payloadlength; i++)
+				{
+					printf("%c", packet_received.data[i]);		// Printing payload
+				}
+				printf("\n");
+				//printf("Retry number: ");
+				//printf("%d\n", packet_received.retry);			// Printing number retry
+				printf(" ##\n");
+				printf("\n");
 #endif
-            state = 0;
+            	state = 0;
 
 #ifdef W_REQUESTED_ACK
-            // added by C. Pham
-            // need to send an ACK
-            if (packet_received.type & PKT_FLAG_ACK_REQ) {
-                state = 5;
-                _requestACK_indicator=1;
-            }
-            else
-                _requestACK_indicator=0;
+				// added by C. Pham
+				// need to send an ACK
+				if (packet_received.type & PKT_FLAG_ACK_REQ) {
+					state = 5;
+					_requestACK_indicator=1;
+				}
+				else
+					_requestACK_indicator=0;
 #endif
+        	}
         }
     }
     else

@@ -353,6 +353,7 @@ const uint16_t MAX_WAIT = 12000;		//12000 msec = 12.0 sec
 const uint8_t MAX_RETRIES = 5;
 const uint8_t CORRECT_PACKET = 0;
 const uint8_t INCORRECT_PACKET = 1;
+const uint8_t INCORRECT_PACKET_TYPE = 2;
 
 // added by C. Pham
 // Packet type definition
