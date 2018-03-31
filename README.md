@@ -35,6 +35,8 @@ Look also at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.
 Features
 --------
 
+- **NEW** remote access to your gateway from anywhere with ngrok
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-remote-access-ngrok.md)
 - a simple, user-friendly web admin interface to configure and update your gateway
 	- open a browser and go to http://`gw_ip_address`/admin
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/gw_web_admin/README.md)

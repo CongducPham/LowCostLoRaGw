@@ -13,6 +13,8 @@ Quick start
 There are additional dedicated README files
 -------------------------------------------
 
+- remote access to your gateway from anywhere with ngrok
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-remote-access-ngrok.md)
 - interfacing with Node-Red
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NodeRed.md)
 - cloud management approach
@@ -456,6 +458,10 @@ When you connect with `ssh` to the gateway, a text command interface, `cmd.sh`, 
 	B- edit gateway_conf.json                                            +
 	C- show clouds.json                                                  +
 	D- edit clouds.json                                                  +
+	----------------------------------------------------------* ngrok *--+
+	M- get and install ngrok                                             +
+	N- ngrok authtoken                                                   +
+	O- ngrok tcp 22                                                      + 	
 	---------------------------------------------------------* Update *--+
 	U- update to latest version on repository                            +
 	V- download and install a file                                       +

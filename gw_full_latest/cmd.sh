@@ -90,9 +90,9 @@ echo "d- disable Node-Red at boot                                          +"
 #echo "e- run: tail -f rfcomm.log                                           +"
 echo "---------------------------------------------------* Connectivity *--+"
 echo "f- test: ping www.univ-pau.fr                                        +"
-echo "g- wifi: configure as WiFi client at next reboot                    +"
-echo "h- wifi: indicate WiFi SSID and password at next reboot             +"
-echo "i- wifi: configure as WiFi access point at next reboot              +" 
+echo "g- wifi: configure as WiFi client at next reboot                     +"
+echo "h- wifi: indicate WiFi SSID and password at next reboot              +"
+echo "i- wifi: configure as WiFi access point at next reboot               +"
 echo "--------------------------------------------------* Filtering msg *--+"
 echo "l- List LoRa reception indications                                   +"
 echo "m- List radio module reset indications                               +"
@@ -104,6 +104,10 @@ echo "A- show gateway_conf.json                                            +"
 echo "B- edit gateway_conf.json                                            +"
 echo "C- show clouds.json                                                  +"
 echo "D- edit clouds.json                                                  +"
+echo "----------------------------------------------------------* ngrok *--+"
+echo "M- get and install ngrok                                             +"
+echo "N- ngrok authtoken                                                   +"
+echo "O- ngrok tcp 22                                                      +" 
 echo "---------------------------------------------------------* Update *--+"
 echo "U- update to latest version on repository                            +"
 echo "V- download and install a file                                       +"
@@ -358,6 +362,44 @@ if [ "$choice" = "D" ]
                 nano clouds.json
             else
                 echo "Error: clouds.json does not exist"
+        fi	
+fi
+
+if [ "$choice" = "M" ] 
+    then
+    	cd /home/pi/Downloads
+		sudo wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-arm.zip
+		unzip ngrok-stable-linux-arm.zip
+		if [ -f /home/pi/Downloads/ngrok ]
+        	then
+                echo "ngrok successfully installed"
+            else
+                echo "Error: ngrok is not installed"
+        fi
+        cp /home/pi/Downloads/ngrok /home/pi/lora_gateway
+        cd /home/pi/lora_gateway                        		
+fi
+
+if [ "$choice" = "N" ] 
+    then
+        if [ -f /home/pi/lora_gateway/ngrok ]
+        	then
+                echo "Enter you ngrok authtoken"
+                read ngrok_authtoken
+                /home/pi/lora_gateway/ngrok $ngrok_authtoken
+            else
+                echo "Error: ngrok is not installed"
+        fi	
+fi
+
+if [ "$choice" = "O" ] 
+    then
+        if [ -f /home/pi/lora_gateway/ngrok ]
+        	then
+                echo "Running ngrok tunnel for ssh"
+                /home/pi/lora_gateway/ngrok tcp 22
+            else
+                echo "Error: ngrok is not installed"
         fi	
 fi
 
