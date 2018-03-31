@@ -32,6 +32,7 @@
 /*  CHANGE LOGS by C. Pham
  *  March 28th, 2018
  *		- check at packet reception that the packet type is correct, otherwise discard the packet and returned error code is 5
+ *      - add max number of retries for CarrierSense
  *  Feb 28th, 2018
  *		- there is no longer is_binary flag, replaced by is_downlink flag
  *		- the flags are then from left to right: ack_requested|encrypted|with_appkey|is_downlink
@@ -131,7 +132,7 @@ SX1272::SX1272()
     // added by C. Pham
     _defaultSyncWord=0x12;
     _rawFormat=false;
-    _extendedIFS=true;
+    _extendedIFS=false;
     _RSSIonSend=true;
     // disabled by default
     _enableCarrierSense=false;
@@ -6683,11 +6684,14 @@ void SX1272::CarrierSense1() {
 
     int e;
     bool carrierSenseRetry=false;
+    uint8_t retries=3;
+    uint8_t DIFSretries=8;
 
-  	printf("--> CarrierSense1\n"); 
+    printf("--> CS1\n");
   	    
     if (_send_cad_number && _enableCarrierSense) {
         do {
+            DIFSretries=8;
             do {
 
                 // check for free channel (SIFS/DIFS)
@@ -6695,7 +6699,7 @@ void SX1272::CarrierSense1() {
                 e = doCAD(_send_cad_number);
                 _endDoCad=millis();
 
-                printf("--> CAD duration ");
+                printf("--> CAD ");
                 printf("%d\n", _endDoCad-_startDoCad);
 
                 if (!e) {
@@ -6705,7 +6709,7 @@ void SX1272::CarrierSense1() {
                         // wait for random number of CAD
                         uint8_t w = rand() % 8 + 1;
 
-                        printf("--> waiting for ");
+                        printf("--> wait for ");
                         printf("%d",w);
                         printf(" CAD = ");
                         printf("%d\n",sx1272_CAD_value[_loraMode]*w);
@@ -6717,24 +6721,24 @@ void SX1272::CarrierSense1() {
                         e = doCAD(_send_cad_number);
                         _endDoCad=millis();
 
-                        printf("--> CAD duration ");
+                        printf("--> CAD ");
                         printf("%d\n", _endDoCad-_startDoCad);
 
                         if (!e)
                             printf("OK2\n");
                         else
-                            printf("###2\n");
+                            printf("#2\n");
                     }
                 }
                 else {
-                    printf("###1\n");
+                    printf("#1\n");
 
                     // wait for random number of DIFS
                     uint8_t w = rand() % 8 + 1;
 
-                    printf("--> waiting for ");
+                    printf("--> wait for ");
                     printf("%d",w);
-                    printf(" DIFS (DIFS=3SIFS) = ");
+                    printf(" DIFS=3SIFS= ");
                     printf("%d\n",sx1272_SIFS_value[_loraMode]*3*w);
 
                     delay(sx1272_SIFS_value[_loraMode]*3*w);
@@ -6742,28 +6746,23 @@ void SX1272::CarrierSense1() {
                     printf("--> retry\n");
                 }
 
-            } while (e);
+            } while (e && --DIFSretries);
 
             // CAD is OK, but need to check RSSI
             if (_RSSIonSend) {
 
                 e=getRSSI();
-
-                uint8_t rssi_retry_count=10;
+                uint8_t rssi_retry_count=8;
 
                 if (!e) {
 
-                    printf("--> RSSI ");
-                    printf("%d\n",_RSSI);
-
-                    while (_RSSI > -90 && rssi_retry_count) {
-
-                        delay(1);
+                     do {
                         getRSSI();
                         printf("--> RSSI ");
                         printf("%d\n",_RSSI);
                         rssi_retry_count--;
-                    }
+                        delay(1);
+                    } while (_RSSI > -90 && rssi_retry_count);
                 }
                 else
                     printf("--> RSSI error\n");
@@ -6774,7 +6773,7 @@ void SX1272::CarrierSense1() {
                     carrierSenseRetry=false;
             }
 
-        } while (carrierSenseRetry);
+        } while (carrierSenseRetry && --retries);
     }
 }
 
@@ -6783,15 +6782,19 @@ void SX1272::CarrierSense2() {
   int e;
   bool carrierSenseRetry=false;  
   uint8_t foundBusyDuringDIFSafterBusyState=0;
+  uint8_t retries=3;
+  uint8_t DIFSretries=8;
   uint8_t n_collision=0;
   // upper bound of the random backoff timer
-  uint8_t W=2;  
+  uint8_t W=2;
+  uint32_t max_toa = sx1272.getToA(MAX_LENGTH);
   
-  printf("--> CarrierSense2: do CAD for DIFS=9CAD\n"); 
+  //CAD for DIFS=9CAD
+  printf("--> CS2\n");
   
   if (_send_cad_number && _enableCarrierSense) {
     do { 
-        
+      DIFSretries=8;
       do {
         //D f W
         //2 2 4
@@ -6809,7 +6812,7 @@ void SX1272::CarrierSense2() {
         e = sx1272.doCAD(_send_cad_number);
         _endDoCad=millis();
         
-        printf("--> DIFS duration ");
+        printf("--> DIFS ");
         printf("%ld\n",_endDoCad-_startDoCad);
 
         // successull SIFS/DIFS
@@ -6818,7 +6821,7 @@ void SX1272::CarrierSense2() {
           // previous collision detected
           if (n_collision) {
                 
-              printf("--> counting for ");
+              printf("--> count for ");
               // count for random number of CAD/SIFS/DIFS?   
               // SIFS=3CAD
               // DIFS=9CAD
@@ -6865,14 +6868,12 @@ void SX1272::CarrierSense2() {
           }
           else {
               printf("OK1\n");
-    
-              _extendedIFS=false;
               
               if (_extendedIFS)  {          
                 // wait for random number of CAD         
                 uint8_t w = rand() % 8 + 1;
     
-                printf("--> extended waiting for ");
+                printf("--> extended wait for ");
                 printf("%d\n",w);
                 printf(" CAD = ");
                 printf("%d\n",sx1272_CAD_value[_loraMode]*w);
@@ -6884,13 +6885,13 @@ void SX1272::CarrierSense2() {
                 e = sx1272.doCAD(_send_cad_number);
                 _endDoCad=millis();
      
-                printf("--> CAD duration ");
+                printf("--> CAD ");
                 printf("%ld\n",_endDoCad-_startDoCad);
             
                 if (!e)
                   printf("OK2\n");            
                 else
-                  printf("###2\n");
+                  printf("#2\n");
               }          
           }    
         }
@@ -6900,7 +6901,7 @@ void SX1272::CarrierSense2() {
           printf("###");  
           printf("%d\n",n_collision);
           
-          printf("--> Channel busy. Retry CAD until free channel\n");
+          printf("--> CAD until clear\n");
 
           int busyCount=0;
               
@@ -6914,7 +6915,7 @@ void SX1272::CarrierSense2() {
                 busyCount++;              
             }
                          
-          } while (e);
+          } while (e && (millis()-_startDoCad < 2*max_toa));
 
           _endDoCad=millis();
 
@@ -6929,39 +6930,34 @@ void SX1272::CarrierSense2() {
           e=1;
         }
 
-      } while (e);
+      } while (e && --DIFSretries);
     
       // CAD is OK, but need to check RSSI
       if (_RSSIonSend) {
-    
-          e=sx1272.getRSSI();
-          
-          uint8_t rssi_retry_count=10;
-          
+
+          e=getRSSI();
+          uint8_t rssi_retry_count=8;
+
           if (!e) {
-          
-            printf("--> RSSI ");
-            printf("%d\n", sx1272._RSSI);
-            
-            while (sx1272._RSSI > -90 && rssi_retry_count) {
-              
-              delay(1);
-              sx1272.getRSSI();
-              printf("--> RSSI ");
-              printf("%d\n",  sx1272._RSSI);       
-              rssi_retry_count--;
-            }
+
+               do {
+                  getRSSI();
+                  printf("--> RSSI ");
+                  printf("%d\n",_RSSI);
+                  rssi_retry_count--;
+                  delay(1);
+              } while (_RSSI > -90 && rssi_retry_count);
           }
           else
-            printf("--> RSSI error\n"); 
+              printf("--> RSSI error\n");
         
           if (!rssi_retry_count)
             carrierSenseRetry=true;  
           else
-      carrierSenseRetry=false;            
+            carrierSenseRetry=false;
       }
       
-    } while (carrierSenseRetry);  
+    } while (carrierSenseRetry && --retries);
   }
 }
 
@@ -6970,16 +6966,17 @@ void SX1272::CarrierSense3() {
   int e;
   bool carrierSenseRetry=false;
   uint8_t n_collision=0;
+  uint8_t retries=3;
   uint8_t n_cad=9;
   
-  uint32_t max_toa = sx1272.getToA(255);
+  uint32_t max_toa = sx1272.getToA(MAX_LENGTH);
   
   //unsigned long end_carrier_sense=0;
   
   if (_send_cad_number && _enableCarrierSense) {
     do { 
 
-      printf("--> CarrierSense3: do CAD for MaxToa=");
+      printf("--> CAD for MaxToa=");
       printf("%ld\n", max_toa);
         
       //end_carrier_sense=millis()+(max_toa/n_cad)*(n_cad-1);
@@ -6990,7 +6987,7 @@ void SX1272::CarrierSense3() {
         _endDoCad=millis();
 
         if (!e) {
-          printf("%ld\n", _endDoCad);
+          printf("%ld", _endDoCad);
           printf(" 0 ");
           printf("%d\n", sx1272._RSSI);
           printf(" ");
@@ -7005,20 +7002,20 @@ void SX1272::CarrierSense3() {
 
       if (e) {
         n_collision++;
-        printf("###");  
+        printf("###");
         printf("%d\n",n_collision);
-                  
+
         printf("Channel busy. Wait for MaxToA=");
-        printf("%ld\n", max_toa);      
+        printf("%ld\n", max_toa);
         delay(max_toa);
         // to perform a new max_toa waiting
-        printf("--> retry\n");        
+        printf("--> retry\n");
         carrierSenseRetry=true;
       }
       else
         carrierSenseRetry=false;
       
-    } while (carrierSenseRetry);  
+    } while (carrierSenseRetry && --retries);
   }
 }
 
