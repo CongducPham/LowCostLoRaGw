@@ -13,7 +13,7 @@ Quick start
 There are additional dedicated README files
 -------------------------------------------
 
-- remote access to your gateway from anywhere with ngrok
+- remote access to your gateway from anywhere with `ngrok`
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-remote-access-ngrok.md)
 - interfacing with Node-Red
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NodeRed.md)
@@ -319,7 +319,7 @@ If you need more advanced configuration, then run `config_gw.sh`. for advanced W
 - configure `/etc/hostapd/hostapd.conf` to advertise a WiFi SSID corresponding to last 5 hex-byte of your `eth0` interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
 
 `gateway_conf.json` options
-===========================
+---------------------------
 
 A typical `gateway_conf.json` is shown below:
 
@@ -417,14 +417,14 @@ We plan in the future to send appropriate message to a LoRaWAN network server (s
 ["alert_conf"]["gammurc_file"] is the path to the GAMMU configuration file for the 3G dongle. See the [3G Dongle README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/3GDongle/README.md).
 
 Adding new features
-===================
+-------------------
 
 The gateway architecture is flexible on purpose for adding or customizing your gateway by modifying the `post_processing_gw.py` script or the `post_status_processing_gw.py` script or by adding new cloud scripts. To add new options, you can either add new fields in one of the current sections in `gateway_conf.json`, or add a brand new section. 
 
 New cloud platforms can be added by writing new cloud scripts and adding them to `clouds.json`. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md).
 
 Use `cmd.sh` to interact with the gateway
-=======================================
+-----------------------------------------
 
 When you connect with `ssh` to the gateway, a text command interface, `cmd.sh`, is launched. If you have the WiFi access point enabled you can use a smartphone with an `ssh` app to log on 192.168.200.1. On iOS we tested with `Termius` and on Android we tested with `JuiceSSH`. You can use `cmd.sh` as follows:
 
