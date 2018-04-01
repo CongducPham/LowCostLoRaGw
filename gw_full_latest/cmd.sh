@@ -386,7 +386,7 @@ if [ "$choice" = "N" ]
         	then
                 echo "Enter you ngrok authtoken"
                 read ngrok_authtoken
-                /home/pi/lora_gateway/ngrok $ngrok_authtoken
+                /home/pi/lora_gateway/ngrok authtoken $ngrok_authtoken
             else
                 echo "Error: ngrok is not installed"
         fi	
