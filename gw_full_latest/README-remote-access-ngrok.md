@@ -6,10 +6,10 @@ This README describes a very simple and convenient way to access (and then admin
 Install `ngrok`
 ---------------
 
-If you update the gateway software (using the [web admin interface procedure](https://github.com/CongducPham/LowCostLoRaGw#option-i)) `ngrok` support will be installed. If you just want to add the `ngrok` feature without a full update of your gateway, then can you just use the web admin interface `Gateway Update`/`Download and install a file` to sequentially download and install the 2 following files (`ngrok`is about 13MB so it can take some time depending on your Internet access):
+If you update the gateway software (using the [web admin interface procedure](https://github.com/CongducPham/LowCostLoRaGw#option-i)) `ngrok` support will be installed. If you just want to add the `ngrok` feature without a full update of your gateway, then can you just use the web admin interface `Gateway Update`/`Download and install a file` to sequentially download and install the 2 following files by copy/paste the URL (`ngrok`is about 13MB so it can take some time depending on your Internet access):
 
-- `ngrok` binary: https://www.dropbox.com/s/9zdbx9g78q7qree/ngrok
-- `cmd.sh` update=: https://www.dropbox.com/s/0t8evgnanvzeqpz/cmd.sh  
+- `ngrok` binary: `https://www.dropbox.com/s/9zdbx9g78q7qree/ngrok`
+- `cmd.sh` update=: `https://www.dropbox.com/s/0t8evgnanvzeqpz/cmd.sh`  
 
 If you want to manually install the latest version of `ngrok` from `ngrok.com` use `ssh` to connect to your gateway, then:
 
