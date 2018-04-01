@@ -52,7 +52,7 @@ To start `ssh` remote access from anywhere in the world, even if your gateway is
 	Web Interface                 http://127.0.0.1:4040
 	Forwarding                    tcp://0.tcp.ngrok.io:48590 -> localhost:22
 	
-	Connections                   ttl     opn     rt1     rt5     p50     p90                                                                                                                                
+	Connections                   ttl     opn     rt1     rt5     p50     p90
 	                              0       0       0.00    0.00    0.00    0.00
 
 Then from a terminal you can get access to your gateway with:
@@ -70,7 +70,7 @@ You can use command `O` of the text command interface to start the `ngrok tcp 22
 Typical usage of the `ngrok` service
 ------------------------------------
 
-We use this `ngrok` service to administrate a deployed gateway when some troubleshooting and maintenance is needed. It is not intended for permanent access to a gateway but rather like a `Teamviewer`-like service. For instance, suppose that organization X with administrator person Y has a deployed gateway and Y needs some assistance. He creates an account with `ngrok`, install and run `ngrok tcp 22` and tell you (via phone, mail, SMS, Whatsapp,...) the `ngrok`'s URL, e.g. `tcp://0.tcp.ngrok.io:48590`. Then, from your office, you can just run `ssh -p 48590 pi@0.tcp.ngrok.io` to manage Y's gateway: upgrade the gateway, configure a particular service, troubleshooting,... When the maintenance is finished, Y will just tear down the `ngrok` tunnel.
+We use this `ngrok` service to administrate a deployed gateway when some troubleshooting and maintenance is needed. It is not intended for permanent access to a gateway but rather like a `Teamviewer`-like service. For instance, suppose that organization X with administrator person Y has a deployed gateway and Y needs some assistance. Y creates an account with `ngrok`, installs and runs `ngrok tcp 22`, then gives you (via phone, mail, SMS, `Whatsapp`,...) the `ngrok`'s URL, e.g. `tcp://0.tcp.ngrok.io:48590`. Then, from your office, you can just run `ssh -p 48590 pi@0.tcp.ngrok.io` to manage Y's gateway: upgrade the gateway, configure a particular service, troubleshooting,... When the maintenance is finished, Y will just tear down the `ngrok` tunnel.
 
 Use the `cmd.sh` text command interface
 ---------------------------------------
