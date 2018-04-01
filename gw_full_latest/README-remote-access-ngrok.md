@@ -44,16 +44,16 @@ To start `ssh` remote access from anywhere in the world, even if your gateway is
 `ngrok` will display something similar to:
 
 	ngrok by @inconshreveable
-																																																		 
-	Session Status                online                                                                                                                                                                     
-	Account                       Congduc Pham (Plan: Free)                                                                                                                                                  
-	Version                       2.2.8                                                                                                                                                                      
-	Region                        United States (us)                                                                                                                                                         
-	Web Interface                 http://127.0.0.1:4040                                                                                                                                                      
-	Forwarding                    tcp://0.tcp.ngrok.io:48590 -> localhost:22                                                                                                                                 
-																																																		 
+	
+	Session Status                online
+	Account                       Congduc Pham (Plan: Free)
+	Version                       2.2.8
+	Region                        United States (us)
+	Web Interface                 http://127.0.0.1:4040
+	Forwarding                    tcp://0.tcp.ngrok.io:48590 -> localhost:22
+	
 	Connections                   ttl     opn     rt1     rt5     p50     p90                                                                                                                                
-	                              0       0       0.00    0.00    0.00    0.00   	
+	                              0       0       0.00    0.00    0.00    0.00
 
 Then from a terminal you can get access to your gateway with:
 
