@@ -14,38 +14,32 @@
 			"type":"smsservice",
 			"enabled":false,
 			"always_enabled":false
-		},	
-		{	
-			"name":"WAZIUP SMS Service ",
-			"script":"python CloudOrionWAZIUP_SMS.py",
-			"type":"smsservice",
-			"enabled":false,
-			"always_enabled":false
-		},	
+		},
 		{
 			"name":"Temporary storage for no Internet connection",
 			"script":"python CloudNoInternet.py",
 			"type":"file",            
 			"enabled":false
-        },	
+        },			
 		{	
-			"name":"GPS",
-			"script":"python CloudGpsFile.py",
-			"type":"file",			
+			"name":"WAZIUP SMS Service ",
+			"script":"python CloudWAZIUP_SMS.py",
+			"type":"smsservice",
+			"enabled":false,
+			"always_enabled":false
+		},	
+		{
+			"name":"WAZIUP Orion cloud new API",
+			"script":"python CloudWAZIUP.py",
+			"type":"iotcloud",
 			"enabled":false
-		},	        							
+		},	        	        							
 		{	
 			"name":"WAZIUP Orion cloud old API",
 			"script":"python CloudOrion.py",
 			"type":"iotcloud",			
 			"enabled":false
-		},
-		{
-			"name":"WAZIUP cloud new API",
-			"script":"python CloudWAZIUP.py",
-			"type":"iotcloud",
-			"enabled":false
-		},						
+		},		
 		{	
 			"name":"ThingSpeak cloud",
 			"script":"python CloudThingSpeak.py",
@@ -63,7 +57,13 @@
 			"script":"python CloudMQTT.py",
 			"type":"MQTT on test.mosquitto.org",			
 			"enabled":false
-		},						
+		},
+		{	
+			"name":"GPS",
+			"script":"python CloudGpsFile.py",
+			"type":"file",			
+			"enabled":false
+		},									
 		{	
 			"name":"GroveStreams cloud",
 			"script":"python CloudGroveStreams.py",

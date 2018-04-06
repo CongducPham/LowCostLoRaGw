@@ -2,7 +2,6 @@
 
 ?>
 
- <div class="tab-pane fade" id="waziup-pills">
 	</br>
 	<div id="waziup_status_msg"></div>
 	
@@ -153,5 +152,3 @@
 		
 		</div>
 	</div>
-
-

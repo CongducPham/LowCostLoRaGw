@@ -27,13 +27,13 @@ import libSMS
 
 # get key definition from external file to ease
 # update of cloud script in the future
-import key_Orion
-import key_OrionWAZIUP_SMS
+import key_WAZIUP
+import key_WAZIUP_SMS
 
 try:
-	key_Orion.source_list
+	key_WAZIUP.source_list
 except AttributeError:
-	key_Orion.source_list=[]
+	key_WAZIUP.source_list=[]
 
 global sm, always_enabled, gammurc_file
 
@@ -57,7 +57,7 @@ clouds = json_array["clouds"]
 
 #here we check for our own script entry
 for cloud in clouds:
-	if "CloudOrionWAZIUP_SMS.py" in cloud["script"]:
+	if "CloudWAZIUP_SMS.py" in cloud["script"]:
 			
 		try:
 			always_enabled = cloud["always_enabled"]
@@ -76,28 +76,29 @@ if not always_enabled:
 		sys.exit()
 		
 try:
-	gammurc_file=key_OrionWAZIUP_SMS.gammurc_file
+	gammurc_file=key_WAZIUP_SMS.gammurc_file
 except AttributeError:
 	gammurc_file="/home/pi/.gammurc"
 	
 #check Gammu configuration
 if (not libSMS.gammuCheck()):
-	print 'CloudOrionWAZIUP_SMS: Gammu is not available'
+	print 'CloudWAZIUP_SMS: Gammu is not available'
 	sys.exit()
 else: 
 	if (not libSMS.gammurcCheck(gammurc_file)):
-		print 'CloudOrionWAZIUP_SMS: gammurc file is not available'
+		print 'CloudWAZIUP_SMS: gammurc file is not available'
 		sys.exit()
 
-if (libSMS.phoneConnection(gammurc_file, key_OrionWAZIUP_SMS.PIN) == None):
-	print 'CloudOrionWAZIUP_SMS: Can not connect to cellular network'
+if (libSMS.phoneConnection(gammurc_file, key_WAZIUP_SMS.PIN) == None):
+	print 'CloudWAZIUP_SMS: Can not connect to cellular network'
 	sys.exit()
 else:	
-	sm = libSMS.phoneConnection(gammurc_file, key_OrionWAZIUP_SMS.PIN)
+	sm = libSMS.phoneConnection(gammurc_file, key_WAZIUP_SMS.PIN)
 		
 
 # main
 # -------------------
+# mainly a replication of the CloudWAZIUP.py code
 
 def main(ldata, pdata, rdata, tdata, gwid):
 	
@@ -123,12 +124,13 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	else:
 		src_str=str(src)	
 
-	if (src_str in key_Orion.source_list) or (len(key_Orion.source_list)==0):
+	if (src_str in key_WAZIUP.source_list) or (len(key_WAZIUP.source_list)==0):
 					
-		#this part depends on the syntax used by the end-device
-		#we use: thingspeak_channel#thingspeak_field#TC/22.4/HU/85... 
-		#ex: ##TC/22.4/HU/85... or TC/22.4/HU/85... or thingspeak_channel##TC/22.4/HU/85... 
-		#or #thingspeak_field#TC/22.4/HU/85... to use some default value
+		# this part depends on the syntax used by the end-device
+		# we use: TC/22.4/HU/85...
+		#
+		# but we accept also a_str#b_str#TC/22.4/HU/85... to indicate a project_name and a service_path
+		# or simply 22.4 in which case, the nomemclature will be DEF
 	
 		# get number of '#' separator
 		nsharp = ldata.count('#')
@@ -136,7 +138,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 
 		# no separator
 		if nsharp==0:
-			# will use default Fiware-Service and Fiware-ServicePath
+			# will use default project_name and service_path
 			data=['','']
 
 			# get number of '/' separator on ldata
@@ -149,8 +151,8 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		
 			# only 1 separator
 			if nsharp==1:
-				# insert '' to indicate default Fiware-Service
-				# as we assume that the only parameter indicate the Fiware-ServicePath
+				# insert '' to indicate default project name
+				# as we assume that the only parameter indicate the service_path
 				data_array.insert(0,'');
 				# if the length is greater than 2
 				if len(data_array[1])<3:
@@ -164,24 +166,21 @@ def main(ldata, pdata, rdata, tdata, gwid):
 					data_array[1]=''
 									
 			# get number of '/' separator on data_array[2]
-			# because ldata may contain '/' as Fiware-ServicePath name
+			# because ldata may contain '/' in service_path name
 			nslash = data_array[2].count('/')
 	
 			# then reconstruct data_array
 			data_array=[data_array[0],data_array[1]]+re.split("/", data_array[2])
 				
 			# at the end data_array contains
-			# ["Fiware-Service", "Fiware-ServicePath", "s1", s1value, "s2", s2value, ...]
+			# ["project_name", "service_path", "s1", s1value, "s2", s2value, ...]
 		
 		# just in case we have an ending CR or 0
 		data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\n', '')
 		data_array[len(data_array)-1] = data_array[len(data_array)-1].replace('\0', '')	
 	
 		#sms data to be sent
-		sms_data = "SensorData "+key_Orion.sensor_name+src_str
-	
-		#sms_data = "SRC#"+str(src)+"#RSSI#"+str(RSSI)+"#BW#"+str(bw)+"#CR#"+str(cr)+"#SF#"+str(sf)+"#GWID#"+gwid+"/"+data
-		#sms_data = "SensorData  Sensor"+str(src)+" RSSI "+str(RSSI)+" BW "+str(bw)+" CR "+str(cr)+" SF "+str(sf)+" GWID "+gwid+" "
+		sms_data = "SensorData "+key_WAZIUP.sensor_name+src_str
 	
 		#start from the first nomenclature
 		i = 2
@@ -191,23 +190,23 @@ def main(ldata, pdata, rdata, tdata, gwid):
 			i += 2
 	
 		if data_array[0]=='':
-			data_array[0]=key_Orion.project_name
+			data_array[0]=key_WAZIUP.project_name
 
 		if data_array[1]=='':
-			data_array[1]=key_Orion.service_path
+			data_array[1]=key_WAZIUP.service_path
 		
 		sms_data += " "+data_array[0]+" "+data_array[1]
 	
 		# Send data to expected contacts
 		success = False
 		
-		print("rcv msg to send via the Orion WAZIUP SMS Service: "+sms_data)
-		success = libSMS.send_sms(sm, sms_data, key_OrionWAZIUP_SMS.contacts)
+		print("rcv msg to send via the WAZIUP SMS Service: "+sms_data)
+		success = libSMS.send_sms(sm, sms_data, key_WAZIUP_SMS.contacts)
 	
 		if (success):
 				print "Sending SMS done"	
 	else:
-		print "Source is not is source list, not sending with CloudOrionWAZIUP_SMS.py"
+		print "Source is not is source list, not sending with CloudWAZIUP_SMS.py"
 		
 if __name__ == "__main__":
         main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])

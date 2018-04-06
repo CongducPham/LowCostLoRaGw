@@ -58,11 +58,13 @@ require 'header.php';
                         <div class="panel-body">
                             <!-- Nav tabs -->
                             <ul class="nav nav-pills">
-                                <li class="active"><a href="#thingSpeak-pills" data-toggle="tab">ThingSpeak</a>
-                                </li>
 								<?php
 									if($waziup){	
-                            			echo '<li><a href="#waziup-pills" data-toggle="tab">Cloud WAZIUP</a></li>';
+                            			echo '<li class="active"><a href="#waziup-pills" data-toggle="tab">Cloud WAZIUP</a></li>';
+                            			echo '<li><a href="#thingSpeak-pills" data-toggle="tab">ThingSpeak</a></li>';
+									}
+									else {
+										echo '<li class="active"><a href="#thingSpeak-pills" data-toggle="tab">ThingSpeak</a></li>';
 									}
 								?>
 								<li><a href="#cloudNoInternet-pills" data-toggle="tab">Cloud No Internet</a>
@@ -77,8 +79,17 @@ require 'header.php';
 
                             <!-- Tab panes -->
                             <div class="tab-content">
-                                                            
-                                <div class="tab-pane fade in active" id="thingSpeak-pills">
+								<?php 
+									if($waziup){
+										echo '<div class="tab-pane fade in active" id="waziup-pills">';
+                                		require 'waziup.php';
+                                		echo '</div>';
+                                		echo '<div class="tab-pane fade" id="thingSpeak-pills">';
+									}
+									else {
+										echo '<div class="tab-pane fade in active" id="thingSpeak-pills">';
+									}
+								?>
                                 	</br>
                                 	<div id="thingspeak_status_msg"></div>
             						
@@ -182,27 +193,17 @@ require 'header.php';
     							    
                                 </div>
                                 <!-- tab-pane -->
-									<?php 
-										if($waziup){
-                                			require 'waziup.php';
-										}
-									?>
-    								
-                                </div>
+
                                 <?php require 'cloudNoInternet.php'; ?>
                                 <?php require 'cloudGpsFile.php'; ?> 
                                 <?php require 'cloudMQTT.php'; ?>
                                 <?php require 'cloudNodeRed.php'; ?>
-
-                                <!-- tab-pane -->
-                               
-                                	
                       			
                                 <!-- tab-pane -->  
                         </div>        
                         <!-- /.panel-body -->
-                        
                 </div>
                 <!-- /.panel -->
-        
+		</div>
+	</div>        
 <?php require 'footer.php'; ?>
