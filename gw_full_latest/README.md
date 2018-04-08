@@ -437,11 +437,6 @@ When you connect with `ssh` to the gateway, a text command interface, `cmd.sh`, 
 	4- tail --line=15 ../Dropbox/LoRa-test/post-processing.log           +
 	5- tail -f ../Dropbox/LoRa-test/post-processing.log                  +
 	6- less ../Dropbox/LoRa-test/post-processing.log                     +
-	-------------------------------------------------------* Node-Red *--+
-	a- start Node-Red                                                    +
-	b- stop Node-Red                                                     +
-	c- enable Node-Red at boot                                           +
-	d- disable Node-Red at boot                                          +
 	---------------------------------------------------* Connectivity *--+
 	f- test: ping www.univ-pau.fr                                        +
 	g- wifi: configure as WiFi client at next reboot                     +

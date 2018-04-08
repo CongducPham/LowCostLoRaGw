@@ -7,20 +7,21 @@ This README describes a simple Node-Red support for our low-cost LoRa gateway. I
 Starting Node-Red on you Raspberry gateway
 ------------------------------------------
 
-The SD card image has Node-Red installed. Start Node-Red with
+The SD card image has Node-Red installed. You can manually start Node-Red with
 
 	> node-red-start
 	
 Use your browser on `http://192.168.2.8:1880` for instance if this is your gateway's IP address. Make sure that your gateway has internet connection.
 
-If you consider to use Node-Red as the main mode to process received data, then you may enable starting Node-Red at boot:
+If the Node-Red cloud (`CloudNodeRed.py`) is enabled in `clouds.json` then Node-Red will be started by the `start_gw.sh` script. So you do no need to worry about starting manually Node-Red (and you should not start it manually actually).
+
+In the case you use Node-Red for other purposes than `CloudNodeRed.py` (the cloud is disabled), then you can enable Node-Red at boot with:
 
 	> sudo systemctl enable nodered.service
 
-But be sure that this is what you want because having Node-Red running is resource-consuming . If you just want to test, just use the `node-red-start` command. You can disable the service at any time with:
+But be sure that this is what you want because having Node-Red running is resource-consuming. If you just want to test, just use the `node-red-start` command. You can disable the service at any time with:
 
 	> sudo systemctl disable nodered.service	
-
 
 Importing the Node-Red flow
 ---------------------------

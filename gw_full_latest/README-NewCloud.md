@@ -4,7 +4,7 @@ Cloud support module for the low-cost LoRa gateway
 Description 
 -----------
 
-`clouds.json` contains a list of clouds where you want your data to be uploaded. Here is an example with 5 clouds: local MongoDB, WAZIUP Orion (based on FiWare), `ThingSpeak`, MQTT (with `test.mosquitto.org` broker) and `GroveStreams`.
+`clouds.json` contains a list of clouds where you want your data to be uploaded. Here is an example with 5 clouds: local MongoDB, WAZIUP (based on FiWare), `ThingSpeak`, MQTT (with `test.mosquitto.org` broker) and `GroveStreams`.
 
 	{
 		"clouds" : [
@@ -16,10 +16,9 @@ Description
 				"max_months_to_store":2,
 				"enabled":false
 			},
-			{	
-				"name":"WAZIUP Orion cloud",
-				"script":"python CloudOrion.py",
-				"type":"iotcloud",			
+				"name":"WAZIUP Orion cloud new API",
+				"script":"python CloudWAZIUP.py",
+				"type":"iotcloud",
 				"enabled":true
 			},				
 			{	

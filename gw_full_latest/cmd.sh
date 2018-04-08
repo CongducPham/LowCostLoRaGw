@@ -77,11 +77,11 @@ echo "3- ps aux | grep -e start_gw -e lora_gateway -e post_proc -e log_gw  +"
 echo "4- tail --line=25 ../Dropbox/LoRa-test/post-processing.log           +"
 echo "5- tail --line=25 -f ../Dropbox/LoRa-test/post-processing.log        +"
 echo "6- less ../Dropbox/LoRa-test/post-processing.log                     +"
-echo "-------------------------------------------------------* Node-Red *--+"
-echo "a- start Node-Red                                                    +"
-echo "b- stop Node-Red                                                     +"
-echo "c- enable Node-Red at boot                                           +"
-echo "d- disable Node-Red at boot                                          +"
+#echo "-------------------------------------------------------* Node-Red *--+"
+#echo "a- start Node-Red                                                    +"
+#echo "b- stop Node-Red                                                     +"
+#echo "c- enable Node-Red at boot                                           +"
+#echo "d- disable Node-Red at boot                                          +"
 #echo "------------------------------------------------------* Bluetooth *--+"
 #echo "a- run: sudo hciconfig hci0 piscan                                   +"
 #echo "b- run: sudo python rfcomm-server.py                                 +"
@@ -181,29 +181,29 @@ if [ "$choice" = "6" ]
 		less ../Dropbox/LoRa-test/post-processing.log
 fi
 
-if [ "$choice" = "a" ] 
-	then
-		echo "Starting Node-Red; press CTRL-C"
-		node-red-start
-fi
-
-if [ "$choice" = "b" ] 
-	then
-		echo "Stopping Node-Red;"
-		node-red-stop
-fi
-
-if [ "$choice" = "c" ] 
-	then
-		echo "enable Node-Red at boot"
-		sudo systemctl enable nodered.service
-fi
-
-if [ "$choice" = "d" ] 
-	then
-		echo "disable Node-Red at boot"
-		sudo systemctl disable nodered.service
-fi
+# if [ "$choice" = "a" ] 
+# 	then
+# 		echo "Starting Node-Red; press CTRL-C"
+# 		node-red-start
+# fi
+# 
+# if [ "$choice" = "b" ] 
+# 	then
+# 		echo "Stopping Node-Red;"
+# 		node-red-stop
+# fi
+# 
+# if [ "$choice" = "c" ] 
+# 	then
+# 		echo "enable Node-Red at boot"
+# 		sudo systemctl enable nodered.service
+# fi
+# 
+# if [ "$choice" = "d" ] 
+# 	then
+# 		echo "disable Node-Red at boot"
+# 		sudo systemctl disable nodered.service
+# fi
 
 # if [ "$choice" = "a" ] 
 # 	then
