@@ -117,7 +117,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define TEMP_PIN_READ  A0
 // use digital 9 to power the temperature sensor if needed
 // but on most ESP8266 boards pin 9 can not be used, so use pin 2 instead
-#ifdef ARDUINO_ESP8266_ESP01
+#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
 #define TEMP_PIN_POWER 2
 #else
 #define TEMP_PIN_POWER 9
@@ -190,7 +190,7 @@ uint8_t message[50];
 #include <Snooze.h>
 SnoozeTimer timer;
 SnoozeBlock sleep_config(timer);
-#elif defined ARDUINO_ESP8266_ESP01
+#elif defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
 #define LOW_POWER_PERIOD 60
 //we will use the deepSleep feature, so no additional library
 #else // for all other boards based on ATMega168, ATMega328P, ATMega32U4, ATMega2560, ATMega256RFR2, ATSAMD21G18A
@@ -294,7 +294,7 @@ void setup()
 #ifdef ARDUINO_SAMD_FEATHER_M0
   PRINT_CSTSTR("%s","Adafruit FeatherM0 detected\n");
 #endif
-#ifdef ARDUINO_ESP8266_ESP01
+#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
   PRINT_CSTSTR("%s","Expressif ESP8266 detected\n");
   //uncomment if you want to disable the WiFi, this will reset your board
   //but maybe it is preferable to use the WiFi.mode(WIFI_OFF), see above
@@ -325,7 +325,7 @@ void setup()
 
 #ifdef WITH_EEPROM
 
-#ifdef ARDUINO_ESP8266_ESP01
+#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
   EEPROM.begin(512);
 #endif
   // get config from EEPROM
@@ -549,7 +549,7 @@ void loop(void)
       // save packet number for next packet in case of reboot
       my_sx1272config.seq=sx1272._packetNumber;     
       EEPROM.put(0, my_sx1272config);
-#ifdef ARDUINO_ESP8266_ESP01
+#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
       EEPROM.commit();
 #endif
 #endif
@@ -642,7 +642,7 @@ void loop(void)
 #else            
           Snooze.deepSleep(sleep_config);
 #endif
-#elif defined ARDUINO_ESP8266_ESP01
+#elif defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
           //in microseconds
           //it is reported that RST pin should be connected to pin 16 to actually reset the board when deepsleep
           //timer is triggered
