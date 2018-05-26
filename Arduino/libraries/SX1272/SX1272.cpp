@@ -4370,7 +4370,9 @@ boolean	SX1272::availableData(uint16_t wait)
         {
 #if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
             yield();
+
 #endif        
+
             value = readRegister(REG_IRQ_FLAGS);
             // Condition to avoid an overflow (DO NOT REMOVE)
             //if( millis() < previous )
@@ -4398,6 +4400,7 @@ boolean	SX1272::availableData(uint16_t wait)
 #if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
             	yield();
 #endif            
+
                 header = readRegister(REG_FIFO_RX_BYTE_ADDR);
                 // Condition to avoid an overflow (DO NOT REMOVE)
                 //if( millis() < previous )
