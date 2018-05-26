@@ -4368,6 +4368,9 @@ boolean	SX1272::availableData(uint16_t wait)
         //while( (bitRead(value, 4) == 0) && (millis() - previous < (unsigned long)wait) )
         while( (bitRead(value, 4) == 0) && (millis() < exitTime) )
         {
+#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
+            yield();
+#endif        
             value = readRegister(REG_IRQ_FLAGS);
             // Condition to avoid an overflow (DO NOT REMOVE)
             //if( millis() < previous )
@@ -4392,6 +4395,9 @@ boolean	SX1272::availableData(uint16_t wait)
             while( (header == 0) && (millis() < exitTime) )
 #endif
             { // Waiting to read first payload bytes from packet
+#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
+            	yield();
+#endif            
                 header = readRegister(REG_FIFO_RX_BYTE_ADDR);
                 // Condition to avoid an overflow (DO NOT REMOVE)
                 //if( millis() < previous )
