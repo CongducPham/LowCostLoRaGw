@@ -37,7 +37,7 @@
 					<div id="banner" style="text-align:center;">
 						<h1 style="color:white;">Access to the data from MongoDB</h1>
 						<div class="btn-group">
-							<a href="./list.php" class="btn btn-default"> Log</a>	
+							<a href="./list.php" class="btn btn-default"> List</a>	
 							<a href="./export_csv.php" class="btn btn-default"> Export data to csv</a>
 							<a href="/admin/index.php" class="btn btn-default"> Web admin interface</a>
 							

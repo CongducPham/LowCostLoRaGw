@@ -143,16 +143,16 @@ $(function()
   <div class="row content">
     <div class="col-sm-12">
 	<div id="banner" style="text-align:center;">
-		<h1>Access to the data from MongoDB</h1>
+		<h1 style="color:white;">Access to the data from MongoDB</h1>
 		<div class="btn-group">
-			<a href="./index.php" class="btn btn-default"> Mongo db graph</a>
+			<a href="./index.php" class="btn btn-default"> Graph</a>
 			<a href="./export_csv.php" class="btn btn-default"> Export data to csv</a>
 			<a href="/admin/index.php" class="btn btn-default"> Web admin interface</a>
 
 		</div>
 	</div>
 	<hr>
-	<form name="Form1" method="GET" action="temp2.php" id="Form1"  style="text-align:center;" >
+	<form name="Form1" method="GET" action="list.php" id="Form1"  style="text-align:center;" >
 		<label for="Editbox1" id="Label1" >Display the</label>
 		<input type="text" id="Editbox1" name="Editbox1"style="width:5%;"  value="<?php if (isset($_GET['Editbox1'])){echo $_GET['Editbox1'];}else{echo '10';} ?>">
 		<select name="Combobox1" size="1" id="Combobox1" >
@@ -160,12 +160,10 @@ $(function()
 			<option value="last" <?php if (isset($_GET['Combobox1']) && $_GET['Combobox1'] == "last"){echo 'selected';} ?> >last</option>
 		</select>
 		<label for="" id="Label2" >document(s)</label>
-		</br>
-		<label for="" id="Label3" >Sort by</label>
+		<label for="" id="Label3" >and sort by</label>
 		<select name="Combobox2" size="1" id="Combobox2">
 			<option value="date" <?php if (isset($_GET['Combobox2']) && $_GET['Combobox2'] == "date"){echo 'selected';} ?> >date</option>
 		</select>
-		</br>
 		<input type="submit"  class="btn btn-success" id="Button1" name='Submit' value='Valid'>
 	</form>
 	<hr>
@@ -265,7 +263,7 @@ $(function()
 				
 						foreach($aux_array as $value){ 
 							if ($iteration<intval($_GET['Editbox1'])) { ?>
-								<li class="list-group-item"  style="text-align:center;" ><a class="list-group-item"><?php echo strtoupper((string)$nomenclature).": ".($value["data"][(string)$nomenclature]); ?></a>
+								<li class="list-group-item"  style="text-align:center;background-color: #337AB7;" ><a class="list-group-item"><?php echo strtoupper((string)$nomenclature).": ".($value["data"][(string)$nomenclature]); ?></a>
 									<div table-responsive>
 										<table class="table" id="SlideMenu1_MoreInfo">
 											<thead>
@@ -277,7 +275,7 @@ $(function()
 												</tr>										
 											</thead>
 											<tbody>
-												<tr>
+												<tr class="success">
 													<td><?php echo "[  ";
 															foreach($value["data"] as $currentnom => $currentdata){
 																if($currentnom != $nomenclature){
@@ -310,7 +308,7 @@ $(function()
 			
 						while($cursor->hasNext() &&  $iteration<intval($_GET['Editbox1'])) { 
 						$document = $cursor->getNext(); ?>
-						<li class="list-group-item"  style="text-align:center;"><a class="list-group-item"><?php echo gmdate('Y-m-d H:i:s', $document["time"]->sec); ?></a>
+						<li class="list-group-item"  style="text-align:center;background-color: #337AB7;"><a class="list-group-item"><?php echo gmdate('Y-m-d H:i:s', $document["time"]->sec); ?></a>
 							<div table-responsive>
 								<table class="table" id="SlideMenu1_MoreInfo">
 									<thead>
@@ -321,7 +319,7 @@ $(function()
 										</tr>										
 									</thead>
 									<tbody>
-										<tr>
+										<tr  class="success">
 											<td><?php	$dataarray = json_decode($document["data"], true);
 													echo "[  ";
 													foreach($dataarray as $currentnom => $currentdata){
@@ -369,7 +367,7 @@ $(function()
 						foreach($aux_array as $value){ 
 							if ($iteration<intval($_GET['Editbox1'])) { ?>
 
-								<li class="list-group-item"  style="text-align:center;"><a class="list-group-item"><?php echo strtoupper((string)$nomenclature).": ".($value["data"][(string)$nomenclature]); ?></a>
+								<li class="list-group-item"  style="text-align:center;background-color: #337AB7;"><a class="list-group-item"><?php echo strtoupper((string)$nomenclature).": ".($value["data"][(string)$nomenclature]); ?></a>
 									<div table-responsive>
 										<table class="table" id="SlideMenu1_MoreInfo">
 											<thead>
@@ -381,7 +379,7 @@ $(function()
 												</tr>										
 											</thead>
 											<tbody>
-												<tr>
+												<tr  class="success">
 													<td>
 													 <?php echo "[  ";
 																foreach($value["data"] as $currentnom => $currentdata){

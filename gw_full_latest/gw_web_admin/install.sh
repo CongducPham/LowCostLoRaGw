@@ -38,7 +38,7 @@ fi
 ###############################################
 cd /home/pi/lora_gateway/php
 echo "Installing/Updating gateway's web MongoDB data interface..."
-sudo cp * /var/www/html
+sudo cp -r * /var/www/html
 
 ######################################
 # Editing /etc/sudoers file
