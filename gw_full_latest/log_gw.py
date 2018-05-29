@@ -129,6 +129,8 @@ while the_line:
 			
 			#new month, check if months are different OR if years are different (in case we have the same month but not the same year)
 			if last_modif.month != now.month or last_modif.year != now.year :
+				#delete old log files to keep only the last one
+				os.system("rm "+_prefix_filename+"*")
 				os.rename(os.path.expanduser(_parselog_filename), os.path.expanduser(_prefix_filename+str(last_modif.year)+"-"+str(last_modif.month)+".log"))
 	
 	

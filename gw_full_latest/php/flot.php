@@ -1,11 +1,3 @@
-<!--
-*
-* Copyright (C) 2016 Nicolas Bertuol, University of Pau, France
-*
-* nicolas.bertuol@etud.univ-pau.fr
-*
--->
-
 
 	<link href="flot.css" rel="stylesheet" type="text/css">
 	<script language="javascript" type="text/javascript" src="jquery.js"></script>
@@ -150,22 +142,27 @@
 		function new_checkbox_source(srcName, isChecked){
 			old_content = document.getElementById('sources').innerHTML;
 			if (isChecked){
-				content = "<input type='checkbox' id='" + srcName + "' name='checkboxes_sources' value='" + srcName + "' checked /> " + srcName;
+				//content = "<input type='checkbox' id='" + srcName + "' name='checkboxes_sources' value='" + srcName + "' checked /> " + srcName;
+				content = '<label class="checkbox-inline"><input id="' + srcName + '" type="checkbox" value="'+srcName+'" name="checkboxes_sources" checked>'+srcName+'</label>';
 				document.getElementById('sources').innerHTML = old_content + content;
 			}else{
-				content = "<input type='checkbox' id='" + srcName + "' name='checkboxes_sources' value='" + srcName + "' /> " + srcName;
+				//content = "<input type='checkbox' id='" + srcName + "' name='checkboxes_sources' value='" + srcName + "' /> " + srcName;
+				content = '<label class="checkbox-inline"><input id="' + srcName + '" type="checkbox" value="'+srcName+'" name="checkboxes_sources">'+srcName+'</label>';
 				document.getElementById('sources').innerHTML = old_content + content;
 			}
 		}
 		
+
 		// add a new "<input type="radio">" for the data 
 		function new_radio_data(dataName, isChecked){
 			old_content = document.getElementById('data').innerHTML;
 			if (isChecked){
-				content = "<input type='radio' id='" + dataName + "' name='radio_data' value='" + dataName + "' checked /> " + dataName;
+				//content = "<input type='radio' id='" + dataName + "' name='radio_data' value='" + dataName + "' checked /> " + dataName;
+				content = '<label class="radio-inline"><input type="radio" id="' + dataName + '" name="radio_data" value="' + dataName + '" checked>' + dataName + '</label>' ;		
 				document.getElementById('data').innerHTML = old_content + content;
 			}else{
-				content = "<input type='radio' id='" + dataName + "' name='radio_data' value='" + dataName + "' /> " + dataName;
+				//content = "<input type='radio' id='" + dataName + "' name='radio_data' value='" + dataName + "' /> " + dataName;	
+				content = '<label class="radio-inline"><input type="radio" id="' + dataName + '" name="radio_data" value="' + dataName + '">' + dataName + '</label>' ;
 				document.getElementById('data').innerHTML = old_content + content;
 			}
 		}
@@ -595,21 +592,21 @@
 
 	</script>
 
-	<div id="content" style="position:absolute;left:1px;top:-15px;width:790px;height:622px;">
+	<div class="container">
 
-		<div class="demo-container" style="position:absolute;left:1px;top:0px;width:790px;height:322px;">
+		<div class="demo-container" >
 			<div id="placeholder" class="demo-placeholder"></div>
 		</div>
 		
 		<br>
-		<div id="data" class="data" style="position:absolute;left:1px;top:343px;width:790px;height:75px;">Display data: </div>
-		<div id="sources" class="sources" style="position:absolute;left:1px;top:379px;width:790px;height:75px;">Display sources: </div>
-		<div id="buttons" style="position:absolute;left:1px;top:414px;width:790px;height:150px;">
-			<p>Zoom to: <button id="whole">Whole period</button>
-			<button id="lastmonth">Last month</button>
-			<button id="currentmonth">Current month</button>
-			<button id="lastweek">Last seven days</button>
-			<button id="currentday">Current day</button></p>
+		<div id="data" class="data" >Display data: </div>
+		<div id="sources" class="sources" >Display sources: </div>
+		<div id="buttons" class="btn-group btn-group-sm" >
+			<p>Zoom to: <button type="button" class="btn-primary" id="whole">Whole period</button>
+			<button type="button" class="btn-primary" id="lastmonth">Last month</button>
+			<button type="button" class="btn-primary" id="currentmonth">Current month</button>
+			<button type="button" class="btn-primary" id="lastweek">Last seven days</button>
+			<button type="button" class="btn-primary" id="currentday">Current day</button></p>
 		</div>
 		
 

@@ -31,7 +31,14 @@ if [ ! -d ./admin ]
 		
 		echo "Removing downloaded gw_web_admin folder"
 		sudo rm -rf gw_web_admin
-fi		
+fi
+
+###############################################
+# Update the web MongoDB data interface as well
+###############################################
+cd /home/pi/lora_gateway/php
+echo "Installing/Updating gateway's web MongoDB data interface..."
+sudo cp * /var/www/html
 
 ######################################
 # Editing /etc/sudoers file

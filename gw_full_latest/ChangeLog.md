@@ -1,6 +1,20 @@
 Change logs
 ===========
 
+May 28th, 2018
+------------------
+
+- scripts/start_gw.sh.
+	* adds routing rules to share the wired Internet connection (eth0) through the WiFi access point
+	* now, a device connected to the gateway's WiFi has Internet connection assuming the gateway has Internet connection with the wired interface
+	* these rules are added if the gateway runs in access point mode 
+	
+April 25th, 2018
+------------------
+
+- scripts/start_gw.sh.
+	* run `node-red-start` if `CloudNodeRed.py` is enabled in `clouds.json`
+
 March 4th, 2018
 ---------------
 - post-processing_gw.py.

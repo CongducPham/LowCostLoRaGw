@@ -73,13 +73,14 @@ Note the test `if (msg.payload.measure==="")` that allow encrypted payload to be
 
 There is also a ThingSpeak node sending to our LoRa test channel (https://thingspeak.com/channels/66794). The ThingSpeak node can be installed with:
 
+	> cd .node-red/node_modules
 	> npm install node-red-contrib-thingspeak42
 
 You may need to have npm installed beforehand:
 
 	> sudo apt-get install npm
 	
-More info on the ThingSpeak node can be found at [https://flows.nodered.org/node/node-red-contrib-thingspeak42](https://flows.nodered.org/node/node-red-contrib-thingspeak42). The ThingSpeak node waits for the `waziup/UPPA/Sensor6/TC` topic to upload the data on field 5.
+More info on the ThingSpeak node can be found at [https://flows.nodered.org/node/node-red-contrib-thingspeak42](https://flows.nodered.org/node/node-red-contrib-thingspeak42). The ThingSpeak node waits for the `waziup/UPPA/Sensor6/TC` topic to upload the data on field 5. That means real data should come from a device which address is 6. Also, note that if you change `project_name`, `organization_name` or `sensor_name` in `key_NodeRed.py` then you have to change the topic name for `Topic 5` in the ThingSpeak node configuration.
  
  
 Testing with test.mosquitto.org
