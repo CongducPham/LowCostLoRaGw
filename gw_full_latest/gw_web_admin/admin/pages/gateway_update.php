@@ -89,8 +89,10 @@ require 'header.php';
 										
 										<?php
 											$current_install_date=exec('stat --format=%y /home/pi/lora_gateway/post_processing_gw.py');
+											$installed_version=exec('cat /home/pi/VERSION.txt');
+											$git_version=exec('cat /home/pi/git-VERSION.txt');
 
-											echo "Date of current distribution is $current_install_date";    
+											echo "Git version: $git_version. Installed version: $installed_version. Date of current distribution is $current_install_date";    
 										?> 
 						                                   	
             						<div id="gw_new_install_msg"></div>	
@@ -120,8 +122,10 @@ require 'header.php';
 										</br>
 										<?php
 											$current_install_date=exec('stat --format=%y /home/pi/lora_gateway/post_processing_gw.py');
+											$installed_version=exec('cat /home/pi/VERSION.txt');
+											$git_version=exec('cat /home/pi/git-VERSION.txt');
 
-											echo "Date of current distribution is $current_install_date";   
+											echo "Git version: $git_version. Installed version: $installed_version. Date of current distribution is $current_install_date";   
 										?> 
 										                                   	
             						<div id="gw_full_update_msg"></div>	
