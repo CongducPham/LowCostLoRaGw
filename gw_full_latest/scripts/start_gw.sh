@@ -45,6 +45,47 @@ then
 	sudo iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 	sudo iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
 fi
+
+installed_version=`cat /home/pi/VERSION.txt`
+echo "Current installed version is $installed_version"
+
+#get git version of distribution
+echo "svn trying to get version info from github"
+svn info https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_full_latest | grep "Revision:" | cut -d ' ' --field=2 > /home/pi/git-VERSION-tmp.txt
+
+#in case we don't have internet connectivity, the file size is 0
+git_version_size=`stat -c %b /home/pi/git-VERSION-tmp.txt`
+		
+if [ "$git_version_size" != "0" ]
+then
+	mv /home/pi/git-VERSION-tmp.txt /home/pi/git-VERSION.txt
+	git_version=`cat /home/pi/git-VERSION.txt`
+	echo "github version is $git_version"
 	
+	auto_update=`jq ".gateway_conf.auto_update" gateway_conf.json`
+
+	if [ "$auto_update" = "true" ]
+	then
+		echo "Auto update is on, trying to update to latest version from github"
+		
+		if [ "$installed_version" != "$git_version" ]
+		then
+			echo "Launching update script to install latest version from github"
+			echo "Equivalent to full update with the web admin interface"
+			./scripts/update_gw.sh
+			sleep 5
+		else
+			echo "Installed version is up-to-date"
+		fi
+	else
+		echo "Auto update is off."
+	fi
+else
+	git_version=`cat cat /home/pi/git-VERSION.txt`
+	echo "svn could not get version info from github, keep previous known version info which is $git_version."
+	rm -rf /home/pi/git-VERSION-new.txt
+fi	
+
 #run the gateway
 python start_gw.py &
+
