@@ -2,6 +2,13 @@
 
 cd /home/pi/lora_gateway
 
+#create the gw id so that a newly installed gateway is always configured with a correct id
+./scripts/create_gwid.sh
+
+###
+### Start Internet access with Loranga board
+############################################
+
 if [ -f 3GDongle/loranga/use_loranga_internet_on_boot.txt ]
 then
 	echo "Start Internet with Loranga board"
@@ -18,9 +25,11 @@ then
 	sudo python wake-2G.py
 	cd ../..
 fi
+############################################
 
-#create the gw id so that a newly installed gateway is always configured with a correct id
-./scripts/create_gwid.sh
+###
+### Start Node-Red if needed
+############################################
 
 #try to find whether NodeRed cloud is enabled or not
 i=`jq '.clouds[].script|index("CloudNodeRed")|values' clouds.json`
@@ -34,6 +43,11 @@ then
 	echo "CloudNodeRed is enabled, start Node-Red"
 	node-red-start &
 fi
+############################################
+
+###
+### Internet routing for WiFi access point
+############################################
 
 #check if the gateway is an access point
 #if yes, then enable IP forwarding to give internet connectivity to connected devices, e.g. smartphone, tablets,...
@@ -45,6 +59,11 @@ then
 	sudo iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 	sudo iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
 fi
+############################################
+
+###
+### Version management and auto update
+############################################
 
 installed_version=`cat /home/pi/VERSION.txt`
 echo "Current installed version is $installed_version"
@@ -85,7 +104,13 @@ else
 	echo "svn could not get version info from github, keep previous known version info which is $git_version."
 	rm -rf /home/pi/git-VERSION-new.txt
 fi	
+############################################
+
+###
+### Last item, run the gateway
+############################################
 
 #run the gateway
 python start_gw.py &
 
+############################################
