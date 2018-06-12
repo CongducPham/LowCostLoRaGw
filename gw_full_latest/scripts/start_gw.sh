@@ -100,9 +100,9 @@ then
 		echo "Auto update is off."
 	fi
 else
-	git_version=`cat cat /home/pi/git-VERSION.txt`
+	git_version=`cat /home/pi/git-VERSION.txt`
 	echo "svn could not get version info from github, keep previous known version info which is $git_version."
-	rm -rf /home/pi/git-VERSION-new.txt
+	rm -rf /home/pi/git-VERSION-tmp.txt
 fi	
 ############################################
 
