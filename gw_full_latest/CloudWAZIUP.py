@@ -204,7 +204,7 @@ def create_new_entity(data, src, nomenclatures, tdata):
 			print 'WAZIUP: entity creation success'
 			
 	except requests.exceptions.RequestException as e:
-    	print e
+		print e
 		print 'WAZIUP: requests command failed (maybe a disconnection)'
 		connection_failure = True 	
 		
@@ -286,7 +286,7 @@ def send_data(data, src, nomenclatures, tdata):
 						entity_need_to_be_created=True
 
 				except requests.exceptions.RequestException as e:
-    				print e
+					print e
 					print 'WAZIUP: requests command failed (maybe a disconnection)'
 					connection_failure = True						
 				
@@ -294,7 +294,7 @@ def send_data(data, src, nomenclatures, tdata):
 				create_new_entity(data, src, nomenclatures, tdata)
 				
 		except requests.exceptions.RequestException as e:
-    		print e
+			print e
 			print 'WAZIUP: requests command failed (maybe a disconnection)'
 			connection_failure = True			
 
