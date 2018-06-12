@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright 2016 Congduc Pham, University of Pau, France.
+# Copyright 2018 Congduc Pham, University of Pau, France.
 # 
 # Congduc.Pham@univ-pau.fr
 #
@@ -202,7 +202,9 @@ def create_new_entity(data, src, nomenclatures, tdata):
 						
 		if response.ok:
 			print 'WAZIUP: entity creation success'
-	except ConnectTimeout:
+			
+	except requests.exceptions.RequestException as e:
+    	print e
 		print 'WAZIUP: requests command failed (maybe a disconnection)'
 		connection_failure = True 	
 		
@@ -283,14 +285,16 @@ def send_data(data, src, nomenclatures, tdata):
 					else:	
 						entity_need_to_be_created=True
 
-				except ConnectTimeout:
+				except requests.exceptions.RequestException as e:
+    				print e
 					print 'WAZIUP: requests command failed (maybe a disconnection)'
 					connection_failure = True						
 				
 			if entity_need_to_be_created:
 				create_new_entity(data, src, nomenclatures, tdata)
 				
-		except ConnectTimeout:
+		except requests.exceptions.RequestException as e:
+    		print e
 			print 'WAZIUP: requests command failed (maybe a disconnection)'
 			connection_failure = True			
 
