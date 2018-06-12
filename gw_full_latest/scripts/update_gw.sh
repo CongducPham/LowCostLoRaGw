@@ -18,8 +18,9 @@ else
 			#online
 			echo "getting new gw_full_latest from github"
 			svn checkout https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_full_latest > svn.txt
-			grep "Checked out revision" svn.txt | cut -d ' ' --field=4 > VERSION.txt
-			sed -i -- 's/\.//g' /home/pi/VERSION.txt
+			grep "Checked out revision" svn.txt | cut -d ' ' --field=4 > /home/pi/git-VERSION.txt
+			sed -i -- 's/\.//g' /home/pi/git-VERSION.txt
+			cp /home/pi/git-VERSION.txt /home/pi/VERSION.txt
 			rm -rf svn.txt
 		else
 			echo "No Internet connection, exiting"
