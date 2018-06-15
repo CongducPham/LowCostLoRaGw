@@ -240,7 +240,18 @@ fi
 if [ "$1" = "update_gw_file" ]
 then
 	cd /home/pi/lora_gateway
-	wget --backups=1 $2 
+	wget --backups=1 $2
+	
+	fname=`basename $2`
+	
+	case "$fname" in
+	*.zip) 
+        unzip -o $fname;;
+	*)
+        # it's not
+        ;;
+	esac
+	 
 	sudo chown -R pi:pi /home/pi/lora_gateway/
 fi
 

@@ -170,7 +170,8 @@ require 'header.php';
                                 							<label>URL of the file</label>
                                 							<input class="form-control" placeholder="" name="file_name_url" type="text" value="" autofocus>	
                                 						</div>
-                                					
+                                                        <p>Enter a URL link to a file or .zip archive. A .zip archive will be decompressed and its content will overwrite existing files. All files will be downloaded to <tt>/home/pi/lora_gateway</tt>.
+                                                        <p>e.g. a Dropbox link like <tt>https://www.dropbox.com/s/usc9w3i6urbquvw/gateway_conf.json</tt></p>                                					
                                 						<center>
                                 							<button  type="submit" class="btn btn-primary">Install</button>
                                 							<button  id="btn_gw_update_form_reset" type="reset" class="btn btn-primary">Clear</button>

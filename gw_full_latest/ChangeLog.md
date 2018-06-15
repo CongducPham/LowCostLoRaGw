@@ -1,31 +1,43 @@
 Change logs
 ===========
 
-May 28th, 2018
-------------------
+June 15th, 2018
+---------------
 
-- scripts/start_gw.sh.
+- when downloading and installing a .zip file with the web admin interface, the zip file will be uncompressed and its content will overwrite existing files in `/home/pi/lora_gateway`. It is a convenient way to update the gateway by providing a .zip archive.
+
+- scripts/start_gw.sh and scripts/update_gw.sh
+	* manage gateway software version from github
+	* `/home/pi/git-VERSION.txt` contains the github version
+	* `/home/pi/VERSION.txt` contains the installed version 
+	* both versions are shown in the web admin interface
+	* if there is `"auto_update":true` in `gateway_conf.json:"gateway_conf"` then on boot (reboot) `scripts/start_gw.sh` will update the gateway to the latest version from github (assuming that the gateway has Internet connectivity).
+
+May 28th, 2018
+--------------
+
+- scripts/start_gw.sh
 	* adds routing rules to share the wired Internet connection (eth0) through the WiFi access point
 	* now, a device connected to the gateway's WiFi has Internet connection assuming the gateway has Internet connection with the wired interface
 	* these rules are added if the gateway runs in access point mode 
 	
 April 25th, 2018
-------------------
+----------------
 
-- scripts/start_gw.sh.
+- scripts/start_gw.sh
 	* run `node-red-start` if `CloudNodeRed.py` is enabled in `clouds.json`
 
 March 4th, 2018
 ---------------
-- post-processing_gw.py.
+- post-processing_gw.py
 	* fix a bug when locally decrypting received data. Now the packet type is updated to remove the `PKT_FLAG_DATA_ENCRYPTED` flag
 	* this bug mainly affected `CloudMQTT.py` that can both publish clear and encrypted data
 	
 February 28th, 2018
 -------------------
-- v3.8 post-processing_gw.py.
+- v3.8 post-processing_gw.py
 	* `post_status_processing_gw.py` can now compute a LoRaWAN-like MIC (Message Integrity Code) for downlink request so that the low-level gateway program can add the 4-byte MIC in downlink packet. Downlink data are still sent in clear but the end-device can now check the received MIC and compared it with a valid MIC by performing encryption on the clear data.
-- v1.8 lora_gateway.cpp.
+- v1.8 lora_gateway.cpp
 	* add a 4-byte MIC when sending downlink packet
 	* packet type is then set to `PKT_TYPE_DATA | PKT_FLAG_DATA_ENCRYPTED | PKT_FLAG_DATA_DOWNLINK`
 - there is no longer `is_binary` flag in SX1272.h, replaced by `is_downlink` flag
@@ -39,7 +51,7 @@ December 29th, 2017
 December 12th, 2017
 -------------------
 
-- v3.7 post-processing_gw.py. 
+- v3.7 post-processing_gw.py
 	* List of app keys has been move to `key_AppKey.py` file. 
 	* `post_status_processing_gw.py` will be called periodically by `post_processing_gw.py` (defined by `"status":600` for instance in `gateway_conf.json`, 600 means every 600s). Periodic tasks can then be added into `post_status_processing_gw.py`. For the moment, the gateway will just indicate periodically that it is up and will show its GPS coordinates. In `gateway_conf.json`, a new section called `"status_conf"` can be used to store dedicated information/variable to be used by custom tasks defined in `post_status_processing_gw.py`.
 	* `post_processing_gw.py` has been slightly modified to be able to support other low-level gateway bridge (e.g. 802.14.5). Still experimental.
@@ -47,11 +59,14 @@ December 12th, 2017
 November 22th, 2017
 -------------------
 
-- v3.6 post-processing_gw.py. `post_processing_gw.py` can now handle the 4-byte LoRaWAN devAddr and pass this address to cloud scripts. All scripts have been modified to handle both 1-byte address and 4-byte address. 
+- v3.6 post-processing_gw.py
+	* `post_processing_gw.py` can now handle the 4-byte LoRaWAN devAddr and pass this address to cloud scripts. All scripts have been modified to handle both 1-byte address and 4-byte address. 
 
-- Add Node-Red support. `CloudNodeRed.py` can be enabled in `clouds.json` to generate json entries into `nodered/nodered.txt` that will be followed by a Node-Red flow. Look at README-NodeRed.md for more details.
+- Add Node-Red support
+	* `CloudNodeRed.py` can be enabled in `clouds.json` to generate json entries into `nodered/nodered.txt` that will be followed by a Node-Red flow. Look at README-NodeRed.md for more details.
 
-- Add MQTT suport. `CloudMQTT.py` can be enabled in `clouds.json` and `key_MQTT.py` defines `test.mosquitto.org` as the MQTT broker for testing.
+- Add MQTT suport
+	* `CloudMQTT.py` can be enabled in `clouds.json` and `key_MQTT.py` defines `test.mosquitto.org` as the MQTT broker for testing.
 
 November 2nd, 2017
 ------------------
@@ -65,7 +80,8 @@ November 2nd, 2017
 October 17th, 2017
 ------------------
 
-- v3.5 post-processing_gw.py. Timestamps are in ISO format with timezone information if `dateutil.tz` is installed (`pip install python-dateutil`), otherwise it is the "naïve" version without timezone information.
+- v3.5 post-processing_gw.py
+	* Timestamps are in ISO format with timezone information if `dateutil.tz` is installed (`pip install python-dateutil`), otherwise it is the "naïve" version without timezone information.
 
 October 1st, 2017
 -----------------

@@ -3,7 +3,7 @@
 cd /home/pi/lora_gateway
 
 #create the gw id so that a newly installed gateway is always configured with a correct id
-./scripts/create_gwid.sh
+/home/pi/lora_gateway/scripts/create_gwid.sh
 
 ###
 ### Start Internet access with Loranga board
@@ -91,7 +91,7 @@ then
 		then
 			echo "Launching update script to install latest version from github"
 			echo "Equivalent to full update with the web admin interface"
-			./scripts/update_gw.sh
+			/home/pi/lora_gateway/scripts/update_gw.sh
 			sleep 5
 		else
 			echo "Installed version is up-to-date"
@@ -111,6 +111,9 @@ fi
 ############################################
 
 #run the gateway
-python start_gw.py &
+if [ $# -eq 0 ]
+then
+	python start_gw.py &
+fi
 
 ############################################
