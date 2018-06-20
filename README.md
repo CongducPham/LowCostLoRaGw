@@ -1,12 +1,10 @@
 Low-cost LoRa IoT framework developed in the EU H2020 WAZIUP project
-====================================================================
-
-![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/WAZIUP.png)
+=====================================================================
 
 Quick start
 -----------
 
-- **The current SD card image has everything you need!**
+- **The current SD card image has everything you need!** [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
 - Read the [Low-cost-LoRa-device leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-device-leaflet.pdf)
 - Read the [Low-cost-LoRa-GW leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-leaflet.pdf)
 - Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. **For instance, to configure a new gateway, it is recommended to use the web admin interface to update the gateway software and to run the basic configuration procedure as described [here](https://github.com/CongducPham/LowCostLoRaGw#option-i)**.
@@ -37,7 +35,9 @@ Look also at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.
 Features
 --------
 
-- **NEW** remote access to your gateway from anywhere with ngrok
+- **NEW** remote access to your gateway from anywhere with `remot3.it`
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-remote-access-remot3it.md)
+- remote access to your gateway from anywhere with `ngrok`
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-remote-access-ngrok.md)
 - a simple, user-friendly web admin interface to configure and update your gateway
 	- open a browser and go to http://`gw_ip_address`/admin
@@ -98,6 +98,7 @@ Get our SD card image
 
 Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip). The current image has everything you need including:
 
+- `remot3.it` tools for remote access
 - the simple gateway web admin interface for easy configuration and management
 - `mosquitto-clients` package installed to have `mosquitto_pub` and `mosquitto_sub` commands
 - Node-Red and `npm` upgraded with `node-red-contrib-thingspeak42` installed

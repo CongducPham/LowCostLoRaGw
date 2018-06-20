@@ -11,6 +11,8 @@ If you update the gateway software (using the [web admin interface procedure](ht
 - `ngrok` binary: `https://www.dropbox.com/s/9zdbx9g78q7qree/ngrok`
 - `cmd.sh` update=: `https://www.dropbox.com/s/0t8evgnanvzeqpz/cmd.sh`  
 
+or get these files from our [LowCostLoRaGw github](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest).
+
 If you want to manually install the latest version of `ngrok` from `ngrok.com` use `ssh` to connect to your gateway, then:
 
 	> cd /home/pi/Downloads
