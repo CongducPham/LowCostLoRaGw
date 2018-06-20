@@ -1,6 +1,8 @@
 Low-cost LoRa IoT framework developed in the EU H2020 WAZIUP project
 =====================================================================
 
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/WAZIUP.png)
+
 Quick start
 -----------
 
