@@ -114,6 +114,9 @@ echo "Compile lora_gateway executable"
 
 pushd /home/pi/lora_gateway/
 
+#remove old binaries
+make clean
+
 board=`cat /proc/cpuinfo | grep "Revision" | cut -d ':' -f 2 | tr -d " \t\n\r"`
 
 downlink=`jq ".gateway_conf.downlink" gateway_conf.json`

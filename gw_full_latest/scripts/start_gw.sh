@@ -6,10 +6,19 @@ cd /home/pi/lora_gateway
 /home/pi/lora_gateway/scripts/create_gwid.sh
 
 ###
-### Start Internet access with Loranga board
+### Start Internet access with 3G dongle
 ############################################
 
-if [ -f 3GDongle/loranga/use_loranga_internet_on_boot.txt ]
+if [ -f 3GDongle/use_3GDongle_internet_on_boot.txt ]
+then
+	echo "Start Internet with 3G Dongle"
+	# the script will turn on the modem and launch pppd
+	sudo wvdial Dongle &
+	sleep 10
+###
+### Start Internet access with Loranga board
+############################################
+elif [ -f 3GDongle/loranga/use_loranga_internet_on_boot.txt ]
 then
 	echo "Start Internet with Loranga board"
 	cd 3GDongle/loranga

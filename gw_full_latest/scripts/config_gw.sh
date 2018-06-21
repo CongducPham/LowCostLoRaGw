@@ -37,6 +37,9 @@ read ouinon
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 	then
 		cd ..
+
+		#remove old binaries
+		make clean		
 		
 		downlink=`jq ".gateway_conf.downlink" gateway_conf.json`
  
