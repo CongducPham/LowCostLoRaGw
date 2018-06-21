@@ -136,6 +136,16 @@ then
 	grep -a "Low-level gw status ON" /home/pi/Dropbox/LoRa-test/post-processing.log | tail -1
 fi
 
+if [ "$1" = "get_git_version" ]
+then
+	sudo svn info https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_full_latest | grep "Revision:" | cut -d ' ' --field=2 > /home/pi/git-VERSION.txt
+fi
+
+if [ "$1" = "no_git_version" ]
+then
+	sudo echo "N/A" > /home/pi/git-VERSION.txt
+fi
+
 if [ "$1" = "set_profile" ]
 then
 	tmp=$(mktemp)

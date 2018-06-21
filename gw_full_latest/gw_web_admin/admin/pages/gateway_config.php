@@ -13,6 +13,8 @@ if(!isset($_SESSION['username'])){
 $radio_conf= null; $gw_conf= null; $alert_conf = null;
 process_gw_conf_json($radio_conf, $gw_conf, $alert_conf);
 
+$maxAddr = 255;
+
 require 'header.php';
 ?>
             <div class="navbar-default sidebar" role="navigation">
@@ -274,9 +276,44 @@ require 'header.php';
 													$pip = strpos($mycom, $findme); 
 													$next = "Bcast";
 													$nextword = strpos($mycom, $next);
-													$length = $nextword - $pip - strlen($findme) - strlen($next) +3;
-													$ip=substr($mycom,($pip+(strlen($findme)+1)),$length); 
-													echo $ip; 
+													if ($nextword === false) {
+														ob_start();
+														system("ifconfig ppp0");
+														$mycom=ob_get_contents(); 
+														ob_clean(); 
+														$findme = "inet addr"; 
+														$pip = strpos($mycom, $findme); 
+														$next = "P-t-P";
+														$nextword = strpos($mycom, $next);
+														if ($nextword === false) {
+															ob_start();
+															system("ifconfig wlan0");
+															$mycom=ob_get_contents(); 
+															ob_clean(); 
+															$findme = "inet addr"; 
+															$pip = strpos($mycom, $findme); 
+															$next = "Bcast";
+															$nextword = strpos($mycom, $next);
+															if ($nextword === false) {
+																echo "cannot be determined";
+															}
+															else {
+																$length = $nextword - $pip - strlen($findme) - strlen($next) +3;
+																$ip=substr($mycom,($pip+(strlen($findme)+1)),$length); 
+																echo "wlan0: $ip";
+															}														
+														}
+														else {
+															$length = $nextword - $pip - strlen($findme) - strlen($next) +3;
+															$ip=substr($mycom,($pip+(strlen($findme)+1)),$length); 
+															echo "ppp0: $ip";														
+														}													
+													}
+													else {
+														$length = $nextword - $pip - strlen($findme) - strlen($next) +3;
+														$ip=substr($mycom,($pip+(strlen($findme)+1)),$length); 
+														echo "eth0: $ip";													
+													} 
 												?>
    										   </td>
    										   <td align="right">not editable</td>
@@ -293,7 +330,7 @@ require 'header.php';
 													$findme = "HWaddr"; 
 													$pmac = strpos($mycom, $findme); 
 													$mac=substr($mycom,($pmac+7),17); 
-													echo $mac; 
+													echo "eth0: $mac"; 
 												?>
    										   	</td> 
    										   	<td align="right">not editable</td>
@@ -687,7 +724,7 @@ require 'header.php';
                             						<fieldset>
                                 						<div class="form-group">
                                 							<label>Destination</label>
-                                							<input class="form-control" placeholder="Between 2 and 255" name="destination" type="number" value="" min="2" max="255" autofocus>
+                                							<input class="form-control" placeholder="Between 2 and <?php echo $maxAddr; ?>" name="destination" type="number" value="" min="2" max="<?php echo $maxAddr; ?>" autofocus>
                                 						</div>
                                 						<div class="form-group">
                                 							<label>Message</label>

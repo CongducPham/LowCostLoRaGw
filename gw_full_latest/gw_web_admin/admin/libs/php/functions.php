@@ -10,7 +10,16 @@ function _shutdown(){
 }
 
 function is_connected(){
-	return fopen("http://www.google.com:80/","r");
+	$is_connected=fopen("http://www.google.com:80/","r");
+	
+	if ($is_connected) {
+		shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh get_git_version");	
+	}
+	else {
+		shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh no_git_version");
+	}
+	
+	return $is_connected;
 }
 
 function low_level_gw_status(){

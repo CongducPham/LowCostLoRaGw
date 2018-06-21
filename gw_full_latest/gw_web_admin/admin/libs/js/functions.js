@@ -219,7 +219,7 @@ var maxAddr = 255;
 			$('#cloud_msg').html("It is not a number !");
 			return -1; 
 		}
-	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:clouds_key_value}, function(data){	
+	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
 			$('#cloud_msg').html(data);
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
@@ -1052,6 +1052,9 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 	$('#gw_update_form').submit(function(event){
         // Stop form from submitting normally
         event.preventDefault();
+
+        msg = '<p><center><font color="green">File download and installation in progress, wait for finish notification.</font></center></p>';
+        $('#gw_update_msg').html(msg);        
         
         /* Serialize the submitted form control values to be sent to the web server with the request */
         var formValues = $(this).serialize();

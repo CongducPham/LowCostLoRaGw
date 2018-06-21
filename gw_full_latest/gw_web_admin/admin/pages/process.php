@@ -21,7 +21,7 @@ if (isset($_GET['shutdown']) && $_GET['shutdown'] == "true"){
  ********************************/
 if (isset($_GET['internet']) && $_GET['internet'] == "true"){ 
 	if(is_connected())
-		echo '<p><center><font color="green">Internet connection successful</font></center></p>';
+		echo '<p><center><font color="green">Internet connection successful. github version number has been obtained.</font></center></p>';
 	else
 		echo '<p><center><font color="red">Internet connection failure</font></center></p>';
 }
