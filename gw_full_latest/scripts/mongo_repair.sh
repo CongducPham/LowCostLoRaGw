@@ -1,13 +1,15 @@
 #!/bin/bash
 
 LOCK_FILE=/var/lib/mongodb/mongod.lock
-PID_FILE=/var/run/mongodb.pid
+#PID_FILE=/var/run/mongodb.pid
 
 mongo_running=0
 
 #if mongodb.lock and mongodb.pid are different, then need to repair
-pid=`cat $PID_FILE`
+pid=`pgrep mongod`
 lock=`cat $LOCK_FILE`
+echo "pid : $pid";
+echo "lock : $lock";
 if [ $lock == $pid ]; then
   mongo_running=1
 fi
@@ -28,4 +30,4 @@ fi
 echo "Repairing mongodb..."
 mongod --repair
 echo "done, starting mongodb..."
-sudo service mongod start
+sudo service mongodb start

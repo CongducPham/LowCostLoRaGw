@@ -113,5 +113,4 @@ if ! shopt -oq posix; then
 fi
 
 cd lora_gateway
-scripts/mongodb_repair.sh
 ./cmd.sh

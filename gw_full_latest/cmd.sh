@@ -413,10 +413,20 @@ fi
 
 if [ "$choice" = "V" ]
 	then
-		echo "Download and install a file"
+		echo "Download and install a file. A .zip file will be unzipped"
 		echo "Enter the URL of the file:"
 		read filename_url			
 		wget --backups=1 $filename_url
+		fname=`basename $filename_url`
+	
+		case "$fname" in
+		*.zip)
+			echo "unzipping file" 
+			unzip -o $fname;;
+		*)
+			# it's not
+			;;
+		esac		
 		echo "Done"
 fi
 
