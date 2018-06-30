@@ -23,20 +23,28 @@
  * 
  * last update: Nov. 26th by C. Pham
  */
+
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// add here some specific board define statements if you want to implement user-defined specific settings
+// A/ LoRa radio node from IoTMCU: https://www.tindie.com/products/IOTMCU/lora-radio-node-v10/
+//#define IOTMCU_LORA_RADIO_NODE
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+ 
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
 // Include sensors
 #include "Sensor.h"
+#include "LM35.h"
 #include "DHT22_Humidity.h"
 #include "DHT22_Temperature.h"
-#include "LeafWetness.h"
-#include "LM35.h"
-//#include <OneWire.h>
-#include "DS18B20.h"
 #include "rawAnalog.h"
-#include "HCSR04.h"
-#include "HRLV.h"
+//#include "LeafWetness.h"
+//#include <OneWire.h>
+//#include "DS18B20.h"
+//#include "HCSR04.h"
+//#include "HRLV.h"
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,7 +91,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 //
 // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-//#define PABOOST
+#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////
@@ -248,7 +256,7 @@ long getCmdValue(int &i, char* strBuff=NULL) {
 // SENSORS DEFINITION 
 //////////////////////////////////////////////////////////////////
 // CHANGE HERE THE NUMBER OF SENSORS, SOME CAN BE NOT CONNECTED
-const int number_of_sensors = 8;
+const int number_of_sensors = 4;
 //////////////////////////////////////////////////////////////////
 
 // array containing sensors pointers
@@ -284,14 +292,15 @@ void setup()
 //////////////////////////////////////////////////////////////////
 // ADD YOUR SENSORS HERE   
 // Sensor(nomenclature, is_analog, is_connected, is_low_power, pin_read, pin_power, pin_trigger=-1)
-  sensor_ptrs[0] = new LM35("tc", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 8);
-  sensor_ptrs[1] = new DHT22_Temperature("TC", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 9);
-  sensor_ptrs[2] = new DHT22_Humidity("HU", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 9);
-  sensor_ptrs[3] = new LeafWetness("lw", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7);
-  sensor_ptrs[4] = new DS18B20("DS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 4, (uint8_t) 7);
-  sensor_ptrs[5] = new rawAnalog("SH", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 6);
-  sensor_ptrs[6] = new HCSR04("DIS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 39, (uint8_t) 41, (uint8_t) 40);
-  sensor_ptrs[7] = new HRLV("DIS_", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A3, (uint8_t) 5);
+  sensor_ptrs[0] = new LM35("tc", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 9);
+  sensor_ptrs[1] = new DHT22_Temperature("TC", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 8);
+  sensor_ptrs[2] = new DHT22_Humidity("HU", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 8);
+  sensor_ptrs[3] = new rawAnalog("SH", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7);  
+  //sensor_ptrs[4] = new LeafWetness("lw", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A3, (uint8_t) 6);
+  //sensor_ptrs[5] = new HRLV("DIS_", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A3, (uint8_t) 6);  
+  //sensor_ptrs[6] = new DS18B20("DS", IS_NOT_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) 4, (uint8_t) 5);
+  //sensor_ptrs[7] = new HCSR04("DIS", IS_NOT_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) 39, (uint8_t) 41, (uint8_t) 40); // for the MEGA
+
   
   // for non connected sensors, indicate whether you want some fake data, for test purposes for instance
   sensor_ptrs[3]->set_fake_data(true);
@@ -336,7 +345,7 @@ void setup()
 #ifdef __MKL26Z64__
   PRINT_CSTSTR("%s","TeensyLC MKL26Z64 detected\n");
 #endif
-#ifdef ARDUINO_SAMD_ZERO 
+#if defined ARDUINO_SAMD_ZERO && not defined ARDUINO_SAMD_FEATHER_M0
   PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
 #endif
 #ifdef ARDUINO_AVR_FEATHER32U4 
@@ -359,7 +368,7 @@ void setup()
   PRINT_CSTSTR("%s","ATmega2560 detected\n");
 #endif 
 #ifdef __SAMD21G18A__ 
-  PRINT_CSTSTR("%s","ATSAMD21G18A detected\n");
+  PRINT_CSTSTR("%s","SAMD21G18A ARM Cortex-M0+ detected\n");
 #endif
 #ifdef __SAM3X8E__ 
   PRINT_CSTSTR("%s","SAM3X8E ARM Cortex-M3 detected\n");
@@ -746,7 +755,6 @@ void loop(void)
 
 #ifdef __SAMD21G18A__
       // For Arduino M0 or Zero we use the built-in RTC
-      //LowPower.standby();
       rtc.setTime(17, 0, 0);
       rtc.setDate(1, 1, 2000);
       rtc.setAlarmTime(17, idlePeriodInMin, 0);
@@ -756,6 +764,8 @@ void loop(void)
       //rtc.attachInterrupt(alarmMatch);
       rtc.standbyMode();
 
+      LowPower.standby();
+      
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT
 #else      

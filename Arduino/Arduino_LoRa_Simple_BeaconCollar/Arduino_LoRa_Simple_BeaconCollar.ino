@@ -18,6 +18,14 @@
  *
  *****************************************************************************
  */
+
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// add here some specific board define statements if you want to implement user-defined specific settings
+// A/ LoRa radio node from IoTMCU: https://www.tindie.com/products/IOTMCU/lora-radio-node-v10/
+//#define IOTMCU_LORA_RADIO_NODE
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
@@ -69,7 +77,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 //
 // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-//#define PABOOST
+#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////
@@ -104,7 +112,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 20;
+unsigned int idlePeriodInMin = 1;
 ///////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
@@ -586,6 +594,9 @@ void loop(void)
 
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif          
+
+      //nCycle = 2;
+      
       for (int i=0; i<nCycle; i++) {  
 
 #if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         

@@ -77,8 +77,6 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
 #define WITH_EEPROM
 #define WITH_APPKEY
-#define FLOAT_TEMP
-#define NEW_DATA_FIELD
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //#define WITH_ACK
@@ -436,7 +434,13 @@ void loop(void)
       while (!timeout && !get_fix_sucess)  {
         
         if (millis() - currentTime > GPS_FIX_ATTEMPT_TIME_IN_MS) {
-          timeout = 1;
+          //one more time if it is a new start
+          if (starting) {
+            currentTime = millis();
+            starting=0;
+          }
+          else  
+            timeout = 1;
         }
         else{
           gps.parseNMEA();

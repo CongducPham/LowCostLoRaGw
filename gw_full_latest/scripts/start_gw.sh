@@ -12,9 +12,12 @@ cd /home/pi/lora_gateway
 if [ -f 3GDongle/use_3GDongle_internet_on_boot.txt ]
 then
 	echo "Start Internet with 3G Dongle"
+	cd 3GDongle
 	# the script will turn on the modem and launch pppd
-	sudo wvdial Dongle &
+	# it will keep re-launching wvdial is case wvdial crashes
+	sudo ./wvdial_wrapper.sh Dongle &
 	sleep 10
+	cd ..
 ###
 ### Start Internet access with Loranga board
 ############################################
@@ -109,8 +112,9 @@ then
 		echo "Auto update is off."
 	fi
 else
+	echo "N/A" > /home/pi/git-VERSION.txt
 	git_version=`cat /home/pi/git-VERSION.txt`
-	echo "svn could not get version info from github, keep previous known version info which is $git_version."
+	echo "svn could not get version info from github, mark as $git_version."
 	rm -rf /home/pi/git-VERSION-tmp.txt
 fi	
 ############################################

@@ -18,8 +18,16 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Feb 17th, 2018 by C. Pham
+ * last update: June 29th, 2018 by C. Pham
  */
+
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// add here some specific board define statements if you want to implement user-defined specific settings
+// A/ LoRa radio node from IoTMCU: https://www.tindie.com/products/IOTMCU/lora-radio-node-v10/
+//#define IOTMCU_LORA_RADIO_NODE
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
@@ -73,7 +81,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 //
 // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-//#define PABOOST
+#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////
@@ -119,7 +127,12 @@ uint8_t node_addr=6;
 // CHANGE HERE THE READ PIN AND THE POWER PIN FOR THE TEMP. SENSOR
 #define TEMP_PIN_READ  A0
 // use digital 9 to power the temperature sensor if needed
+// but on most ESP8266 boards pin 9 can not be used, so use pin 2 instead
+#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined IOTMCU_LORA_RADIO_NODE
+#define TEMP_PIN_POWER 2
+#else
 #define TEMP_PIN_POWER 9
+#endif
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////

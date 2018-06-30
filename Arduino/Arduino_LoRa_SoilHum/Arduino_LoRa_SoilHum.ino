@@ -23,6 +23,13 @@
  * Sensor 1 is connected to digital 9 for power and A0 for output value
  * Sensor 2 is connected to digital 8 for power and A1 for output value
  */
+
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// add here some specific board define statements if you want to implement user-defined specific settings
+// A/ LoRa radio node from IoTMCU: https://www.tindie.com/products/IOTMCU/lora-radio-node-v10/
+//#define IOTMCU_LORA_RADIO_NODE
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
  
 #include <SPI.h> 
 // Include the SX1272
@@ -79,7 +86,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 //
 // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-//#define PABOOST
+#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////

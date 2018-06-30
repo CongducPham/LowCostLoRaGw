@@ -113,9 +113,10 @@ One main issue for a eligible board is to have a 3.3v pin to power the radio mod
 **Small form factor**
 
 - Arduino Pro Mini (8MHz/3.3V version is better for power consumption), Arduino Nano (ATmega328 16MHz/5V but 3.3v pin), Arduino Micro (ATmega32u4 16MHz/5V but 3.3v pin)
-- Teensy LC/31/32/35/36
-- Ideetron Nexus (which is an ATmega328P at 3.3v, select as Arduino Mini in IDE)  
+- Probably all boards based on ATmega328P such IoT-MCU LoRa Radio Node for instance
 - Adafruit Feather32u4 and FeatherM0
+- Ideetron Nexus (which is an ATmega328P at 3.3v, select as Arduino Mini in IDE)  
+- Teensy LC/31/32/35/36
 - Expressif ESP8266 (only the **`Arduino_LoRa_Simple_temp`** has been modified to support the ESP8266)
 - Expressif ESP32 (tested but support is not integrated into library, so you need to change the CS pin according to your board model)
 

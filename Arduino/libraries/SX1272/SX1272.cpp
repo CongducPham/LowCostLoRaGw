@@ -30,6 +30,9 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
+ *	June 29th, 2018
+ *		- SX1272_WRST (not defined by default) controls whether there will be a RST procedure or not. Normally, there is no need for the RST.
+ *		- If RST is used, it is currently pin 4 on the Arduino but sometimes there is conflict, so better not use RST
  *  March 28th, 2018
  *		- check at packet reception that the packet type is correct, otherwise discard the packet and returned error code is 5
  *      - add max number of retries for CarrierSense
@@ -256,13 +259,15 @@ uint8_t SX1272::ON()
 
     delay(100);
 
+#ifdef SX1272_WRST
     // added by C. Pham
     pinMode(SX1272_RST,OUTPUT);
     digitalWrite(SX1272_RST,HIGH);
     delay(100);
     digitalWrite(SX1272_RST,LOW);
     delay(100);
-
+#endif
+    
     // from single_chan_pkt_fwd by Thomas Telkamp
     uint8_t version = readRegister(REG_VERSION);
 
@@ -272,10 +277,12 @@ uint8_t SX1272::ON()
         _board = SX1272Chip;
     } else {
         // sx1276?
+#ifdef SX1272_WRST        
         digitalWrite(SX1272_RST, LOW);
         delay(100);
         digitalWrite(SX1272_RST, HIGH);
         delay(100);
+#endif        
         version = readRegister(REG_VERSION);
         if (version == 0x12) {
             // sx1276
@@ -4368,11 +4375,9 @@ boolean	SX1272::availableData(uint16_t wait)
         //while( (bitRead(value, 4) == 0) && (millis() - previous < (unsigned long)wait) )
         while( (bitRead(value, 4) == 0) && (millis() < exitTime) )
         {
-#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
+#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined ESP32
             yield();
-
 #endif        
-
             value = readRegister(REG_IRQ_FLAGS);
             // Condition to avoid an overflow (DO NOT REMOVE)
             //if( millis() < previous )
@@ -4397,10 +4402,9 @@ boolean	SX1272::availableData(uint16_t wait)
             while( (header == 0) && (millis() < exitTime) )
 #endif
             { // Waiting to read first payload bytes from packet
-#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
+#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined ESP32
             	yield();
 #endif            
-
                 header = readRegister(REG_FIFO_RX_BYTE_ADDR);
                 // Condition to avoid an overflow (DO NOT REMOVE)
                 //if( millis() < previous )
