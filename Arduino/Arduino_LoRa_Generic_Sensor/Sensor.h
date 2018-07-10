@@ -20,7 +20,7 @@
 #define IS_LOWPOWER true
 #define IS_NOT_LOWPOWER false
 
-#define MAX_NOMENCLATURE_LENGTH 4
+#define MAX_NOMENCLATURE_LENGTH 5
 
 #if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined __MK20DX256__  || defined __MKL26Z64__ || defined __SAMD21G18A__
   // these boards work in 3.3V

@@ -1,7 +1,7 @@
 /*
  *  Demonstration of generic sensors with the LoRa gateway
  *
- *  Copyright (C) 2016 Congduc Pham, University of Pau, France
+ *  Copyright (C) 2016-2018 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -21,7 +21,7 @@
  * first version of generic sensor
  * nicolas.bertuol@etud.univ-pau.fr
  * 
- * last update: Nov. 26th by C. Pham
+ * last update: July 10th by C. Pham
  */
 
 // IMPORTANT
@@ -37,12 +37,14 @@
 // Include sensors
 #include "Sensor.h"
 #include "LM35.h"
+#include "TMP36.h"
 #include "DHT22_Humidity.h"
 #include "DHT22_Temperature.h"
-#include "rawAnalog.h"
+#include "SHT_Humidity.h"
+#include "SHT_Temperature.h"
+#include "DS18B20.h"
+//#include "rawAnalog.h"
 //#include "LeafWetness.h"
-//#include <OneWire.h>
-//#include "DS18B20.h"
 //#include "HCSR04.h"
 //#include "HRLV.h"
 
@@ -121,7 +123,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE LORA MODE, NODE ADDRESS 
 #define LORAMODE  1
-uint8_t node_addr=13;
+uint8_t node_addr=6;
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -256,7 +258,7 @@ long getCmdValue(int &i, char* strBuff=NULL) {
 // SENSORS DEFINITION 
 //////////////////////////////////////////////////////////////////
 // CHANGE HERE THE NUMBER OF SENSORS, SOME CAN BE NOT CONNECTED
-const int number_of_sensors = 4;
+const int number_of_sensors = 7;
 //////////////////////////////////////////////////////////////////
 
 // array containing sensors pointers
@@ -292,18 +294,23 @@ void setup()
 //////////////////////////////////////////////////////////////////
 // ADD YOUR SENSORS HERE   
 // Sensor(nomenclature, is_analog, is_connected, is_low_power, pin_read, pin_power, pin_trigger=-1)
-  sensor_ptrs[0] = new LM35("tc", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 9);
-  sensor_ptrs[1] = new DHT22_Temperature("TC", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 8);
-  sensor_ptrs[2] = new DHT22_Humidity("HU", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 8);
-  sensor_ptrs[3] = new rawAnalog("SH", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7);  
+  sensor_ptrs[0] = new LM35("LM35", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 9 /*no pin trigger*/);
+  sensor_ptrs[1] = new TMP36("TMP36", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 8 /*no pin trigger*/);  
+  sensor_ptrs[2] = new DHT22_Temperature("TC1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
+  sensor_ptrs[3] = new DHT22_Humidity("HU1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
+  //for SHT, pin_trigger will be the clock pin
+  sensor_ptrs[4] = new SHT_Temperature("TC2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
+  sensor_ptrs[5] = new SHT_Humidity("HU2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
+  sensor_ptrs[6] = new DS18B20("DS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 4 /*no pin trigger*/);
+  
+  //sensor_ptrs[3] = new rawAnalog("SH", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7);  
   //sensor_ptrs[4] = new LeafWetness("lw", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A3, (uint8_t) 6);
   //sensor_ptrs[5] = new HRLV("DIS_", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A3, (uint8_t) 6);  
   //sensor_ptrs[6] = new DS18B20("DS", IS_NOT_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) 4, (uint8_t) 5);
   //sensor_ptrs[7] = new HCSR04("DIS", IS_NOT_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) 39, (uint8_t) 41, (uint8_t) 40); // for the MEGA
 
-  
   // for non connected sensors, indicate whether you want some fake data, for test purposes for instance
-  sensor_ptrs[3]->set_fake_data(true);
+  //sensor_ptrs[3]->set_fake_data(true);
   //sensor_ptrs[4]->set_fake_data(true); 
 
 //////////////////////////////////////////////////////////////////  

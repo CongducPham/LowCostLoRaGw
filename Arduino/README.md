@@ -40,7 +40,9 @@ This example also shows how a dedicated "cloud" task, `CloudGpsFile.py`, is impl
 **`Arduino_LoRa_Generic_Sensor`** is a very generic sensor template where a large variety of new physical sensors can be added. All physical sensors must be derived from a base Sensor class (defined in `Sensor.cpp` and `Sensor.h`) and should provide a `get_value()` and `get_nomenclature()` function. All the periodic task loop with duty-cycle low-power management is already there as in previous examples. Some predefined physical sensors are also already defined:
 
 - very simple LM35DZ analog temperature sensor
+- very simple TMP36 analog temperature sensor
 - digital DHT22 temperature and humidity sensor
+- digital SHT10 temperature and humidity sensor
 - digital DS18B20 temperature sensor
 - ultra-sonic HC-SR04 distance sensor
 - Davies Leaf Wetness sensor
@@ -59,17 +61,18 @@ Add the sensors:
 	//////////////////////////////////////////////////////////////////
 	// ADD YOUR SENSORS HERE   
 	// Sensor(nomenclature, is_analog, is_connected, is_low_power, pin_read, pin_power, pin_trigger=-1)
-	sensor_ptrs[0] = new LM35("tc", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 8);
-	sensor_ptrs[1] = new DHT22_Temperature("TC", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 9);
-	sensor_ptrs[2] = new DHT22_Humidity("HU", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 9);
-	sensor_ptrs[3] = new LeafWetness("lw", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7);
-	sensor_ptrs[4] = new DS18B20("DS", IS_NOT_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) 4, (uint8_t) 7);
-	sensor_ptrs[5] = new rawAnalog("SH", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 6);
-	sensor_ptrs[6] = new HCSR04("DIS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 39, (uint8_t) 41, (uint8_t) 40);
+	sensor_ptrs[0] = new LM35("LM35", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 9 /*no pin trigger*/);
+	sensor_ptrs[1] = new TMP36("TMP36", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 8 /*no pin trigger*/);  
+	sensor_ptrs[2] = new DHT22_Temperature("TC1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
+	sensor_ptrs[3] = new DHT22_Humidity("HU1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
+	//for SHT, pin_trigger will be the clock pin
+	sensor_ptrs[4] = new SHT_Temperature("TC2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
+	sensor_ptrs[5] = new SHT_Humidity("HU2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
+	sensor_ptrs[6] = new DS18B20("DS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 4 /*no pin trigger*/);
 	
 	// for non connected sensors, indicate whether you want some fake data, for test purposes for instance
-	sensor_ptrs[3]->set_fake_data(true);
-	sensor_ptrs[4]->set_fake_data(true); 
+	//sensor_ptrs[3]->set_fake_data(true);
+	//sensor_ptrs[4]->set_fake_data(true); 
 	
 	//////////////////////////////////////////////////////////////////  	
 	
@@ -97,9 +100,11 @@ The control loop that is periodically executed is as follows:
       
 With the declared sensors, the transmitted data string can be as follows:
 
-	\!tc/19.52/TC/19.62/HU/45/lw/3.53/DS/19.8/SH/500.56/DIS/56.78      
+	\!LM35/27.71/TMP36/27.2/TC1/27.79/HU1/56.50/TC2/28.63/HU2/50.49/DS/27.93      
 	
 You can look at the provided examples to see how you can write a specific sensor class for a specific physical sensor. The previous simple temperature example `Arduino_LoRa_Simple_temp` can be obtained from the generic example by simply using a single sensor declaration with the LM35 class (i.e. `sensor_ptrs[0]`).	
+
+The generic example drives 5 types of temperature and humidity sensors (LM35DZ, TMP36, DHT22, SHT10, DS18B20) on the same node. You can see our [ThingSpeak channel here](https://thingspeak.com/channels/66583) that shows Sensor 3 data.
 
 **`Arduino_LoRa_InteractiveDevice`** is a tool that turns an Arduino board to an interactive device where a user can interactively enter data to be sent to the gateway. There are also many parameters that can dynamically be configured. This example can serve for test and debug purposes as well.
 
