@@ -26,7 +26,7 @@ then
 	echo "Start Internet with Loranga board"
 	cd 3GDongle/loranga
 	# the script will turn on the modem and launch pppd
-	./start-internet.sh
+	./start-internet.sh &
 	sleep 10
 	cd ../../
 elif [ -f 3GDongle/loranga/use_loranga_SMS_on_boot.txt ]
@@ -65,11 +65,19 @@ fi
 #if yes, then enable IP forwarding to give internet connectivity to connected devices, e.g. smartphone, tablets,...
 if [ -f /etc/network/interfaces_not_ap ]
 then
-	sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
-	sudo sed -i 's/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
-	sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-	sudo iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
-	sudo iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
+		sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
+		sudo sed -i 's/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
+
+		if [ -f 3GDongle/use_3GDongle_internet_on_boot.txt ]
+		then
+				sudo iptables -t nat -A POSTROUTING -o ppp0 -j MASQUERADE
+				sudo iptables -A FORWARD -i ppp0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+				sudo iptables -A FORWARD -i wlan0 -o ppp0 -j ACCEPT
+		else
+				sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+				sudo iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+				sudo iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
+		fi
 fi
 ############################################
 

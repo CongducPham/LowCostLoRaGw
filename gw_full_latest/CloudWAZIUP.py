@@ -289,6 +289,10 @@ def send_data(data, src, nomenclatures, tdata):
 					print e
 					print 'WAZIUP: requests command failed (maybe a disconnection)'
 					connection_failure = True						
+			
+			elif response.status_code==400:
+				print 'WAZIUP: bad request'
+				i += 1
 				
 			if entity_need_to_be_created:
 				create_new_entity(data, src, nomenclatures, tdata)
