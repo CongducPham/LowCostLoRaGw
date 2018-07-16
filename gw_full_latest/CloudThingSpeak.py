@@ -181,7 +181,7 @@ def thingspeak_uploadMultipleData(data, src, nomenclatures):
 		# check if we have a key_association field
 		# priority is given to key association defined on gateway
 		if (len(key_ThingSpeak.key_association)!=0):
-			for k in (0, len(key_ThingSpeak.key_association)-1):
+			for k in range(0, len(key_ThingSpeak.key_association)):
 				# found a key for this source node
 				if src in key_ThingSpeak.key_association[k][1:]:
 					found_key_association=True
