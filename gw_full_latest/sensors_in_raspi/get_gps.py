@@ -33,15 +33,6 @@ if len(sys.argv) < 3:
 else:
     theBaud = sys.argv[2]
 
-try:    
-	ser = serial.Serial(thePort, theBaud, timeout=0)
-except SerialException:
-	print 'get_gps.py: invalid serial port'
-	sys.exit() 
-
-# flush everything that may have been received on the port to make sure that we start with a clean serial input
-ser.flushInput()
-
 nofix=True
 ntry=0
 nfixtry=0
@@ -53,6 +44,15 @@ try:
 	os.remove(os.path.expanduser(gw_gps_file))
 except OSError:
 	print 'get_gps.py: no '+gw_gps_file+' file'
+
+try:
+	ser = serial.Serial(thePort, theBaud, timeout=0)
+except (OSError, serial.SerialException):
+	print 'get_gps.py: invalid serial port'
+	sys.exit()
+
+# flush everything that may have been received on the port to make sure that we start with a clean serial input
+ser.flushInput()
 
 while nofix:
 
