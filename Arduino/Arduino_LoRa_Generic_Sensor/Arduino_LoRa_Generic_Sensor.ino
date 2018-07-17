@@ -122,8 +122,8 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE LORA MODE, NODE ADDRESS 
-#define LORAMODE  4
-uint8_t node_addr=3;
+#define LORAMODE  1
+uint8_t node_addr=6;
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -390,11 +390,11 @@ void setup()
 
   // found a valid config?
   if (my_sx1272config.flag1==0x12 && my_sx1272config.flag2==0x35) {
-    //PRINT_STR("%s","Get back previous sx1272 config\n");
+    //PRINT_CSTSTR("%s","Get back previous sx1272 config\n");
 
     // set sequence number for SX1272 library
     sx1272._packetNumber=my_sx1272config.seq;
-    //PRINT_STR("%s","Using packet sequence number of ");
+    //PRINT_CSTSTR("%s","Using packet sequence number of ");
     PRINT_VALUE("%d", sx1272._packetNumber);
     PRINTLN;
 
