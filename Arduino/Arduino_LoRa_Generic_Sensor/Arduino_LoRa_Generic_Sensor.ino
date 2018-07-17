@@ -21,7 +21,7 @@
  * first version of generic sensor
  * nicolas.bertuol@etud.univ-pau.fr
  * 
- * last update: July 10th by C. Pham
+ * last update: July 17th by C. Pham
  */
 
 // IMPORTANT
@@ -122,8 +122,8 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE LORA MODE, NODE ADDRESS 
-#define LORAMODE  1
-uint8_t node_addr=6;
+#define LORAMODE  4
+uint8_t node_addr=3;
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -390,16 +390,16 @@ void setup()
 
   // found a valid config?
   if (my_sx1272config.flag1==0x12 && my_sx1272config.flag2==0x35) {
-    PRINT_CSTSTR("%s","Get back previous sx1272 config\n");
+    //PRINT_STR("%s","Get back previous sx1272 config\n");
 
     // set sequence number for SX1272 library
     sx1272._packetNumber=my_sx1272config.seq;
-    PRINT_CSTSTR("%s","Using packet sequence number of ");
+    //PRINT_STR("%s","Using packet sequence number of ");
     PRINT_VALUE("%d", sx1272._packetNumber);
     PRINTLN;
 
 #ifdef FORCE_DEFAULT_VALUE
-    PRINT_CSTSTR("%s","Forced to use default parameters\n");
+    //PRINT_CSTSTR("%s","Forced to use default parameters\n");
     my_sx1272config.flag1=0x12;
     my_sx1272config.flag2=0x35;
     my_sx1272config.seq=sx1272._packetNumber;
@@ -426,15 +426,12 @@ void setup()
     else
         PRINT_CSTSTR("%s","Stored idle period is null\n");                 
 #endif  
-
-#ifdef WITH_AES
-    DevAddr[3] = (unsigned char)node_addr;
-#endif            
-    PRINT_CSTSTR("%s","Using node addr of ");
+           
+    //PRINT_CSTSTR("%s","Using node addr of ");
     PRINT_VALUE("%d", node_addr);
     PRINTLN;   
 
-    PRINT_CSTSTR("%s","Using idle period of ");
+    //PRINT_STR("%s","Using idle period of ");
     PRINT_VALUE("%d", idlePeriodInMin);
     PRINTLN;     
   }
@@ -489,12 +486,12 @@ void setup()
   
   // Set the node address and print the result
   e = sx1272.setNodeAddress(node_addr);
-  PRINT_CSTSTR("%s","Setting node addr: state ");
+  //PRINT_CSTSTR("%s","Setting node addr: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
   
   // Print a success message
-  PRINT_CSTSTR("%s","SX1272 successfully configured\n");
+  //PRINT_STR("%s","SX1272 successfully configured\n");
 
   delay(500);
 }
@@ -521,6 +518,9 @@ void loop(void)
     
       char final_str[80] = "\\!";
       char aux[6] = "";
+
+      //this is how we can wake up some sensors in advance in case they need a longer warmup time
+      //digitalWrite(sensor_ptrs[4]->get_pin_power(),HIGH);
 
       // main loop for sensors, actually, you don't have to edit anything here
       // just add a predefined sensor if needed or provide a new sensor class instance for a handle a new physical sensor
@@ -549,7 +549,7 @@ void loop(void)
       PRINT_STR("%s",(char*)(message+app_key_offset));
       PRINTLN;
       
-      PRINT_CSTSTR("%s","Real payload size is ");
+      //PRINT_CSTSTR("%s","Real payload size is ");
       PRINT_VALUE("%d", r_size);
       PRINTLN;
       
@@ -599,19 +599,19 @@ void loop(void)
       EEPROM.put(0, my_sx1272config);
 #endif
       
-      PRINT_CSTSTR("%s","LoRa pkt seq ");
+      //PRINT_CSTSTR("%s","LoRa pkt seq ");
       PRINT_VALUE("%d", sx1272.packet_sent.packnum);
       PRINTLN;
     
-      PRINT_CSTSTR("%s","LoRa Sent in ");
+      //PRINT_CSTSTR("%s","LoRa Sent in ");
       PRINT_VALUE("%ld", endSend-startSend);
       PRINTLN;
           
-      PRINT_CSTSTR("%s","LoRa Sent w/CAD in ");
+      //PRINT_CSTSTR("%s","LoRa Sent w/CAD in ");
       PRINT_VALUE("%ld", endSend-sx1272._startDoCad);
       PRINTLN;
 
-      PRINT_CSTSTR("%s","Packet sent, state ");
+      //PRINT_CSTSTR("%s","Packet sent, state ");
       PRINT_VALUE("%d", e);
       PRINTLN;
 
@@ -622,7 +622,7 @@ void loop(void)
       //wait a bit
       delay(DELAY_BEFORE_RCVW-1000);
 
-      PRINT_CSTSTR("%s","Wait for incoming packet\n");
+      //PRINT_CSTSTR("%s","Wait for incoming packet\n");
       // wait for incoming packets
       e = sx1272.receivePacketTimeout(10000);
     
@@ -682,16 +682,13 @@ void loop(void)
                               cmdValue = node_addr;
                       // set node addr        
                       node_addr=cmdValue; 
-#ifdef WITH_AES
-                      DevAddr[3] = (unsigned char)node_addr;
-#endif
                       
-                      PRINT_CSTSTR("%s","Set LoRa node addr to ");
+                      //PRINT_CSTSTR("%s","Set LoRa node addr to ");
                       PRINT_VALUE("%d", node_addr);  
                       PRINTLN;
                       // Set the node address and print the result
                       e = sx1272.setNodeAddress(node_addr);
-                      PRINT_CSTSTR("%s","Setting LoRa node addr: state ");
+                      //PRINT_CSTSTR("%s","Setting LoRa node addr: state ");
                       PRINT_VALUE("%d",e);     
                       PRINTLN;           
 
@@ -748,14 +745,14 @@ void loop(void)
 #endif
 
 #ifdef LOW_POWER
-      PRINT_CSTSTR("%s","Switch to power saving mode\n");
+      //PRINT_CSTSTR("%s","Switch to power saving mode\n");
 
       e = sx1272.setSleepMode();
 
-      if (!e)
-        PRINT_CSTSTR("%s","Successfully switch LoRa module in sleep mode\n");
-      else  
-        PRINT_CSTSTR("%s","Could not switch LoRa module in sleep mode\n");
+      //if (!e)
+      //  PRINT_CSTSTR("%s","Successfully switch LoRa module in sleep mode\n");
+      //else  
+      //  PRINT_CSTSTR("%s","Could not switch LoRa module in sleep mode\n");
         
       FLUSHOUTPUT
       delay(50);

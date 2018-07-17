@@ -2,6 +2,8 @@
 * Copyright (C) 2016 Nicolas Bertuol, University of Pau, France
 *
 * nicolas.bertuol@etud.univ-pau.fr
+* 
+* Modified by C. Pham, University of Pau, France
 */
 
 #ifndef SENSOR_H
@@ -50,7 +52,7 @@ class Sensor {
     uint8_t get_pin_power();
     int get_pin_trigger();
     //char* get_power_set();
-    double get_data();
+    double get_data();       
     unsigned long get_wait_time();
     bool has_fake_data();
     bool has_pin_trigger();
@@ -65,7 +67,7 @@ class Sensor {
     void set_pin_power(uint8_t u);
     void set_pin_trigger(int u);    
     //void set_power_set(char* c);
-    void set_data(double d);
+    void set_data(double d);      
     void set_wait_time(unsigned long i);
     void set_fake_data(bool b);
     void set_n_sample(uint8_t n);
@@ -83,7 +85,7 @@ class Sensor {
     int _pin_trigger;
     bool _with_fake_data;
     //char* _power_set = NULL;
-    double _data;
+    double _data;       
     unsigned long _wait_time;
     uint8_t _n_sample;
 };
