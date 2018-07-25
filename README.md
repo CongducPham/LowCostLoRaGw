@@ -23,6 +23,10 @@ Also consult the following web page: http://cpham.perso.univ-pau.fr/LORA/RPIgate
 - [Extreme low-cost & low-power LoRa IoT for real-world deployment](https://www.youtube.com/watch?v=2_VQpcCwdd8)
 - [Build your low-cost LoRa gateway with WAZIUP](https://www.youtube.com/watch?v=mj8ItKA14PY)
 
+1 live demo video on YouTube: setting up a gateway in less than 5 mins to upload data to various clouds
+
+- [Setting up a LoRa gateway in less than 5mins (live demo)](https://www.youtube.com/watch?v=CJbUFXLpSok)
+
 Go to [https://github.com/CongducPham/tutorials](https://github.com/CongducPham/tutorials) for all tutorials and particularly look for:
 
 - [Low-cost-LoRa-GW leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-leaflet.pdf)
