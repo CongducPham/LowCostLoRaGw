@@ -4,14 +4,14 @@
 Dongles
 -------
 
-These 2 dongles have been successfully tested and work without any issues:
+The following dongles have been successfully tested:
 
 - https://www.amazon.fr/gp/product/B01G3GLPDU/ref=oh_aui_detailpage_o04_s00?ie=UTF8&psc=1
-- https://fr.aliexpress.com/item/Unlocked-Huawei-Lte-Modem-Adapter-E220-3g-Wwan-Hsdpa-Utms-Usb-Modem-7-2m-Win7-Android/32329684728.html?spm=2114.13010608.0.0.S9UqH7
+- https://fr.aliexpress.com/item/Original-Unlocked-HUAWEI-E220-7-2Mbps-3G-USB-dongle-HSDPA-USB-STICK-support-Android-system/32779450595.html
 
-Generally, most of the Huawei E220 dongles should work fine and I personally find the USB cable to be more practical.
+Most of Huawei E220 dongles (or compatible) should work fine and I personally find the USB cable to be more practical. Also, these dongles seems to not suffer from USB disconnection.
 
-You can also use a simple 3G/4G router where the dongle can be plugged. We also tested these 2 products that work fine:
+It is generally safer to use a 3G/4G router where the dongle can be plugged. We also tested these 2 products that work fine:
 
 - https://www.amazon.fr/gp/product/B003WK62OS/ref=oh_aui_detailpage_o08_s00?ie=UTF8&psc=1
 - https://www.amazon.fr/gp/product/B00634PLTW/ref=oh_aui_detailpage_o01_s00?ie=UTF8&psc=1
