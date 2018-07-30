@@ -483,6 +483,10 @@ WARNING
 
 - Although 900MHz band is supported (mostly for the US ISM band), the library does not implement the frequency hopping mechanism nor the limited dwell time (e.g. 400ms per transmission).
 
+Specific development
+====================
+
+Specific developments can be made from the general, public version on github. If you are interested by such customization, you can contact me.
 
 Enjoy!
 C. Pham
