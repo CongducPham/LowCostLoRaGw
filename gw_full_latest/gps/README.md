@@ -32,6 +32,8 @@ In the distribution, we provide an example file containing 7 devices. You can us
 	"ref_longitude" : "-0.363887",
 	...
 
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/gps-web-interface.png)
+
 `CloudGpsFile.py` also extract from the list of GPS devices those that have sent GPS information during the last time window.
 `key_GpsFile.py` defines `active_interval_minutes` to 20 minutes. For instance, devices that have sent GPS info in the last 20 minutes will be indicated as active. Those active devices are further maintained in `gps/active_gps.json`.
 
