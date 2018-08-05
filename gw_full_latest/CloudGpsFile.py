@@ -144,7 +144,7 @@ def update_gps_device(src, SNR, RSSI, seq, bc, lat, lgt, fxt, distance, tdata, g
 			device["lgt"]=float(lgt)
 			device["distance"]=float(distance)
 			device["active"]='yes'
-	
+			
 	#new device
 	if found_device==False:
 		new_device={}
@@ -160,6 +160,7 @@ def update_gps_device(src, SNR, RSSI, seq, bc, lat, lgt, fxt, distance, tdata, g
 		new_device["lgt"]=float(lgt)
 		new_device["distance"]=float(distance)
 		new_device["active"]='yes'
+		new_device["name"]=key_GpsFile.project_name+'_'+key_GpsFile.organization_name+'_'+key_GpsFile.sensor_name+src
 		#append in list
 		gps_devices.append(new_device)			
     
@@ -357,10 +358,11 @@ def main(ldata, pdata, rdata, tdata, gwid):
 				#replace in naive format because we don't know if we have time zone info or not
 				tdata = the_time.replace(microsecond=0,tzinfo=None).isoformat()
 				
-				store_gps_coordinate(key_GpsFile.project_name+'_'+key_GpsFile.organization_name+'_'+key_GpsFile.sensor_name+src_str, SNR, RSSI, seq, bc, lat, lgt, fxt, tdata, gwid)				
-
+				#store_gps_coordinate(key_GpsFile.project_name+'_'+key_GpsFile.organization_name+'_'+key_GpsFile.sensor_name+src_str, SNR, RSSI, seq, bc, lat, lgt, fxt, tdata, gwid)				
+				store_gps_coordinate(src_str, SNR, RSSI, seq, bc, lat, lgt, fxt, tdata, gwid)
+				
 # you can test CloudGpsFile.py in standalone mode with
-# python CloudGpsFile.py "BC/9/LAT/43.31402/LGT/-0.36370/FXT/4180" "1,16,6,0,9,8,-45" "125,5,12" "2017-11-20T14:18:54+01:00" "00000027EBBEDA21"
-		
+# python CloudGpsFile.py "BC/1/LAT/43.31532/LGT/-0.36705/FXT/4180" "1,16,36,0,9,8,-45" "125,5,12" "2018-08-05T11:08:52" "00000027EB5A71F7"
+
 if __name__ == "__main__":
         main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])

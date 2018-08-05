@@ -46,14 +46,34 @@ fi
 #try to find whether NodeRed cloud is enabled or not
 i=`jq '.clouds[].script|index("CloudNodeRed")|values' clouds.json`
 #echo $i
-j=`jq '.clouds[].script|index("CloudNodeRed")' clouds.json | grep -n "$i" | cut -c1`
+j=`jq '.clouds[].script|index("CloudNodeRed")' clouds.json | grep -n "$i" | cut -d ":" -f1`
 #echo $j
 nodered=`jq ".clouds[$j-1].enabled" clouds.json`
 #echo $nodered
 if [ $nodered = "true" ]
 then
 	echo "CloudNodeRed is enabled, start Node-Red"
-	node-red-start &
+	sudo -u pi node-red-start &
+fi
+############################################
+
+###
+### Start GPS web interface nodejs if needed
+############################################
+
+#try to find whether NodeRed cloud is enabled or not
+i=`jq '.clouds[].script|index("CloudGpsFile")|values' clouds.json`
+#echo $i
+j=`jq '.clouds[].script|index("CloudGpsFile")' clouds.json | grep -n "$i" | cut -d ":" -f1`
+#echo $j
+gpsfile=`jq ".clouds[$j-1].enabled" clouds.json`
+#echo $gpsfile
+if [ $gpsfile = "true" && -f gps/server.js ]
+then
+	echo "CloudGpsFile is enabled, start GPS nodejs web interface"
+	cd gps
+	node server.js &
+	cd ..
 fi
 ############################################
 
