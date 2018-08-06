@@ -47,4 +47,6 @@ You can test `CloudGpsFile.py` in standalone mode with:
 	
 Here, `update_gps_json.sh` will replace for all devices the time field with "2018-08-05T06:04:24" and will display the time difference between the gateway's current time and the specified time. Note that the time difference is only valid within the same day.	
 
+To test with the provided example `gps.json` file, run `update_gps_json.sh` without any parameter to replace with current gateway time so that all devices will be determined as active for the GPS web interface.
+
 More information on GPS and `CloudGpsFile.py` can be found in the [Low-cost-LoRa-Collar](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) tutorial.
