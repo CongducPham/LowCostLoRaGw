@@ -30,6 +30,9 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
+ *	August 28th, 2018
+ *		- add a small delay in the availableData() loop that decreases the CPU load of a gateway program to 4~5% instead of nearly 100%
+ *		- suggested by rertini (https://github.com/CongducPham/LowCostLoRaGw/issues/211)
  *	June 29th, 2018
  *		- SX1272_WRST (not defined by default) controls whether there will be a RST procedure or not. Normally, there is no need for the RST.
  *		- If RST is used, it is currently pin 4 on the Arduino but sometimes there is conflict, so better not use RST
@@ -4374,11 +4377,16 @@ boolean	SX1272::availableData(uint16_t wait)
         // Wait to ValidHeader interrupt
         //while( (bitRead(value, 4) == 0) && (millis() - previous < (unsigned long)wait) )
         while( (bitRead(value, 4) == 0) && (millis() < exitTime) )
-        {
+        {       
+            value = readRegister(REG_IRQ_FLAGS);
 #if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined ESP32
             yield();
-#endif        
-            value = readRegister(REG_IRQ_FLAGS);
+#else
+        	// adding this small delay decreases the CPU load of the lora_gateway process to 4~5% instead of nearly 100%
+        	// suggested by rertini (https://github.com/CongducPham/LowCostLoRaGw/issues/211)
+        	// tests have shown no side effects
+			delay(1);
+#endif			             
             // Condition to avoid an overflow (DO NOT REMOVE)
             //if( millis() < previous )
             //{

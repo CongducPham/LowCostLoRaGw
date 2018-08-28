@@ -30,6 +30,9 @@
 #include <math.h>
 
 /*  CHANGE LOGS by C. Pham
+ *	August 28th, 2018
+ *		- add a small delay in the availableData() loop that decreases the CPU load of the lora_gateway process to 4~5% instead of nearly 100%
+ *		- suggested by rertini (https://github.com/CongducPham/LowCostLoRaGw/issues/211)
  *  March 28th, 2018
  *		- check at packet reception that the packet type is correct, otherwise discard the packet and returned error code is 5
  *      - add max number of retries for CarrierSense
@@ -4340,6 +4343,10 @@ boolean	SX1272::availableData(uint16_t wait)
         while( (bitRead(value, 4) == 0) && (millis() < exitTime) )
         {
             value = readRegister(REG_IRQ_FLAGS);
+        	// adding this small delay decreases the CPU load of the lora_gateway process to 4~5% instead of nearly 100%
+        	// suggested by rertini (https://github.com/CongducPham/LowCostLoRaGw/issues/211)
+        	// tests have shown no side effects
+        	delay(1);            
             // Condition to avoid an overflow (DO NOT REMOVE)
             //if( millis() < previous )
             //{
@@ -4400,6 +4407,8 @@ boolean	SX1272::availableData(uint16_t wait)
         while( (bitRead(value, 2) == 0) && (millis() < exitTime) )
         {
             value = readRegister(REG_IRQ_FLAGS2);
+            
+        	delay(1);
             // Condition to avoid an overflow (DO NOT REMOVE)
             //if( millis() < previous )
             //{
