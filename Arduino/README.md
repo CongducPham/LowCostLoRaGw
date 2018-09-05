@@ -17,6 +17,8 @@ On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Startin
 
 All the examples uses so-called LoRa mode 1 (BW125, CR45, SF12) at 865.2 Mhz (`CH_10_868`) to work with the default gateway configuration.
 
+**`Arduino_LoRa_Demo_Sensor`** is a simple demo sketch for training purpose. The main program, i.e. `Arduino_LoRa_Demo_Sensor` can be left unchanged by the students. They just have to add/modify code in `my_demo_sensor_code.h` and `my_demo_sensor_code.cpp` to adapt the code for a given physical sensor. The provided example reads from either an LM35DZ or a TMP36 analog temperature sensor.
+
 **`Arduino_LoRa_Ping_Pong`** shows a simple ping-pong communication between a LoRa device and a gateway by requesting an acknowlegment for data messages sent to the gateway. This example can serve as a simple range test as the device displays back the SNR of the received packet on the gateway.
 
 **`Arduino_LoRa_Ping_Pong_LCD`** is an extended version that uses an OLED display to show in real-time the results of the range test. The pictures below show our simple range tester built from an Heltec ESP32 WiFi LoRa with OLED display. Plenty of information on this nice board are available from https://robotzero.one/heltec-wifi-lora-32/ and https://github.com/darthm0e/esp32-101 to name a few. 

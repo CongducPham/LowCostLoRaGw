@@ -21,8 +21,9 @@
  
 // Include the SX1272
 #include "SX1272.h"
+#include "my_demo_sensor_code.h"
 
-#define OLED
+//#define OLED
 
 #ifdef OLED
 #include <U8x8lib.h>
@@ -58,43 +59,12 @@ char oled_msg[20];
 #define MAX_DBM 14
 #endif
 
-// IMPORTANT
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
-// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-#define PABOOST
-/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-
 #define FLOAT_TEMP
 
 #define DEFAULT_DEST_ADDR 1
 #define LORAMODE  1
 
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE NODE ADDRESS 
-#define node_addr 9
-//////////////////////////////////////////////////////////////////
-
-#define TEMP_PIN_READ  A0
-
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined ARDUINO_SAM_DUE || defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__ || defined __SAMD21G18A__ 
-|| defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
-  // if you have a Pro Mini running at 5V, then change here
-  // these boards work in 3.3V
-  // Nexus board from Ideetron is a Mini
-  // __MK66FX1M0__ is for Teensy36
-  // __MK64FX512__  is for Teensy35  
-  // __MK20DX256__ is for Teensy31/32
-  // __MKL26Z64__ is for TeensyLC
-  // __SAMD21G18A__ is for Zero/M0 and FeatherM0 (Cortex-M0)
-  #define TEMP_SCALE  3300.0
-#else // ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MEGA2560
-  // also for all other boards, so change here if required.
-  #define TEMP_SCALE  5000.0
-#endif
-
-double temp;
+double sensor_value;
 unsigned long nextTransmissionTime=0L;
 char float_str[20];
 uint8_t message[100];
@@ -105,14 +75,11 @@ void setup()
 {
   int e;
 
-  // for the temperature sensor
-  pinMode(TEMP_PIN_READ, INPUT);
-
   delay(3000);
   // Open serial communications and wait for port to open:
   Serial.begin(38400);
   // Print a start message
-  Serial.println(F("Simple LoRa temperature sensor demo"));
+  Serial.println(F("Simple LoRa sensor demo"));
 
 #ifdef OLED
   u8x8.begin();
@@ -166,6 +133,8 @@ void setup()
   Serial.println(F("SX1272 successfully configured"));
 
   delay(500);
+
+  sensor_demo_Init();
 }
 
 char *ftoa(char *a, double f, int precision)
@@ -193,42 +162,20 @@ void loop(void)
 
   if (millis() > nextTransmissionTime) {
 
-      int value = analogRead(TEMP_PIN_READ);
-      Serial.print(F("Reading "));
-      Serial.println(value);
-            
-      // change here how the temperature should be computed depending on your sensor type
-      //  
-      //LM35DZ
-      //the LM35DZ needs at least 4v as supply voltage
-      //can be used on 5v board
-      //temp = (value*TEMP_SCALE/1024.0)/10;
-
-      //TMP36
-      //the TMP36 can work with supply voltage of 2.7v-5.5v
-      //can be used on 3.3v board
-      //we use a 0.95 factor when powering with less than 3.3v, e.g. 3.1v in the average for instance
-      //this setting is for 2 AA batteries
-      temp = ((value*0.95*TEMP_SCALE/1024.0)-500)/10;
-
-      // on the Heltec, use the 3.3v pin and a TMP36 sensor
-      //temp = ((value*TEMP_SCALE/1024.0)-500)/10;
+      sensor_value = sensor_demo_getValue();
       
-      //set a defined value for testing
-      //temp = 22.5;
-      
-      Serial.print(F("(Temp is "));
-      Serial.println(temp);
+      Serial.print(F("(Sensor value is "));
+      Serial.println(sensor_value);
 
       uint8_t r_size;
 
       // then use app_key_offset to skip the app key
 #ifdef FLOAT_TEMP
-      ftoa(float_str,temp,2);
+      ftoa(float_str,sensor_value,2);
 
-      r_size=sprintf((char*)message, "\\!TC/%s", float_str);
+      r_size=sprintf((char*)message, "\\!%s/%s", nomenclature_str, float_str);
 #else
-      r_size=sprintf((char*)message, "\\!TC/%d", (int)temp);   
+      r_size=sprintf((char*)message, "\\!%s/%d", nomenclature_str, (int)sensor_value);   
 #endif
 
 #ifdef OLED
@@ -250,7 +197,7 @@ void loop(void)
       
       startSend=millis();
 
-      // indicate that we have an appkey
+      // simple data packet
       sx1272.setPacketType(PKT_TYPE_DATA);
       
       // Send message to the gateway and print the result
