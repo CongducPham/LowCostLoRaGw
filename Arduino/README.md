@@ -43,8 +43,8 @@ This example also shows how a dedicated "cloud" task, `CloudGpsFile.py`, is impl
 
 - very simple LM35DZ analog temperature sensor
 - very simple TMP36 analog temperature sensor
-- digital DHT22 temperature and humidity sensor
-- digital SHT10 temperature and humidity sensor
+- digital DHT22 (AM2302) temperature and humidity sensor (work also with the AM2305)
+- digital SHT1x and SHT2x temperature and humidity sensor
 - digital DS18B20 temperature sensor
 - ultra-sonic HC-SR04 distance sensor
 - Davies Leaf Wetness sensor
@@ -107,6 +107,8 @@ With the declared sensors, the transmitted data string can be as follows:
 You can look at the provided examples to see how you can write a specific sensor class for a specific physical sensor. The previous simple temperature example `Arduino_LoRa_Simple_temp` can be obtained from the generic example by simply using a single sensor declaration with the LM35 class (i.e. `sensor_ptrs[0]`).	
 
 The generic example drives 5 types of temperature and humidity sensors (LM35DZ, TMP36, DHT22, SHT10, DS18B20) on the same node. You can see our [ThingSpeak channel here](https://thingspeak.com/channels/66583) that shows Sensor 3 data.
+
+**Note** With so many sensors and sensor libs, many output to serial monitor have been commented to have enough memory.
 
 **`Arduino_LoRa_InteractiveDevice`** is a tool that turns an Arduino board to an interactive device where a user can interactively enter data to be sent to the gateway. There are also many parameters that can dynamically be configured. This example can serve for test and debug purposes as well.
 

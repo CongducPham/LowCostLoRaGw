@@ -10,7 +10,11 @@
 SHT_Humidity::SHT_Humidity(char* nomenclature, bool is_analog, bool is_connected, bool is_low_power, uint8_t pin_read, uint8_t pin_power, uint8_t pin_trigger):Sensor(nomenclature, is_analog, is_connected, is_low_power, pin_read, pin_power, pin_trigger){
   if (get_is_connected()){
 
-    sht = new Sensirion(get_pin_read(), get_pin_trigger());
+#ifdef SHT2x
+    sht = new Sensirion(get_pin_read(), get_pin_trigger(), 0x40);
+#else    
+    sht = new Sensirion(get_pin_read(), get_pin_trigger());    
+#endif
     
     pinMode(get_pin_power(),OUTPUT);
     
