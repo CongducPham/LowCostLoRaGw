@@ -303,7 +303,7 @@ Uncomment `PABOOST` if you have a HopeRF RFM92W or RFM95W, or a Modtronix inAir9
 First try: a simple Ping-Pong program example
 =============================================
 
-As suggested by some people, we provide here a simple Ping-Pong program to upload on an Arduino board. First, install the Arduino IDE. You can use the latest one (we tested with 1.8.3). But then, check (see the board manager) that the Arduino AVR board library is not above 1.6.11 as there might be some compilation issues because of the change of the GCC AVR compiler. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
+As suggested by some people, we provide here a simple Ping-Pong program to upload on an Arduino board. First, install the Arduino IDE. You can use the latest one (we tested with 1.8.6). There have been some issues with the Arduino AVR board library version (some time ago, libraries above 1.6.11 showed some compilation issues because of changes in the GCC AVR compiler) but it seems that these issues have been solved. So now, you can also use the latest Arduino AVR board library (1.6.22 at time writing, included with Arduino 1.8.6 IDE). Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
 
 Run the gateway with:
 

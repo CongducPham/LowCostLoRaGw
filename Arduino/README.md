@@ -108,8 +108,6 @@ You can look at the provided examples to see how you can write a specific sensor
 
 The generic example drives 5 types of temperature and humidity sensors (LM35DZ, TMP36, DHT22, SHT10, DS18B20) on the same node. You can see our [ThingSpeak channel here](https://thingspeak.com/channels/66583) that shows Sensor 3 data.
 
-**Note** With so many sensors and sensor libs, many output to serial monitor have been commented to have enough memory.
-
 **`Arduino_LoRa_InteractiveDevice`** is a tool that turns an Arduino board to an interactive device where a user can interactively enter data to be sent to the gateway. There are also many parameters that can dynamically be configured. This example can serve for test and debug purposes as well.
 
 **`Arduino_LoRa_ucamII`** is the image IoT sensor device for multimedia sensing. Read [this specific page](http://cpham.perso.univ-pau.fr/WSN-MODEL/tool-html/imagesensor.html) and this [specific tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-ImageIoT-step-by-step.pdf) for more informations on how to build and run the image sensor.
