@@ -61,14 +61,14 @@ fi
 ### Start GPS web interface nodejs if needed
 ############################################
 
-#try to find whether NodeRed cloud is enabled or not
+#try to find whether CloudGpsFile cloud is enabled or not
 i=`jq '.clouds[].script|index("CloudGpsFile")|values' clouds.json`
 #echo $i
 j=`jq '.clouds[].script|index("CloudGpsFile")' clouds.json | grep -n "$i" | cut -d ":" -f1`
 #echo $j
 gpsfile=`jq ".clouds[$j-1].enabled" clouds.json`
 #echo $gpsfile
-if [ $gpsfile = "true" && -f gps/server.js ]
+if [ $gpsfile = "true" ] && [ -f gps/server.js ]
 then
 	echo "CloudGpsFile is enabled, start GPS nodejs web interface"
 	cd gps
