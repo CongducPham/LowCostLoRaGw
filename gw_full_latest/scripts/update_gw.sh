@@ -17,7 +17,16 @@ else
 		then
 			#online
 			echo "getting new gw_full_latest from github"
-			svn checkout https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_full_latest > svn.txt
+			if [ -f /home/pi/lora_gateway/scripts/repo.txt ]
+				then
+					repo=`tr -d '\n' < /home/pi/lora_gateway/scripts/repo.txt`
+					echo "using user-defined repository: $repo"
+				else
+					repo="https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_full_latest"
+					echo "using default repository: $repo"
+			fi		
+			
+			svn checkout "$repo" > svn.txt
 			grep "Checked out revision" svn.txt | cut -d ' ' --field=4 > /home/pi/git-VERSION.txt
 			sed -i -- 's/\.//g' /home/pi/git-VERSION.txt
 			cp /home/pi/git-VERSION.txt /home/pi/VERSION.txt
