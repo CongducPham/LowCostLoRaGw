@@ -8,7 +8,8 @@
 #define DHT22_TEMPERATURE_H
 
 #include "Sensor.h"
-#include "DHT22.h"
+//#include "DHT22.h"
+#include "DHT.h"
 
 class DHT22_Temperature : public Sensor {
   public:
@@ -17,8 +18,9 @@ class DHT22_Temperature : public Sensor {
     void update_data();
     
   private:
-    DHT22* dht = NULL;
-    DHT22_ERROR_t errorCode;
+    DHT* dht = NULL;
+    //DHT22* dht = NULL;
+    //DHT22_ERROR_t errorCode;
     uint8_t _dht_type;
     
 };

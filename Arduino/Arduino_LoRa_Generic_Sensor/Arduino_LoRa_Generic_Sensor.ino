@@ -21,7 +21,7 @@
  * first version of generic sensor
  * nicolas.bertuol@etud.univ-pau.fr
  * 
- * last update: July 17th by C. Pham
+ * last update: September 18th, 2018 by C. Pham
  */
 
 // IMPORTANT
@@ -749,10 +749,10 @@ void loop(void)
 
       e = sx1272.setSleepMode();
 
-      //if (!e)
-      //  PRINT_CSTSTR("%s","Successfully switch LoRa module in sleep mode\n");
-      //else  
-      //  PRINT_CSTSTR("%s","Could not switch LoRa module in sleep mode\n");
+      if (!e)
+        PRINT_CSTSTR("%s","Successfully switch LoRa module in sleep mode\n");
+      else  
+        PRINT_CSTSTR("%s","Could not switch LoRa module in sleep mode\n");
         
       FLUSHOUTPUT
       delay(50);
