@@ -85,14 +85,16 @@ function update_contact_mail($contacts){
 }
 
 function waziup_key($key_name, $key_value){
-	if($key_name == "service_tree"){
-		$tree = explode("-", $key_value);
-		$key_value = "";
-		for($i=0; $i < sizeof($tree); $i++){
-			if($tree[$i] != '')
-				$key_value .= "\-".$tree[$i];
-		}
+	if ($key_name == "service_tree"){	
+		if ($key_value != '') {	
+			$tree = explode("-", $key_value);
+			$key_value = "";
+			for($i=0; $i < sizeof($tree); $i++){
+				if($tree[$i] != '')
+					$key_value .= "\-".$tree[$i];
+			}	
 		//$key_value = addslashes($key_value);
+		}
 	}
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh waziup_key ".$key_name." ".$key_value);
 }

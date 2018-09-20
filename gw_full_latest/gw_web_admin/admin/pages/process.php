@@ -832,20 +832,14 @@ if(isset($_GET['organization_name'])){
 if(isset($_GET['service_tree'])){
 	
     $serv = htmlspecialchars($_GET['service_tree']);
-    echo $serv;
-	if(empty($serv)){
-		echo '<p><center><font color="red">Please fill all fields</font></center></p>';
+    
+	$output = waziup_key("service_tree", $serv);
+	
+	if($output == 0) {
+		echo '<p><center><font color="green">Service tree saved</font></center></p>';
 	}
 	else{
-    
-		$output = waziup_key("service_tree", $serv);
-	
-		if($output == 0){
-			echo '<p><center><font color="green">Service tree saved</font></center></p>';
-		}
-		else{
-			echo '<p><center><font color="red">Failed to save service tree</font></center></p>';
-		}
+		echo '<p><center><font color="red">Failed to save service tree</font></center></p>';
 	}
 }
 

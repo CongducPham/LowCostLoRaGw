@@ -1925,6 +1925,7 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 	   		 //erase message after 5 seconds
 	    		setTimeout(function() {
   				$('#cloud_msg').html("");
+  				window.location.reload();
 	    		},5000);
         });
     	
