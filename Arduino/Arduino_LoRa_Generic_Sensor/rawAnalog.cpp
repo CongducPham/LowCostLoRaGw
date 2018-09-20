@@ -18,7 +18,7 @@ rawAnalog::rawAnalog(char* nomenclature, bool is_analog, bool is_connected, bool
     else
 		digitalWrite(get_pin_power(),HIGH);
 	
-    set_wait_time(100);
+    set_warmup_time(100);
   }
 }
 
@@ -34,7 +34,7 @@ void rawAnalog::update_data()
     	digitalWrite(get_pin_power(),HIGH);
     	
     // wait
-    delay(get_wait_time());
+    delay(get_warmup_time());
    
     for(int i=0; i<get_n_sample(); i++) {
     	

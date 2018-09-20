@@ -18,7 +18,7 @@ TMP36::TMP36(char* nomenclature, bool is_analog, bool is_connected, bool is_low_
     else
 		digitalWrite(get_pin_power(),HIGH);
 	
-    set_wait_time(500);
+    set_warmup_time(500);
   }
 }
 
@@ -34,7 +34,7 @@ void TMP36::update_data()
     	digitalWrite(get_pin_power(),HIGH);     
     
     // wait
-    delay(get_wait_time());
+    delay(get_warmup_time());
    
     for(int i=0; i<get_n_sample(); i++) {
     	

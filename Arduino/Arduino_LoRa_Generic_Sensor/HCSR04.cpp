@@ -21,7 +21,7 @@ HCSR04::HCSR04(char* nomenclature, bool is_analog, bool is_connected, bool is_lo
   	if (has_pin_trigger())
   		pinMode(get_pin_trigger(),OUTPUT);
   		
-    set_wait_time(500);
+    set_warmup_time(500);
   }
 }
 
@@ -38,7 +38,7 @@ void HCSR04::update_data()
     	digitalWrite(get_pin_power(),HIGH);     
     
     // wait
-    delay(get_wait_time());
+    delay(get_warmup_time());
    
     for(int i=0; i<get_n_sample(); i++) {
     	

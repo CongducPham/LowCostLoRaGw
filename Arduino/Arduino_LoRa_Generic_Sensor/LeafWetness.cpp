@@ -19,7 +19,7 @@ LeafWetness::LeafWetness(char* nomenclature, bool is_analog, bool is_connected, 
     else
 		digitalWrite(get_pin_power(),HIGH);
 	
-    set_wait_time(500);
+    set_warmup_time(500);
   }
 }
 
@@ -32,7 +32,7 @@ void LeafWetness::update_data()
     	digitalWrite(get_pin_power(),HIGH);  	
 
     // wait
-    delay(get_wait_time());
+    delay(get_warmup_time());
       
     // TO MODIFY, IT SHALL RETURN VALUE BETWEEN 0 - 15 NOT A VOLTAGE
     if(get_is_analog()){

@@ -21,7 +21,7 @@ DHT22_Temperature::DHT22_Temperature(char* nomenclature, bool is_analog, bool is
     else
 		digitalWrite(get_pin_power(),HIGH);
 		
-    set_wait_time(2000);
+    set_warmup_time(2000);
   }
 }
 
@@ -36,7 +36,7 @@ void DHT22_Temperature::update_data()
     dht->begin();
     
     // wait
-    delay(get_wait_time());
+    delay(get_warmup_time());
 
     double t = dht->readTemperature();
 

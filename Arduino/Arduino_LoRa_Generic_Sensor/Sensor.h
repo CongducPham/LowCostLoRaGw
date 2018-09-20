@@ -53,7 +53,7 @@ class Sensor {
     int get_pin_trigger();
     //char* get_power_set();
     double get_data();       
-    unsigned long get_wait_time();
+    uint16_t get_warmup_time();
     bool has_fake_data();
     bool has_pin_trigger();
     uint8_t get_n_sample();
@@ -68,7 +68,7 @@ class Sensor {
     void set_pin_trigger(int u);    
     //void set_power_set(char* c);
     void set_data(double d);      
-    void set_wait_time(unsigned long i);
+    void set_warmup_time(uint16_t t);
     void set_fake_data(bool b);
     void set_n_sample(uint8_t n);
     
@@ -86,7 +86,8 @@ class Sensor {
     bool _with_fake_data;
     //char* _power_set = NULL;
     double _data;       
-    unsigned long _wait_time;
+    // delay in ms before reading data, sensor is powered
+    uint16_t _warmup_time;
     uint8_t _n_sample;
 };
 

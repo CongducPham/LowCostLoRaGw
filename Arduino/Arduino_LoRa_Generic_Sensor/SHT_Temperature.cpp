@@ -23,7 +23,7 @@ SHT_Temperature::SHT_Temperature(char* nomenclature, bool is_analog, bool is_con
     else
 		digitalWrite(get_pin_power(),HIGH);
 		
-    set_wait_time(1000);
+    set_warmup_time(1000);
   }
 }
 
@@ -36,7 +36,7 @@ void SHT_Temperature::update_data()
     	digitalWrite(get_pin_power(),HIGH);  	
 
     // wait
-    delay(get_wait_time());
+    delay(get_warmup_time());
         
     float t;
     float h;

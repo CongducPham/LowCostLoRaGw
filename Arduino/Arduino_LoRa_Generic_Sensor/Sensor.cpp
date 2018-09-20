@@ -25,7 +25,7 @@ Sensor::Sensor(char* nomenclature, bool is_analog, bool is_connected, bool is_lo
   set_pin_power(pin_power);
   set_pin_trigger(pin_trigger);
   set_data(0);
-  set_wait_time(0);
+  set_warmup_time(0);
   set_fake_data(false);
   set_n_sample(5);
   
@@ -74,8 +74,8 @@ double Sensor::get_data(){
   return _data;
 }
 
-unsigned long Sensor::get_wait_time(){
-  return _wait_time;
+uint16_t Sensor::get_warmup_time(){
+  return _warmup_time;
 }
 
 bool Sensor::has_fake_data(){
@@ -132,8 +132,8 @@ void Sensor::set_data(double d) {
   		_data = -1.0;	
 }
 
-void Sensor::set_wait_time(unsigned long i){
-  _wait_time = i;
+void Sensor::set_warmup_time(uint16_t t){
+  _warmup_time = t;
 }
 
 void Sensor::set_fake_data(bool b) {

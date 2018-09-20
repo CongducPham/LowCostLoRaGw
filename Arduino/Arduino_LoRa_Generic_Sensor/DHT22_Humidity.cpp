@@ -21,7 +21,7 @@ DHT22_Humidity::DHT22_Humidity(char* nomenclature, bool is_analog, bool is_conne
     else
 		digitalWrite(get_pin_power(),HIGH);
 		
-    set_wait_time(2000);
+    set_warmup_time(2000);
   }
 }
 
@@ -36,7 +36,7 @@ void DHT22_Humidity::update_data()
     dht->begin();
     
     // wait
-    delay(get_wait_time());
+    delay(get_warmup_time());
 
     double h = dht->readHumidity();
 
