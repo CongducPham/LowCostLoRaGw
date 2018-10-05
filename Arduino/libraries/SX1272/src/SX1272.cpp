@@ -4396,6 +4396,8 @@ boolean	SX1272::availableData(uint16_t wait)
 
         if( bitRead(value, 4) == 1 )
         { // header received
+            _starttime=millis();
+                    
 #if (SX1272_debug_mode > 0)
             Serial.println(F("## Valid Header received in LoRa mode ##"));
 #endif
