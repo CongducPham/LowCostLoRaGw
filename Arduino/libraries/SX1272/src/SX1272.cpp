@@ -4691,6 +4691,7 @@ int8_t SX1272::getPacket(uint16_t wait)
         }
         writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);	// Setting standby FSK mode
     }
+    
     if( p_received == true )
     {
         // Store the packet
@@ -4728,7 +4729,7 @@ int8_t SX1272::getPacket(uint16_t wait)
         if (!_rawFormat) {
             packet_received.type = readRegister(REG_FIFO);		// Reading second byte of the received packet
             // check packet type to discard unknown packet type
-            if ( (packet_received.type & PKT_TYPE_MASK != PKT_TYPE_DATA) && (packet_received.type & PKT_TYPE_MASK != PKT_TYPE_ACK) ) {
+            if ( ((packet_received.type & PKT_TYPE_MASK) != PKT_TYPE_DATA) && ((packet_received.type & PKT_TYPE_MASK) != PKT_TYPE_ACK) ) {
                 _reception = INCORRECT_PACKET_TYPE;
                 state = 3;
 #if (SX1272_debug_mode > 0)
@@ -4746,68 +4747,71 @@ int8_t SX1272::getPacket(uint16_t wait)
             packet_received.packnum = 0;
         }
 
-        packet_received.length = readRegister(REG_RX_NB_BYTES);
+		if (_reception == CORRECT_PACKET) {
+		
+			packet_received.length = readRegister(REG_RX_NB_BYTES);
 
-        if( _modem == LORA )
-        {
-            if (_rawFormat) {
-                _payloadlength=packet_received.length;
-            }
-            else
-                _payloadlength = packet_received.length - OFFSET_PAYLOADLENGTH;
-        }
-        if( packet_received.length > (MAX_LENGTH + 1) )
-        {
+			if( _modem == LORA )
+			{
+				if (_rawFormat) {
+					_payloadlength=packet_received.length;
+				}
+				else
+					_payloadlength = packet_received.length - OFFSET_PAYLOADLENGTH;
+			}
+			if( packet_received.length > (MAX_LENGTH + 1) )
+			{
 #if (SX1272_debug_mode > 0)
-            Serial.println(F("Corrupted packet, length must be less than 256"));
+				Serial.println(F("Corrupted packet, length must be less than 256"));
 #endif
-        }
-        else
-        {
-            for(unsigned int i = 0; i < _payloadlength; i++)
-            {
-                packet_received.data[i] = readRegister(REG_FIFO); // Storing payload
-            }
+			}
+			else
+			{
+				for(unsigned int i = 0; i < _payloadlength; i++)
+				{
+					packet_received.data[i] = readRegister(REG_FIFO); // Storing payload
+				}
 
-            // commented by C. Pham
-            //packet_received.retry = readRegister(REG_FIFO);
+				// commented by C. Pham
+				//packet_received.retry = readRegister(REG_FIFO);
 
-            // Print the packet if debug_mode
+				// Print the packet if debug_mode
 #if (SX1272_debug_mode > 0)
-            Serial.println(F("## Packet received:"));
-            Serial.print(F("Destination: "));
-            Serial.println(packet_received.dst);			 	// Printing destination
-            Serial.print(F("Type: "));
-            Serial.println(packet_received.type);			 	// Printing type
-            Serial.print(F("Source: "));
-            Serial.println(packet_received.src);			 	// Printing source
-            Serial.print(F("Packet number: "));
-            Serial.println(packet_received.packnum);			// Printing packet number
-            Serial.print(F("Packet length: "));
-            Serial.println(packet_received.length);			// Printing packet length
-            Serial.print(F("Data: "));
-            for(unsigned int i = 0; i < _payloadlength; i++)
-            {
-                Serial.print((char)packet_received.data[i]);		// Printing payload
-            }
-            Serial.println();
-            //Serial.print(F("Retry number: "));
-            //Serial.println(packet_received.retry);			// Printing number retry
-            Serial.println(F("##"));
-            Serial.println();
+				Serial.println(F("## Packet received:"));
+				Serial.print(F("Destination: "));
+				Serial.println(packet_received.dst);			 	// Printing destination
+				Serial.print(F("Type: "));
+				Serial.println(packet_received.type);			 	// Printing type
+				Serial.print(F("Source: "));
+				Serial.println(packet_received.src);			 	// Printing source
+				Serial.print(F("Packet number: "));
+				Serial.println(packet_received.packnum);			// Printing packet number
+				Serial.print(F("Packet length: "));
+				Serial.println(packet_received.length);			// Printing packet length
+				Serial.print(F("Data: "));
+				for(unsigned int i = 0; i < _payloadlength; i++)
+				{
+					Serial.print((char)packet_received.data[i]);		// Printing payload
+				}
+				Serial.println();
+				//Serial.print(F("Retry number: "));
+				//Serial.println(packet_received.retry);			// Printing number retry
+				Serial.println(F("##"));
+				Serial.println();
 #endif
-            state = 0;
+				state = 0;
 
 #ifdef W_REQUESTED_ACK
-            // added by C. Pham
-            // need to send an ACK
-            if (packet_received.type & PKT_FLAG_ACK_REQ) {
-                state = 5;
-                _requestACK_indicator=1;
-            }
-            else
-                _requestACK_indicator=0;
+				// added by C. Pham
+				// need to send an ACK
+				if (packet_received.type & PKT_FLAG_ACK_REQ) {
+					state = 5;
+					_requestACK_indicator=1;
+				}
+				else
+					_requestACK_indicator=0;
 #endif
+			}
         }
     }
     else
