@@ -1,4 +1,4 @@
-#include "my_demo_sensor_code.h"
+#include "my_temp_sensor_code.h"
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE NOMEMCLATURE, HERE TC WOULD MEAN TEMPERATURE IN CELCIUS FOR INSTANCE
@@ -11,11 +11,11 @@ char nomenclature_str[4]="TC";
 // ADD HERE SOME INITIALIZATION CODE
 // HERE WE JUST DECLARE VALUE_PIN_READ AS INPUT PIN
 
-void sensor_demo_Init() {
+void sensor_temp_Init() {
 
   // for the temperature sensor
-  pinMode(VALUE_PIN_READ, INPUT);
-  pinMode(PIN_POWER, OUTPUT);
+  pinMode(TEMP_PIN_READ, INPUT);
+  pinMode(TEMP_PIN_POWER, OUTPUT);
 }
 ///////////////////////////////////////////////////////////////////
 
@@ -23,19 +23,11 @@ void sensor_demo_Init() {
 // CHANGE HERE THE WAY YOU READ A VALUE FROM YOUR SPECIFIC SENSOR
 // HERE IT IS AN EXAMPLE WITH THE LM35DZ SIMPLE ANALOG TEMPERATURE SENSOR
 
-double sensor_demo_getValue() {
-
-  //power the sensor
-  digitalWrite(PIN_POWER, HIGH);
-  // wait a bit
-  delay(500);
+double sensor_temp_getValue() {
 
   //read the raw sensor value
-	int value = analogRead(VALUE_PIN_READ);
+	int value = analogRead(TEMP_PIN_READ);
 
-  //power down the sensor
-  digitalWrite(PIN_POWER, LOW);
-	
 	Serial.print(F("Reading "));
 	Serial.println(value);
 

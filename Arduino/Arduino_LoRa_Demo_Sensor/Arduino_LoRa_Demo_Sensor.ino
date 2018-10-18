@@ -1,7 +1,7 @@
 /*
  *  Demo of a simple temperature sensor on analog A0 to test the LoRa gateway
  *
- *  Copyright (C) 2017 Congduc Pham, University of Pau, France
+ *  Copyright (C) 2018 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,7 +23,26 @@
 #include "SX1272.h"
 #include "my_demo_sensor_code.h"
 
+// IMPORTANT SETTINGS
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+
+#define PABOOST
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE NODE ADDRESS 
+
+#define node_addr 9
+//////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// UNCOMMENT HERE IF YOU HAVE CONNECTED A SMALL OLED SCREEN
+
 //#define OLED
+//////////////////////////////////////////////////////////////////
 
 #ifdef OLED
 #include <U8x8lib.h>
@@ -134,6 +153,7 @@ void setup()
 
   delay(500);
 
+  // initialization of the demo sensor
   sensor_demo_Init();
 }
 

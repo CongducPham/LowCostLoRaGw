@@ -1,5 +1,5 @@
 /*
- *  temperature sensor on analog A0 to test the LoRa gateway
+ *  Fully operational temperature sensor on analog A0 to test the LoRa gateway
  *
  *  Copyright (C) 2016-2018 Congduc Pham, University of Pau, France
  *
@@ -17,7 +17,10 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: June 29th, 2018 by C. Pham
+ * last update: Oct 18th, 2018 by C. Pham
+ * 
+ * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
+ * the sensor-related code is in a separate file
  */
 
 // IMPORTANT
@@ -30,10 +33,34 @@
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
+#include "my_temp_sensor_code.h"
+
 //uncomment if you want to disable WiFi on ESP8266 boards
 //#include <ESP8266WiFi.h>
 
-// IMPORTANT
+// IMPORTANT SETTINGS
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+#define PABOOST
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE NODE ADDRESS 
+#define node_addr 6
+//////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE LORA MODE
+#define LORAMODE  1
+//////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
+unsigned int idlePeriodInMin = 10;
+///////////////////////////////////////////////////////////////////
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 //
@@ -42,7 +69,6 @@
 //#define SENEGAL_REGULATION
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
-// IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 #define BAND868
@@ -77,18 +103,10 @@ const uint32_t DEFAULT_CHANNEL=CH_08_900;
 const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
 
-// IMPORTANT
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
-// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-#define PABOOST
-/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
-//#define WITH_EEPROM
+#define WITH_EEPROM
 #define WITH_APPKEY
 //if you are low on program memory, comment STRING_LIB to save about 2K
 #define STRING_LIB
@@ -110,31 +128,8 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE LORA MODE, NODE ADDRESS 
-#define LORAMODE  1
-#define node_addr 6
-//////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 8
 #define field_index 3
-///////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE READ PIN AND THE POWER PIN FOR THE TEMP. SENSOR
-#define TEMP_PIN_READ  A0
-// use digital 9 to power the temperature sensor if needed
-// but on most ESP8266 boards pin 9 can not be used, so use pin 2 instead
-#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined IOTMCU_LORA_RADIO_NODE
-#define TEMP_PIN_POWER 2
-#else
-#define TEMP_PIN_POWER 9
-#endif
-///////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 10;
 ///////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
@@ -173,21 +168,6 @@ uint8_t message[50];
 
 #ifdef WITH_ACK
 #define NB_RETRIES 2
-#endif
-
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_MINI || defined ARDUINO_SAM_DUE || defined __MK20DX256__  || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__ || defined __SAMD21G18A__
-  // if you have a Pro Mini running at 5V, then change here
-  // these boards work in 3.3V
-  // Nexus board from Ideetron is a Mini
-  // __MK66FX1M0__ is for Teensy36
-  // __MK64FX512__  is for Teensy35
-  // __MK20DX256__ is for Teensy31/32
-  // __MKL26Z64__ is for TeensyLC
-  // __SAMD21G18A__ is for Zero/M0 and FeatherM0 (Cortex-M0)
-  #define TEMP_SCALE  3300.0
-#else // ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MEGA2560 
-  // also for all other boards, so change here if required.
-  #define TEMP_SCALE  5000.0
 #endif
 
 #ifdef LOW_POWER
@@ -243,10 +223,8 @@ void setup()
   //WiFi.forceSleepBegin();
   //delay(1);
   
-  // for the temperature sensor
-  pinMode(TEMP_PIN_READ, INPUT);
-  // and to power the temperature sensor
-  pinMode(TEMP_PIN_POWER,OUTPUT);
+  // initialization of the temperature sensor
+  sensor_temp_Init();
 
 #ifdef LOW_POWER
 #ifdef __SAMD21G18A__
@@ -454,28 +432,9 @@ void loop(void)
 #endif
 
       temp = 0.0;
-      int value;
       
       for (int i=0; i<5; i++) {
-          // change here how the temperature should be computed depending on your sensor type
-          // 
-          value = analogRead(TEMP_PIN_READ);
-
-          //LM35DZ
-          //the LM35DZ needs at least 4v as supply voltage
-          //can be used on 5v board
-          temp += (value*TEMP_SCALE/1024.0)/10;
-
-          //TMP36
-          //the TMP36 can work with supply voltage of 2.7v-5.5v
-          //can be used on 3.3v board
-          //we use a 0.95 factor when powering with less than 3.3v, e.g. 3.1v in the average for instance
-          //this setting is for 2 AA batteries
-          //temp += ((value*0.95*TEMP_SCALE/1024.0)-500)/10;
-        
-          PRINT_CSTSTR("%s","Reading ");
-          PRINT_VALUE("%d", value);
-          PRINTLN;   
+          temp += sensor_temp_getValue();  
           delay(100);
       }
       
@@ -498,13 +457,13 @@ void loop(void)
       
       // the recommended format if now \!TC/22.5
 #ifdef STRING_LIB
-      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#TC/%s",field_index,String(temp).c_str());
+      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#%s/%s",field_index,nomenclature_str,String(temp).c_str());
 #else
       char float_str[10];
       ftoa(float_str,temp,2);
       // this is for testing, uncomment if you just want to test, without a real temp sensor plugged
       //strcpy(float_str, "21.55567");
-      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#TC/%s",field_index,float_str);
+      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#%s/%s",field_index,nomenclature_str,float_str);
 #endif
 
       PRINT_CSTSTR("%s","Sending ");
