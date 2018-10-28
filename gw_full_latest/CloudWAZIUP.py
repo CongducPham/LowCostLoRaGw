@@ -21,10 +21,10 @@
 
 import urllib2
 import requests
-import subprocess
+#import subprocess
 import time
-import ssl
-import socket
+#import ssl
+#import socket
 import datetime
 import sys
 import os
@@ -42,46 +42,13 @@ try:
 except AttributeError:
 	key_WAZIUP.source_list=[]
 
-####################################################
-# To create a new entitiy
-# curl -X POST "http://dev.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors" -H "accept:application/json" -H "content-type:application/json" -d @- <<EOF 
-# {
-#  "id": "UPPA_Sensor2",
-#  "gateway_id": "4b13a223f24d3dba5403c2727fa92e62",
-#  "measurements": [ 
-#    { 
-#      "id": "TC",
-#      "values": [
-#           {
-#             "value": "25.6",
-#             "timestamp": "2016-06-08T18:20:27.873Z"
-#           }
-#		]
-#    }
-#   ]
-# }
-# EOF
-
-# Note that if organization_name is 'ORG' (default value), then 'Id' will be appended with the gw's md5 hash: "Id": "ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62"
-
-# curl -X POST "http://dev.waziup.io:80/api/v1/domains/waziup-UPPA-TESTS/sensors" -H "accept:application/json" -H "content-type:application/json" -d '{"id":"UPPA_Sensor2","gateway_id":"4b13a223f24d3dba5403c2727fa92e62","measurements":[{"id":"TC","values":[{"value": "25.6","timestamp":"2016-06-08T18:20:27.873Z"}]}]}'
-
-# Further updates of the values are like that:
-# curl -X POST "http://dev.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors/UPPA_Sensor2/measurements/TC/values" -H  "accept:application/json" -H  "content-type:application/json" -d @- <<EOF
-# {  
-#    "value": "25.6",
-#    "timestamp": "2016-06-08T18:20:27.873Z"
-# }
-
-# curl -X POST "http://dev.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors/UPPA_Sensor2/measurements/TC/values" -H  "accept:application/json" -H  "content-type:application/json" -d '{"value":"25.6","timestamp":"2016-06-08T18:20:27.873Z"}'
-
-#To retrieve the last data point inserted:
-#curl -X GET "http://dev.waziup.io/api/v1/domains/waziup-UPPA-TESTS/sensors/UPPA_Sensor2/measurements/TC" -H  "accept:application/json" -H  "content-type:application/json"
-
-####################################################
-
 # didn't get a response from server?
 connection_failure = False
+
+#the token
+current_token="notoken"
+last_token_time="notime"
+token_valid_time_in_seconds=2*60
 
 gw_id_md5=''
 
@@ -127,7 +94,7 @@ def test_network_available():
 	while(not connection and iteration < 4) :
 		try:
 			# 3sec timeout in case of server available but overcrowded
-			response=urllib2.urlopen(key_WAZIUP.waziup_server+'/domains/waziup/sensors', timeout=3)
+			response=urllib2.urlopen(key_WAZIUP.waziup_server+'/sensors', timeout=3)
 			connection = True
 		except urllib2.URLError, e: pass
 		except socket.timeout: pass
@@ -146,50 +113,200 @@ def test_network_available():
 	    		
 	return connection
 
-def create_new_entity(data, src, nomenclatures, tdata):
+def get_token():
 
 	global connection_failure
+	global current_token
+	global last_token_time
+	global token_valid_time_in_seconds
 	
-	print "WAZIUP: create new entity"
+	ask_new_token=False
 	
-	append_gw_str=''
+	if current_token=="notoken":
+		ask_new_token=True
+	else:
+		token_elapsed_time=datetime.datetime.now()-last_token_time		
+	 	if token_elapsed_time.total_seconds() > token_valid_time_in_seconds:
+	 		ask_new_token=True
+	 		
+	if ask_new_token: 		
 	
-	if key_WAZIUP.organization_name=='':
-		key_WAZIUP.organization_name='ORG'
-		
-	#default organization name?
-	if key_WAZIUP.organization_name=='ORG':
-		#we append the md5 hash to the sensor name: ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62
-		append_gw_str='_'+gw_id_md5		
+		username=key_WAZIUP.auth_token.split(':')[0]
+		password=key_WAZIUP.auth_token.split(':')[1]
+	
+		WAZIUP_url=key_WAZIUP.waziup_server+'/auth/token'
+		WAZIUP_headers = {'accept':'application/json','content-type':'application/json'}
+		WAZIUP_data = '{"username":"'+username+'","password":"'+password+'"}'
+	
+		print "CloudWAZIUP: get token for "+username
+		print "CloudWAZIUP: will issue requests with"
+		print 'url: '+WAZIUP_url
+		#print 'headers: '+json.dumps(WAZIUP_headers)
+		#print 'data: '+WAZIUP_data		
+	
+		current_token="notoken"
+	
+		try:
+			response = requests.post(WAZIUP_url, headers=WAZIUP_headers, data=WAZIUP_data, timeout=30)
 
-	WAZIUP_headers = {'accept':'application/json','content-type':'application/json'}
-	
-	WAZIUP_url=key_WAZIUP.waziup_server+'/domains/'+key_WAZIUP.project_name+key_WAZIUP.service_path+'/sensors' 
-	
-	WAZIUP_data = '{"id":"'+key_WAZIUP.organization_name+'_'+src+append_gw_str+'","gateway_id":"'+gw_id_md5+'","measurements":['
-	
-	i=0
-	
-	while i < len(data)-2:
+			print 'CloudWAZIUP: returned msg from server is ',
+			print response.status_code	
+						
+			if response.status_code == 200:
+				print 'CloudWAZIUP: got token'
+				current_token=response.text
+				last_token_time=datetime.datetime.now()
+				
+			if response.status_code == 404:
+				print 'CloudWAZIUP: authorization failed'
+				
+		except requests.exceptions.RequestException as e:
+			print e
+			print 'CloudWAZIUP: requests command failed (maybe a disconnection)'
+			connection_failure = True		
 		
-		WAZIUP_data = WAZIUP_data+'{"id":"'+nomenclatures[i]+'","values":[{"value":'
+	return current_token	
+	
+def create_new_measurement(entity, nomenclature):
+
+	global connection_failure
+	global gw_id_md5
+	
+	my_token=get_token()
+	
+	if my_token=="notoken":
+		return False
 		
-		isnumber = re.match(num_format,data[i+2])
-		isnumber = False
-		
-		if isnumber:
-			WAZIUP_data = WAZIUP_data+data[i+2]+',"timestamp":"'+tdata+'"}]}'
-		else:	
-			WAZIUP_data = WAZIUP_data+'"'+data[i+2]+'","timestamp":"'+tdata+'"}]}'
-		i += 1
-		if i < len(data)-2:
-			WAZIUP_data = WAZIUP_data+','
+	WAZIUP_headers = {'accept':'application/json','content-type':'application/json','Authorization':'Bearer '+my_token}
+	WAZIUP_url=key_WAZIUP.waziup_server+'/sensors'+'/'+entity+'/measurements' 
+	WAZIUP_data = '{"id":"'+nomenclature+'"}'
+
+	print 'CloudWAZIUP: create new measurement'
+	print "CloudWAZIUP: will issue requests with"
+	print 'url: '+WAZIUP_url
+	#print 'headers: '+json.dumps(WAZIUP_headers)
+	print 'data: '+WAZIUP_data
+
+	try:
+		response = requests.post(WAZIUP_url, headers=WAZIUP_headers, data=WAZIUP_data, timeout=30)
+	
+		print 'CloudWAZIUP: returned msg from server is ',
+		print response.status_code	
 			
-	WAZIUP_data = WAZIUP_data+']'
+		if response.status_code==200:
+			print 'CloudWAZIUP: measurement creation success'
+			return True			
+
+	except requests.exceptions.RequestException as e:
+		print e
+		print 'CloudWAZIUP: requests command failed (maybe a disconnection)'
+		connection_failure = True	
+	
+	return False
+
+#check if measurement exists
+def does_measurement_exist(entity, nomenclature):
+
+	global connection_failure
+
+	my_token=get_token()
+	
+	if my_token=="notoken":
+		return False
+
+	WAZIUP_headers = {'accept':'application/json','content-type':'application/json','Authorization':'Bearer '+my_token}
+	WAZIUP_url=key_WAZIUP.waziup_server+'/sensors'
+	WAZIUP_url=WAZIUP_url+'/'+entity		
+	WAZIUP_url=WAZIUP_url+'/measurements/'+nomenclature
+
+	print 'CloudWAZIUP: check if measurement exits'
+	print "CloudWAZIUP: will issue requests with"
+	print 'url: '+WAZIUP_url
+	#print 'headers: '+json.dumps(WAZIUP_headers)
+
+	try:
+		response = requests.get(WAZIUP_url, headers=WAZIUP_headers, data='', timeout=30)
+
+		print 'CloudWAZIUP: returned msg from server is ',
+		print response.status_code	
+					
+		if response.status_code==404:
+			print 'CloudWAZIUP: measurement does not exist'
+			return False
+		else:
+			print 'CloudWAZIUP: measurement exists'
+			return True				
+
+	except requests.exceptions.RequestException as e:
+		print e
+		print 'CloudWAZIUP: requests command failed (maybe a disconnection)'
+		connection_failure = True
+	
+	if connection_failure:
+		return False		
+
+
+def does_entity_exist(entity):
+
+	global connection_failure
+
+	my_token=get_token()
+	
+	if my_token=="notoken":
+		return False
+		
+	#check if entity exist
+	WAZIUP_headers = {'accept':'application/json','content-type':'application/json','Authorization':'Bearer '+my_token}
+	WAZIUP_url=key_WAZIUP.waziup_server+'/sensors'
+	WAZIUP_url=WAZIUP_url+'/'+entity
+	
+	print 'CloudWAZIUP: check if entity exits'
+	print "CloudWAZIUP: will issue requests with"
+	print 'url: '+WAZIUP_url
+	#print 'headers: '+json.dumps(WAZIUP_headers)
+	
+	try:
+		response = requests.get(WAZIUP_url, headers=WAZIUP_headers, data='', timeout=30)
+
+		print 'CloudWAZIUP: returned msg from server is ',
+		print response.status_code	
+						
+		if response.status_code==404:
+			print 'CloudWAZIUP: entity does not exist'
+			return False
+		else:
+			print 'CloudWAZIUP: entity exists'
+			return True				
+
+	except requests.exceptions.RequestException as e:
+		print e
+		print 'CloudWAZIUP: requests command failed (maybe a disconnection)'
+		connection_failure = True
+		
+	if connection_failure:
+		return False
+		
+def create_new_entity(data, entity, nomenclatures, tdata):
+
+	global connection_failure
+	global gw_id_md5
+			
+	my_token=get_token()
+	
+	if my_token=="notoken":
+		return False
+		
+	WAZIUP_headers = {'accept':'application/json','content-type':'application/json','Authorization':'Bearer '+my_token}
+	WAZIUP_url=key_WAZIUP.waziup_server+'/sensors' 
+	WAZIUP_data = '{"id":"'+entity+'","gateway_id":"'+gw_id_md5+'","domain":"'+key_WAZIUP.project_name+'-'+key_WAZIUP.organization_name+key_WAZIUP.service_tree+'"'
+	
+	if key_WAZIUP.visibility=='private':
+		WAZIUP_data = WAZIUP_data+',"visibility":"private"'	
+	
 	WAZIUP_data = WAZIUP_data+'}'
 	
+	print "CloudWAZIUP: create new entity"
 	print "CloudWAZIUP: will issue requests with"
-		
 	print 'url: '+WAZIUP_url
 	#print 'headers: '+json.dumps(WAZIUP_headers)
 	print 'data: '+WAZIUP_data
@@ -197,55 +314,71 @@ def create_new_entity(data, src, nomenclatures, tdata):
 	try:
 		response = requests.post(WAZIUP_url, headers=WAZIUP_headers, data=WAZIUP_data, timeout=30)
 
-		print 'WAZIUP: returned msg from server is ',
+		print 'CloudWAZIUP: returned msg from server is ',
 		print response.status_code	
 						
 		if response.ok:
-			print 'WAZIUP: entity creation success'
+			print 'CloudWAZIUP: entity creation success'
+			print "CloudWAZIUP: create measurements for new entity"
+		
+			i=0
+	
+			while i < len(nomenclatures):
+				create_new_measurement(entity, nomenclatures[i])
+				#create next measurement in same entity				
+				i += 1			
 			
 	except requests.exceptions.RequestException as e:
 		print e
-		print 'WAZIUP: requests command failed (maybe a disconnection)'
-		connection_failure = True 	
-		
+		print 'CloudWAZIUP: requests command failed (maybe a disconnection)'
+		connection_failure = True
+	
+	if connection_failure:
+		return False
+	else:
+		return True	
+	 	
 		
 # send a data to the server
-def send_data(data, src, nomenclatures, tdata):
+def send_data(data, entity, nomenclatures, tdata):
 
 	global connection_failure
-	
-	entity_need_to_be_created=False
-	
-	append_gw_str=''
-	
-	i=0
 	
 	if data[0]=='':
 		data[0]=key_WAZIUP.project_name
 
 	if data[1]=='':
-		data[1]=key_WAZIUP.service_path
-			
-	while i < len(data)-2  and not entity_need_to_be_created:
+		data[1]=key_WAZIUP.service_path	
 
-		if key_WAZIUP.organization_name=='':
-			key_WAZIUP.organization_name='ORG'
-		
-		#default organization name?
-		if key_WAZIUP.organization_name=='ORG':
-			#we append the md5 hash to the sensor name: ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62
-			append_gw_str='_'+gw_id_md5
-		
-		#with WAZIUP new API, it is always a string	
-		isnumber = re.match(num_format,data[i+2])
-		isnumber = False
-		
-		WAZIUP_headers = {'accept':'application/json','content-type':'application/json'}
-		
-		WAZIUP_url=key_WAZIUP.waziup_server + '/domains/'+key_WAZIUP.project_name+key_WAZIUP.service_path+'/sensors/'+key_WAZIUP.organization_name+"_"+src+append_gw_str+'/measurements/'+nomenclatures[i]+'/values' 
-		
+	#check entity
+	if does_entity_exist(entity)==False:
+		if create_new_entity(data, entity, nomenclatures, tdata)==False:
+			return False
+			
+	i=0
+	
+	#will try to upload values for each measurement			
+	while i < len(data)-2:
+
+		#check measurement
+		if does_measurement_exist(entity, nomenclatures[i])==False:
+			if create_new_measurement(entity, nomenclatures[i])==False:
+				return False
+	
+		#now we push the measurement value
+		#we ask for a new token just in case because if measurement already exists, we did not have a valid token
+		my_token=get_token()
+	
+		if my_token=="notoken":
+			return False
+				
+		WAZIUP_headers = {'accept':'application/json','content-type':'application/json','Authorization':'Bearer '+my_token}		
+		WAZIUP_url=key_WAZIUP.waziup_server+'/sensors/'+entity+'/measurements/'+nomenclatures[i]+'/values'
 		WAZIUP_data = '{"value":'
-		
+
+		isnumber = re.match(num_format,data[i+2])
+		#isnumber = False
+				
 		if isnumber:
 			WAZIUP_data = WAZIUP_data+data[i+2]+',"timestamp":"'+tdata+'"}'
 		else:
@@ -259,60 +392,40 @@ def send_data(data, src, nomenclatures, tdata):
 		try:
 			response = requests.post(WAZIUP_url, headers=WAZIUP_headers, data=WAZIUP_data, timeout=30)
 
-			print 'WAZIUP: returned msg from server is ',
+			print 'CloudWAZIUP: returned msg from server is ',
 			print response.status_code
 
 			if response.ok:
-				print 'WAZIUP: upload success'
+				print 'CloudWAZIUP: upload success'
 				i += 1
-			elif response.status_code==403 or response.status_code==404:
-				#we try to (re-)create the measurement first
-				WAZIUP_url=key_WAZIUP.waziup_server + '/domains/'+key_WAZIUP.project_name+key_WAZIUP.service_path+'/sensors/'+key_WAZIUP.organization_name+"_"+src+append_gw_str+'/measurements'
-				WAZIUP_data = '{"id":"'+nomenclatures[i]+'"}'
-				print "CloudWAZIUP: will try to create measurement and issue requests with"
-				print 'url: '+WAZIUP_url
-				print 'data: '+WAZIUP_data	
-				
-				try:
-					response = requests.post(WAZIUP_url, headers=WAZIUP_headers, data=WAZIUP_data, timeout=30)
-								
-					print 'WAZIUP: returned msg from server is ',
-					print response.status_code		
-					
-					if response.ok:
-						print 'WAZIUP: measurement creation success'
-						print 'WAZIUP: retry upload'
-					else:	
-						entity_need_to_be_created=True
-
-				except requests.exceptions.RequestException as e:
-					print e
-					print 'WAZIUP: requests command failed (maybe a disconnection)'
-					connection_failure = True						
-			
 			elif response.status_code==400:
-				print 'WAZIUP: bad request'
+				print 'CloudWAZIUP: bad request'
 				i += 1
-				
-			if entity_need_to_be_created:
-				create_new_entity(data, src, nomenclatures, tdata)
 				
 		except requests.exceptions.RequestException as e:
 			print e
-			print 'WAZIUP: requests command failed (maybe a disconnection)'
-			connection_failure = True			
+			print 'CloudWAZIUP: requests command failed (maybe a disconnection)'
+			connection_failure = True	
+			
+		if connection_failure:
+			return False			
 
 # main
 # -------------------
 #
-# ldata can be formatted to indicate a specific project_name and service_path. Options are:
-# 	TC/22.4/HU/85 -> use default project_name and service_path
-#	-UPPA-TESTS#TC/22.4/HU/85 -> use default project_name and service_path=-UPPA-TESTS
-#	waziup#-UPPA-TEST#TC/22.4/HU/85 -> project_name=waziup and service_path=-UPPA-TESTS
+# ldata can be formatted to indicate a specific project_name and service_tree. Options are:
+# 	TC/22.4/HU/85 -> use default project_name and service_tree
+#	-TESTS#TC/22.4/HU/85 -> use default project_name and service_tree=-TESTS
+#	waziup#-TEST#TC/22.4/HU/85 -> project_name=waziup and service_tree=-TESTS
 #
-#	project_name and service_path must BOTH have more than 2 characters
+#	project_name and service_tree must BOTH have more than 2 characters
 #
-#   the final domain will be project_name+service_path, e.g waziup-UPPA-TESTS
+#   the domain will be project_name+'-'+organization_name+service_tree, e.g. waziup-UPPA-TESTS
+#	the entity name will be organization_name+service_tree+'_'+sensor_name+scr_addr, e.g UPPA-TESTS_Sensor2
+#
+#	you can test the script in standalone mode as follwow:
+#
+#	python CloudWAZIUP.py "TC/22.5" "1,16,36,0,9,8,-45" "125,5,12" "2018-08-05T11:08:52" "00000027EB5A71F7"
 #
 def main(ldata, pdata, rdata, tdata, gwid):
 
@@ -420,13 +533,28 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	
 		#if we got a response from the server, send the data to it	
 		if (connected):
-			print("WAZIUP: uploading")
+			print("CloudWAZIUP: uploading")
 			#here we append the device's address to get for instance Sensor2
 			#if packet come from a LoRaWAN device with 4-byte devAddr then we will have for instance Sensor01020304
 			#where the devAddr is expressed in hex format
-			send_data(data, key_WAZIUP.sensor_name+src_str, nomenclatures, tdata)
+			
+			append_gw_str=''
+	
+			if key_WAZIUP.organization_name=='':
+				key_WAZIUP.organization_name='ORG'
+		
+			#default organization name?
+			if key_WAZIUP.organization_name=='ORG':
+				#we append the md5 hash to the sensor name: ORG_Sensor2_4b13a223f24d3dba5403c2727fa92e62
+				append_gw_str='_'+gw_id_md5	
+				
+			#key_WAZIUP.service_path=key_WAZIUP.organization_name+key_WAZIUP.service_tree
+			#the provided parameter would be the entity name, i.e. UPPA-TESTS_Sensor2
+			#here: UPPA is the organization_name, -TESTS is the servire_tree
+			
+			send_data(data, key_WAZIUP.service_path+'_'+key_WAZIUP.sensor_name+src_str+append_gw_str, nomenclatures, tdata)
 		else:
-			print("WAZIUP: not uploading")
+			print("CloudWAZIUP: not uploading")
 			
 			if (CloudNoInternet_enabled):
 				print("Using CloudNoInternet")

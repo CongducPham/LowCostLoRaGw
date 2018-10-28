@@ -11,9 +11,8 @@ project_name="waziup"
 organization_name="ORG"
 
 #service tree: CHANGE HERE at your convenience
-#should start with -
-#service_tree='-LIUPPA-T2I-CPHAM'
 #can be empty
+#should start with a '-'
 #service_tree='-TESTS'
 service_tree=''
 
@@ -22,16 +21,19 @@ service_tree=''
 sensor_name="Sensor"
 
 #service path: DO NOT CHANGE HERE
-service_path='-'+organization_name+service_tree
+service_path=organization_name+service_tree
 
 #SUMMARY
 #
-#with a domain vision, the domain will be project_name+service_path, e.g waziup-UPPA-TESTS
-#
-#the entity name will then be organization_name+"_"+sensor_name+scr_addr, e.g. "UPPA_Sensor2"
+#the entity name will then be service_path+'_'+sensor_name+scr_addr, e.g. "UPPA-TESTS_Sensor2"
 #
 
-auth_token = "this_is_my_authorization_token"
+#use ONLY letters and numbers for the password
+auth_token="username:password"
+
+#here "private" or "public" for the managed sensors
+#leave blank would mean public
+visibility="public"
 
 #Note how we can indicate a device source addr that are allowed to use the script
 #Use decimal between 2-255 and use 4-byte hex format for LoRaWAN devAddr
