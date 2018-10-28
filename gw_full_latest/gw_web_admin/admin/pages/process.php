@@ -525,7 +525,7 @@ if (isset($_GET['reboot']) && $_GET['reboot'] == "true"){
 }
 
 /*************************
- * Shutdomn gateway
+ * Shutdown gateway
  *************************/
 if (isset($_GET['shutdown']) && $_GET['shutdown'] == "true"){ 
 	_shutdown();
@@ -763,10 +763,10 @@ if (isset($_GET["waziup_status"]) && (! empty($_GET["waziup_status"]))) {
 	$output = waziup_conf("enabled", $waziup_status);
 	
 	if($output == 0){
-		echo '<p><center><font color="green">Waziup cloud status updated</font></center></p>';
+		echo '<p><center><font color="green">WAZIUP cloud status updated</font></center></p>';
 	}
 	else{
-		echo '<p><center><font color="red">Failed to update Waziup cloud status</font></center></p>';	
+		echo '<p><center><font color="red">Failed to update WAZIUP cloud status</font></center></p>';	
 	}
 }
 
@@ -833,26 +833,65 @@ if(isset($_GET['service_tree'])){
 	}
 }
 
-/******************************
- * Setting Waziup Orion token
- ******************************/
-if(isset($_GET['auth_token'])){
+/***************************
+ * Setting Waziup username
+ ***************************/
+if(isset($_GET['username']) && (! empty($_GET["username"]))) {
 	
-    $auth_token = htmlspecialchars($_GET['auth_token']);
-    echo $auth_token;
-	if(empty($auth_token)){
+    $username = htmlspecialchars($_GET['username']);
+
+	if(empty($username)){
 		echo '<p><center><font color="red">Please fill all fields</font></center></p>';
 	}
 	else{
     
-		$output = waziup_key("auth_token", $auth_token);
+		$output = waziup_key("username", $username);
 	
 		if($output == 0){
-			echo '<p><center><font color="green">Auth token saved</font></center></p>';
+			echo '<p><center><font color="green">WAZIUP username saved</font></center></p>';
 		}
 		else{
-			echo '<p><center><font color="red">Failed to save Auth token</font></center></p>';
+			echo '<p><center><font color="red">Failed to save WAZIUP username</font></center></p>';
 		}
+	}
+}
+
+/***************************
+ * Setting Waziup password
+ ***************************/
+if(isset($_GET['password']) && (! empty($_GET["password"]))) {
+	
+    $password = htmlspecialchars($_GET['password']);
+
+	if(empty($password)){
+		echo '<p><center><font color="red">Please fill all fields</font></center></p>';
+	}
+	else{
+    
+		$output = waziup_key("password", $password);
+	
+		if($output == 0){
+			echo '<p><center><font color="green">WAZIUP password saved</font></center></p>';
+		}
+		else{
+			echo '<p><center><font color="red">Failed to save WAZIUP password</font></center></p>';
+		}
+	}
+}
+
+/***********************************
+ * Setting WAZIUP gateway visibility
+ ***********************************/
+if (isset($_GET["visibility"]) && (! empty($_GET["visibility"]))) {
+    
+    $visibility = htmlspecialchars($_GET["visibility"]);
+	$output = waziup_key("visibility", $visibility);
+	
+	if($output == 0){
+		echo '<p><center><font color="green">WAZIUP gateway visibility updated</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to update WAZIUP gateway visibility</font></center></p>';	
 	}
 }
 

@@ -1505,41 +1505,94 @@ $('#btn_thingspeak_source_list_submit').click(function(){
     });
     
 //==================================
-// Setting Waziup auth token
+// Setting Waziup username
 //==================================
-    $('#td_edit_auth_token').hide();
-    $('#td_auth_token_submit').hide();
-    $("#waziup_status_msg").hide();
+    $('#td_edit_username').hide();
+    $('#td_username_submit').hide();
     
-    $('#btn_edit_auth_token').click(function() {	
-    	$('#td_edit_auth_token').show();
-    	$('#td_auth_token_submit').show();
+    $('#btn_edit_username').click(function() {	
+    	$('#td_edit_username').show();
+    	$('#td_username_submit').show();
     });
  
-    $('#auth_token_submit').click(function() {	
-    	auth_token = $('#auth_token_input').val();
-    	//alert(serv);
-    	$.get("process.php", {auth_token: auth_token}, function(data){	
+    $('#username_submit').click(function() {	
+    	username = $('#username_input').val();
+    	
+	if (! /^[A-Za-z0-9]{1,}$/.test(username)){
+		$("#cloud_msg").html('<p><center><font color="red">Enter username where only letters and numbers [A-Za-z0-9] are allowed</font></center></p>');
+            	//erase message after 2 seconds
+	   			setTimeout(function() {
+  					$('#cloud_msg').html("");
+	     			},2000);
+	}
+	else{    	
+    	$.get("process.php", {username: username}, function(data){	
 			//$('#waziup_status_msg').html(data);
 			//$('#waziup_status_msg').show();
 			$('#cloud_msg').html(data);
-	   		 //erase message after 5 seconds
+	   		 //erase message after 5s
 	    		setTimeout(function() {
   				$('#cloud_msg').html("");
+  				window.location.reload();
 	    		},5000);
         });
     	
-	if(auth_token !='')		
-        	$('#auth_token_value').html(auth_token);
-        $('#auth_token_input').val("");
-        $('#td_edit_auth_token').hide();
-    	$('#td_auth_token_submit').hide();
+	if(username !='')		
+        	$('#username_value').html(username);
+        $('#username_input').val("");
+        $('#td_edit_username').hide();
+    	$('#td_username_submit').hide();
+    	
+    }
+    
     });
+
+//==================================
+// Setting Waziup password
+//==================================
+    $('#td_edit_password').hide();
+    $('#td_password_submit').hide();
+    
+    $('#btn_edit_password').click(function() {	
+    	$('#td_edit_password').show();
+    	$('#td_password_submit').show();
+    });
+ 
+    $('#password_submit').click(function() {	
+    	password = $('#password_input').val();
+    	
+	if (! /^[A-Za-z0-9]{1,}$/.test(password)){
+		$("#cloud_msg").html('<p><center><font color="red">Enter password where only letters and numbers [A-Za-z0-9] are allowed</font></center></p>');
+            	//erase message after 2 seconds
+	   			setTimeout(function() {
+  					$('#cloud_msg').html("");
+	     			},2000);
+	}
+	else{    	
+    	$.get("process.php", {password: password}, function(data){	
+			//$('#waziup_status_msg').html(data);
+			//$('#waziup_status_msg').show();
+			$('#cloud_msg').html(data);
+	   		 //erase message after 5s
+	    		setTimeout(function() {
+  				$('#cloud_msg').html("");
+  				window.location.reload();
+	    		},5000);
+        });
+    	
+	if(password !='')		
+        	$('#password_value').html("***********");
+        $('#password_input').val("");
+        $('#td_edit_password').hide();
+    	$('#td_password_submit').hide();
+    	
+    }
+    
+    });    
     
 //==================================
 // Waziup source list
 //==================================
-
 $('#td_edit_waziup_source_list').hide();
 $('#td_waziup_source_list_submit').hide();
 
@@ -1583,6 +1636,34 @@ $('#btn_waziup_source_list_submit').click(function(){
 		}
 });
 
+//==================================
+// Waziup gateway visibility
+//==================================
+    $('#td_edit_visibility').hide();
+    $('#td_visibility_submit').hide();
+    
+    $('#btn_edit_visibility').click(function() {	
+    	$('#td_edit_visibility').show();
+    	$('#td_visibility_submit').show();
+    });
+ 
+    $('#btn_visibility_submit').click(function() {	
+    	visibility = $( "input:checked" ).val();
+    	
+    	$.get("process.php", {visibility:visibility}, function(data){	
+			$('#cloud_msg').html(data);
+	   		 //erase message after 5 seconds
+	    		setTimeout(function() {
+  				$('#cloud_msg').html("");
+	    		},5000);
+        });
+
+	if(visibility !='')
+        	$('#visibility_value').html(visibility);
+        $('#td_edit_visibility').hide();
+    	$('#td_visibility_submit').hide();
+    });
+    
 //+++++++++++++++++++++++++++++++++++++
 // CLOUD NO INTERNET
 //+++++++++++++++++++++++++++++++++++++

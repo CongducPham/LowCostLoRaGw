@@ -78,18 +78,33 @@
 			</tr>
 
 			<tr>
-			<td>auth token</td>
-			<td id="auth_token_value"><?php echo $key_clouds['auth_token']; ?></td>
-			<td align="right"><button id="btn_edit_auth_token" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
-			<td id="td_edit_auth_token">
-				<div id="div_update_auth_token" class="form-group">
-					<label>auth token</label>
-					<input id="auth_token_input" class="form-control" placeholder="auth token" name="auth_token" type="text" value="" autofocus></div>
+			<td>username</td>
+			<td id="username_value"><?php echo $key_clouds['username']; ?></td>
+			<td align="right"><button id="btn_edit_username" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+			<td id="td_edit_username">
+				<div id="div_update_username" class="form-group">
+					<label>username</label>
+					<input id="username_input" class="form-control" placeholder="username [A-Za-z0-9]" name="username" type="text" value="" autofocus></div>
 			</td> 
-			<td id="td_auth_token_submit" align="right">
-					<button id="auth_token_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+			<td id="td_username_submit" align="right">
+					<button id="username_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
 			</td>
 			</tr>
+
+			<tr>
+			<td>password</td>
+			<td id="password_value"><?php echo $key_clouds['password']; ?></td>
+			<td align="right"><button id="btn_edit_password" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+			<td id="td_edit_password">
+				<div id="div_update_password" class="form-group">
+					<label>password</label>
+					<input id="password_input" class="form-control" placeholder="password [A-Za-z0-9]" name="password" type="text" value="" autofocus></div>
+			</td> 
+			<td id="td_password_submit" align="right">
+					<button id="password_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+			</td>
+			</tr>
+						
 			<tr>
 				<td>source list</td>
 				<td id="td_waziup_source_list_value">
@@ -139,14 +154,39 @@
 						<span class="fa fa-edit"></span>
 					</button>
 				</td>
-			</tr>										
+			</tr>
+			
+			<tr>
+			<td>visibility</td>
+			<td id="visibility_value"><?php echo $key_clouds['visibility']; ?></td>
+			<td align="right"><button id="btn_edit_visibility" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+			<td id="td_edit_visibility">
+				<div id="div_visibility_options" class="form-group">
+					
+					<div class="radio">
+						<label>
+							<input type="radio" name="optionsRadios" id="visibility_public" value="public" checked>Public
+						</label>
+						</br>
+						<label>
+							<input type="radio" name="optionsRadios" id="visibility_private" value="private" >Private
+						</label>
+					</div>
+				</div>
+			</td> 
+			<td id="td_visibility_submit" align="right">
+					<button id="btn_visibility_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+			</td>
+			</tr>													
 			</tbody>
 		</table>
-		<p>The WAZIUP cloud uses FIWARE platform and adopts a domain approach: the domain will be defined as <tt>project_name+'-'+organization_name+service_tree</tt>, e.g. <tt>waziup-UPPA-OFFICE1-TESTS</tt> if <tt>project_name</tt> is <tt>waziup</tt>, <tt>organization_name</tt> is <tt>UPPA</tt> and <tt>service_tree</tt> is <tt>-OFFICE1-TESTS</tt> (<tt>service_tree</tt> can be empty otherwise it must begin with a '-'). The device id will be <tt>organization_name+"Sensor"+device_addr</tt>. For instance, for sensor 2 hosted by <tt>UPPA</tt>: <tt>UPPA_Sensor2</tt>.</p>
+		<p>The WAZIUP cloud uses FIWARE platform with the possibility to define domains: the domain will be defined as <tt>project_name+'-'+organization_name+service_tree</tt>, e.g. <tt>waziup-UPPA-TESTS</tt> if <tt>project_name</tt> is <tt>waziup</tt>, <tt>organization_name</tt> is <tt>UPPA</tt> and <tt>service_tree</tt> is <tt>-TESTS</tt> (<tt>service_tree</tt> can be empty otherwise it must begin with a '-'). The device id will be <tt>organization_name+service_tree+"_Sensor"+device_addr</tt>. For instance, for sensor 2 hosted by <tt>UPPA</tt> with a <tt>service_tree</tt> of <tt>-TESTS</tt>, device id will be <tt>UPPA-TESTS_Sensor2</tt>.</p>
 		
-		<p>With the domain approach, the URL will be for instance <tt>http://api.waziup.io/api/v1/domains/<font color="red">waziup-UPPA-OFFICE1-TESTS</font>/sensors</tt>.</p>
+		<p>The default <tt>organization_name</tt> is 'ORG'. It is <b>necessary</b> to change it to your organization name.</p>
 		
-		<p>The default <tt>organization_name</tt> is 'ORG'. It is necessary to change it to your organization name.</p>
+		<p><tt>username</tt> is your WAZIUP username. <tt>password</tt> is your WAZIUP password. Use <b>only letters and numbers</b> for <tt>username</tt> and <tt>password</tt>. To create an account on the WAZIUP platform, go to <a href="https://dashboard.waziup.io">https://dashboard.waziup.io</a>.</p>
+		
+		<p><tt>visibility</tt> can be set to <tt>private</tt> so that the gateway creates private sensors under the account of the user. Private sensors can only be seen by its owner.</p>
 		
 		<p><b>Do not use space nor '/'</b> in any of these parameters, use '_' or '-' instead.</p>
 		

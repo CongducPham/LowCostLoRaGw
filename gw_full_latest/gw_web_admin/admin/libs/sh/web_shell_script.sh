@@ -319,10 +319,16 @@ then
 	elif [ $2 == "service_tree" ]
 	then
 		sudo sed -i 's/^service_tree.*/service_tree=\"'"$3"'\"/g' /home/pi/lora_gateway/key_WAZIUP.py
-	elif [ $2 == "auth_token" ]
+	elif [ $2 == "username" ]
 	then
-		sudo sed -i 's/^auth_token.*/auth_token=\"'"$3"'\"/g' /home/pi/lora_gateway/key_WAZIUP.py	
-	fi
+		sudo sed -i 's/^username.*/username=\"'"$3"'\"/g' /home/pi/lora_gateway/key_WAZIUP.py	
+	elif [ $2 == "password" ]
+	then
+		sudo sed -i 's/^password.*/password=\"'"$3"'\"/g' /home/pi/lora_gateway/key_WAZIUP.py			
+	elif [ $2 == "visibility" ]
+	then
+		sudo sed -i 's/^visibility.*/visibility=\"'"$3"'\"/g' /home/pi/lora_gateway/key_WAZIUP.py	
+	fi	
 fi
 
 if [ "$1" = "gpsfile_key" ]

@@ -131,14 +131,11 @@ def get_token():
 	 		
 	if ask_new_token: 		
 	
-		username=key_WAZIUP.auth_token.split(':')[0]
-		password=key_WAZIUP.auth_token.split(':')[1]
-	
 		WAZIUP_url=key_WAZIUP.waziup_server+'/auth/token'
 		WAZIUP_headers = {'accept':'application/json','content-type':'application/json'}
-		WAZIUP_data = '{"username":"'+username+'","password":"'+password+'"}'
+		WAZIUP_data = '{"username":"'+key_WAZIUP.username+'","password":"'+key_WAZIUP.password+'"}'
 	
-		print "CloudWAZIUP: get token for "+username
+		print "CloudWAZIUP: get token for "+key_WAZIUP.username
 		print "CloudWAZIUP: will issue requests with"
 		print 'url: '+WAZIUP_url
 		#print 'headers: '+json.dumps(WAZIUP_headers)

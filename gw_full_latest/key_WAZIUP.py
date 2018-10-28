@@ -28,8 +28,9 @@ service_path=organization_name+service_tree
 #the entity name will then be service_path+'_'+sensor_name+scr_addr, e.g. "UPPA-TESTS_Sensor2"
 #
 
-#use ONLY letters and numbers for the password
-auth_token="username:password"
+#use ONLY letters and numbers [A-Za-z0-9] for the username and the password
+username="username"
+password="password"
 
 #here "private" or "public" for the managed sensors
 #leave blank would mean public
