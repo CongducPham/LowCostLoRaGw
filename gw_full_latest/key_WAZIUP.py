@@ -33,7 +33,6 @@ username="username"
 password="password"
 
 #here "private" or "public" for the managed sensors
-#leave blank would mean public
 visibility="public"
 
 #Note how we can indicate a device source addr that are allowed to use the script
