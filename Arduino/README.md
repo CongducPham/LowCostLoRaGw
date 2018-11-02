@@ -86,7 +86,7 @@ With the DHT example, the transmitted data string can be as follows:
 
 You can look at the provided examples to see how you can write a specific sensor class for a specific/new physical sensor. The previous simple temperature example `Arduino_LoRa_Simple_temp` can be obtained from the generic example by simply using a single sensor declaration with the LM35 class (i.e. as `sensor_ptrs[0]`).	
 
-**`Arduino_LoRa_Generic_MultiSensor`** is an extension of the previous example to handle 7 logical sensors.
+**`Arduino_LoRa_Generic_Simple_MultiSensors`** is an extension of the previous example to handle 7 logical sensors.
 
 	// SENSORS DEFINITION 
 	//////////////////////////////////////////////////////////////////
