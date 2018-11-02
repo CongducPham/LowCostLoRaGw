@@ -1,5 +1,5 @@
 /*
- *  Fully operational temperature sensor on analog A0 to test the LoRa gateway
+ *  Fully operational DHT sensor on analog A0 to test the LoRa gateway
  *
  *  Copyright (C) 2016-2018 Congduc Pham, University of Pau, France
  *
