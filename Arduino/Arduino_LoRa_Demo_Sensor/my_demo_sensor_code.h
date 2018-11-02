@@ -8,14 +8,14 @@
 #endif
 
 extern char nomenclature_str[4];
-void sensor_demo_Init();
-double sensor_demo_getValue();
+void sensor_Init();
+double sensor_getValue();
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE PIN TO READ AND POWER SENSOR
 // IF YOU USE A COMPLETELY DIFFERENT SENSOR, YOU MAY NOT NEED THIS LINE 
 
-#define VALUE_PIN_READ  A0
+#define PIN_READ  A0
 #define PIN_POWER 9
 ///////////////////////////////////////////////////////////////////
 

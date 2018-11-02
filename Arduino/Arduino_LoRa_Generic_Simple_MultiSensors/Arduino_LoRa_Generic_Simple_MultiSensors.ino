@@ -1,7 +1,6 @@
 /*
- *  temperature sensor on analog A0 to test the LoRa gateway
- *  extended version with AES and custom Carrier Sense features
- *  
+ *  Demonstration of generic sensors with the LoRa gateway
+ *
  *  Copyright (C) 2016-2018 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
@@ -18,46 +17,38 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Nov 2nd, 2018 by C. Pham
+ * Modified by Nicolas Bertuol (May 2016), University of Pau, France.
+ * first version of generic sensor
+ * nicolas.bertuol@etud.univ-pau.fr
  * 
- * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
- * the sensor-related code is in a separate file
+ * last update: September 18th, 2018 by C. Pham
  */
 
+// IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // add here some specific board define statements if you want to implement user-defined specific settings
 // A/ LoRa radio node from IoTMCU: https://www.tindie.com/products/IOTMCU/lora-radio-node-v10/
 //#define IOTMCU_LORA_RADIO_NODE
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+ 
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
-#include "my_temp_sensor_code.h"
+// Include sensors
+#include "Sensor.h"
+#include "LM35.h"
+#include "TMP36.h"
+#include "DHT22_Humidity.h"
+#include "DHT22_Temperature.h"
+#include "SHT_Humidity.h"
+#include "SHT_Temperature.h"
+#include "DS18B20.h"
+//#include "rawAnalog.h"
+//#include "LeafWetness.h"
+//#include "HCSR04.h"
+//#include "HRLV.h"
 
-// IMPORTANT SETTINGS
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
-// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-#define PABOOST
-/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE NODE ADDRESS 
-uint8_t node_addr=6;
-//////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE LORA MODE
-#define LORAMODE  1
-//////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 30;
-///////////////////////////////////////////////////////////////////
-
+// IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 //
@@ -83,8 +74,6 @@ unsigned int idlePeriodInMin = 30;
 // previous way for setting output power
 // 'H' is actually 6dBm, so better to use the new way to set output power
 // char powerLevel='H';
-#elif defined FCC_US_REGULATION
-#define MAX_DBM 14
 #endif
 
 #ifdef BAND868
@@ -95,27 +84,29 @@ const uint32_t DEFAULT_CHANNEL=CH_10_868;
 #endif
 #elif defined BAND900
 const uint32_t DEFAULT_CHANNEL=CH_05_900;
-// For HongKong, Japan, Malaysia, Singapore, Thailand, Vietnam: 920.36MHz     
-//const uint32_t DEFAULT_CHANNEL=CH_08_900;
 #elif defined BAND433
 const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
+
+// IMPORTANT
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+#define PABOOST
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
 #define WITH_EEPROM
 #define WITH_APPKEY
-//if you are low on program memory, comment STRING_LIB to save about 2K
-#define STRING_LIB
+#define FLOAT_TEMP
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
-//#define WITH_AES
-//#define LORAWAN
-//#define TO_LORAWAN_GW
 //#define WITH_ACK
 //this will enable a receive window after every transmission
-#define WITH_RCVW
+//#define WITH_RCVW
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -130,8 +121,14 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 8
-#define field_index 1
+// CHANGE HERE THE LORA MODE, NODE ADDRESS 
+#define LORAMODE  1
+uint8_t node_addr=6;
+//////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
+unsigned int idlePeriodInMin = 10;
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -162,25 +159,18 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 ///////////////////////////////////////////////////////////////////
 #endif
 
-///////////////////////////////////////////////////////////////////
-// IF YOU SEND A LONG STRING, INCREASE THE SIZE OF MESSAGE
-uint8_t message[80];
-///////////////////////////////////////////////////////////////////
-
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
 #define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
 #define PRINT_STR(fmt,param)      SerialUSB.print(param)
 #define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
-#define PRINT_HEX(fmt,param)      SerialUSB.print(param,HEX)
 #define FLUSHOUTPUT               SerialUSB.flush();
 #else
-#define PRINTLN                   Serial.println("")
+#define PRINTLN                   Serial.println("")              
 #define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
 #define PRINT_STR(fmt,param)      Serial.print(param)
 #define PRINT_VALUE(fmt,param)    Serial.print(param)
-#define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
 #define FLUSHOUTPUT               Serial.flush();
 #endif
 
@@ -202,7 +192,7 @@ uint8_t message[80];
 #include <Snooze.h>
 SnoozeTimer timer;
 SnoozeBlock sleep_config(timer);
-#else // for all other boards based on ATMega168, ATMega328P, ATMega32U4, ATMega2560, ATMega256RFR2, ATSAMD21G18A
+#else
 #define LOW_POWER_PERIOD 8
 // you need the LowPower library from RocketScream
 // https://github.com/rocketscream/Low-Power
@@ -218,38 +208,9 @@ RTCZero rtc;
 unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
 
-#ifdef WITH_AES
-
-#include "AES-128_V10.h"
-#include "Encrypt_V31.h"
-
-unsigned char AppSkey[16] = {
-  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
-};
-
-unsigned char NwkSkey[16] = {
-  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
-};
-
-unsigned char DevAddr[4] = {
-  0x00, 0x00, 0x00, node_addr
-};
-
-uint16_t Frame_Counter_Up = 0x0000;
-// we use the same convention than for LoRaWAN as we will use the same AES convention
-// See LoRaWAN specifications
-unsigned char Direction = 0x00;
-#endif
-
 unsigned long nextTransmissionTime=0L;
-
-#ifdef TO_LORAWAN_GW
-int loraMode=1;
-#else
+uint8_t message[100];
 int loraMode=LORAMODE;
-#endif
 
 #ifdef WITH_EEPROM
 struct sx1272config {
@@ -257,7 +218,7 @@ struct sx1272config {
   uint8_t flag1;
   uint8_t flag2;
   uint8_t seq;
-  uint8_t addr;
+  uint8_t addr;  
   unsigned int idle_period;  
   uint8_t overwrite;
   // can add other fields such as LoRa mode,...
@@ -294,30 +255,75 @@ long getCmdValue(int &i, char* strBuff=NULL) {
 }   
 #endif
 
-void setup()
+// SENSORS DEFINITION 
+//////////////////////////////////////////////////////////////////
+// CHANGE HERE THE NUMBER OF SENSORS, SOME CAN BE NOT CONNECTED
+const int number_of_sensors = 7;
+//////////////////////////////////////////////////////////////////
+
+// array containing sensors pointers
+Sensor* sensor_ptrs[number_of_sensors];
+
+char *ftoa(char *a, double f, int precision)
 {
+ long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
+ 
+ char *ret = a;
+ long heiltal = (long)f;
+ itoa(heiltal, a, 10);
+ while (*a != '\0') a++;
+ *a++ = '.';
+ long desimal = abs((long)((f - heiltal) * p[precision]));
+ itoa(desimal, a, 10);
+ return ret;
+}
+
+void setup()
+{  
   int e;
 
-  // initialization of the temperature sensor
-  sensor_Init();
-
 #ifdef LOW_POWER
+  bool low_power_status = IS_LOWPOWER;
 #ifdef __SAMD21G18A__
   rtc.begin();
 #endif  
 #else
-  digitalWrite(PIN_POWER,HIGH);
+  bool low_power_status = IS_NOT_LOWPOWER;
 #endif
+
+//////////////////////////////////////////////////////////////////
+// ADD YOUR SENSORS HERE   
+// Sensor(nomenclature, is_analog, is_connected, is_low_power, pin_read, pin_power, pin_trigger=-1)
+  sensor_ptrs[0] = new LM35("LM35", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 9 /*no pin trigger*/);
+  sensor_ptrs[1] = new TMP36("TMP36", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 8 /*no pin trigger*/);  
+  sensor_ptrs[2] = new DHT22_Temperature("TC1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
+  sensor_ptrs[3] = new DHT22_Humidity("HU1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
+  //for SHT, pin_trigger will be the clock pin
+  sensor_ptrs[4] = new SHT_Temperature("TC2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
+  sensor_ptrs[5] = new SHT_Humidity("HU2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
+  sensor_ptrs[6] = new DS18B20("DS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 4 /*no pin trigger*/);
   
+  //sensor_ptrs[3] = new rawAnalog("SH", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7);  
+  //sensor_ptrs[4] = new LeafWetness("lw", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A3, (uint8_t) 6);
+  //sensor_ptrs[5] = new HRLV("DIS_", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A3, (uint8_t) 6);  
+  //sensor_ptrs[6] = new DS18B20("DS", IS_NOT_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) 4, (uint8_t) 5);
+  //sensor_ptrs[7] = new HCSR04("DIS", IS_NOT_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) 39, (uint8_t) 41, (uint8_t) 40); // for the MEGA
+
+  // for non connected sensors, indicate whether you want some fake data, for test purposes for instance
+  //sensor_ptrs[3]->set_fake_data(true);
+  //sensor_ptrs[4]->set_fake_data(true); 
+
+//////////////////////////////////////////////////////////////////  
+
   delay(3000);
   // Open serial communications and wait for port to open:
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0 
   SerialUSB.begin(38400);
 #else
   Serial.begin(38400);  
-#endif  
+#endif 
   // Print a start message
-  PRINT_CSTSTR("%s","LoRa temperature sensor, extended version\n");
+  PRINT_CSTSTR("%s","Generic LoRa sensor\n");
 
 #ifdef ARDUINO_AVR_PRO
   PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");  
@@ -420,15 +426,12 @@ void setup()
     else
         PRINT_CSTSTR("%s","Stored idle period is null\n");                 
 #endif  
-
-#ifdef WITH_AES
-    DevAddr[3] = (unsigned char)node_addr;
-#endif            
+           
     PRINT_CSTSTR("%s","Using node addr of ");
     PRINT_VALUE("%d", node_addr);
     PRINTLN;   
 
-    PRINT_CSTSTR("%s","Using idle period of ");
+    PRINT_STR("%s","Using idle period of ");
     PRINT_VALUE("%d", idlePeriodInMin);
     PRINTLN;     
   }
@@ -450,12 +453,12 @@ void setup()
   PRINTLN;
 
   // enable carrier sense
-  sx1272._enableCarrierSense=true;  
+  sx1272._enableCarrierSense=true;
 #ifdef LOW_POWER
   // TODO: with low power, when setting the radio module in sleep mode
   // there seem to be some issue with RSSI reading
   sx1272._RSSIonSend=false;
-#endif  
+#endif 
 
   // Select frequency channel
   e = sx1272.setChannel(DEFAULT_CHANNEL);
@@ -474,10 +477,9 @@ void setup()
 #endif
 
   // previous way for setting output power
-  // e = sx1272.setPower(powerLevel);  
-
-  e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
+  // e = sx1272.setPower(powerLevel);
   
+  e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
   PRINT_CSTSTR("%s","Setting Power: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
@@ -487,40 +489,12 @@ void setup()
   PRINT_CSTSTR("%s","Setting node addr: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
-
-#ifdef TO_LORAWAN_GW
-  e = sx1272.setSyncWord(0x34);
-  PRINT_CSTSTR("%s","Set sync word to 0x34 state ");
-  PRINT_VALUE("%d", e);
-  PRINTLN;
-#endif  
-
+  
   // Print a success message
-  PRINT_CSTSTR("%s","SX1272 successfully configured\n");
+  PRINT_STR("%s","SX1272 successfully configured\n");
 
-  //printf_begin();
   delay(500);
 }
-
-#ifndef STRING_LIB
-
-char *ftoa(char *a, double f, int precision)
-{
- long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
- 
- char *ret = a;
- long heiltal = (long)f;
- itoa(heiltal, a, 10);
- while (*a != '\0') a++;
- *a++ = '.';
- long desimal = abs((long)((f - heiltal) * p[precision]));
- if (desimal < p[precision-1]) {
-  *a++ = '0';
- } 
- itoa(desimal, a, 10);
- return ret;
-}
-#endif
 
 void loop(void)
 {
@@ -528,61 +502,48 @@ void loop(void)
   long endSend;
   uint8_t app_key_offset=0;
   int e;
-  float temp;
-  
+
 #ifndef LOW_POWER
   // 600000+random(15,60)*1000
   if (millis() > nextTransmissionTime) {
 #endif
 
-#ifdef LOW_POWER
-      digitalWrite(PIN_POWER,HIGH);
-      // security?
-      delay(200);    
-#endif
-
-      temp = 0.0;
-      
-      /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-      // change here how the temperature should be computed depending on your sensor type
-      //  
-    
-      for (int i=0; i<5; i++) {
-          temp += sensor_getValue();  
-          delay(100);
-      }
-
-      //
-      // 
-      // /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-      
-#ifdef LOW_POWER
-      digitalWrite(PIN_POWER,LOW);
-#endif
-      
-      PRINT_CSTSTR("%s","Mean temp is ");
-      temp = temp/5;
-      PRINT_VALUE("%f", temp);
-      PRINTLN;
-      
-#if defined WITH_APPKEY && not defined LORAWAN
+#ifdef WITH_APPKEY
       app_key_offset = sizeof(my_appKey);
       // set the app key in the payload
       memcpy(message,my_appKey,app_key_offset);
 #endif
 
       uint8_t r_size;
+    
+      char final_str[80] = "\\!";
+      char aux[6] = "";
 
-      // the recommended format if now \!TC/22.5
-#ifdef STRING_LIB
-      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#%s/%s",field_index,nomenclature_str,String(temp).c_str());
-#else
-      char float_str[10];
-      ftoa(float_str,temp,2);
-      // this is for testing, uncomment if you just want to test, without a real temp sensor plugged
-      //strcpy(float_str, "21.55567");
-      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#%s/%s",field_index,nomenclature_str,float_str);
-#endif
+      //this is how we can wake up some sensors in advance in case they need a longer warmup time
+      //digitalWrite(sensor_ptrs[4]->get_pin_power(),HIGH);
+
+      // main loop for sensors, actually, you don't have to edit anything here
+      // just add a predefined sensor if needed or provide a new sensor class instance for a handle a new physical sensor
+      for (int i=0; i<number_of_sensors; i++) {
+
+          if (sensor_ptrs[i]->get_is_connected() || sensor_ptrs[i]->has_fake_data()) {
+            
+              ftoa(aux, sensor_ptrs[i]->get_value(), 2);
+          
+              if (i==0) {
+                  //sprintf(final_str, "%s%s/%s", final_str, nomenclatures_array[i], aux);
+                  sprintf(final_str, "%s%s/%s", final_str, sensor_ptrs[i]->get_nomenclature(), aux);
+                  
+              } 
+              else {
+                  sprintf(final_str, "%s/%s/%s", final_str, sensor_ptrs[i]->get_nomenclature(), aux);
+              }
+          }
+          //else
+          //  strcpy(aux,"");
+      }
+      
+      r_size=sprintf((char*)message+app_key_offset, final_str);
 
       PRINT_CSTSTR("%s","Sending ");
       PRINT_STR("%s",(char*)(message+app_key_offset));
@@ -594,125 +555,12 @@ void loop(void)
       
       int pl=r_size+app_key_offset;
       
-#ifdef WITH_AES
-      //
-      PRINT_STR("%s",(char*)(message+app_key_offset));
-      PRINTLN;
-      PRINT_CSTSTR("%s","plain payload hex\n");
-      for (int i=0; i<pl;i++) {
-        if (message[i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", message[i]);
-        PRINT_CSTSTR("%s"," ");
-      }
-      PRINTLN; 
-
-      PRINT_CSTSTR("%s","Encrypting\n");     
-      PRINT_CSTSTR("%s","encrypted payload\n");
-      Encrypt_Payload((unsigned char*)message, pl, Frame_Counter_Up, Direction);
-      //Print encrypted message
-      for(int i = 0; i < pl; i++)      
-      {
-        if (message[i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", message[i]);         
-        PRINT_CSTSTR("%s"," ");
-      }
-      PRINTLN;   
-
-      // with encryption, we use for the payload a LoRaWAN packet format to reuse available LoRaWAN encryption libraries
-      //
-      unsigned char LORAWAN_Data[80];
-      unsigned char LORAWAN_Package_Length;
-      unsigned char MIC[4];
-      //Unconfirmed data up
-      unsigned char Mac_Header = 0x40;
-      // no ADR, not an ACK and no options
-      unsigned char Frame_Control = 0x00;
-      // with application data so Frame_Port = 1..223
-      unsigned char Frame_Port = 0x01; 
-
-      //Build the Radio Package, LoRaWAN format
-      //See LoRaWAN specification
-      LORAWAN_Data[0] = Mac_Header;
-    
-      LORAWAN_Data[1] = DevAddr[3];
-      LORAWAN_Data[2] = DevAddr[2];
-      LORAWAN_Data[3] = DevAddr[1];
-      LORAWAN_Data[4] = DevAddr[0];
-    
-      LORAWAN_Data[5] = Frame_Control;
-    
-      LORAWAN_Data[6] = (Frame_Counter_Up & 0x00FF);
-      LORAWAN_Data[7] = ((Frame_Counter_Up >> 8) & 0x00FF);
-    
-      LORAWAN_Data[8] = Frame_Port;
-    
-      //Set Current package length
-      LORAWAN_Package_Length = 9;
-      
-      //Load Data
-      for(int i = 0; i < r_size+app_key_offset; i++)
-      {
-        // see that we don't take the appkey, just the encrypted data that starts that message[app_key_offset]
-        LORAWAN_Data[LORAWAN_Package_Length + i] = message[i];
-      }
-    
-      //Add data Lenth to package length
-      LORAWAN_Package_Length = LORAWAN_Package_Length + r_size + app_key_offset;
-    
-      PRINT_CSTSTR("%s","calculate MIC with NwkSKey\n");
-      //Calculate MIC
-      Calculate_MIC(LORAWAN_Data, MIC, LORAWAN_Package_Length, Frame_Counter_Up, Direction);
-    
-      //Load MIC in package
-      for(int i=0; i < 4; i++)
-      {
-        LORAWAN_Data[i + LORAWAN_Package_Length] = MIC[i];
-      }
-    
-      //Add MIC length to package length
-      LORAWAN_Package_Length = LORAWAN_Package_Length + 4;
-    
-      PRINT_CSTSTR("%s","transmitted LoRaWAN-like packet:\n");
-      PRINT_CSTSTR("%s","MHDR[1] | DevAddr[4] | FCtrl[1] | FCnt[2] | FPort[1] | EncryptedPayload | MIC[4]\n");
-      //Print transmitted data
-      for(int i = 0; i < LORAWAN_Package_Length; i++)
-      {
-        if (LORAWAN_Data[i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", LORAWAN_Data[i]);         
-        PRINT_CSTSTR("%s"," ");
-      }
-      PRINTLN;      
-
-      // copy back to message
-      memcpy(message,LORAWAN_Data,LORAWAN_Package_Length);
-      pl = LORAWAN_Package_Length;
-
-#ifdef LORAWAN
-      PRINT_CSTSTR("%s","end-device uses native LoRaWAN packet format\n");
-      // indicate to SX1272 lib that raw mode at transmission is required to avoid our own packet header
-      sx1272._rawFormat=true;
-#else
-      PRINT_CSTSTR("%s","end-device uses encapsulated LoRaWAN packet format only for encryption\n");
-#endif
-      // in any case, we increment Frame_Counter_Up
-      // even if the transmission will not succeed
-      Frame_Counter_Up++;
-#endif
-    
       sx1272.CarrierSense();
-
+      
       startSend=millis();
 
       uint8_t p_type=PKT_TYPE_DATA;
       
-#ifdef WITH_AES
-      // indicate that payload is encrypted
-      p_type = p_type | PKT_FLAG_DATA_ENCRYPTED;
-#endif
-
 #ifdef WITH_APPKEY
       // indicate that we have an appkey
       p_type = p_type | PKT_FLAG_DATA_WAPPKEY;
@@ -736,29 +584,20 @@ void loop(void)
         if (n_retry)
           PRINT_CSTSTR("%s","Retry");
         else
-          PRINT_CSTSTR("%s","Abort"); 
+          PRINT_CSTSTR("%s","Abort");  
           
       } while (e && n_retry);          
-#else
+#else      
       e = sx1272.sendPacketTimeout(DEFAULT_DEST_ADDR, message, pl);
 #endif
   
       endSend=millis();
-
-#ifdef LORAWAN
-      // switch back to normal behavior
-      sx1272._rawFormat=false;
-#endif
-          
+    
 #ifdef WITH_EEPROM
       // save packet number for next packet in case of reboot
       my_sx1272config.seq=sx1272._packetNumber;
       EEPROM.put(0, my_sx1272config);
 #endif
-
-      PRINT_CSTSTR("%s","LoRa pkt size ");
-      PRINT_VALUE("%d", pl);
-      PRINTLN;
       
       PRINT_CSTSTR("%s","LoRa pkt seq ");
       PRINT_VALUE("%d", sx1272.packet_sent.packnum);
@@ -771,7 +610,7 @@ void loop(void)
       PRINT_CSTSTR("%s","LoRa Sent w/CAD in ");
       PRINT_VALUE("%ld", endSend-sx1272._startDoCad);
       PRINTLN;
-       
+
       PRINT_CSTSTR("%s","Packet sent, state ");
       PRINT_VALUE("%d", e);
       PRINTLN;
@@ -786,7 +625,7 @@ void loop(void)
       PRINT_CSTSTR("%s","Wait for incoming packet\n");
       // wait for incoming packets
       e = sx1272.receivePacketTimeout(10000);
-      
+    
       if (!e) {
          int i=0;
          int cmdValue;
@@ -843,9 +682,6 @@ void loop(void)
                               cmdValue = node_addr;
                       // set node addr        
                       node_addr=cmdValue; 
-#ifdef WITH_AES
-                      DevAddr[3] = (unsigned char)node_addr;
-#endif
                       
                       PRINT_CSTSTR("%s","Set LoRa node addr to ");
                       PRINT_VALUE("%d", node_addr);  
@@ -908,7 +744,7 @@ void loop(void)
         PRINT_CSTSTR("%s","No packet\n");
 #endif
 
-#if defined LOW_POWER && not defined _VARIANT_ARDUINO_DUE_X_
+#ifdef LOW_POWER
       PRINT_CSTSTR("%s","Switch to power saving mode\n");
 
       e = sx1272.setSleepMode();
@@ -920,7 +756,7 @@ void loop(void)
         
       FLUSHOUTPUT
       delay(50);
-      
+
 #ifdef __SAMD21G18A__
       // For Arduino M0 or Zero we use the built-in RTC
       rtc.setTime(17, 0, 0);
@@ -931,12 +767,12 @@ void loop(void)
       rtc.enableAlarm(rtc.MATCH_HHMMSS);
       //rtc.attachInterrupt(alarmMatch);
       rtc.standbyMode();
-      
-      LowPower.standby();
 
+      LowPower.standby();
+      
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT
-#else
+#else      
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
 
 #if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
@@ -944,8 +780,7 @@ void loop(void)
       timer.setTimer(LOW_POWER_PERIOD*1000 + random(1,5)*1000);// milliseconds
 
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
-#endif
-          
+#endif          
       for (int i=0; i<nCycle; i++) {  
 
 #if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
@@ -961,7 +796,7 @@ void loop(void)
           //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
           //      TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
           //      USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
-#elif defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
+#elif defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__  
           // Teensy31/32 & TeensyLC
 #ifdef LOW_POWER_HIBERNATE
           Snooze.hibernate(sleep_config);
@@ -978,8 +813,8 @@ void loop(void)
       }
       
       delay(50);
-#endif  
-      
+#endif 
+
 #else
       PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;

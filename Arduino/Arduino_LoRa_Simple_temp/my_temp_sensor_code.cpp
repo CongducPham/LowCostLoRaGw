@@ -11,11 +11,11 @@ char nomenclature_str[4]="TC";
 // ADD HERE SOME INITIALIZATION CODE
 // HERE WE JUST DECLARE VALUE_PIN_READ AS INPUT PIN
 
-void sensor_temp_Init() {
+void sensor_Init() {
 
   // for the temperature sensor
-  pinMode(TEMP_PIN_READ, INPUT);
-  pinMode(TEMP_PIN_POWER, OUTPUT);
+  pinMode(PIN_READ, INPUT);
+  pinMode(PIN_POWER, OUTPUT);
 }
 ///////////////////////////////////////////////////////////////////
 
@@ -23,10 +23,10 @@ void sensor_temp_Init() {
 // CHANGE HERE THE WAY YOU READ A VALUE FROM YOUR SPECIFIC SENSOR
 // HERE IT IS AN EXAMPLE WITH THE LM35DZ SIMPLE ANALOG TEMPERATURE SENSOR
 
-double sensor_temp_getValue() {
+double sensor_getValue() {
 
   //read the raw sensor value
-	int value = analogRead(TEMP_PIN_READ);
+	int value = analogRead(PIN_READ);
 
 	Serial.print(F("Reading "));
 	Serial.println(value);

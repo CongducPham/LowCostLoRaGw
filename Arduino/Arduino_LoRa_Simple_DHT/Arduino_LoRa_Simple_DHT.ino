@@ -33,7 +33,7 @@
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
-#include "my_temp_sensor_code.h"
+#include "my_DHT_sensor_code.h"
 
 //uncomment if you want to disable WiFi on ESP8266 boards
 //#include <ESP8266WiFi.h>
@@ -231,7 +231,7 @@ void setup()
   rtc.begin();
 #endif  
 #else
-  digitalWrite(PIN_POWER,HIGH);
+  digitalWrite(DHT_PIN_POWER,HIGH);
 #endif
 
   delay(3000);
@@ -430,20 +430,14 @@ void loop(void)
       // security?
       delay(200);   
 #endif
+      
+      temp = sensor_getValue();  
 
-      temp = 0.0;
-      
-      for (int i=0; i<5; i++) {
-          temp += sensor_getValue();  
-          delay(100);
-      }
-      
 #ifdef LOW_POWER
       digitalWrite(PIN_POWER,LOW);
 #endif
 
-      PRINT_CSTSTR("%s","Mean temp is ");
-      temp = temp/5;
+      PRINT_CSTSTR("%s","Temp is ");
       PRINT_VALUE("%f", temp);
       PRINTLN;
       

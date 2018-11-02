@@ -1,4 +1,4 @@
-#include "my_temp_sensor_code.h"
+#include "my_DHT_sensor_code.h"
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE NOMEMCLATURE, HERE TC WOULD MEAN TEMPERATURE IN CELCIUS FOR INSTANCE
@@ -6,6 +6,8 @@
 
 char nomenclature_str[4]="TC";
 //////////////////////////////////////////////////////////////////
+
+DHT dht(PIN_READ, DHTTYPE);
 
 ///////////////////////////////////////////////////////////////////
 // ADD HERE SOME INITIALIZATION CODE
@@ -16,38 +18,31 @@ void sensor_Init() {
   // for the temperature sensor
   pinMode(PIN_READ, INPUT);
   pinMode(PIN_POWER, OUTPUT);
+  dht.begin();
 }
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE WAY YOU READ A VALUE FROM YOUR SPECIFIC SENSOR
-// HERE IT IS AN EXAMPLE WITH THE TMP36 SIMPLE ANALOG TEMPERATURE SENSOR
+// HERE IT IS AN EXAMPLE WITH THE DHT22
 
 double sensor_getValue() {
 
   //read the raw sensor value
-	int value = analogRead(PIN_READ);
+  //float h = dht.readHumidity();
+  float t = dht.readTemperature();
 
-	Serial.print(F("Reading "));
-	Serial.println(value);
-
-  double sensor_value;
-  
-  // change here how the temperature should be computed depending on your sensor type
-  //  
-  //LM35DZ
-  //sensor_value = (value*VOLTAGE_SCALE/1024.0)/10;
-
-  //TMP36
-  //the TMP36 can work with supply voltage of 2.7v-5.5v
-  //can be used on 3.3v board
-  //we use a 0.95 factor when powering with less than 3.3v, e.g. 3.1v in the average for instance
-  //this setting is for 2 AA batteries           
-	sensor_value=((value*0.95*VOLTAGE_SCALE/1024.0)-500)/10;
-	
-  //set a defined value for testing
-  //sensor_value = 22.5;	
+  if (isnan(t)) {
+    Serial.println("Failed to read from DHT sensor!");
+  }
+  else {         
+    Serial.print("Temperature: ");
+    Serial.println(t);
+    //Serial.print(" degrees Celcius Humidity: ");
+    //Serial.print(h);
+    //Serial.println("%");
+  }    	
     
-  return sensor_value;
+  return t;
 }
 ///////////////////////////////////////////////////////////////////

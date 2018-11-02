@@ -154,7 +154,7 @@ void setup()
   delay(500);
 
   // initialization of the demo sensor
-  sensor_demo_Init();
+  sensor_Init();
 }
 
 char *ftoa(char *a, double f, int precision)
@@ -182,7 +182,7 @@ void loop(void)
 
   if (millis() > nextTransmissionTime) {
 
-      sensor_value = sensor_demo_getValue();
+      sensor_value = sensor_getValue();
       
       Serial.print(F("(Sensor value is "));
       Serial.println(sensor_value);

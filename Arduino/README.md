@@ -1,7 +1,7 @@
 Arduino example sketches
 ========================
 
-This folder contains sketches for Arduino (and compatible) boards. The example sketches will show how simple, yet effective, low-cost LoRa IoT device can be programmed. For instance, they show how LoRa radio modules are configured and how a device can send sensed data to a gateway. They actually serve as template for future developments. On the Uno, Pro Mini, Mini, Nano, Teensy the mapping is as follows:
+This folder contains sketches for Arduino (and compatible) boards. The example sketches, in increasing level of complexity, will show how simple, yet effective, low-cost LoRa IoT device can be programmed. For instance, they show how LoRa radio modules are configured and how a device can send sensed data to a gateway. They actually serve as template for future developments. On the Uno, Pro Mini, Mini, Nano, Teensy the mapping is as follows:
 
 ```
        Arduino      Radio module
@@ -17,70 +17,50 @@ On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Startin
 
 All the examples uses so-called LoRa mode 1 (BW125, CR45, SF12) at 865.2 Mhz (`CH_10_868`) to work with the default gateway configuration.
 
-**`Arduino_LoRa_Demo_Sensor`** is a simple demo sketch for training purpose. The main program, i.e. `Arduino_LoRa_Demo_Sensor` can be left unchanged by the students. They just have to add/modify code in `my_demo_sensor_code.h` and `my_demo_sensor_code.cpp` to adapt the code for a given physical sensor. The provided example reads from either an LM35DZ or a TMP36 analog temperature sensor.
+**`Arduino_LoRa_Demo_Sensor`** is a very simple demo sketch for training purpose. The main program, i.e. `Arduino_LoRa_Demo_Sensor` can be left unchanged by the students. They just have to add/modify code in `my_demo_sensor_code.h` and `my_demo_sensor_code.cpp` to adapt the code for a given physical sensor. The provided example reads from either an LM35DZ or a TMP36 analog temperature sensor.
 
-**`Arduino_LoRa_Ping_Pong`** shows a simple ping-pong communication between a LoRa device and a gateway by requesting an acknowlegment for data messages sent to the gateway. This example can serve as a simple range test as the device displays back the SNR of the received packet on the gateway.
+**`Arduino_LoRa_Simple_temp`** uses the same simple structure than `Arduino_LoRa_Demo_Sensor` where `my_temp_sensor_code.cpp` contains the code to read values from the physical sensor (which is still either an LM35DZ or a TMP36 analog temperature sensor). Additionally, this example illustrates how to implement periodic sensing with low-power mode to run on battery for years.
 
-**`Arduino_LoRa_Ping_Pong_LCD`** is an extended version that uses an OLED display to show in real-time the results of the range test. The pictures below show our simple range tester built from an Heltec ESP32 WiFi LoRa with OLED display. Plenty of information on this nice board are available from https://robotzero.one/heltec-wifi-lora-32/ and https://github.com/darthm0e/esp32-101 to name a few. 
+**`Arduino_LoRa_Simple_DHT`** shows how a more elaborated digital sensor such as the DHT22 (also known as AM2302) can be used. Code for DHT sensor is provided by the DHT library by Adafruit. This example therefore shows how you can use libraries provided by third-parties which is most likely the approach that you will use if you need to support a new physical sensor. Note that the DHT code can also be used for the AM2305 sensor. One advantage of the AM2305 is that it usually comes in an outdoor casing which make it suitable for outdoor and real-world deployment scenarios. Note that as it is a very simple example, only one physical measure is provided. In the example, it is the temperature even if the DHT22 sensor can provide both temperature and humidity.
 
-![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/pingpong.png)
+**`Arduino_LoRa_temp`** ends the simple temperature example serie. It illustrates a more complex example with AES encryption and the possibility to send LoRaWAN packet. It can also open a receive window after every transmission to wait for downlink message coming from the gateway (to do so, uncomment `#define WTH_RCVW`). The template shows for instance how an '/@Ax#' command from the gateway can be parsed to set the node's address to 'x'. It can serve as a template for a more complex LoRa IoT device with actuation capability on downlink packets from the gateway.
 
-We also use a regular Arduino Pro Mini or Arduino Nano with an I2C 0.9inch OLED display (such as [this one]( https://fr.aliexpress.com/item/1pcs-0-96-blue-0-96-inch-OLED-module-New-128X64-OLED-LCD-LED-Display-Module/32643950109.html?spm=a2g0s.9042311.0.0.LbMu7r)). You can connect SDA and SCL to pin A4 and A5 respectively. Of course, connect your LoRa module as usual. For range test prior to deploying the sensor nodes, it is recommended to build the Ping-Pong tester with the case that you will use for your final end-devices because the impact of the case on transmission quality is important (see [this antenna presentation](https://www.youtube.com/watch?v=AhFy4-kForA&feature=youtu.be) from our colleague Fabien Ferrero). On the left part you can see an Arduino Nano using the Modtronix inAir9 radio module with the external antenna. On the right part, it is an Arduino Pro Mini with the integrated antenna provided by a simple PCB (see below the `Arduino_LoRa_GPS` description).
+**`Arduino_GPS_Parser_GGA`** is a very simple GPS example used to introduce the usage of GPS sensor modules. GPS modules are very popular sensors as geolocalization capabilities are quite attractive in IoT applications. Besides, these modules are becoming less and less expansive as a GPS module can be bought for about 5€ now (for instance the well-known UBlox 6M/7M/M8N modules). The program constantly reads data from the GPS serial (`gps_serial`) and will try to decode GPGGA messages. This example can served as a basis for a tracking device that parses in a very light-weight manner the GPGGA NMEA message. Once a fix is obtained, the GPGGA message will provide localization data and the program will convert the latitude and longitude into decimal degree that can directly be copied/pasted into GoogleMap for instance.
 
-![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/pingpong_1.png)
+**`Arduino_LoRa_GPS`** is a more elaborated GPS system that we use to build a localization system for cattle collars. The GPS library is also stored in an external file (`gps_light.cpp` and `gps_light.h`). The device will periodically send a beacon message with a sequence number and the GPS coordinates in the following format `\!BC/0/LAT/43.31408/LGT/-0.36362/FXT/4172`.  Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such a system. In the tutorial, the GPS device can use an open source PCB board designed by Fabien Ferrero from LEAT laboratory, University of Nice, France, to easily integrate an Arduino Pro Mini and an RFM95W radio module. The PCB has an integrated antenna to avoid external fragile part. The PCB Gerber layout file can be obtained from [https://github.com/FabienFerrero/UCA_Board](https://github.com/FabienFerrero/UCA_Board). Here is a [1-click order link](https://www.pcbway.com/project/shareproject/W48634ASK5_UCA_reverse.html) on PCBWAY.com. The latest PCB version with more holes for more connectivity options can be ordered from [here](https://www.pcbway.com/project/shareproject/UCA_Board.html).
 
-**`Arduino_LoRa_Simple_temp`** illustrates how a simple LoRa device with temperature data can be flashed to an Arduino board. The example illustrates in a simple manner how to implement most of the features of a real IoT device: periodic sensing, transmission to gateway, duty-cycle and low-power mode to run on battery for months.
- 
-**`Arduino_LoRa_temp`** illustrates a more complex example with AES encryption and the possibility to send LoRaWAN packet. It can also open a receive window after every transmission to wait for downlink message coming from the gateway (uncomment `#define WTH_RCVW`). The template shows for instance how an '/@Ax#' command from the gateway can be parsed to set the node's address to 'x'. It can serve as a template for a more complex LoRa IoT device.
+On the gateway side, this example also shows how a dedicated "cloud" task, `CloudGpsFile.py`, is implemented and enabled in `clouds.json` to process GPS messages from remote GPS devices and to compute their distance to the gateway. More details are provided in this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf).
 
-**`Arduino_LoRa_Simple_BeaconCollar`** is a simple beacon system to build a collar device intended for Cattle Rustling applications. The device will periodically send a beacon message with a sequence number to track at the gateway the beacon's RSSI and beacon losses to trigger alarms. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system.
-
-**`Arduino_LoRa_GPS`** is a more elaborated GPS beacon system where a GPS module (UBlox 6M/7M/M8N) is used to get the coordinates of the collar device. The device will periodically send a beacon message with a sequence number and the GPS coordinates in the following format `\!BC/0/LAT/43.31408/LGT/-0.36362/FXT/4172`. This example can served as a basis for a tracking device that parses in a very light-weight manner the GPGGA NMEA message. Look at this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) to build such as system. In the tutorial, the GPS device can use an open source PCB board designed by Fabien Ferrero from LEAT laboratory, University of Nice, France, to easily integrate an Arduino Pro Mini and an RFM95W radio module. The PCB has an integrated antenna to avoid external fragile part. The PCB Gerber layout file can be obtained from [https://github.com/FabienFerrero/UCA_Board](https://github.com/FabienFerrero/UCA_Board). Here is a [1-click order link](https://www.pcbway.com/project/shareproject/W48634ASK5_UCA_reverse.html) on PCBWAY.com. The latest PCB version with more holes for more connectivity options can be ordered from [here](https://www.pcbway.com/project/shareproject/UCA_Board.html).
-
-This example also shows how a dedicated "cloud" task, `CloudGpsFile.py`, is implemented and enabled in `clouds.json` to process GPS messages from remote GPS devices and to compute their distance to the gateway. More details are provided in this [dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf).
-
-**`Arduino_LoRa_Generic_Sensor`** is a very generic sensor template where a large variety of new physical sensors can be added. All physical sensors must be derived from a base Sensor class (defined in `Sensor.cpp` and `Sensor.h`) and should provide a `get_value()` and `get_nomenclature()` function. All the periodic task loop with duty-cycle low-power management is already there as in previous examples. Some predefined physical sensors are also already defined:
+**`Arduino_LoRa_Generic_DHT`** shows a more "generic" approach to handle physical sensors. All physical sensors must be derived from a base `Sensor` class (defined in `Sensor.cpp` and `Sensor.h`) and should provide a `get_value()` and `get_nomenclature()` function. Some predefined physical sensors are already defined, but we are demonstrating only the DHT22 in this example:
 
 - very simple LM35DZ analog temperature sensor
 - very simple TMP36 analog temperature sensor
 - digital DHT22 (AM2302) temperature and humidity sensor (work also with the AM2305)
-- digital SHT1x and SHT2x temperature and humidity sensor
+- digital SHT1x and SHT2x temperature and humidity sensor from Sensirion
 - digital DS18B20 temperature sensor
 - ultra-sonic HC-SR04 distance sensor
 - Davies Leaf Wetness sensor
 - general raw analog sensor
 
-You just have to define the number of physical sensors you want to consider:
+All the periodic task loop with duty-cycle low-power management is already there as in previous examples. In this `Arduino_LoRa_Generic_DHT` example, we show how the DHT22 sensor is handled by declaring 2 logical sensors: one for the temperature and one for the humidity. Again, the DHT code is the one from Adafruit and it is wrapped in our own generic sensor library.
+
+To use the template, you just have to define the number of logical sensors you want to consider:
 
 	// SENSORS DEFINITION 
 	//////////////////////////////////////////////////////////////////
 	// CHANGE HERE THE NUMBER OF SENSORS, SOME CAN BE NOT CONNECTED
-	const int number_of_sensors = 7;
+	const int number_of_sensors = 2;
 	//////////////////////////////////////////////////////////////////
-
-Add the sensors:
+	
+And add the logical sensors. For each physical sensor, you have to indicate a nomemclature string, whether it is analog or not, whether it is connected to your board or not, whether its power pin is regulated by low-power management or not, the read pin, the power pin and an optional trigger pin.
 
 	//////////////////////////////////////////////////////////////////
 	// ADD YOUR SENSORS HERE   
 	// Sensor(nomenclature, is_analog, is_connected, is_low_power, pin_read, pin_power, pin_trigger=-1)
-	sensor_ptrs[0] = new LM35("LM35", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 9 /*no pin trigger*/);
-	sensor_ptrs[1] = new TMP36("TMP36", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 8 /*no pin trigger*/);  
-	sensor_ptrs[2] = new DHT22_Temperature("TC1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
-	sensor_ptrs[3] = new DHT22_Humidity("HU1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
-	//for SHT, pin_trigger will be the clock pin
-	sensor_ptrs[4] = new SHT_Temperature("TC2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
-	sensor_ptrs[5] = new SHT_Humidity("HU2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
-	sensor_ptrs[6] = new DS18B20("DS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 4 /*no pin trigger*/);
-	
-	// for non connected sensors, indicate whether you want some fake data, for test purposes for instance
-	//sensor_ptrs[3]->set_fake_data(true);
-	//sensor_ptrs[4]->set_fake_data(true); 
-	
-	//////////////////////////////////////////////////////////////////  	
-	
-For each physical sensor, you have to indicate a nomemclature string, whether it is analog or not, whether it is connected to your board or not, whether its power pin is regulated by low-power management or not, the read pin, the power pin and an optional trigger pin (see the HCSR04 sensor). See how sensors that are not connected can provide emulated data for test purposes. 
+	sensor_ptrs[0] = new DHT22_Temperature("TC", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, A0, A1);
+	sensor_ptrs[1] = new DHT22_Humidity("HU", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, A0, A1);	
 
-The control loop that is periodically executed is as follows:
+Then the control loop that is periodically executed in the template is as follows:
 
 	char final_str[80] = "\\!";
 	char aux[6] = "";
@@ -100,13 +80,55 @@ The control loop that is periodically executed is as follows:
 	    }
 	}
       
-With the declared sensors, the transmitted data string can be as follows:
+With the DHT example, the transmitted data string can be as follows:
 
-	\!LM35/27.71/TMP36/27.2/TC1/27.79/HU1/56.50/TC2/28.63/HU2/50.49/DS/27.93      
+	\!TC/27.79/HU/56.50  
+
+You can look at the provided examples to see how you can write a specific sensor class for a specific/new physical sensor. The previous simple temperature example `Arduino_LoRa_Simple_temp` can be obtained from the generic example by simply using a single sensor declaration with the LM35 class (i.e. as `sensor_ptrs[0]`).	
+
+**`Arduino_LoRa_Generic_MultiSensor`** is an extension of the previous example to handle 7 logical sensors.
+
+	// SENSORS DEFINITION 
+	//////////////////////////////////////////////////////////////////
+	// CHANGE HERE THE NUMBER OF SENSORS, SOME CAN BE NOT CONNECTED
+	const int number_of_sensors = 7;
+	//////////////////////////////////////////////////////////////////
+
+With the following sensors:
+
+	//////////////////////////////////////////////////////////////////
+	// ADD YOUR SENSORS HERE   
+	// Sensor(nomenclature, is_analog, is_connected, is_low_power, pin_read, pin_power, pin_trigger=-1)
+	sensor_ptrs[0] = new LM35("LM35", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 9 /*no pin trigger*/);
+	sensor_ptrs[1] = new TMP36("TMP36", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 8 /*no pin trigger*/);  
+	sensor_ptrs[2] = new DHT22_Temperature("TC1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
+	sensor_ptrs[3] = new DHT22_Humidity("HU1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
+	//for SHT, pin_trigger will be the clock pin
+	sensor_ptrs[4] = new SHT_Temperature("TC2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
+	sensor_ptrs[5] = new SHT_Humidity("HU2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
+	sensor_ptrs[6] = new DS18B20("DS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 4 /*no pin trigger*/);
 	
-You can look at the provided examples to see how you can write a specific sensor class for a specific physical sensor. The previous simple temperature example `Arduino_LoRa_Simple_temp` can be obtained from the generic example by simply using a single sensor declaration with the LM35 class (i.e. `sensor_ptrs[0]`).	
+	// for non connected sensors, indicate whether you want some fake data, for test purposes for instance
+	//sensor_ptrs[3]->set_fake_data(true);
+	//sensor_ptrs[4]->set_fake_data(true); 
+	
+	//////////////////////////////////////////////////////////////////  	
+	
+Compared to the previous example, you can see how sensors that are not connected can provide emulated data for test purposes. With the declared sensors, the transmitted data string can be as follows:
 
-The generic example drives 5 types of temperature and humidity sensors (LM35DZ, TMP36, DHT22, SHT10, DS18B20) on the same node. You can see our [ThingSpeak channel here](https://thingspeak.com/channels/66583) that shows Sensor 3 data.
+	\!LM35/27.71/TMP36/27.2/TC1/27.79/HU1/56.50/TC2/28.63/HU2/50.49/DS/27.93
+
+This generic multi-sensors example drives 5 types of temperature and humidity sensors (LM35DZ, TMP36, DHT22, SHT10, DS18B20) on the same node. You can see our [ThingSpeak channel here](https://thingspeak.com/channels/66583) that shows Sensor 3 data.
+
+**`Arduino_LoRa_Ping_Pong`** shows a simple ping-pong communication between a LoRa device and a gateway by requesting an acknowlegment for data messages sent to the gateway. This example can serve as a simple range test as the device displays back the SNR of the received packet on the gateway.
+
+**`Arduino_LoRa_Ping_Pong_LCD`** is an extended version that uses an OLED display to show in real-time the results of the range test. The pictures below show our simple range tester built from an Heltec ESP32 WiFi LoRa with OLED display. Plenty of information on this nice board are available from https://robotzero.one/heltec-wifi-lora-32/ and https://github.com/darthm0e/esp32-101 to name a few. 
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/pingpong.png)
+
+We also use a regular Arduino Pro Mini or Arduino Nano with an I2C 0.9inch OLED display (such as [this one]( https://fr.aliexpress.com/item/1pcs-0-96-blue-0-96-inch-OLED-module-New-128X64-OLED-LCD-LED-Display-Module/32643950109.html?spm=a2g0s.9042311.0.0.LbMu7r)). You can connect SDA and SCL to pin A4 and A5 respectively. Of course, connect your LoRa module as usual. For range test prior to deploying the sensor nodes, it is recommended to build the Ping-Pong tester with the case that you will use for your final end-devices because the impact of the case on transmission quality is important (see [this antenna presentation](https://www.youtube.com/watch?v=AhFy4-kForA&feature=youtu.be) from our colleague Fabien Ferrero). On the left part you can see an Arduino Nano using the Modtronix inAir9 radio module with the external antenna. On the right part, it is an Arduino Pro Mini with the integrated antenna provided by a simple PCB (see below the `Arduino_LoRa_GPS` description).
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/pingpong_1.png)
 
 **`Arduino_LoRa_InteractiveDevice`** is a tool that turns an Arduino board to an interactive device where a user can interactively enter data to be sent to the gateway. There are also many parameters that can dynamically be configured. This example can serve for test and debug purposes as well.
 
@@ -410,5 +432,5 @@ Our library uses the following 4-byte header: `dst(1B)` `ptype(1B)` `src(1B)` `s
 flags <-> seq 
 ``` 
 
-These variables will be set using the `RHDatagram.h` functions: `setHeaderTo`, `setHeaderfrom`, `setHeaderId`, `setHeaderFlags`. The **`Arduino_LoRa_Radiohead_Example`** provides an example sending "hello" using so-called LoRa mode 1 (BW125, CR45, SF12) on 865.2Mhz. PA_BOOST is activated by default and the DI0 pin is connected to Arduino digital pin 2.
+These variables will be set using the `RHDatagram.h` functions: `setHeaderTo`, `setHeaderfrom`, `setHeaderId`, `setHeaderFlags`. The **`Arduino_LoRa_Radiohead_Example`** provides an example sending "hello" using so-called LoRa mode 1 (BW125, CR45, SF12) on 865.2Mhz. PA_BOOST is activated by default and the DIO0 pin is connected to Arduino digital pin 2.
 
