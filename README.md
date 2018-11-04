@@ -45,8 +45,6 @@ You can download all the Gerber zipped archive and view them on an [online Gerbe
 
 You can easily make them produced on many online PCB manufacturers. Usually, you just need to provide the zip archive and both size and number of layers are detected. You can dramatically decrease the price by using "panelize" option. As you can see on the pictures, we use 3x2 for the RFM95 breakout and 3x1 for both the Nano and ProMini breakout. For instance, we ordered them from [JLCPCB](https://jlcpcb.com/) and the cost of 10 panels (i.e. 60 RFM breakout or 30 Nano/ProMini breakout) is about $2!
 
-https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/NanoLoRaBreakout_2018-10-24.zip
-
 Tutorial materials
 ------------------
 
@@ -124,7 +122,7 @@ You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutor
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/connect-radio-rpi.png)
 
-Or you can of course use our RFM95 breakout PCB that can be directly connected to the RPI GPIO header.
+**Or you can of course use our RFM95 breakout PCB that can be directly connected to the RPI GPIO header**.
 
 Installing the latest gateway version 
 =====================================
@@ -317,6 +315,8 @@ MOSI pin D11----------MOSI  (SPI Data in)
 MISO pin D12----------MISO  (SPI Data out)
 ```
 
+**For the Nano and the ProMini, you can of course use our Nano/ProMini breakout PCB that makes connection to an RFM95 radio straightforward**.
+
 On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino and Teensy boards. You can have a look at the [Low-cost-LoRa-IoT-step-by-step](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-outdoor-step-by-step.pdf) tutorial in the tutorial repository https://github.com/CongducPham/tutorials.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/connect-radio-device.png)
@@ -335,7 +335,7 @@ Practically, we only use either `M` (Max) or `x` (extreme) to have maximum range
 	//#define PABOOST
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////  
 
-Uncomment `PABOOST` if you have a HopeRF RFM92W or RFM95W, or a Modtronix inAir9B (if inAir9, leave commented) or a NiceRF1276. If you have another non listed radio module, try first by leaving `PABOOST` commented, then see whether the packet reception is correct with a reasonably high SNR (such as 6 to 10 dB) at some meters of the gateway. If not, then try with `PABOOST` uncommented.
+Uncomment `PABOOST` if you have a HopeRF RFM92W or RFM95W or RFM96W, or a Modtronix inAir9B (if inAir9, leave commented) or a NiceRF1276. If you have another non listed radio module, try first by leaving `PABOOST` commented, then see whether the packet reception is correct with a reasonably high SNR (such as 6 to 10 dB) at some meters of the gateway. If not, then try with `PABOOST` uncommented.
 
 First try: a simple Ping-Pong program example
 =============================================
