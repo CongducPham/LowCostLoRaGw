@@ -21,7 +21,7 @@ In order to facilitate connection between an Arduino board or a RaspberryPI and 
 
 The first PCB is a simple RFM95 breakout with header pin for both the Raspberry (to make a gateway) and Arduino boards. This PCB can therefore be connected to the GPIO header row of the Raspberry as shown below.
 
-![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFMonPI.png)
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFMonRPI.png)
 
 Or on an Arduino board as it will be explained in Section [connect a radio module to your end-device](https://github.com/CongducPham/LowCostLoRaGw#connect-a-radio-module-to-your-end-device) and illustrated below. On the breakout Arduino header, you can connect RFM95's DIO0 to a digital pin of your Arduino if you want to use another communication library that needs this pin. Our communication library does not need it but we left this possibility.
 
@@ -31,11 +31,11 @@ Then, 2 specific PCBs for Arduino Nano and Arduino ProMini are available as show
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/NanoLoRaBreakout.png)
 
-The PCB for the Arduino ProMini (3.3v, 8MHz version) can be used for prototyping and even integration purpose. 
+The PCB for the Arduino ProMini (3.3v, 8MHz version) can be used for prototyping and even integration purpose. Beware that A4 and A5 (which are usually SDA and SCL pin of the I2C bus) are not connected on the PCB. If you need to use them, use these 2 pins from the Arduino board.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/ProMiniLoRaBreakout.png)
 
-All the PCBs have footprint for an SMA connector. Both Nano and ProMini PCBs have replicated rows for all the pins. They also have extra VCC and GND rails. They additionally have 2 pads that can be soldered together in case you can connect RFM95's DIO0 to a digital pin of your Arduino if you want to use another communication library that needs this pin. Our communication library does not need it but we left this possibility. We also indicate clearly which pin of the RFM95 you need to solder on the PCB. As you can see on the picture, you can directly solder the Arduino board on the PCB, or, as we did, use intermediate headers so that the Arduino board can be easily plugged and removed.
+All the PCBs have footprint for an SMA connector. Both Nano and ProMini PCBs have replicated rows for all the pins. They also have extra VCC and GND rails. They additionally have 2 pads that can be soldered together in case you can connect RFM95's DIO0 to a digital pin of your Arduino if you want to use another communication library that needs this pin. Our communication library does not need it but we left this possibility. We also indicate clearly which pin of the RFM95 you need to solder on the PCB (for instance `MOSI>`). As you can see on the picture, you can directly solder the Arduino board on the PCB, or, as we did, use intermediate headers so that the Arduino board can be easily plugged and removed.
 
 You can download all the Gerber zipped archive and view them on an [online Gerber viewer](http://www.gerber-viewer.com/).
 
