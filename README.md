@@ -12,6 +12,40 @@ Quick start
 - Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. **For instance, to configure a new gateway, it is recommended to use the web admin interface to update the gateway software and to run the basic configuration procedure as described [here](https://github.com/CongducPham/LowCostLoRaGw#option-i)**.
 - **The rest of this README file contains additional information to better understand the proposed low-cost IoT framework**.
 
+PCBs
+----
+
+In order to facilitate connection between an Arduino board or a RaspberryPI and the well-known RFM95 LoRa radio module, we developed simple PCBs for Arduino ProMini, Arduino Nano and RaspberryPI and make them **freely** available. 
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFM95Breakout.png)
+
+The first PCB is a simple RFM95 breakout with header pin for both the Raspberry (to make a gateway) and Arduino boards. This PCB can therefore be connected to the GPIO header row of the Raspberry as shown below.
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFMonPI.png)
+
+Or on an Arduino board as it will be explained in Section [connect a radio module to your end-device](https://github.com/CongducPham/LowCostLoRaGw#connect-a-radio-module-to-your-end-device) and illustrated below. On the breakout Arduino header, you can connect RFM95's DIO0 to a digital pin of your Arduino if you want to use another communication library that needs this pin. Our communication library does not need it but we left this possibility.
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFMonArduino.png)
+
+Then, 2 specific PCBs for Arduino Nano and Arduino ProMini are available as shown below. The PCB for Arduino Nano is mainly intended for teaching/training purpose as the Nano is not energy-efficient enough for real deployment. However its main advantage is to avoid the need of an external FTDI breakout cable to program it.
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/NanoLoRaBreakout.png)
+
+The PCB for the Arduino ProMini (3.3v, 8MHz version) can be used for prototyping and even integration purpose. 
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/ProMiniLoRaBreakout.png)
+
+All the PCBs have footprint for an SMA connector. Both Nano and ProMini PCBs have replicated rows for all the pins. They also have extra VCC and GND rails. They additionally have 2 pads that can be soldered together in case you can connect RFM95's DIO0 to a digital pin of your Arduino if you want to use another communication library that needs this pin. Our communication library does not need it but we left this possibility. We also indicate clearly which pin of the RFM95 you need to solder on the PCB. As you can see on the picture, you can directly solder the Arduino board on the PCB, or, as we did, use intermediate headers so that the Arduino board can be easily plugged and removed.
+
+You can download all the Gerber zipped archive and view them on an [online Gerber viewer](http://www.gerber-viewer.com/).
+
+- RFM95 breakout zipped Gerber archive, 2 layer board of 29x37mm [.zip](https://github.com/CongducPham/PCBs/blob/master/RFM95Breakout_2018-10-24.zip)
+- Arduino Nano breakout zipped Gerber archive, 2 layer board of 30x81mm [.zip](https://github.com/CongducPham/PCBs/blob/master/NanoLoRaBreakout_2018-10-24.zip)
+- Arduino ProMini breakout zipped Gerber archive, 2 layer board of 30x77mm [.zip](https://github.com/CongducPham/PCBs/blob/master/ProMiniLoRaBreakout_2018-10-24.zip)
+
+You can easily make them produced on many online PCB manufacturers. Usually, you just need to provide the zip archive and both size and number of layers are detected. You can dramatically decrease the price by using "panelize" option. As you can see on the pictures, we use 3x2 for the RFM95 breakout and 3x1 for both the Nano and ProMini breakout. For instance, we ordered them from [JLCPCB](https://jlcpcb.com/) and the cost of 10 panels (i.e. 60 RFM breakout or 30 Nano/ProMini breakout) is about $2!
+
+
 Tutorial materials
 ------------------
 
@@ -38,8 +72,8 @@ Go to [https://github.com/CongducPham/tutorials](https://github.com/CongducPham/
 
 Look also at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.pdf)!
 
-Features
---------
+Main features of gateway
+------------------------
 
 - **NEW** remote access to your gateway from anywhere with `remot3.it`
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-remote-access-remot3it.md)
