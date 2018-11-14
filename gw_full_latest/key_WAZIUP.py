@@ -29,8 +29,8 @@ service_path=organization_name+service_tree
 #
 
 #use ONLY letters and numbers [A-Za-z0-9] for the username and the password
-username="username"
-password="password"
+username="guest"
+password="guest"
 
 #here "private" or "public" for the managed sensors
 visibility="public"

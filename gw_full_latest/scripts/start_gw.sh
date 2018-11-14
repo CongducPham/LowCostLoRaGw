@@ -5,6 +5,9 @@ cd /home/pi/lora_gateway
 #create the gw id so that a newly installed gateway is always configured with a correct id
 /home/pi/lora_gateway/scripts/create_gwid.sh
 
+#repair if needed the mongodb database connection
+/home/pi/lora_gateway/scripts/mongo_repair.sh
+
 ###
 ### Start Internet access with 3G dongle
 ############################################

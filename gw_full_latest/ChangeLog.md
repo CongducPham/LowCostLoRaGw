@@ -1,9 +1,13 @@
 Change logs
 ===========
 
+November 13th, 2018
+-------------------
+- scripts/start_gw.sh
+	* run mongo_repair.sh at startup to repair a damaged database when gateway has been shutdown abruptly.
+
 June 15th, 2018
 ---------------
-
 - when downloading and installing a .zip file with the web admin interface, the zip file will be uncompressed and its content will overwrite existing files in `/home/pi/lora_gateway`. It is a convenient way to update the gateway by providing a .zip archive.
 
 - scripts/start_gw.sh and scripts/update_gw.sh
@@ -15,7 +19,6 @@ June 15th, 2018
 
 May 28th, 2018
 --------------
-
 - scripts/start_gw.sh
 	* adds routing rules to share the wired Internet connection (eth0) through the WiFi access point
 	* now, a device connected to the gateway's WiFi has Internet connection assuming the gateway has Internet connection with the wired interface
@@ -23,7 +26,6 @@ May 28th, 2018
 	
 April 25th, 2018
 ----------------
-
 - scripts/start_gw.sh
 	* run `node-red-start` if `CloudNodeRed.py` is enabled in `clouds.json`
 
@@ -45,12 +47,10 @@ February 28th, 2018
  
 December 29th, 2017
 -------------------
-
 - It is recommended to only store in `clouds.json` minimum information, such as `"name"`, `"script"`, `"type"` and `"enabled"`. Then store in the associated `key*` file additional information as needed. For instance, we removed the `"gammurc_file"` in `clouds.json` to put them in `key_SMS.py`.
 
 December 12th, 2017
 -------------------
-
 - v3.7 post-processing_gw.py
 	* List of app keys has been move to `key_AppKey.py` file. 
 	* `post_status_processing_gw.py` will be called periodically by `post_processing_gw.py` (defined by `"status":600` for instance in `gateway_conf.json`, 600 means every 600s). Periodic tasks can then be added into `post_status_processing_gw.py`. For the moment, the gateway will just indicate periodically that it is up and will show its GPS coordinates. In `gateway_conf.json`, a new section called `"status_conf"` can be used to store dedicated information/variable to be used by custom tasks defined in `post_status_processing_gw.py`.
@@ -58,7 +58,6 @@ December 12th, 2017
 	
 November 22th, 2017
 -------------------
-
 - v3.6 post-processing_gw.py
 	* `post_processing_gw.py` can now handle the 4-byte LoRaWAN devAddr and pass this address to cloud scripts. All scripts have been modified to handle both 1-byte address and 4-byte address. 
 
@@ -70,7 +69,6 @@ November 22th, 2017
 
 November 2nd, 2017
 ------------------
-
 - `create_gwid.sh` will be called by `start_gw.sh` (on boot) to create the gateway id. This is done in order to automatically have a valid gateway id when installing a new gateway with the provided SD card image.
 
 - The gateway id SHOULD NOT BE changed from the web admin interface anymore.
@@ -79,18 +77,15 @@ November 2nd, 2017
 
 October 17th, 2017
 ------------------
-
 - v3.5 post-processing_gw.py
 	* Timestamps are in ISO format with timezone information if `dateutil.tz` is installed (`pip install python-dateutil`), otherwise it is the "naïve" version without timezone information.
 
 October 1st, 2017
 -----------------
-
 - Add `CloudNoInternet.py` script that stores received messages into a temporary file when Internet connectivity is down. When Internet is up again, it is possible to upload all stored messages. `key_NoInternet.py` indicates a script that can be executed with the correct parameters to upload stored data. You can add/enable `CloudNoInternet.py` cloud in `clouds.json`.
 
 October 1st, 2017
 -----------------
-
 - Start maintaining a `ChangeLog.md` file
 
 
