@@ -7,6 +7,7 @@ Quick start
 -----------
 
 - **The current SD card image has everything you need!** [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
+- We have a new online [Arduino-Sensor-LoRa tutorial](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/Waziup_Sensor_Tutorial/index.html) and here is the direct link to the [LoRa part](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/Waziup_Sensor_Tutorial/sensors/lora_sensor/Arduino_lora_demo.html)
 - Read the [Low-cost-LoRa-device leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-device-leaflet.pdf)
 - Read the [Low-cost-LoRa-GW leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-leaflet.pdf)
 - Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. **For instance, to configure a new gateway, it is recommended to use the web admin interface to update the gateway software and to run the basic configuration procedure as described [here](https://github.com/CongducPham/LowCostLoRaGw#option-i)**.
