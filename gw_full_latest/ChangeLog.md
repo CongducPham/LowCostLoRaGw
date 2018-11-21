@@ -1,6 +1,12 @@
 Change logs
 ===========
 
+November 21st, 2018
+-------------------
+- scripts/start_gw.sh
+	* run piShutdown.py script at startup to shutdown the gateway properly if connecting GPIO26 (pin 37) to ground (can be pin 39 which is next to pin 37).
+	* if you need to use GPIO26, edit scripts/piShutdown.py to use another pin.
+	
 November 13th, 2018
 -------------------
 - scripts/start_gw.sh

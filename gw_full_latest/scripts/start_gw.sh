@@ -2,6 +2,9 @@
 
 cd /home/pi/lora_gateway
 
+#run script for the shutdown button
+python /home/pi/lora_gateway/scripts/piShutdown.py &
+
 #create the gw id so that a newly installed gateway is always configured with a correct id
 /home/pi/lora_gateway/scripts/create_gwid.sh
 
