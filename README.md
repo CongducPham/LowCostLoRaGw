@@ -143,13 +143,16 @@ Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/r
 
 - `remot3.it` tools for remote access
 - the simple gateway web admin interface for easy configuration and management
-- `mosquitto-clients` package installed to have `mosquitto_pub` and `mosquitto_sub` commands
-- Node-Red and `npm` upgraded with `node-red-contrib-thingspeak42` installed
+- `mosquitto-clients` package installed to have `mosquitto_pub` and `mosquitto_sub` commands (v1.5)
+- Node-Red v0.18.6, Node.js v9.11.1 and `npm` upgraded with `node-red-contrib-thingspeak42` installed
 - a ready-to-use Node-Red flow to show how received data can be uploaded to MQTT brokers and ThingSpeak
+- MongoDB v3.0.9
+
+The image should work on RPI0 to RPI3 version B. For RPI3B+, it is reported that an update with `rpi-update` allows the SD card to boot. Then follow the procedures in [this link](https://www.linuxquestions.org/questions/slackware-arm-108/raspberry-pi-3-b-wifi-nic-not-found-4175627137/) to copy over the drivers for the WiFi radios.
 
 It is not a MacOS X DMG package as the extension may be misleading, simply unzip the file and burn the dmg file to an SD card. Use an SD card of a minimum of 8GB. Take also a class 10. If you have bigger SD card, e.g. 16GB, then after boot, use `raspi-config` (see [tutorial here](https://www.raspberrypi.org/documentation/configuration/raspi-config.md)) to resize the partition in order to use the extra space available (you will need to reboot but `raspi-config` will ask you for that). You can use `df -h` to verify that you have more space after reboot.  
 
-You can look at various tutorials on how to burn an image to an SD card. There is one [here from raspberrypi.org](https://www.raspberrypi.org/documentation/installation/installing-images/) and [here from elinux.org](http://elinux.org/RPi_Easy_SD_Card_Setup). I use a Mac to do so and [this is my preferred solution](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md). The [Linux version](https://www.raspberrypi.org/documentation/installation/installing-images/linux.md) is not very different. The `Etcher` tool is nice and you don't even need to unzip the SD card image.
+You can look at various tutorials on how to burn an image to an SD card. There is one [here from raspberrypi.org](https://www.raspberrypi.org/documentation/installation/installing-images/) and [here from elinux.org](http://elinux.org/RPi_Easy_SD_Card_Setup). I use a Mac to do so and [this is my preferred solution](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md). The [Linux version](https://www.raspberrypi.org/documentation/installation/installing-images/linux.md) is not very different. The `Etcher` tool is also very nice and you don't even need to unzip the SD card image. I also use that solution extensively.
 
 When booting from the provided SD card image
 ============================================ 
