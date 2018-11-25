@@ -51,11 +51,11 @@ function copy_log_file(){
 }
 
 function hostapd_conf($ssid, $wpa_passphrase){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh wifi ".$ssid." ".$wpa_passphrase);
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh wifi ".escapeshellarg($ssid)." ".escapeshellarg($wpa_passphrase));
 }
 
 function wificlient_conf($wificlient_ssid, $wificlient_wpa_passphrase){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh wificlient ".$wificlient_ssid." ".$wificlient_wpa_passphrase);
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh wificlient ".escapeshellarg($wificlient_ssid)." ".escapeshellarg($wificlient_wpa_passphrase));
 }
 
 function apmode_conf(){
