@@ -395,6 +395,8 @@ The program has been tested on Arduino Uno, Mega2560, Nano, Pro Mini, Mini, Due,
 
 **Notice for low-cost/clone Arduino boards**. If you get a low-cost Arduino board, such as those sold by most of Chinese manufacturer, the USB connectivity is probably based on the CH340 or CH341. To make your low-cost Arduino visible to your Arduino IDE, you need the specific driver. Look at http://sparks.gogo.co.nz/ch340.html or http://www.microcontrols.org/arduino-uno-clone-ch340-ch341-chipset-usb-drivers/. For MacOS, you can look at http://www.mblock.cc/posts/run-makeblock-ch340-ch341-on-mac-os-sierra which works for MacOS up to Sierra. For MacOS user that have the previous version of CH34x drivers and encountering kernel panic with Sierra, don't forget to delete previous driver installation: `sudo rm -rf /System/Library/Extensions/usb.kext`.
 
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/iot-node.jpg)
+
 
 An interactive end-device for sending LoRa messages with the Arduino IDE
 ========================================================================
