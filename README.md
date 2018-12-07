@@ -133,7 +133,7 @@ The full, latest distribution of the low-cost gateway is available in the `gw_fu
 
 However, the **simplest and recommended way** to install a new gateway is to use [our zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip) based on the Jessie Raspbian OS and perform a new install of the gateway from this image. In this way you don't need to install the various additional packages that are required (as explained in an additional [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-manual-install.md) describing all manual installation steps if you want to install from scratch). Once you have burnt the SD image on a 8GB (minimum) SD card, insert it in your Raspberry and power it.
 
-The distribution supports Raspberry 1B+, RPI2, RPI3, RPI0 and RPI0W. **For RPI1, RPI0 and RPI0W you need to run `make lora_gateway` as the default version is built for RPI2&RPI3**. There is out-of-the-box WiFi support for RPI3 and RPI0W. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles.
+The distribution supports Raspberry 1B+, RPI2, RPI3B/B3+, RPI0 and RPI0W. **For RPI1, RPI0 and RPI0W you need to run `make lora_gateway` as the default version is built for RPI2&RPI3**. There is out-of-the-box WiFi support for RPI3B/3B+ and RPI0W. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles.
 
 
 Get our SD card image
@@ -141,6 +141,7 @@ Get our SD card image
 
 Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip). The current image has everything you need including:
 
+- support for RPI3B+ as well (including the WiFi)
 - `remot3.it` tools for remote access
 - the simple gateway web admin interface for easy configuration and management
 - `mosquitto-clients` package installed to have `mosquitto_pub` and `mosquitto_sub` commands (v1.5)
@@ -148,11 +149,11 @@ Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/r
 - a ready-to-use Node-Red flow to show how received data can be uploaded to MQTT brokers and ThingSpeak
 - MongoDB v3.0.9
 
-The image should work on RPI0 to RPI3 version B. For RPI3B+, it is reported that an update with `rpi-update` allows the SD card to boot. Then follow the procedures in [this link](https://www.linuxquestions.org/questions/slackware-arm-108/raspberry-pi-3-b-wifi-nic-not-found-4175627137/) to copy over the drivers for the WiFi radios.
+The image should work on RPI0 to RPI3B/3B+. For RPI3B+, we performed an update with `rpi-update` on Jessie. Then we followed the procedures in [this link](https://www.linuxquestions.org/questions/slackware-arm-108/raspberry-pi-3-b-wifi-nic-not-found-4175627137/) to copy over the drivers for the 3B+ WiFi radios. The image has already all these features and should work on all RPI models. We however recommend the 3B version unless you need to run other applications on the RPI otherwise the last 3B+ is much more power consuming and heats a lot more.
 
-It is not a MacOS X DMG package as the extension may be misleading, simply unzip the file and burn the dmg file to an SD card. Use an SD card of a minimum of 8GB. Take also a class 10. If you have bigger SD card, e.g. 16GB, then after boot, use `raspi-config` (see [tutorial here](https://www.raspberrypi.org/documentation/configuration/raspi-config.md)) to resize the partition in order to use the extra space available (you will need to reboot but `raspi-config` will ask you for that). You can use `df -h` to verify that you have more space after reboot.  
+It is not a MacOS X DMG package as the extension may be misleading, simply unzip the file and burn the dmg file to an SD card. Use an SD card of a minimum of 8GB. Take also a class 10 (it is more than recommended!). If you have bigger SD card, e.g. 16GB, then after boot, use `raspi-config` (see [tutorial here](https://www.raspberrypi.org/documentation/configuration/raspi-config.md)) to resize the partition in order to use the extra space available (you will need to reboot but `raspi-config` will ask you for that). You can use `df -h` to verify that you have more space after reboot.  
 
-You can look at various tutorials on how to burn an image to an SD card. There is one [here from raspberrypi.org](https://www.raspberrypi.org/documentation/installation/installing-images/) and [here from elinux.org](http://elinux.org/RPi_Easy_SD_Card_Setup). I use a Mac to do so and [this is my preferred solution](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md). The [Linux version](https://www.raspberrypi.org/documentation/installation/installing-images/linux.md) is not very different. The `Etcher` tool is also very nice and you don't even need to unzip the SD card image. I also use that solution extensively.
+You can look at various tutorials on how to burn an image to an SD card. There is one [here from raspberrypi.org](https://www.raspberrypi.org/documentation/installation/installing-images/) and [here from elinux.org](http://elinux.org/RPi_Easy_SD_Card_Setup). We use a Mac to do so and [this is our preferred solution](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md). The [Linux version](https://www.raspberrypi.org/documentation/installation/installing-images/linux.md) is not very different. The `Etcher` tool is also very nice and you don't even need to unzip the SD card image. We also use that solution extensively.
 
 When booting from the provided SD card image
 ============================================ 
