@@ -531,7 +531,9 @@ WARNING
 Specific development
 ====================
 
-Specific developments can be made from the general, public version on github. If you are interested by such customization, you can contact me.
+Specific developments can be made from the general, public version on github. The framework has been used for instance in Nestlé's WaterSense project and HygieItalia's WISMART project. If you are interested by such customization (advanced and reliable downlink, dynamic and reconfigurable measure interval, PCBs with integrated antennas,...) you can contact me.
+
+<a href=""><img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/wismart.jpg" width="300"></a>
 
 Enjoy!
 C. Pham
