@@ -18,31 +18,50 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Jan. 19th, 2018 by C. Pham
+ *
+ * last update: Dec. 14th, 2018 by C. Pham
  */
 #include <SPI.h>  
 // Include the SX1272
 #include "SX1272.h"
 
+//new small OLED screen, mostly based on SSD1306 
 #define OLED
+//if you want to plug directly to consecutive pin GND, 2, 3, 4 for respectively GND, VCC, SCK, SDA
+//#define OLED_GND234
+//if you are using the old LCD screen
 //#define HITACHI
 
+// uncomment if you are sure you have an ESP8266 board and that it is not detected
+//#define ESP8266
 // uncomment if you are sure you have an Heltec LoRa board and that it is not detected
 //#define HELTEC_LORA
 
 #ifdef OLED
-
+//reset is not used
 #include <U8x8lib.h>
-// the OLED used
+//you can also power the OLED screen with a digital pin, here pin 8
+#define OLED_PWR_PIN 8
+// connection may depend on the board. Use A5/A4 for most Arduino boards. On ESP8266-based board we use GPI05 and GPI04. Heltec ESP32 has embedded OLED.
 #if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
 U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
+#elif defined ESP8266 || defined ARDUINO_ESP8266_ESP01
+//U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 5, /* data=*/ 4, /* reset=*/ U8X8_PIN_NONE);
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 12, /* data=*/ 14, /* reset=*/ U8X8_PIN_NONE);
 #else
-//reset is not used, but don't know what the lib will do with that pin, so better to indicate a pn that you do not use
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ A5, /* data=*/ A4, /* reset=*/ A3);
+#ifdef OLED_GND234
+#ifdef OLED_PWR_PIN
+#undef OLED_PWR_PIN
+#define OLED_PWR_PIN 2
 #endif
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 3, /* data=*/ 4, /* reset=*/ U8X8_PIN_NONE);
+#else
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ A5, /* data=*/ A4, /* reset=*/ U8X8_PIN_NONE);
+#endif
+#endif
+char oled_msg[20];
 
 #elif defined HITACHI
-
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 LiquidCrystal_I2C lcd(0x20,16,2);  // set the LCD address to 0x20 for a 16 chars and 2 line display
@@ -147,6 +166,10 @@ void setup()
   PRINT_CSTSTR("%s","Simple LoRa ping-pong with the gateway\n"); 
   
 #ifdef OLED
+#ifdef OLED_PWR_PIN
+  pinMode(OLED_PWR_PIN, OUTPUT);
+  digitalWrite(OLED_PWR_PIN, HIGH);
+#endif
   u8x8.begin();
   u8x8.setFont(u8x8_font_chroma48medium8_r);
   u8x8.drawString(0, 1, "Simple PingPong");
@@ -281,18 +304,20 @@ void loop(void)
   uint8_t r_size;
   int e;
 
-  sx1272.CarrierSense();
-
   sx1272.setPacketType(PKT_TYPE_DATA);
       
   while (1) {
+
+      sx1272.CarrierSense();
+      
       r_size=sprintf((char*)message, "Ping");
       PRINT_CSTSTR("%s","Sending Ping");  
       PRINTLN;
 
 #ifdef OLED
       u8x8.drawString(0, 3, "Sending Ping....");
-      u8x8.drawString(0, 4, "                ");
+      u8x8.clearLine(4);
+      u8x8.clearLine(5);
 #elif defined HITACHI
       printLCD(0, "Sending Ping....", true);
 #endif
@@ -333,15 +358,31 @@ void loop(void)
         
       if (e==0) {
           char msg[20];
-          sprintf(msg,"SNR at gw=%d   ", sx1272._rcv_snr_in_ack);
+
           PRINT_CSTSTR("%s","Pong received from gateway!");
           PRINTLN;
+          sprintf(msg,"SNR at gw=%d   ", sx1272._rcv_snr_in_ack);
           PRINT_STR("%s", msg);   
+          PRINTLN;
+
 #ifdef OLED             
           u8x8.drawString(0, 3, "Get Pong from gw");
           u8x8.drawString(0, 4, msg);
 #elif defined HITACHI
           printLCD(0, "Get Pong from gw", true);
+          printLCD(1, msg, false);
+#endif
+
+          sx1272.getSNR();
+          sx1272.getRSSIpacket();
+          sprintf(msg,"from gw SNR=%d:%d", sx1272._SNR, sx1272._RSSIpacket);
+          PRINT_STR("%s", msg);
+          PRINTLN;
+
+#ifdef OLED
+          u8x8.clearLine(5);             
+          u8x8.drawString(0, 5, msg);
+#elif defined HITACHI
           printLCD(1, msg, false);
 #endif
       }
