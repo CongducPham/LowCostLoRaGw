@@ -27,7 +27,7 @@
 
 //new small OLED screen, mostly based on SSD1306 
 #define OLED
-//if you want to plug directly to consecutive pin GND, 2, 3, 4 for respectively GND, VCC, SCK, SDA
+//if you want to plug the OLED pin directly to consecutive Arduino board GND, 2, 3, 4 for respectively GND, VCC, SCK, SDA
 //#define OLED_GND234
 //if you are using the old LCD screen
 //#define HITACHI
@@ -375,7 +375,7 @@ void loop(void)
 
           sx1272.getSNR();
           sx1272.getRSSIpacket();
-          sprintf(msg,"from gw SNR=%d:%d", sx1272._SNR, sx1272._RSSIpacket);
+          sprintf(msg,"gw->SNR=%d:%d", sx1272._SNR, sx1272._RSSIpacket);
           PRINT_STR("%s", msg);
           PRINTLN;
 
