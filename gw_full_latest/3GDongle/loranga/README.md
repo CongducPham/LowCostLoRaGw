@@ -1,5 +1,5 @@
-Using the LORANGA board
-=======================
+Using the LORANGA 2G/3G board
+=============================
 
 The [LORANGA](https://www.alegrefactory.com/loranga) board from "La Fabrica Alegre" company embeds an RFM95W as the LoRa module. This module needs PABOOST so in order to use the module you first have to edit `radio.makefile` and make sure that PABOOST is enabled:
 
@@ -14,16 +14,100 @@ The support of [LORANGA](https://www.alegrefactory.com/loranga) board has been r
 
 They have the following [test github](https://github.com/edu986/test_ppp) to explain the installation of the support of the LORANGA board. Note that the `wvdial` method explained for 3G USB dongles is currently not working with the LORANGA board.
 
+The `ppp-creator.py` script basically creates:
+
+- `/etc/chatscripts` folder
+- `/etc/ppp/peers` folder
+- `/etc/chatscripts/quectel-chat-connect` script
+- `/etc/chatscripts/quectel-chat-disconnect` script
+- `/etc/ppp/peers/gprs` configuration file
+
+We have a slightly modified `ppp-creator.py` script for the `/etc/chatscripts/quectel-chat-disconnect` script. Here are example of what you should obtained after running `ppp-creator.py` with 2 arguments. The first one being your provider APN and the second one being the serial port used by the Loranga board which is typically `ttyS0` on an RPI3.
+
+	> sudo ./ppp-creator.sh mmsbouygtel.com ttyS0
+
+`/etc/chatscripts/quectel-chat-connect` script:
+
+	ABORT "BUSY"
+	ABORT "NO CARRIER"
+	ABORT "NO DIALTONE"
+	ABORT "ERROR"
+	ABORT "NO ANSWER"
+	TIMEOUT 30
+	"" AT
+	OK ATE0
+	OK ATI;+CSUB;+CSQ;+CPIN?;+COPS?;+CGREG?;&D2
+	# Insert the APN provided by your network operator, default apn is mmsbouygtel.com
+	OK AT+CGDCONT=1,"IP","\T",,0,0
+	OK ATD*99#
+	CONNECT	
+
+`/etc/chatscripts/quectel-chat-disconnect` script:
+
+	ABORT           'BUSY'
+	ABORT           'ERROR'
+	ABORT           'NO DIALTONE'
+	TIMEOUT         30
+	''              '+++\c'
+	SAY             " + sending break"
+	'NO CARRIER'    'ATH'
+	SAY             "\n + dropping data connection"
+	OK              'AT+CGATT=0'
+	SAY             "\n + disconnecting from GPRS"
+	OK              '\c'
+	SAY             "\n + disconnected."
+
+`/etc/ppp/peers/gprs` configuration file:
+
+	/dev/ttyS0 115200
+	# The chat script, customize your APN in this file
+	connect 'chat -s -v -f /etc/chatscripts/quectel-chat-connect -T mmsbouygtel.com'
+	# The close script
+	disconnect 'chat -s -v -f /etc/chatscripts/quectel-chat-disconnect'
+	# Hide password in debug messages
+	hide-password
+	# The phone is not required to authenticate
+	noauth
+	# Debug info from pppd
+	debug
+	# If you want to use the HSDPA link as your gateway
+	defaultroute
+	# pppd must not propose any IP address to the peer
+	noipdefault
+	# No ppp compression
+	novj
+	novjccomp
+	noccp
+	ipcp-accept-local
+	ipcp-accept-remote
+	local
+	# For sanity, keep a lock on the serial line
+	lock
+	modem
+	dump
+	nodetach
+	# Hardware flow control
+	nocrtscts
+	remotename 3gppp
+	ipparam 3gppp
+	ipcp-max-failure 30
+	# Ask the peer for up to 2 DNS server addresses
+	usepeerdns
+
 If you use our latest version of SD card image (from September 2017) then everything is set-up to use the LORANGA board. You just have to run:
 
 	> cd /home/pi/lora_gateway/3GDongle/loranga
 	> ./start-internet.sh
 
+Prior to launch the script, you need to indicate whether you have the Loranga 2G or the Loranga 3G board. This is done by running `select-loranga3G-board.sh` if you have the 3G version. The script basically creates the `loranga3G.txt` file which existence will be checked by `start-internet.sh` to run the appropriate Pythin script to power the Loranga modem.
+
 To start the 2G/3G Internet connection at boot, run:
 
 	> ./enable-loranga-internet-on-boot.sh
 	
-This simple script simply creates a file called `use_loranga_internet_on_boot.txt`. The `start_gw.sh` script, called at boot time, now checks for this file and will run the `start-internet.sh` script before launching the gateway program and post-processing stage. However, it is safer to test it first in interactive mode to see how the ppp connection is going. Once you are supposed to have Internet, try to ping some remote computers or use the web admin interface to see whether the gateway has Internet or not. 
+This simple script simply creates a file called `use_loranga_internet_on_boot.txt`. 
+
+The `start_gw.sh` script, called at boot time, now checks for this file and will run the `start-internet.sh` script before launching the gateway program and post-processing stage. However, it is safer to test it first in interactive mode to see how the ppp connection is going. Once you are supposed to have Internet, try to ping some remote computers or use the web admin interface to see whether the gateway has Internet or not. 
 
 You can provide a parameter to `start-internet.sh` when testing in interactive mode. With no parameters, `pppd` logs are sent to `stdout` which is not very convenient. You can use:
 

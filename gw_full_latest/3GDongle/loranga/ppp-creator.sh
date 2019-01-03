@@ -23,17 +23,28 @@ OK AT+CGDCONT=1,\"IP\",\"\\T\",,0,0
 OK ATD*99#
 CONNECT" > /etc/chatscripts/quectel-chat-connect
 
-
 echo "creating script file : /etc/chatscripts/quectel-chat-disconnect"
+#echo "
+#ABORT \"ERROR\"
+#ABORT \"NO DIALTONE\"
+#SAY \"\nSending break to the modem\n\"
+#""  +++
+#""  +++
+#""  +++
+#SAY \"\nGoodbay\n\"" > /etc/chatscripts/quectel-chat-disconnect
 echo "
-ABORT \"ERROR\"
-ABORT \"NO DIALTONE\"
-SAY \"\nSending break to the modem\n\"
-""  +++
-""  +++
-""  +++
-SAY \"\nGoodbay\n\"" > /etc/chatscripts/quectel-chat-disconnect
-
+ABORT           \"BUSY\"
+ABORT           \"ERROR\"
+ABORT           \"NO DIALTONE\"
+TIMEOUT         30
+\"\"            \"+++\c\"
+SAY             \" + sending break\"
+\"NO CARRIER\"  \"ATH\"
+SAY             \"\n + dropping data connection\"
+OK              \"AT+CGATT=0\"
+SAY             \"\n + disconnecting from GPRS\"
+OK              \"\c\"
+SAY             \"\n + disconnected.\"" > /etc/chatscripts/quectel-chat-disconnect
 
 echo "creating script file : /etc/ppp/peers/gprs"
 echo "
