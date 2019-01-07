@@ -57,6 +57,8 @@ require 'header.php';
                                 </li> 
                                 <li><a href="#apmode-pills" data-toggle="tab">Switch back to AP mode</a>
                                 </li>
+                                <li><a href="#cellular-pills" data-toggle="tab">Cellular</a>
+                                </li>                                
                                 <li><a href="../../raspap-webgui/">RaspAP webgui</a>
                                 </li>                                                                                                 
 								<li><a href="#profile-pills" data-toggle="tab">Web admin login settings</a>
@@ -75,9 +77,10 @@ require 'header.php';
 								?>                            
                             </p>
                                                         
-                            <!-- Tab panes -->
+
                             <div class="tab-content">
-				
+
+                            <!-- Tab panes -->				
                             	<div class="tab-pane fade in active" id="hostapd-pills">
                                    </br>
                                     <div class="col-md-8 col-md-offset-1"> 
@@ -105,7 +108,8 @@ require 'header.php';
             						</br>
             						<div id="hostapd_msg"></div>	
                                 </div> 
-                                
+
+                            <!-- Tab panes -->                                
                             	<div class="tab-pane fade" id="wificlient-pills">
                                    </br>
                                     <div class="col-md-8 col-md-offset-1"> 
@@ -133,7 +137,8 @@ require 'header.php';
             						</br>
             						<div id="wificlient_msg"></div>	
                                 </div>                                
-                           
+
+                            <!-- Tab panes -->                           
                             	<div class="tab-pane fade" id="apmode-pills">
                                    </br>
 										<center>
@@ -145,7 +150,76 @@ require 'header.php';
             						</br>
             						<div id="apmode_msg"></div>	
                                 </div> 
-                                                            
+
+                            <!-- Tab panes -->                           
+                            	<div class="tab-pane fade" id="cellular-pills">
+                                   </br>
+                                   
+                                	<p>
+										<?php 
+										
+											echo "&nbsp;&nbsp;&nbsp;&nbsp;Current cellular configuration: ";
+											
+											if(is_file("/home/pi/lora_gateway/3GDongle/use_3GDongle_internet_on_boot.txt")){
+												echo "Use 3G dongle for Internet on boot";
+											}
+											elseif(is_file("/home/pi/lora_gateway/3GDongle/loranga/use_loranga_internet_on_boot.txt")){
+												echo "Use Loranga for Internet on boot";
+												
+												if(is_file("/home/pi/lora_gateway/3GDongle/loranga/loranga3G.txt")){
+													echo " – With Loranga 3G";
+												}
+												else {
+													echo " – With Loranga 2G";
+												}												
+											}
+											else {
+												echo "No cellular network configured";
+											}																						
+										?>  
+                            		</p>
+                            		
+            						<div class="col-md-5 col-md-offset-0">
+                                      <div class="table-responsive">
+										<table class="table table-striped table-bordered table-hover">
+   										  <thead></thead>
+										 <tbody>
+										   <tr>
+    									    <td>Enable Dongle on boot</td>
+    										<td align="right"><button  id="btn_dongle_on" type="button" class="btn btn-primary" href="process.php?dongle=true">Set</button></td>
+   										   </tr>
+   										   
+   										   <tr>
+    									    <td>Disable Dongle on boot</td>
+    										<td align="right"><button  id="btn_dongle_off" type="button" class="btn btn-primary" href="process.php?dongle=false">Set</button></td>
+   										   </tr>
+   										   
+   										   <tr>
+    									    <td>Enable Loranga on boot</td>
+    										<td align="right"><button  id="btn_loranga_on" type="button" class="btn btn-primary" href="process.php?loranga=true">Set</button></td>
+   										   </tr>   										   
+
+   										   <tr>
+    									    <td>Disable Loranga on boot</td>
+    										<td align="right"><button  id="btn_loranga_off" type="button" class="btn btn-primary" href="process.php?loranga=false">Set</button></td>
+   										   </tr>
+   										   
+   										   <tr>
+    									    <td>Has Loranga 2G</td>
+    										<td align="right"><button  id="btn_loranga_2G" type="button" class="btn btn-primary" href="process.php?loranga3G=false">Set</button></td>
+   										   </tr>
+
+   										   <tr>
+    									    <td>Has Loranga 3G</td>
+    										<td align="right"><button  id="btn_loranga_3G" type="button" class="btn btn-primary" href="process.php?loranga3G=true">Set</button></td>
+   										   </tr>									      										      										   
+										 </tbody>
+    								    </table>
+    							      </div>
+    							    </div>                            		
+            						<div id="cellular_msg"></div>	
+                                </div> 
+                                                                                            
                             <!-- Tab panes -->
                             	<div class="tab-pane fade" id="profile-pills">
                                    </br>

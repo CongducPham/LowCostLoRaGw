@@ -1,16 +1,33 @@
 Change logs
 ===========
 
+December 12th, 2018
+-------------------
+- v3.8a post-processing_gw.py
+	* add a fast rate statistic thread that will be launched if _gw_statistics is set to True
+	* the thread will periodically (every 5s, currently hard-coded) call `python sensors_in_raspi/stats.py`
+	* `stats.py` is mainly based from Adafruit example (https://learn.adafruit.com/adafruit-pioled-128x32-mini-oled-for-raspberry-pi/usage)
+	* print some RPI statistics and last packet info, as well as the number of received packet since last restart
+	* Note that you can hot-(un)plug the OLED screen at any time. This feature has been added as an additional convenient way for quick debugging
+	* If you get the last SD card image, support for I2C and OLED screen has been added.
+	* If you update the gateway software, you need before enabling this feature to install the required libs
+		* `sudo apt-get install python-imaging python-smbus`
+		* `git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git`
+		* `cd Adafruit_Python_SSD1306`
+		* `sudo python setup.py install`
+
 November 21st, 2018
 -------------------
 - scripts/start_gw.sh
-	* run piShutdown.py script at startup to shutdown the gateway properly if connecting GPIO26 (pin 37) to ground (can be pin 39 which is next to pin 37).
-	* if you need to use GPIO26, edit scripts/piShutdown.py to use another pin.
+	* run `piShutdown.py` script at startup (use the RPI2 long header by default)
+		- to shutdown the gateway properly by connecting GPIO26 (pin 37) to ground which can be pin 39 that is next to pin 37.
+		- to reboot the gateway by connecting GPIO21 (pin 40) to ground which can be pin 39 that is next to pin 40.
+		- if you need to use GPIO26 or GPIO21, edit `scripts/piShutdown.py` to use other pins.
 	
 November 13th, 2018
 -------------------
 - scripts/start_gw.sh
-	* run mongo_repair.sh at startup to repair a damaged database when gateway has been shutdown abruptly.
+	* run `mongo_repair.sh` at startup to repair a damaged database when gateway has been shutdown abruptly.
 
 June 15th, 2018
 ---------------

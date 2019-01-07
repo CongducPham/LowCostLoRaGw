@@ -703,6 +703,70 @@ if (isset($_GET['apmodenow']) && $_GET['apmodenow'] == "true"){
 	}
 }	
 
+/*************************
+ * Setting dongle
+ *************************/
+
+if (isset($_GET['dongle'])){ 
+    	
+	if ($_GET['dongle'] == "true"){
+		$output = dongle_conf_on();
+	}
+	else {
+		$output = dongle_conf_off();	
+	}
+
+	if($output == 0){
+		echo '<p><center><font color="green">Dongle on boot configuration changed. You MUST reboot for changes to take effect</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to change Dongle on boot</font></center></p>';
+	}
+}	
+
+/*************************
+ * Setting Loranga
+ *************************/
+
+if (isset($_GET['loranga'])){ 
+    
+	if ($_GET['loranga'] == "true"){
+		$output = loranga_conf_on();
+	}
+	else {
+		$output = loranga_conf_off();	
+	}
+
+	if($output == 0){
+		echo '<p><center><font color="green">Loranga on boot configuration. You MUST reboot for changes to take effect</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to change Loranga on boot</font></center></p>';
+	}
+}	
+
+/*************************
+ * Setting Loranga3G
+ *************************/
+
+if (isset($_GET['loranga3G'])){ 
+    
+	if ($_GET['loranga3G'] == "true"){
+		$output = loranga_conf_3G();
+	}
+	else {
+		$output = loranga_conf_2G();	
+	}
+
+	if($output == 0){
+		echo '<p><center><font color="green">Loranga board version changed. You MUST reboot for changes to take effect</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to change Loranga board version</font></center></p>';
+	}
+}	
+
+
 //#######################################################################################
 // 									 CLOUD
 //#######################################################################################

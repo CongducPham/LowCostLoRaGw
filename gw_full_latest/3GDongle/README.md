@@ -18,6 +18,14 @@ It is generally safer to use a 3G/4G router where the dongle can be plugged. We 
 
 Many information in this file has been taken from the following original article: https://enavarro.me/raspberry-pi-connection-3g-et-envoi-de-sms-en-meme-temps.html
 
+**If you are using our SD card image** then everything is already set up. You just need to plug your USB 2G/3G/4G dongle with a valid SIM card (with no pin configuration) and run:
+
+	> cd /home/pi/lora_gateway/3GDongle
+	> ./enable-3GDongle-internet-on-boot.sh
+	> sudo reboot
+	
+You can also use the web admin interface to enable the dongle on boot (`System`	menu, then `Cellular` tab) and reboot.
+
 Installation on Raspberry (Jessie)
 ----------------------------------
 

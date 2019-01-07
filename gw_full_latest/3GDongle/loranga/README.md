@@ -7,8 +7,16 @@ The [LORANGA](https://www.alegrefactory.com/loranga) board from "La Fabrica Aleg
 	
 Then, run the `scripts/basic_config_gw.sh` to both configure your gateway and compile the `lora_gateway` program.	
 
-Starting Internet connection
-----------------------------
+**If you are using our SD card image** then everything is already set up. You just need to plug your Loranga board with a valid SIM card (with no pin configuration) and run:
+
+	> cd /home/pi/lora_gateway/3GDongle/loranga
+	> ./enable-loranga-internet-on-boot.sh
+	> sudo reboot
+	
+You can also use the web admin interface to enable the Loranga board on boot (`System`	menu, then `Cellular` tab) and reboot.
+
+Configuring Internet connection
+-------------------------------
 
 The support of [LORANGA](https://www.alegrefactory.com/loranga) board has been realized in collaboration with "La Fabrica Alegre" development team.
 
@@ -94,12 +102,18 @@ We have a slightly modified `ppp-creator.py` script for the `/etc/chatscripts/qu
 	# Ask the peer for up to 2 DNS server addresses
 	usepeerdns
 
-If you use our latest version of SD card image (from September 2017) then everything is set-up to use the LORANGA board. You just have to run:
+If you use our latest version of SD card image (from September 2017) then everything is set up to use the LORANGA board. You just have to run:
 
 	> cd /home/pi/lora_gateway/3GDongle/loranga
 	> ./start-internet.sh
+	
+However, you will probably need	to change the APN information for those from your mobile operator. This is done in the `/etc/ppp/peers/gprs` configuration file
 
-Prior to launch the script, you need to indicate whether you have the Loranga 2G or the Loranga 3G board. This is done by running `select-loranga3G-board.sh` if you have the 3G version. The script basically creates the `loranga3G.txt` file which existence will be checked by `start-internet.sh` to run the appropriate Pythin script to power the Loranga modem.
+	> sudo nano /etc/ppp/peers/gprs
+	
+and change `mmsbouygtel.com` by your APN information (for instance SFR uses `sl2sfr`.
+
+Prior to launch the script, you also need to indicate whether you have the Loranga 2G or the Loranga 3G board. This is done by running `select-loranga3G-board.sh` if you have the 3G version. The script basically creates the `loranga3G.txt` file which existence will be checked by `start-internet.sh` to run the appropriate Pythin script to power the Loranga modem.
 
 To start the 2G/3G Internet connection at boot, run:
 

@@ -66,6 +66,30 @@ function apmodenow_conf(){
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh apmodenow");
 }
 
+function dongle_conf_on(){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh dongle_on");
+}
+
+function dongle_conf_off(){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh dongle_off");
+}
+
+function loranga_conf_on(){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh loranga_on");
+}
+
+function loranga_conf_off(){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh loranga_off");
+}
+
+function loranga_conf_2G(){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh loranga_2G");
+}
+
+function loranga_conf_3G(){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh loranga_3G");
+}
+
 //module => Key => value 
 //radio_conf => ch => -1
 function update_gw_conf($module, $key, $value){

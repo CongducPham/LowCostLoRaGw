@@ -35,9 +35,14 @@ then
 elif [ -f 3GDongle/loranga/use_loranga_SMS_on_boot.txt ]
 then
 	echo "Use Loranga board for SMS"
-	cd 3GDongle/loranga
+	cd 3GDongle/loranga	
 	# just turn on the modem
-	sudo python wake-2G.py
+	if [ -f loranga3G.txt ]
+	then
+		sudo python wake-3G.py
+	else	
+		sudo python wake-2G.py
+	fi
 	cd ../..
 fi
 ############################################

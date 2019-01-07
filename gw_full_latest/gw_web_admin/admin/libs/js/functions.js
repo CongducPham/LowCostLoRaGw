@@ -1183,7 +1183,97 @@ var maxAddr = 255;
 	    },5000);
         });
     });
-                
+
+//==================================
+// Setting dongle on
+//==================================
+
+	$('#btn_dongle_on').click(function() {
+        $.post($(this).attr('href'), function (res) { 
+	     $('#system_msg').html(res);
+	    //erase message after 5 seconds
+	    setTimeout(function() {
+  		$('#system_msg').html("");
+  		window.location.reload();
+	    },2000);
+        });
+    });
+
+//==================================
+// Setting dongle off
+//==================================
+
+	$('#btn_dongle_off').click(function() {
+        $.post($(this).attr('href'), function (res) { 
+	     $('#system_msg').html(res);
+	    //erase message after 5 seconds
+	    setTimeout(function() {
+  		$('#system_msg').html("");
+  		window.location.reload();
+	    },2000);
+        });
+    });
+    
+//==================================
+// Setting Loranga on
+//==================================
+
+	$('#btn_loranga_on').click(function() {
+        $.post($(this).attr('href'), function (res) { 
+	     $('#system_msg').html(res);
+	    //erase message after 5 seconds
+	    setTimeout(function() {
+  		$('#system_msg').html("");
+  		window.location.reload();
+	    },2000);
+        });
+    });
+
+//==================================
+// Setting Loranga off
+//==================================
+
+	$('#btn_loranga_off').click(function() {
+        $.post($(this).attr('href'), function (res) { 
+	     $('#system_msg').html(res);
+	    //erase message after 5 seconds
+	    setTimeout(function() {
+  		$('#system_msg').html("");
+  		window.location.reload();
+	    },2000);
+        });
+    });
+        
+//==================================
+// Setting Loranga2G
+//==================================
+
+	$('#btn_loranga_2G').click(function() {
+        $.post($(this).attr('href'), function (res) { 
+	     $('#system_msg').html(res);
+	    //erase message after 5 seconds
+	    setTimeout(function() {
+  		$('#system_msg').html("");
+  		window.location.reload();
+	    },2000);
+        });
+    });
+
+//==================================
+// Setting Loranga3G
+//==================================
+
+	$('#btn_loranga_3G').click(function() {
+        $.post($(this).attr('href'), function (res) { 
+	     $('#system_msg').html(res);
+	    //erase message after 5 seconds
+	    setTimeout(function() {
+  		$('#system_msg').html("");
+  		window.location.reload();
+	    },2000);
+        });
+    });
+                                
 //==================================
 // Setting profile
 //==================================

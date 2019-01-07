@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v3.8 - image modification and need to incorporate aux_radio features
+# v3.8a - image modification and need to incorporate aux_radio features
 # + copy post-processing feature
 #------------------------------------------------------------
 
@@ -101,6 +101,11 @@ LORAWAN_HEADER_SIZE=13
 pdata="0,0,0,0,0,0,0,0"
 rdata="0,0,0"
 tdata="N/A"
+
+short_info_1="N/A"
+short_info_2="N/A"
+short_info_3="N/A"
+npkt=0
 
 dst=0
 ptype=0
@@ -436,6 +441,24 @@ def status_target():
 		global _gw_status
 		time.sleep(_gw_status)
 
+#----------------------------------------------------------------
+#for doing fast statistics or display, periodicity is fixed to 5s
+#----------------------------------------------------------------
+
+#set to True if we connect a small OLED screen
+_gw_statistics=False
+
+def statistics_target():
+	while True:
+		#avoid any print output here to not overload log file		
+		try:
+			cmd_arg='python sensors_in_raspi/stats.py'+" \""+short_info_1+"\""+" \""+short_info_2+"\""+" \""+short_info_3+"\""+" 2> /dev/null" 
+			os.system(cmd_arg)
+		except:
+			print "Error when executing sensors_in_raspi/stats.py"
+							
+		time.sleep(5)
+		
 #------------------------------------------------------------
 #check Internet connectivity
 #------------------------------------------------------------
@@ -765,6 +788,15 @@ if (_gw_status):
 	t_status.start()
 	time.sleep(1)	
 	
+#fast statistics tasks
+if (_gw_statistics):
+	print "Starting thread to perform fast statistics tasks"
+	sys.stdout.flush()
+	t_status = threading.Thread(target=statistics_target)
+	t_status.daemon = True
+	t_status.start()
+	time.sleep(1)	
+	
 #copy post_processing feature
 #TODO: integrate copy post_processing feature into periodic status/tasks?
 	
@@ -868,7 +900,11 @@ while True:
 			else:
 				info_str="rawFormat(len=%d SNR=%d RSSI=%d)" % (datalen,SNR,RSSI)	
 			print info_str
-			#TODO: maintain statistics from received messages and periodically add these informations in the gateway.log file
+
+			npkt=npkt+1
+			
+			short_info_1="src=%d seq=%d #pk=%d" % (src,seq,npkt)
+			short_info_2="SNR=%d RSSI=%d" % (SNR,RSSI)
 			
 			#here we check for pending downlink message that need to be sent back to the end-device
 			#
@@ -934,6 +970,7 @@ while True:
 		if (ch=='t'):
 			tdata = sys.stdin.readline()
 			print "rcv timestamp (^t): "+tdata
+			short_info_3=tdata.split('+')[0]
 									
 		if (ch=='l'):
 			#TODO: LAS service	

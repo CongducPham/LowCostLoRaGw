@@ -369,8 +369,6 @@ then
 	fi
 fi
 
-
-
 if [ "$1" = "wifi" ]
 then
 	###################################
@@ -413,3 +411,63 @@ then
 	cd /home/pi/lora_gateway/scripts
 	./start_access_point.sh
 fi
+
+if [ "$1" = "dongle_on" ]
+then
+	###################################
+	# configure wifi client
+	###################################
+	cd /home/pi/lora_gateway/3GDongle/loranga
+	./disable-loranga-internet-on-boot.sh	
+	cd /home/pi/lora_gateway/3GDongle
+	./enable-3GDongle-internet-on-boot.sh
+fi
+
+if [ "$1" = "dongle_off" ]
+then
+	###################################
+	# configure wifi client
+	###################################
+	cd /home/pi/lora_gateway/3GDongle
+	./disable-3GDongle-internet-on-boot.sh
+fi
+
+if [ "$1" = "loranga_on" ]
+then
+	###################################
+	# configure wifi client
+	###################################
+	cd /home/pi/lora_gateway/3GDongle
+	./disable-3GDongle-internet-on-boot.sh	
+	cd /home/pi/lora_gateway/3GDongle/loranga
+	./enable-loranga-internet-on-boot.sh
+fi
+
+if [ "$1" = "loranga_off" ]
+then
+	###################################
+	# configure wifi client
+	###################################
+	cd /home/pi/lora_gateway/3GDongle/loranga
+	./disable-loranga-internet-on-boot.sh
+fi
+
+if [ "$1" = "loranga_2G" ]
+then
+	###################################
+	# configure wifi client
+	###################################
+	cd /home/pi/lora_gateway/3GDongle/loranga
+	rm -rf loranga3G.txt
+fi
+
+if [ "$1" = "loranga_3G" ]
+then
+	###################################
+	# configure wifi client
+	###################################
+	cd /home/pi/lora_gateway/3GDongle/loranga
+	./select-loranga3G-board.sh
+fi
+
+
