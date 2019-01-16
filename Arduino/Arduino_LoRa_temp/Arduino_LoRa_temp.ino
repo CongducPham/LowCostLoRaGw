@@ -110,7 +110,10 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define STRING_LIB
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
+//Use LoRaWAN AES-like encryption
 //#define WITH_AES
+//Use our Lightweight Stream Cipher (LSC) algorithm
+//#define WITH_LSC
 //#define LORAWAN
 //#define TO_LORAWAN_GW
 //#define WITH_ACK
@@ -223,6 +226,11 @@ unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #include "AES-128_V10.h"
 #include "Encrypt_V31.h"
 
+#define AES_SHOWB64
+#ifdef AES_SHOWB64
+#include <Base64.h> 
+#endif
+
 unsigned char AppSkey[16] = {
   0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
   0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
@@ -241,6 +249,24 @@ uint16_t Frame_Counter_Up = 0x0000;
 // we use the same convention than for LoRaWAN as we will use the same AES convention
 // See LoRaWAN specifications
 unsigned char Direction = 0x00;
+
+#endif
+
+#ifdef WITH_LSC
+
+#include "LSC_Encrypt.h"
+#define LSC_SHOWB64
+#ifdef LSC_SHOWB64
+#include <Base64.h> 
+#endif
+#define MICv2
+#define MIC 4
+
+uint8_t LSC_Nonce[16] = {
+  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
+  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C                                
+};
+
 #endif
 
 unsigned long nextTransmissionTime=0L;
@@ -495,6 +521,12 @@ void setup()
   PRINTLN;
 #endif  
 
+#ifdef WITH_LSC
+  //need to initialize the LSC encoder
+  //each time you want to change the session key, you need to call this function  
+  LSC_session_init();
+#endif
+  
   // Print a success message
   PRINT_CSTSTR("%s","SX1272 successfully configured\n");
 
@@ -594,6 +626,16 @@ void loop(void)
       
       int pl=r_size+app_key_offset;
       
+/**********************************  
+  ___   _____ _____ 
+ / _ \ |  ___/  ___|
+/ /_\ \| |__ \ `--. 
+|  _  ||  __| `--. \
+| | | || |___/\__/ /
+\_| |_/\____/\____/ 
+***********************************/
+//use AES (LoRaWAN-like) encrypting
+///////////////////////////////////
 #ifdef WITH_AES
       //
       PRINT_STR("%s",(char*)(message+app_key_offset));
@@ -611,7 +653,7 @@ void loop(void)
       PRINT_CSTSTR("%s","encrypted payload\n");
       Encrypt_Payload((unsigned char*)message, pl, Frame_Counter_Up, Direction);
       //Print encrypted message
-      for(int i = 0; i < pl; i++)      
+      for (int i = 0; i < pl; i++)      
       {
         if (message[i]<16)
           PRINT_CSTSTR("%s","0");
@@ -654,7 +696,7 @@ void loop(void)
       //Load Data
       for(int i = 0; i < r_size+app_key_offset; i++)
       {
-        // see that we don't take the appkey, just the encrypted data that starts that message[app_key_offset]
+        // see that we don't take the appkey, just the encrypted data that starts at message[app_key_offset]
         LORAWAN_Data[LORAWAN_Package_Length + i] = message[i];
       }
     
@@ -666,7 +708,7 @@ void loop(void)
       Calculate_MIC(LORAWAN_Data, MIC, LORAWAN_Package_Length, Frame_Counter_Up, Direction);
     
       //Load MIC in package
-      for(int i=0; i < 4; i++)
+      for (int i=0; i < 4; i++)
       {
         LORAWAN_Data[i + LORAWAN_Package_Length] = MIC[i];
       }
@@ -677,7 +719,7 @@ void loop(void)
       PRINT_CSTSTR("%s","transmitted LoRaWAN-like packet:\n");
       PRINT_CSTSTR("%s","MHDR[1] | DevAddr[4] | FCtrl[1] | FCnt[2] | FPort[1] | EncryptedPayload | MIC[4]\n");
       //Print transmitted data
-      for(int i = 0; i < LORAWAN_Package_Length; i++)
+      for (int i = 0; i < LORAWAN_Package_Length; i++)
       {
         if (LORAWAN_Data[i]<16)
           PRINT_CSTSTR("%s","0");
@@ -690,6 +732,17 @@ void loop(void)
       memcpy(message,LORAWAN_Data,LORAWAN_Package_Length);
       pl = LORAWAN_Package_Length;
 
+#ifdef AES_SHOWB64
+        //need to take into account the ending \0 for string in C
+        int b64_encodedLen = base64_enc_len(pl)+1;
+        char b64_encoded[b64_encodedLen];
+               
+        base64_encode(b64_encoded, (char*)message, pl);
+        PRINT_CSTSTR("%s","[base64 LoRaWAN HEADER+CIPHER+MIC]:");
+        PRINT_STR("%s", b64_encoded);
+        PRINTLN;
+#endif      
+
 #ifdef LORAWAN
       PRINT_CSTSTR("%s","end-device uses native LoRaWAN packet format\n");
       // indicate to SX1272 lib that raw mode at transmission is required to avoid our own packet header
@@ -701,14 +754,147 @@ void loop(void)
       // even if the transmission will not succeed
       Frame_Counter_Up++;
 #endif
+
+/********************************** 
+ _      _____ _____ 
+| |    /  ___/  __ \
+| |    \ `--.| /  \/
+| |     `--. \ |    
+| |____/\__/ / \__/\
+\_____/\____/ \____/
+***********************************/
+//use our Lightweight Stream Cipher (LSC) encrypting
+////////////////////////////////////////////////////
+#ifdef WITH_LSC
+      //
+      PRINT_STR("%s",(char*)(message+app_key_offset));
+      PRINTLN;
+      PRINT_CSTSTR("%s","plain payload hex\n");
+      for (int i=0; i<pl;i++) {
+        if (message[i]<16)
+          PRINT_CSTSTR("%s","0");
+        PRINT_HEX("%X", message[i]);
+        PRINT_CSTSTR("%s"," ");
+      }
+      PRINTLN; 
+
+      //longer message may need a longer buffer
+      unsigned char cipher[80];
+
+      PRINT_CSTSTR("%s","Encrypting\n");
+      LSC_encrypt(message, cipher+OFFSET_PAYLOADLENGTH, pl, sx1272._packetNumber, LSC_ENCRYPT);
+      
+      //Print encrypted message     
+      PRINT_CSTSTR("%s","encrypted payload\n");
+      for (int i = 0; i < pl; i++)      
+      {
+        if (cipher[OFFSET_PAYLOADLENGTH+i]<16)
+          PRINT_CSTSTR("%s","0");
+        PRINT_HEX("%X", cipher[OFFSET_PAYLOADLENGTH+i]);         
+        PRINT_CSTSTR("%s"," ");
+      }
+      PRINTLN;   
+
+      //compute MIC
+      //
+      //add header
+      cipher[0]=DEFAULT_DEST_ADDR;    //dst
+      cipher[1]=PKT_TYPE_DATA | PKT_FLAG_DATA_ENCRYPTED; //PTYPE
+      cipher[2]=node_addr;    //src
+      cipher[3]=sx1272._packetNumber;    // current seq
+
+      //re-use plain buffer, encrypt HEADER+CIPHER
+      //but use seq+1 as new random number
+      LSC_encrypt(cipher, message, pl+OFFSET_PAYLOADLENGTH, sx1272._packetNumber+1, LSC_ENCRYPT);
+
+      //start compute MIC
+      PRINT_CSTSTR("%s","[encrypted HEADER+CIPHER]:\n");
+      for (int i = 0; i < pl+OFFSET_PAYLOADLENGTH; i++) {
+        if (message[i]<16)
+          PRINT_CSTSTR("%s","0");
+        PRINT_HEX("%X", message[i]);
+        PRINT_CSTSTR("%s"," ");      
+      }
+      PRINTLN;
+
+#ifdef MICv1
+      PRINT_CSTSTR("%s","[MICv1]:");
+      //skip the first 4 bytes and take the next 4 bytes of encrypted HEADER+CIPHER
+      cipher[pl+OFFSET_PAYLOADLENGTH]=message[OFFSET_PAYLOADLENGTH];
+      cipher[pl+OFFSET_PAYLOADLENGTH+1]=message[OFFSET_PAYLOADLENGTH+1];
+      cipher[pl+OFFSET_PAYLOADLENGTH+2]=message[OFFSET_PAYLOADLENGTH+2];
+      cipher[pl+OFFSET_PAYLOADLENGTH+3]=message[OFFSET_PAYLOADLENGTH+3];  
+            
+#elif defined MICv2
+      uint32_t myMIC=0;
+
+      PRINT_CSTSTR("%s","[MICv2]:");
+      //first, compute byte-sum of encrypted HEADER+CIPHER
+      for (int i = 0; i < pl+OFFSET_PAYLOADLENGTH; i++) {
+        myMIC+=message[i];  
+      }
+
+      //append MIC in cipher
+      cipher[pl+OFFSET_PAYLOADLENGTH]=(uint8_t)xorshift32(myMIC % 7); 
+      cipher[pl+OFFSET_PAYLOADLENGTH+1]=(uint8_t)xorshift32(myMIC % 13);
+      cipher[pl+OFFSET_PAYLOADLENGTH+2]=(uint8_t)xorshift32(myMIC % 29);
+      cipher[pl+OFFSET_PAYLOADLENGTH+3]=(uint8_t)xorshift32(myMIC % 57);      
+      //         
+      //end compute MIC
+#elif defined MICv3
+      PRINT_CSTSTR("%s","[MICv3]: TODO");
+      //should implement a better algorithm?
+      //XTEA?: http://code.activestate.com/recipes/496737-python-xtea-encryption/      
+#endif
+
+      PRINT_CSTSTR("%s","[MIC]:\n");
+      for (int i = 0; i < 4; i++) {
+        if (cipher[pl+OFFSET_PAYLOADLENGTH+i]<16)
+          PRINT_CSTSTR("%s","0");        
+        PRINT_HEX("%X", cipher[pl+OFFSET_PAYLOADLENGTH+i]);
+        PRINT_CSTSTR("%s"," ");      
+      }
+      PRINTLN;
     
+      PRINT_CSTSTR("%s","transmitted packet:\n");
+      PRINT_CSTSTR("%s","HEADER[4] | EncryptedPayload | MIC[4]\n");
+      //Print transmitted data
+      for(int i = 0; i < pl+OFFSET_PAYLOADLENGTH+MIC; i++)
+      {
+        if (cipher[i]<16)
+          PRINT_CSTSTR("%s","0");
+        PRINT_HEX("%X", cipher[i]);
+        if (i==OFFSET_PAYLOADLENGTH-1 || i==pl+OFFSET_PAYLOADLENGTH-1)
+          PRINT_CSTSTR("%s","][");
+        else                  
+          PRINT_CSTSTR("%s"," ");
+      }
+      PRINTLN;      
+
+      // copy back to message
+      memcpy(message,cipher,pl+OFFSET_PAYLOADLENGTH+MIC);
+      pl = pl+OFFSET_PAYLOADLENGTH+MIC;
+
+#ifdef LSC_SHOWB64
+        //need to take into account the ending \0 for string in C
+        int b64_encodedLen = base64_enc_len(pl)+1;
+        char b64_encoded[b64_encodedLen];
+               
+        base64_encode(b64_encoded, (char*)message, pl);
+        PRINT_CSTSTR("%s","[base64 HEADER+CIPHER+MIC]:");
+        PRINT_STR("%s", b64_encoded);
+        PRINTLN;
+#endif   
+#endif
+
+
       sx1272.CarrierSense();
 
       startSend=millis();
 
       uint8_t p_type=PKT_TYPE_DATA;
       
-#ifdef WITH_AES
+#if defined WITH_AES || defined WITH_LSC
       // indicate that payload is encrypted
       p_type = p_type | PKT_FLAG_DATA_ENCRYPTED;
 #endif

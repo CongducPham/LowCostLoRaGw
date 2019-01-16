@@ -79,9 +79,8 @@ def replchars_to_hex(match):
 def loraWAN_process_pkt(lorapkt):
 
 	#print "entering loraWAN_process_pkt"
-	
-	if True:
-	#if import_LoRaWAN_lib()==True:
+
+	if (lorapkt[0] & 0x40) == 0x40 or (lorapkt[0] & 0x80) == 0x80:
 
 		#print "start decryption"
 		
@@ -160,6 +159,7 @@ if __name__ == "__main__":
 		arr = map(int,pdata.split(','))
 		dst=arr[0]
 		ptype=arr[1]
+		#the output is clear data
 		ptype=PKT_TYPE_DATA			
 		src=arr[2]
 		seq=arr[3]
@@ -175,20 +175,25 @@ if __name__ == "__main__":
 		
 	if argc>3:	
 		rdata=sys.argv[3]
+		
+	plain_payload="###BADMIC###"
 	
-	lorapktstr=base64.b64decode(lorapktstr_b64)
+	try:
+		lorapktstr=base64.b64decode(lorapktstr_b64)
+		lorapkt=[]
 	
-	lorapkt=[]
+		for i in range (0,len(lorapktstr)):
+			lorapkt.append(ord(lorapktstr[i]))
 	
-	for i in range (0,len(lorapktstr)):
-		lorapkt.append(ord(lorapktstr[i]))
-	
-	plain_payload=loraWAN_process_pkt(lorapkt)
+		plain_payload=loraWAN_process_pkt(lorapkt)		
+		
+	except TypeError:
+		plain_payload="###BADMIC###"
 
 	if plain_payload=="###BADMIC###":
 		print '?'+plain_payload
 	else:	
-		print "?plain payload is : "+plain_payload
+		print "?plain payload is: "+plain_payload
 		if argc>2:
 			print "^p%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,len(plain_payload),SNR,RSSI)
 		if argc>3:

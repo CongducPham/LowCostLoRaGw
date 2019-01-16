@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v3.8a - image modification and need to incorporate aux_radio features
+# v3.9 - image modification and need to incorporate aux_radio features
 # + copy post-processing feature
 #------------------------------------------------------------
 
@@ -189,7 +189,23 @@ except KeyError:
 	
 if _local_aes:
 	print "enable local AES decryption"	
+
+#------------------------------------------------------------
+#local lsc?
+#------------------------------------------------------------
+try:
+	_local_lsc = json_array["gateway_conf"]["lsc"]
+except KeyError:
+	_local_lsc = 0	
 	
+if _local_lsc:
+	print "enable local LSC decryption"	
+
+#------------------------------------------------------------
+#local decrypt?
+#------------------------------------------------------------	
+_local_decrypt = _local_aes | _local_lsc 	
+		
 #------------------------------------------------------------
 #with app key?
 #------------------------------------------------------------
@@ -1200,7 +1216,7 @@ while True:
 							_hasClearData=1							
 							
 					else:
-						print "--> DATA encrypted: local aes not activated"
+						print "--> DATA encrypted: local AES not activated"
 						lorapktstr_b64=base64.b64encode(lorapktstr)
 						print "--> FYI base64 of LoRaWAN frame w/MIC: "+lorapktstr_b64
 						
@@ -1245,26 +1261,55 @@ while True:
 				_hasClearData=0
 				lorapktstr=getAllLine()
 				
-				if _local_aes==1:
-						print "--> decrypting in AES-CTR mode (LoRaWAN version)"
+				#if encrypted packet, we will try all enabled decryption algorithms
+				if _local_decrypt==1: 
 						
-						lorapkt=[]
-						for i in range (0,len(lorapktstr)):
-							lorapkt.append(ord(lorapktstr[i]))
+						if _local_aes==1 and _hasClearData==0:
+								print "--> decrypting in AES-CTR mode (LoRaWAN version)"
 						
-						from loraWAN import loraWAN_process_pkt
-						try:
-							plain_payload=loraWAN_process_pkt(lorapkt)
-						except:
-							print "### unexpected decryption error ###"
-							plain_payload="###BADMIC###"
+								lorapkt=[]
+								for i in range (0,len(lorapktstr)):
+									lorapkt.append(ord(lorapktstr[i]))
 						
+								from loraWAN import loraWAN_process_pkt
+								try:
+									plain_payload=loraWAN_process_pkt(lorapkt)
+								except:
+									print "### unexpected decryption error ###"
+									plain_payload="###BADMIC###"					
+
+								if plain_payload=="###BADMIC###":
+									print plain_payload
+								else:
+									_hasClearData=1	
+
+						if _local_lsc==1 and _hasClearData==0:
+								print "--> decrypting in LSC mode"
+						
+								lorapkt=[]
+								for i in range (0,len(lorapktstr)):
+									lorapkt.append(ord(lorapktstr[i]))
+						
+								from LSC_decrypt import LSC_process_pkt
+								try:
+									plain_payload=LSC_process_pkt(lorapkt)
+								except:
+									print "### unexpected decryption error ###"
+									plain_payload="###BADMIC###"
+									
+								if plain_payload=="###BADMIC###":
+									print plain_payload
+								else:
+									_hasClearData=1																			
+
+						#common part to local decryption procedure
+						#
 						if plain_payload=="###BADMIC###":
-							print plain_payload
+							print "--> Can not decrypt data"
 						else:	
-							print "plain payload is : ",
+							print "--> plain payload is : ",
 							print(replchars.sub(replchars_to_hex, plain_payload))
-							
+					
 							#if ((ptype & PKT_FLAG_DATA_WAPPKEY)==PKT_FLAG_DATA_WAPPKEY):
 							#	the_app_key = plain_payload[0]
 							#	the_app_key = the_app_key + plain_payload[1]
@@ -1276,17 +1321,16 @@ while True:
 							#	print plain_payload
 							_linebuf = plain_payload
 							_has_linebuf=1
-							_hasClearData=1
-							
+					
 							#remove the data encrypted flag
 							ptype = ptype & (~PKT_FLAG_DATA_ENCRYPTED)
 							pdata="%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,datalen,SNR,RSSI)	
-							print '--> changed packet type to clear data' 					
-						
+							print '--> changed packet type to clear data'					
+											
 				else:
-						print "--> DATA encrypted: local aes not activated"
+						print "--> DATA encrypted: local decryption not activated"
 						lorapktstr_b64=base64.b64encode(lorapktstr)
-						print "--> FYI base64 of LoRaWAN frame w/MIC: "+lorapktstr_b64
+						print "--> FYI base64 of encrypted frame w/MIC: "+lorapktstr_b64
 						
 						print "--> number of enabled clouds is %d" % len(_cloud_for_encrypted_data)
 						

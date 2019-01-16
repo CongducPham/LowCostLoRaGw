@@ -1,6 +1,21 @@
 Change logs
 ===========
 
+January 15th, 2019
+-------------------
+- v3.9 post-processing_gw.py
+	* add support for Lightweight Stream Cipher (LSC)
+	* add `LSC_decrypt.py` library file that will be called by `post-processing_gw.py`	
+	* in `gateway_conf.json` file, `gateway_conf` section, `"lsc" : true` enables local LSC decryption at gateway
+	* `post-processing_gw.py` will try to decrypt an encrypted packet with all enabled encryption modules, e.g. AES, LSC, ...
+		* this process is done sequentially, module by module
+		* as it is most likely that decryption will succeed only when both encryption and decryption algorithms do match, there is normally only one decryption method that will succeed
+		* therefore `post-processing_gw.py` will stop when a decryption module succeeds
+		* actually, it is mandatory for an encryption module to implement a Message Integrity Check (MIC) procedure at both the sender and receiver side. A correct MIC means that encryption and decryption algorithms match
+	* `Arduino_LoRa_temp` has also been updated to be able to send an LSC-encrypted packet
+		* comment `WITH_AES` and uncomment `WITH_LSC`
+		* the encryption key is defined by `uint8_t LSC_Nonce[16]`
+	
 December 12th, 2018
 -------------------
 - v3.8a post-processing_gw.py
