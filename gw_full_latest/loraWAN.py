@@ -32,6 +32,7 @@ try:
 except ImportError:
 	print "LoRaWAN python lib must be installed"
 
+#contains the 2 encryption keys used by LoRaWAN-like AES: AppSKey and NwkSKey
 import loraWAN_config
 		
 def import_LoRaWAN_lib():
@@ -80,7 +81,7 @@ def loraWAN_process_pkt(lorapkt):
 
 	#print "entering loraWAN_process_pkt"
 
-	if (lorapkt[0] & 0x40) == 0x40 or (lorapkt[0] & 0x80) == 0x80:
+	if (lorapkt[0] == 0x40) or (lorapkt[0] == 0x80):
 
 		#print "start decryption"
 		
@@ -158,9 +159,7 @@ if __name__ == "__main__":
 		pdata=sys.argv[2]
 		arr = map(int,pdata.split(','))
 		dst=arr[0]
-		ptype=arr[1]
-		#the output is clear data
-		ptype=PKT_TYPE_DATA			
+		ptype=arr[1]		
 		src=arr[2]
 		seq=arr[3]
 		datalen=arr[4]
@@ -192,7 +191,9 @@ if __name__ == "__main__":
 
 	if plain_payload=="###BADMIC###":
 		print '?'+plain_payload
-	else:	
+	else:
+		#the output is clear data
+		ptype = ptype & (~PKT_FLAG_DATA_ENCRYPTED)		
 		print "?plain payload is: "+plain_payload
 		if argc>2:
 			print "^p%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,len(plain_payload),SNR,RSSI)

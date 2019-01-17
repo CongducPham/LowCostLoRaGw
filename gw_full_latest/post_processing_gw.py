@@ -1292,7 +1292,7 @@ while True:
 						
 								from LSC_decrypt import LSC_process_pkt
 								try:
-									plain_payload=LSC_process_pkt(lorapkt)
+									plain_payload=LSC_process_pkt(lorapkt, dst, ptype, src, seq)
 								except:
 									print "### unexpected decryption error ###"
 									plain_payload="###BADMIC###"
@@ -1309,22 +1309,14 @@ while True:
 						else:	
 							print "--> plain payload is : ",
 							print(replchars.sub(replchars_to_hex, plain_payload))
-					
-							#if ((ptype & PKT_FLAG_DATA_WAPPKEY)==PKT_FLAG_DATA_WAPPKEY):
-							#	the_app_key = plain_payload[0]
-							#	the_app_key = the_app_key + plain_payload[1]
-							#	the_app_key = the_app_key + plain_payload[2]
-							#	the_app_key = the_app_key + plain_payload[3]
-							#	print " ".join("0x{:02x}".format(ord(c)) for c in the_app_key),
-							#	print plain_payload[APPKEY_SIZE:] 
-							#else:
-							#	print plain_payload
 							_linebuf = plain_payload
 							_has_linebuf=1
-					
+
+							#set the correct payload size
+							datalen = len(plain_payload)					
 							#remove the data encrypted flag
 							ptype = ptype & (~PKT_FLAG_DATA_ENCRYPTED)
-							pdata="%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,datalen,SNR,RSSI)	
+							pdata="%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,len(plain_payload),SNR,RSSI)	
 							print '--> changed packet type to clear data'					
 											
 				else:
@@ -1376,6 +1368,9 @@ while True:
 				
 				print "app key is ",
 				print " ".join("0x{:02x}".format(ord(c)) for c in the_app_key)
+				
+				#correct the size of real payload
+				pdata="%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,datalen-APPKEY_SIZE,SNR,RSSI)
 
 				if _wappkey==1:
 					if the_app_key in key_AppKey.app_key_list:

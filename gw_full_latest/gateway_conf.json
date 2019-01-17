@@ -14,6 +14,7 @@
 		"wappkey" : false,
 		"raw" : false,
 		"aes" : false,
+		"lsc" : false,
 		"log_post_processing" : true,
 		"log_weekly" : false,
 		"auto_update" : false,

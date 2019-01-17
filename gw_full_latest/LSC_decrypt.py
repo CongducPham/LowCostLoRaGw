@@ -31,6 +31,9 @@ import base64
 import sys
 import re
 
+#contains the encryption key used by LSC: LSC_Nonce
+import LSC_config
+
 np.seterr(over='ignore')
 
 LSC_DETERMINISTIC=True
@@ -44,9 +47,20 @@ LSC_MICv=2
 
 #MIC size in bytes
 LSC_SMIC=4
-#HEADER size in bytes
-LSC_SHEADER=4
-HEADER_SEQ=3
+
+#------------------------------------------------------------
+# our LoRa header packet information
+#------------------------------------------------------------
+
+HEADER_SIZE=4
+APPKEY_SIZE=4
+PKT_TYPE_DATA=0x10
+PKT_TYPE_ACK=0x20
+
+PKT_FLAG_ACK_REQ=0x08
+PKT_FLAG_DATA_ENCRYPTED=0x04
+PKT_FLAG_DATA_WAPPKEY=0x02
+PKT_FLAG_DATA_DOWNLINK=0x01
 
 def xorshift32(t):
     x=t
@@ -142,7 +156,7 @@ def encrypt_ctr(seq_in, seq_out, lenH, RM1, PboxRM, Sbox1, Sbox2, myrand):
     
     ind=ind+h2
 
-def LSC_process_pkt(lorapkt):
+def LSC_process_pkt(lorapkt, dst, ptype, src, seq):
 
 	#it seems that there is not a full reset when calling this function from a parent Python program
 	#so we need to reset at the beginning of the function
@@ -151,8 +165,11 @@ def LSC_process_pkt(lorapkt):
 		RM2=np.copy(RM1)
 	
 	size_mesg = len(lorapkt)
-
-	lenH=np.uint32((size_mesg+h2-1)/h2)
+	
+	if LSC_WMIC:
+		lenH=np.uint32((size_mesg+HEADER_SIZE+h2-1)/h2)
+	else:		
+		lenH=np.uint32((size_mesg+h2-1)/h2)
 
 	plain = np.empty([lenH*h2],dtype=np.uint8)
 	cipher = np.empty([lenH*h2],dtype=np.uint8)
@@ -161,17 +178,24 @@ def LSC_process_pkt(lorapkt):
 	for i in range(lenH*h2):
 		cipher[i]=0
 
-	for i in range(size_mesg):   
-		cipher[i]=lorapkt[i]
-
 	if LSC_WMIC:
+
+		#add the packet header to compute MIC
+		cipher[0]=dst
+		cipher[1]=ptype
+		cipher[2]=src
+		cipher[3]=seq
+		
+		for i in range(size_mesg):   
+			cipher[HEADER_SIZE+i]=lorapkt[i]		
+		
 		print "?LSC: received MIC: ",
-		print (cipher[size_mesg-LSC_SMIC:size_mesg])
+		print (cipher[size_mesg+HEADER_SIZE-LSC_SMIC:size_mesg+HEADER_SIZE])
 		
 		#encrypt received content: HEADER+CIPHER
-		#but with fcount=lorapkt[HEADER_SEQ]+1
+		#but with fcount=seq+1
 		#here is use the plain buffer
-		encrypt_ctr(cipher, plain, lenH, RM1, PboxRM, Sbox1, Sbox2, (lorapkt[HEADER_SEQ]+1) % 256)
+		encrypt_ctr(cipher, plain, lenH, RM1, PboxRM, Sbox1, Sbox2, (seq+1) % 256)
 		
 		if LSC_MICv==1:
 			#skip the first 4 bytes and take the next 4 bytes of encrypted HEADER+CIPHER
@@ -181,7 +205,7 @@ def LSC_process_pkt(lorapkt):
 			plain[3]=plain[LSC_SMIC+3]	
 		elif LSC_MICv==2:
 			#first, compute byte-sum of encrypted HEADER+CIPHER
-			myMIC=np.sum(plain[:size_mesg-LSC_SMIC])
+			myMIC=np.sum(plain[:size_mesg+HEADER_SIZE-LSC_SMIC])
 
 			plain[0]=xorshift32(np.uint32(myMIC % 7))
 			plain[1]=xorshift32(np.uint32(myMIC % 13))
@@ -195,23 +219,25 @@ def LSC_process_pkt(lorapkt):
 		print "?LSC: computed MIC: ",
 		print (plain[:LSC_SMIC])
 		
-		if np.array_equal(plain[:LSC_SMIC], cipher[size_mesg-LSC_SMIC:size_mesg]):
+		if np.array_equal(plain[:LSC_SMIC], cipher[size_mesg+HEADER_SIZE-LSC_SMIC:size_mesg+HEADER_SIZE]):
 	
 			print "?LSC: valid MIC"
 			
 			#print "?LSC: [cipher]: ",
-			#print (cipher[LSC_SHEADER:size_mesg-LSC_SMIC])
+			#print (cipher[HEADER_SIZE:size_mesg+HEADER_SIZE-LSC_SMIC])
 			
 			#re-index cipher data to get rid of HEADER and MIC
-			size_mesg -= LSC_SHEADER+LSC_SMIC
+			size_mesg -= LSC_SMIC
 			for i in range(size_mesg):   
-				cipher[i]=lorapkt[LSC_SHEADER+i]
+				cipher[i]=lorapkt[i]
 		else:
 			return "###BADMIC###"
-
+	else:
+		for i in range(size_mesg):   
+			cipher[i]=lorapkt[i]		
 
 	#notice the usage of RM2 to decrypt as RM1 has changed
-	encrypt_ctr(cipher, check, lenH, RM2, PboxRM, Sbox1, Sbox2, lorapkt[HEADER_SEQ])
+	encrypt_ctr(cipher, check, lenH, RM2, PboxRM, Sbox1, Sbox2, seq)
 
 	#print "?LSC: [plain]: ",
 	#print (check)
@@ -268,37 +294,11 @@ replchars = re.compile(r'[\x00-\x1f]')
 def replchars_to_hex(match):
 	return r'\x{0:02x}'.format(ord(match.group()))
 
-#change your key here
+#change your key in LSC_config
 #change in the Arduino code as well
 #
 if (LSC_STATIC_KEY):
-	if (LSC_SKEY==256):
-		Nonce = [ 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C ]	     
-	if (LSC_SKEY==64):
-		Nonce = [ 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C ]	  
-	if (LSC_SKEY==32):
-		Nonce = [ 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C, \
-				  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C ]
-	if (LSC_SKEY==16):
-		Nonce = [ 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C ]					  
+	Nonce=np.copy(LSC_config.Nonce) 				  
 else:	
 	#random key, based on seed. Change the seed if you want but change in the Arduino code as well
 	for i in range(0,LSC_SKEY,4):
@@ -366,7 +366,7 @@ for i in range(min(LSC_SKEY,32)):
 #
 # Then test the decrypt Python code:
 #
-# python LSC-decrypt.py "ARAGAP6TkZo4gt60/MLBxcKcbDAv8m1oY0rOhA==" "1,20,6,0,26,8,-45" "125,5,12"
+# python LSC_decrypt.py "ARAGAP6TkZo4gt60/MLBxcKcbDAv8m1oY0rOhA==" "1,20,6,0,26,8,-45" "125,5,12"
 #
 # output is:
 #
@@ -396,9 +396,7 @@ if __name__ == "__main__":
 		pdata=sys.argv[2]
 		arr = map(int,pdata.split(','))
 		dst=arr[0]
-		ptype=arr[1]
-		#the output is clear data
-		ptype=PKT_TYPE_DATA			
+		ptype=arr[1]			
 		src=arr[2]
 		seq=arr[3]
 		datalen=arr[4]
@@ -423,7 +421,7 @@ if __name__ == "__main__":
 		for i in range (0,len(lorapktstr)):
 			lorapkt.append(ord(lorapktstr[i]))
 	
-		plain_payload=LSC_process_pkt(lorapkt)		
+		plain_payload=LSC_process_pkt(lorapkt, dst, ptype, src, seq)		
 		
 	except TypeError:
 		plain_payload="###BADMIC###"	
@@ -431,6 +429,8 @@ if __name__ == "__main__":
 	if plain_payload=="###BADMIC###":
 		print '?'+plain_payload
 	else:	
+		#the output is clear data
+		ptype = ptype & (~PKT_FLAG_DATA_ENCRYPTED)	
 		print "?plain payload is: "+plain_payload
 		if argc>2:
 			print "^p%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,len(plain_payload),SNR,RSSI)
