@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Nov 2nd, 2018 by C. Pham
+ * last update: Jan 15th, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -34,6 +34,17 @@
 // Include the SX1272
 #include "SX1272.h"
 #include "my_temp_sensor_code.h"
+
+/********************************************************************
+ _____              __ _                       _   _             
+/  __ \            / _(_)                     | | (_)            
+| /  \/ ___  _ __ | |_ _  __ _ _   _ _ __ __ _| |_ _  ___  _ __  
+| |    / _ \| '_ \|  _| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \ 
+| \__/\ (_) | | | | | | | (_| | |_| | | | (_| | |_| | (_) | | | |
+ \____/\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
+                          __/ |                                  
+                         |___/                                   
+********************************************************************/
 
 // IMPORTANT SETTINGS
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,21 +69,21 @@ uint8_t node_addr=6;
 unsigned int idlePeriodInMin = 30;
 ///////////////////////////////////////////////////////////////////
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 //
 #define ETSI_EUROPE_REGULATION
 //#define FCC_US_REGULATION
 //#define SENEGAL_REGULATION
-/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+///////////////////////////////////////////////////////////////////
 
 // IMPORTANT
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
 #define BAND868
 //#define BAND900
 //#define BAND433
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
 
 #ifdef ETSI_EUROPE_REGULATION
 #define MAX_DBM 14
@@ -170,6 +181,16 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 uint8_t message[80];
 ///////////////////////////////////////////////////////////////////
 
+
+/*****************************
+ _____           _      
+/  __ \         | |     
+| /  \/ ___   __| | ___ 
+| |    / _ \ / _` |/ _ \
+| \__/\ (_) | (_| |  __/
+ \____/\___/ \__,_|\___|
+*****************************/                        
+                        
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
@@ -319,6 +340,38 @@ long getCmdValue(int &i, char* strBuff=NULL) {
             return (atol(seqStr));
 }   
 #endif
+
+#ifndef STRING_LIB
+
+char *ftoa(char *a, double f, int precision)
+{
+ long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
+ 
+ char *ret = a;
+ long heiltal = (long)f;
+ itoa(heiltal, a, 10);
+ while (*a != '\0') a++;
+ *a++ = '.';
+ long desimal = abs((long)((f - heiltal) * p[precision]));
+ if (desimal < p[precision-1]) {
+  *a++ = '0';
+ } 
+ itoa(desimal, a, 10);
+ return ret;
+}
+#endif
+
+
+/*****************************
+ _____      _               
+/  ___|    | |              
+\ `--.  ___| |_ _   _ _ __  
+ `--. \/ _ \ __| | | | '_ \ 
+/\__/ /  __/ |_| |_| | |_) |
+\____/ \___|\__|\__,_| .__/ 
+                     | |    
+                     |_|    
+******************************/
 
 void setup()
 {
@@ -534,25 +587,17 @@ void setup()
   delay(500);
 }
 
-#ifndef STRING_LIB
 
-char *ftoa(char *a, double f, int precision)
-{
- long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
- 
- char *ret = a;
- long heiltal = (long)f;
- itoa(heiltal, a, 10);
- while (*a != '\0') a++;
- *a++ = '.';
- long desimal = abs((long)((f - heiltal) * p[precision]));
- if (desimal < p[precision-1]) {
-  *a++ = '0';
- } 
- itoa(desimal, a, 10);
- return ret;
-}
-#endif
+/*****************************
+ _                       
+| |                      
+| |     ___   ___  _ __  
+| |    / _ \ / _ \| '_ \ 
+| |___| (_) | (_) | |_) |
+\_____/\___/ \___/| .__/ 
+                  | |    
+                  |_|    
+*****************************/
 
 void loop(void)
 {
@@ -596,6 +641,9 @@ void loop(void)
       temp = temp/5;
       PRINT_VALUE("%f", temp);
       PRINTLN;
+
+      //for testing
+      //temp = 22.5;
       
 #if defined WITH_APPKEY && not defined LORAWAN
       app_key_offset = sizeof(my_appKey);
@@ -625,6 +673,20 @@ void loop(void)
       PRINTLN;
       
       int pl=r_size+app_key_offset;
+
+      uint8_t p_type=PKT_TYPE_DATA;
+      
+#if defined WITH_AES || defined WITH_LSC
+      // indicate that payload is encrypted
+      p_type = p_type | PKT_FLAG_DATA_ENCRYPTED;
+#endif
+
+#ifdef WITH_APPKEY
+      // indicate that we have an appkey
+      p_type = p_type | PKT_FLAG_DATA_WAPPKEY;
+#endif
+
+      sx1272.setPacketType(p_type);      
       
 /**********************************  
   ___   _____ _____ 
@@ -799,10 +861,22 @@ void loop(void)
       //
       //add header
       cipher[0]=DEFAULT_DEST_ADDR;    //dst
-      cipher[1]=PKT_TYPE_DATA | PKT_FLAG_DATA_ENCRYPTED; //PTYPE
+      cipher[1]=p_type; //PTYPE
       cipher[2]=node_addr;    //src
       cipher[3]=sx1272._packetNumber;    // current seq
 
+      PRINT_CSTSTR("%s","[HEADER+CIPHER]:\n");
+      for (int i = 0; i < pl+OFFSET_PAYLOADLENGTH; i++) {
+        if (cipher[i]<16)
+          PRINT_CSTSTR("%s","0");
+        PRINT_HEX("%X", cipher[i]);
+        if (i==OFFSET_PAYLOADLENGTH-1)
+          PRINT_CSTSTR("%s","|");
+        else        
+          PRINT_CSTSTR("%s"," ");      
+      }
+      PRINTLN;
+      
       //re-use plain buffer, encrypt HEADER+CIPHER
       //but use seq+1 as new random number
       LSC_encrypt(cipher, message, pl+OFFSET_PAYLOADLENGTH, sx1272._packetNumber+1, LSC_ENCRYPT);
@@ -857,23 +931,23 @@ void loop(void)
       PRINTLN;
     
       PRINT_CSTSTR("%s","transmitted packet:\n");
-      PRINT_CSTSTR("%s","HEADER[4] | EncryptedPayload | MIC[4]\n");
+      PRINT_CSTSTR("%s","EncryptedPayload | MIC[4]\n");
       //Print transmitted data
-      for(int i = 0; i < pl+OFFSET_PAYLOADLENGTH+MIC; i++)
+      for(int i = 0; i < pl+MIC; i++)
       {
-        if (cipher[i]<16)
+        if (cipher[OFFSET_PAYLOADLENGTH+i]<16)
           PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", cipher[i]);
-        if (i==OFFSET_PAYLOADLENGTH-1 || i==pl+OFFSET_PAYLOADLENGTH-1)
-          PRINT_CSTSTR("%s","][");
+        PRINT_HEX("%X", cipher[OFFSET_PAYLOADLENGTH+i]);
+        if (i==pl-1)
+          PRINT_CSTSTR("%s","|");
         else                  
           PRINT_CSTSTR("%s"," ");
       }
       PRINTLN;      
 
       // copy back to message
-      memcpy(message,cipher,pl+OFFSET_PAYLOADLENGTH+MIC);
-      pl = pl+OFFSET_PAYLOADLENGTH+MIC;
+      memcpy(message,cipher+OFFSET_PAYLOADLENGTH,pl+MIC);
+      pl = pl+MIC;
 
 #ifdef LSC_SHOWB64
         //need to take into account the ending \0 for string in C
@@ -881,7 +955,7 @@ void loop(void)
         char b64_encoded[b64_encodedLen];
                
         base64_encode(b64_encoded, (char*)message, pl);
-        PRINT_CSTSTR("%s","[base64 HEADER+CIPHER+MIC]:");
+        PRINT_CSTSTR("%s","[base64 CIPHER+MIC]:");
         PRINT_STR("%s", b64_encoded);
         PRINTLN;
 #endif   
@@ -891,20 +965,6 @@ void loop(void)
       sx1272.CarrierSense();
 
       startSend=millis();
-
-      uint8_t p_type=PKT_TYPE_DATA;
-      
-#if defined WITH_AES || defined WITH_LSC
-      // indicate that payload is encrypted
-      p_type = p_type | PKT_FLAG_DATA_ENCRYPTED;
-#endif
-
-#ifdef WITH_APPKEY
-      // indicate that we have an appkey
-      p_type = p_type | PKT_FLAG_DATA_WAPPKEY;
-#endif
-
-      sx1272.setPacketType(p_type);
       
       // Send message to the gateway and print the result
       // with the app key if this feature is enabled

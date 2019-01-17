@@ -353,31 +353,29 @@ for i in range(min(LSC_SKEY,32)):
 # "HELLO WORLD!!!!!!!!!" = [72 69 76 76 79 32 87 79 82 76 68 33 33 33 33 33 33 33 33 33]
 # encrypted = [ 254 147 145 154 56 130 222 180 252 194 193 197 194 156 108 48 47 242 109 104 ]
 #
-# use this Python code to produce base64 encoding of header+encrypted+MIC:
+# use this Python code to produce base64 encoding of encrypted+MIC:
 #
 # import base64
-# l=[1, 16, 6, 0, 254, 147, 145, 154, 56, 130, 222, 180, 252, 194, 193, 197, 194, 156, 108, 48, 47, 242, 109, 104, 99, 74, 206, 132]
+# l=[254, 147, 145, 154, 56, 130, 222, 180, 252, 194, 193, 197, 194, 156, 108, 48, 47, 242, 109, 104, 165, 140, 49, 198]
 # l1="".join(map(chr, l))
 # l64=base64.b64encode(l1)
 # print l64
-# ARAGAP6TkZo4gt60/MLBxcKcbDAv8m1oY0rOhA==
+# /pORmjiC3rT8wsHFwpxsMC/ybWiljDHG
 #
-# or get the first one from the Arduino_Encrypt_LSC_v2.ino example
+# or get the first output from the Arduino_Encrypt_LSC_v2.ino example
 #
 # Then test the decrypt Python code:
 #
-# python LSC_decrypt.py "ARAGAP6TkZo4gt60/MLBxcKcbDAv8m1oY0rOhA==" "1,20,6,0,26,8,-45" "125,5,12"
+# python LSC_decrypt.py "/pORmjiC3rT8wsHFwpxsMC/ybWiljDHG" "1,22,6,0,24,8,-45" "125,5,12"
 #
 # output is:
 #
-# ?received MIC:  [ 99  74 206 132]
-# ?computed MIC:  [ 99  74 206 132]
+# ?received MIC:  [165 140  49 198]
+# ?computed MIC:  [165 140  49 198]
 # ?LSC: valid MIC
-# ?LSC[cipher]:  [254 147 145 154  56 130 222 180 252 194 193 197 194 156 108  48  47 242 109 104]
-# ?LSC[plain]:  [ 72  69  76  76  79  32  87  79  82  76  68  33  33  33  33  33  33  33 33  33 113   5  68  84   5 233 142 221 235 182  40  50]
 # ?LSC[plain payload]:  HELLO WORLD!!!!!!!!!
 # ?plain payload is : HELLO WORLD!!!!!!!!!
-# ^p1,16,6,0,20,8,-45
+# ^p1,18,6,0,20,8,-45
 # ^r125,5,12
 # ??HELLO WORLD!!!!!!!!!
 #

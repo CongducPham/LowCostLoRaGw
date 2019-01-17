@@ -142,7 +142,7 @@ void loop ()
       //
       //add header
       cipher[0]=1;    //dst
-      cipher[1]=0x10; //PTYPE
+      cipher[1]=0x10 | 0x04 | 0x02; //PTYPE=PKT_TYPE_DATA | PKT_FLAG_DATA_WAPPKEY | PKT_FLAG_DATA_ENCRYPTED
       cipher[2]=6;    //src
       cipher[3]=fcount;    //seq
 
@@ -224,12 +224,12 @@ void loop ()
 
 #ifndef LSC_ITERATE
         //need to take into account the ending \0 for string in C
-        int b64_encodedLen = base64_enc_len(size_mesg+HEADER+MIC)+1;
+        int b64_encodedLen = base64_enc_len(size_mesg+MIC)+1;
         char b64_encoded[b64_encodedLen];
                
-        base64_encode(b64_encoded, (char*)cipher, size_mesg+HEADER+MIC);
+        base64_encode(b64_encoded, (char*)(cipher+HEADER), size_mesg+MIC);
 #ifdef WMIC
-        Serial.println("[base64 HEADER+CIPHER+MIC]:");
+        Serial.println("[base64 CIPHER+MIC]:");
 #else
         Serial.println("[base64 CIPHER]:");
 #endif
