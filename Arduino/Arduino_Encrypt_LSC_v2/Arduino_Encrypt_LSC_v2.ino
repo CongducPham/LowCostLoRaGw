@@ -138,55 +138,24 @@ void loop ()
       Serial.println();
         
 #ifdef WMIC
-      //compute MIC
+      //compute MIC. We decide to use the packet header
       //
-      //add header
       cipher[0]=1;    //dst
       cipher[1]=0x10 | 0x04 | 0x02; //PTYPE=PKT_TYPE_DATA | PKT_FLAG_DATA_WAPPKEY | PKT_FLAG_DATA_ENCRYPTED
       cipher[2]=6;    //src
       cipher[3]=fcount;    //seq
 
-      //re-use plain buffer, encrypt HEADER+CIPHER
-      //but use fcount+1 as new random number
-      LSC_encrypt(cipher, plain, size_mesg+HEADER, fcount+1, LSC_ENCRYPT);
+      // compute the MIC on [HEADER+CIPHER]
+      // re-use plain buffer which will contain encrypted HEADER+CIPHER
+      // using a random number = fcount+1
+      LSC_setMIC(cipher, plain, size_mesg+HEADER, fcount+1);
 
-      //start compute MIC
       Serial.println("[encrypted HEADER+CIPHER]:");
       for (int i = 0; i < size_mesg+HEADER; i++) {
         Serial.print(plain[i]);
         Serial.print(" ");      
       }
       Serial.println();
-
-#ifdef MICv1
-      Serial.print("[MICv1]:");
-      //skip the first 4 bytes and take the next 4 bytes of encrypted HEADER+CIPHER
-      cipher[size_mesg+HEADER]=plain[HEADER];
-      cipher[size_mesg+HEADER+1]=plain[HEADER+1];
-      cipher[size_mesg+HEADER+2]=plain[HEADER+2];
-      cipher[size_mesg+HEADER+3]=plain[HEADER+3];  
-            
-#elif defined MICv2
-      uint32_t myMIC=0;
-
-      Serial.print("[MICv2]:");
-      //first, compute byte-sum of encrypted HEADER+CIPHER
-      for (int i = 0; i < size_mesg+HEADER; i++) {
-        myMIC+=plain[i];  
-      }
-
-      //append MIC in cipher
-      cipher[size_mesg+HEADER]=(uint8_t)xorshift32(myMIC % 7); 
-      cipher[size_mesg+HEADER+1]=(uint8_t)xorshift32(myMIC % 13);
-      cipher[size_mesg+HEADER+2]=(uint8_t)xorshift32(myMIC % 29);
-      cipher[size_mesg+HEADER+3]=(uint8_t)xorshift32(myMIC % 57);      
-      //         
-      //end compute MIC
-#elif defined MICv3
-      Serial.print("[MICv3]: TODO");
-      //should implement a better algorithm?
-      //XTEA?: http://code.activestate.com/recipes/496737-python-xtea-encryption/      
-#endif
 
       Serial.println("[MIC]:");
       for (int i = 0; i < 4; i++) {
@@ -195,11 +164,11 @@ void loop ()
       }
       Serial.println();
       
-      Serial.println("[HEADER+CIPHER+MIC]:");
-      for (int i = 0; i < size_mesg+HEADER+MIC; i++) {
-        Serial.print(cipher[i]);
-        if (i==HEADER-1 || i==size_mesg+HEADER-1)
-          Serial.print("][");
+      Serial.println("[ CIPHER | MIC[4] ]:");
+      for (int i = 0; i < size_mesg+MIC; i++) {
+        Serial.print(cipher[HEADER+i]);
+        if (i==size_mesg-1)
+          Serial.print("|");
         else  
           Serial.print(" ");
       }

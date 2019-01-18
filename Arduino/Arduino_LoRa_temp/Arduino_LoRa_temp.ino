@@ -831,7 +831,7 @@ void loop(void)
       //
       PRINT_STR("%s",(char*)(message+app_key_offset));
       PRINTLN;
-      PRINT_CSTSTR("%s","plain payload hex\n");
+      PRINT_CSTSTR("%s","[PLAIN HEX]:\n");
       for (int i=0; i<pl;i++) {
         if (message[i]<16)
           PRINT_CSTSTR("%s","0");
@@ -847,7 +847,7 @@ void loop(void)
       LSC_encrypt(message, cipher+OFFSET_PAYLOADLENGTH, pl, sx1272._packetNumber, LSC_ENCRYPT);
       
       //Print encrypted message     
-      PRINT_CSTSTR("%s","encrypted payload\n");
+      PRINT_CSTSTR("%s","[CIPHER]:\n");
       for (int i = 0; i < pl; i++)      
       {
         if (cipher[OFFSET_PAYLOADLENGTH+i]<16)
@@ -857,9 +857,8 @@ void loop(void)
       }
       PRINTLN;   
 
-      //compute MIC
+      //compute MIC. We decide to use the packet header
       //
-      //add header
       cipher[0]=DEFAULT_DEST_ADDR;    //dst
       cipher[1]=p_type; //PTYPE
       cipher[2]=node_addr;    //src
@@ -876,12 +875,11 @@ void loop(void)
           PRINT_CSTSTR("%s"," ");      
       }
       PRINTLN;
-      
-      //re-use plain buffer, encrypt HEADER+CIPHER
-      //but use seq+1 as new random number
-      LSC_encrypt(cipher, message, pl+OFFSET_PAYLOADLENGTH, sx1272._packetNumber+1, LSC_ENCRYPT);
 
-      //start compute MIC
+      // compute the MIC on [HEADER+CIPHER]
+      // using a random number = sx1272._packetNumber+1
+      LSC_setMIC(cipher, message, pl+OFFSET_PAYLOADLENGTH, sx1272._packetNumber+1);
+
       PRINT_CSTSTR("%s","[encrypted HEADER+CIPHER]:\n");
       for (int i = 0; i < pl+OFFSET_PAYLOADLENGTH; i++) {
         if (message[i]<16)
@@ -890,37 +888,7 @@ void loop(void)
         PRINT_CSTSTR("%s"," ");      
       }
       PRINTLN;
-
-#ifdef MICv1
-      PRINT_CSTSTR("%s","[MICv1]:");
-      //skip the first 4 bytes and take the next 4 bytes of encrypted HEADER+CIPHER
-      cipher[pl+OFFSET_PAYLOADLENGTH]=message[OFFSET_PAYLOADLENGTH];
-      cipher[pl+OFFSET_PAYLOADLENGTH+1]=message[OFFSET_PAYLOADLENGTH+1];
-      cipher[pl+OFFSET_PAYLOADLENGTH+2]=message[OFFSET_PAYLOADLENGTH+2];
-      cipher[pl+OFFSET_PAYLOADLENGTH+3]=message[OFFSET_PAYLOADLENGTH+3];  
-            
-#elif defined MICv2
-      uint32_t myMIC=0;
-
-      PRINT_CSTSTR("%s","[MICv2]:");
-      //first, compute byte-sum of encrypted HEADER+CIPHER
-      for (int i = 0; i < pl+OFFSET_PAYLOADLENGTH; i++) {
-        myMIC+=message[i];  
-      }
-
-      //append MIC in cipher
-      cipher[pl+OFFSET_PAYLOADLENGTH]=(uint8_t)xorshift32(myMIC % 7); 
-      cipher[pl+OFFSET_PAYLOADLENGTH+1]=(uint8_t)xorshift32(myMIC % 13);
-      cipher[pl+OFFSET_PAYLOADLENGTH+2]=(uint8_t)xorshift32(myMIC % 29);
-      cipher[pl+OFFSET_PAYLOADLENGTH+3]=(uint8_t)xorshift32(myMIC % 57);      
-      //         
-      //end compute MIC
-#elif defined MICv3
-      PRINT_CSTSTR("%s","[MICv3]: TODO");
-      //should implement a better algorithm?
-      //XTEA?: http://code.activestate.com/recipes/496737-python-xtea-encryption/      
-#endif
-
+      
       PRINT_CSTSTR("%s","[MIC]:\n");
       for (int i = 0; i < 4; i++) {
         if (cipher[pl+OFFSET_PAYLOADLENGTH+i]<16)
@@ -931,7 +899,7 @@ void loop(void)
       PRINTLN;
     
       PRINT_CSTSTR("%s","transmitted packet:\n");
-      PRINT_CSTSTR("%s","EncryptedPayload | MIC[4]\n");
+      PRINT_CSTSTR("%s","CIPHER | MIC[4]\n");
       //Print transmitted data
       for(int i = 0; i < pl+MIC; i++)
       {

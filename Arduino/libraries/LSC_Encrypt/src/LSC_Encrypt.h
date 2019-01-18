@@ -52,6 +52,8 @@
 //#define LSC_STATIC_KEY_32
 #define LSC_STATIC_KEY_16
 
+#define LSC_MICv2
+
 #define LSC_ENCRYPT 1
 #define LSC_DECRYPT 0
 
@@ -67,6 +69,7 @@ extern uint32_t xorshift32(const uint32_t t);
 
 uint32_t xorshift32(const uint32_t t);
 void LSC_encrypt(uint8_t* seq_in, uint8_t *seq_out, uint8_t size_mesg, uint8_t fcount, int enc);
+void LSC_setMIC(uint8_t* seq_in, uint8_t *seq_out, uint8_t size_mesg, uint8_t fcount);
 void LSC_session_init();
 uint8_t LSC_get_block_size(uint8_t size_mesg);
 

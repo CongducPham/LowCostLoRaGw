@@ -262,6 +262,53 @@ void LSC_encrypt(uint8_t* seq_in, uint8_t *seq_out, uint8_t size_mesg, uint8_t f
 #endif  
 }
 
+// Compute the LSC MIC from a seq_in buffer of size size_mesg.
+// Buffer should have 4 available extra at the end to be append the 4-byte MIC 
+//
+// IN:
+// seq_in is the source buffer
+// seq_out is a buffer of size at least equal to seq_in
+// size_mesg is the size of the data on which the MIC is computed
+// fcount is a random number, usually the packet sequence number to allow decryption at the other end
+//
+// OUT:
+// seq_in will be appended by the 4-byte MIC 
+// seq_out will contain the encrypted version of the original seq_in, i.e. without the MIC
+//
+void LSC_setMIC(uint8_t* seq_in, uint8_t *seq_out, uint8_t size_mesg, uint8_t fcount) {
+
+      //re-use plain buffer, encrypt HEADER+CIPHER
+      //but use seq+1 as new random number
+      LSC_encrypt(seq_in, seq_out, size_mesg, fcount, LSC_ENCRYPT);
+
+#ifdef LSC_MICv1
+      //skip the first 4 bytes and take the next 4 bytes of encrypted HEADER+CIPHER
+      seq_in[size_mesg]=seq_out[4];
+      seq_in[size_mesg+1]=seq_out[5];
+      seq_in[size_mesg+2]=seq_out[6];
+      seq_in[size_mesg+3]=seq_out[7];  
+            
+#elif defined LSC_MICv2
+      uint32_t myMIC=0;
+
+      //first, compute byte-sum of encrypted HEADER+CIPHER
+      for (int i = 0; i < size_mesg; i++) {
+        myMIC+=seq_out[i];  
+      }
+
+      //append MIC in cipher
+      seq_in[size_mesg]=(uint8_t)xorshift32(myMIC % 7); 
+      seq_in[size_mesg+1]=(uint8_t)xorshift32(myMIC % 13);
+      seq_in[size_mesg+2]=(uint8_t)xorshift32(myMIC % 29);
+      seq_in[size_mesg+3]=(uint8_t)xorshift32(myMIC % 57);      
+      //         
+      //end compute MIC
+#elif defined LSC_MICv3
+      //should implement a better algorithm?
+      //XTEA?: http://code.activestate.com/recipes/496737-python-xtea-encryption/      
+#endif
+}
+
 //void printArray(uint8_t *mes, int n) {
 //  for (uint8_t i = 0; i < n; i++) {
 //    Serial.print(mes[i]);
