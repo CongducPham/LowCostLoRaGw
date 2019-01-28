@@ -159,7 +159,7 @@ double degree_location(double loc, char loc_direction){
 }
 
 void setup(){
-  Serial.begin(9600);
+  Serial.begin(38400);
   //if only 1 serial port then gps_serial is equivalent to Serial
 #ifdef SOFTWARE_SERIAL_GPS  
   gps_serial.begin(9600);

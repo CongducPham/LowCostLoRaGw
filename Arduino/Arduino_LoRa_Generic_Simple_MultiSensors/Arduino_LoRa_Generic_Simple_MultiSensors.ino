@@ -21,7 +21,7 @@
  * first version of generic sensor
  * nicolas.bertuol@etud.univ-pau.fr
  * 
- * last update: September 18th, 2018 by C. Pham
+ * last update: Jan 15th, 2019 by C. Pham
  */
 
 // IMPORTANT
@@ -47,6 +47,17 @@
 //#include "LeafWetness.h"
 //#include "HCSR04.h"
 //#include "HRLV.h"
+
+/********************************************************************
+ _____              __ _                       _   _             
+/  __ \            / _(_)                     | | (_)            
+| /  \/ ___  _ __ | |_ _  __ _ _   _ _ __ __ _| |_ _  ___  _ __  
+| |    / _ \| '_ \|  _| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \ 
+| \__/\ (_) | | | | | | | (_| | |_| | | | (_| | |_| | (_) | | | |
+ \____/\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
+                          __/ |                                  
+                         |___/                                   
+********************************************************************/
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,6 +170,21 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 ///////////////////////////////////////////////////////////////////
 #endif
 
+// SENSORS DEFINITION 
+//////////////////////////////////////////////////////////////////
+// CHANGE HERE THE NUMBER OF SENSORS, SOME CAN BE NOT CONNECTED
+const int number_of_sensors = 7;
+//////////////////////////////////////////////////////////////////
+
+/*****************************
+ _____           _      
+/  __ \         | |     
+| /  \/ ___   __| | ___ 
+| |    / _ \ / _` |/ _ \
+| \__/\ (_) | (_| |  __/
+ \____/\___/ \__,_|\___|
+*****************************/ 
+
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
@@ -255,12 +281,6 @@ long getCmdValue(int &i, char* strBuff=NULL) {
 }   
 #endif
 
-// SENSORS DEFINITION 
-//////////////////////////////////////////////////////////////////
-// CHANGE HERE THE NUMBER OF SENSORS, SOME CAN BE NOT CONNECTED
-const int number_of_sensors = 7;
-//////////////////////////////////////////////////////////////////
-
 // array containing sensors pointers
 Sensor* sensor_ptrs[number_of_sensors];
 
@@ -277,6 +297,17 @@ char *ftoa(char *a, double f, int precision)
  itoa(desimal, a, 10);
  return ret;
 }
+
+/*****************************
+ _____      _               
+/  ___|    | |              
+\ `--.  ___| |_ _   _ _ __  
+ `--. \/ _ \ __| | | | '_ \ 
+/\__/ /  __/ |_| |_| | |_) |
+\____/ \___|\__|\__,_| .__/ 
+                     | |    
+                     |_|    
+******************************/
 
 void setup()
 {  
@@ -495,6 +526,17 @@ void setup()
 
   delay(500);
 }
+
+/*****************************
+ _                       
+| |                      
+| |     ___   ___  _ __  
+| |    / _ \ / _ \| '_ \ 
+| |___| (_) | (_) | |_) |
+\_____/\___/ \___/| .__/ 
+                  | |    
+                  |_|    
+*****************************/
 
 void loop(void)
 {

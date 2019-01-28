@@ -19,11 +19,22 @@
  *
  *****************************************************************************
  *
- * last update: Dec. 14th, 2018 by C. Pham
+ * last update: Jan 15th, 2019 by C. Pham
  */
 #include <SPI.h>  
 // Include the SX1272
 #include "SX1272.h"
+
+/********************************************************************
+ _____              __ _                       _   _             
+/  __ \            / _(_)                     | | (_)            
+| /  \/ ___  _ __ | |_ _  __ _ _   _ _ __ __ _| |_ _  ___  _ __  
+| |    / _ \| '_ \|  _| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \ 
+| \__/\ (_) | | | | | | | (_| | |_| | | | (_| | |_| | (_) | | | |
+ \____/\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
+                          __/ |                                  
+                         |___/                                   
+********************************************************************/
 
 //new small OLED screen, mostly based on SSD1306 
 #define OLED
@@ -36,43 +47,6 @@
 //#define ESP8266
 // uncomment if you are sure you have an Heltec LoRa board and that it is not detected
 //#define HELTEC_LORA
-
-#ifdef OLED
-//reset is not used
-#include <U8x8lib.h>
-//you can also power the OLED screen with a digital pin, here pin 8
-#define OLED_PWR_PIN 8
-// connection may depend on the board. Use A5/A4 for most Arduino boards. On ESP8266-based board we use GPI05 and GPI04. Heltec ESP32 has embedded OLED.
-#if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
-#elif defined ESP8266 || defined ARDUINO_ESP8266_ESP01
-//U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 5, /* data=*/ 4, /* reset=*/ U8X8_PIN_NONE);
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 12, /* data=*/ 14, /* reset=*/ U8X8_PIN_NONE);
-#else
-#ifdef OLED_GND234
-#ifdef OLED_PWR_PIN
-#undef OLED_PWR_PIN
-#define OLED_PWR_PIN 2
-#endif
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 3, /* data=*/ 4, /* reset=*/ U8X8_PIN_NONE);
-#else
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ A5, /* data=*/ A4, /* reset=*/ U8X8_PIN_NONE);
-#endif
-#endif
-char oled_msg[20];
-
-#elif defined HITACHI
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0x20,16,2);  // set the LCD address to 0x20 for a 16 chars and 2 line display
-
-void printLCD(int theLine, const char* theInfo, boolean clearFirst=true) {
-        if (clearFirst)
-              lcd.clear();
-        lcd.setCursor(0, theLine);
-        lcd.print(theInfo);
-}  
-#endif
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -128,6 +102,52 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define node_addr 8
 //////////////////////////////////////////////////////////////////
 
+/*****************************
+ _____           _      
+/  __ \         | |     
+| /  \/ ___   __| | ___ 
+| |    / _ \ / _` |/ _ \
+| \__/\ (_) | (_| |  __/
+ \____/\___/ \__,_|\___|
+*****************************/ 
+
+#ifdef OLED
+//reset is not used
+#include <U8x8lib.h>
+//you can also power the OLED screen with a digital pin, here pin 8
+#define OLED_PWR_PIN 8
+// connection may depend on the board. Use A5/A4 for most Arduino boards. On ESP8266-based board we use GPI05 and GPI04. Heltec ESP32 has embedded OLED.
+#if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
+#elif defined ESP8266 || defined ARDUINO_ESP8266_ESP01
+//U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 5, /* data=*/ 4, /* reset=*/ U8X8_PIN_NONE);
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 12, /* data=*/ 14, /* reset=*/ U8X8_PIN_NONE);
+#else
+#ifdef OLED_GND234
+#ifdef OLED_PWR_PIN
+#undef OLED_PWR_PIN
+#define OLED_PWR_PIN 2
+#endif
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 3, /* data=*/ 4, /* reset=*/ U8X8_PIN_NONE);
+#else
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ A5, /* data=*/ A4, /* reset=*/ U8X8_PIN_NONE);
+#endif
+#endif
+char oled_msg[20];
+
+#elif defined HITACHI
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x20,16,2);  // set the LCD address to 0x20 for a 16 chars and 2 line display
+
+void printLCD(int theLine, const char* theInfo, boolean clearFirst=true) {
+        if (clearFirst)
+              lcd.clear();
+        lcd.setCursor(0, theLine);
+        lcd.print(theInfo);
+}  
+#endif
+
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
@@ -148,6 +168,17 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 uint8_t message[30];
 
 int loraMode=LORAMODE;
+
+/*****************************
+ _____      _               
+/  ___|    | |              
+\ `--.  ___| |_ _   _ _ __  
+ `--. \/ _ \ __| | | | '_ \ 
+/\__/ /  __/ |_| |_| | |_) |
+\____/ \___|\__|\__,_| .__/ 
+                     | |    
+                     |_|    
+******************************/
 
 void setup()
 {
@@ -298,6 +329,17 @@ void setup()
   delay(500);
 }
 
+
+/*****************************
+ _                       
+| |                      
+| |     ___   ___  _ __  
+| |    / _ \ / _ \| '_ \ 
+| |___| (_) | (_) | |_) |
+\_____/\___/ \___/| .__/ 
+                  | |    
+                  |_|    
+*****************************/
 
 void loop(void)
 {

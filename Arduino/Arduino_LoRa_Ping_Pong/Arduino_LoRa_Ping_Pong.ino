@@ -17,11 +17,22 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Jan. 19th, 2018 by C. Pham
+ * last update: Jan 15th, 2019 by C. Pham
  */
 #include <SPI.h>  
 // Include the SX1272
 #include "SX1272.h"
+
+/********************************************************************
+ _____              __ _                       _   _             
+/  __ \            / _(_)                     | | (_)            
+| /  \/ ___  _ __ | |_ _  __ _ _   _ _ __ __ _| |_ _  ___  _ __  
+| |    / _ \| '_ \|  _| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \ 
+| \__/\ (_) | | | | | | | (_| | |_| | | | (_| | |_| | (_) | | | |
+ \____/\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
+                          __/ |                                  
+                         |___/                                   
+********************************************************************/
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,6 +85,15 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define node_addr 8
 //////////////////////////////////////////////////////////////////
 
+/*****************************
+ _____           _      
+/  __ \         | |     
+| /  \/ ___   __| | ___ 
+| |    / _ \ / _` |/ _ \
+| \__/\ (_) | (_| |  __/
+ \____/\___/ \__,_|\___|
+*****************************/ 
+
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
@@ -94,6 +114,17 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 uint8_t message[100];
 
 int loraMode=LORAMODE;
+
+/*****************************
+ _____      _               
+/  ___|    | |              
+\ `--.  ___| |_ _   _ _ __  
+ `--. \/ _ \ __| | | | '_ \ 
+/\__/ /  __/ |_| |_| | |_) |
+\____/ \___|\__|\__,_| .__/ 
+                     | |    
+                     |_|    
+******************************/
 
 void setup()
 {
@@ -213,6 +244,16 @@ void setup()
   delay(500);
 }
 
+/*****************************
+ _                       
+| |                      
+| |     ___   ___  _ __  
+| |    / _ \ / _ \| '_ \ 
+| |___| (_) | (_) | |_) |
+\_____/\___/ \___/| .__/ 
+                  | |    
+                  |_|    
+*****************************/
 
 void loop(void)
 {
@@ -223,17 +264,15 @@ void loop(void)
 
   sx1272.setPacketType(PKT_TYPE_DATA);
 
-  r_size=sprintf((char*)message, "Ping");
-      
   while (1) {
-
+      r_size=sprintf((char*)message, "Ping");
       PRINT_CSTSTR("%s","Sending Ping");  
       PRINTLN;
             
       e = sx1272.sendPacketTimeoutACK(DEFAULT_DEST_ADDR, message, r_size);
 
       // this is the no-ack version
-      // e = sx1272.sendPacketTimeout(DEFAULT_DEST_ADDR, message, r_size);
+      //e = sx1272.sendPacketTimeout(DEFAULT_DEST_ADDR, message, r_size);
             
       PRINT_CSTSTR("%s","Packet sent, state ");
       PRINT_VALUE("%d", e);
@@ -243,11 +282,17 @@ void loop(void)
           PRINT_CSTSTR("%s","No Pong from gw!");
         
       if (e==0) {
-          char message[20];
-          sprintf(message,"SNR at gw=%d   ", sx1272._rcv_snr_in_ack);
           PRINT_CSTSTR("%s","Pong received from gateway!");
+          PRINTLN;        
+          sprintf((char*)message,"SNR at gw=%d   ", sx1272._rcv_snr_in_ack);
+          PRINT_STR("%s", (char*)message); 
           PRINTLN;
-          PRINT_STR("%s", message);      
+          
+          sx1272.getSNR();
+          sx1272.getRSSIpacket();
+          sprintf((char*)message,"From gw=%d,%d", sx1272._SNR, sx1272._RSSIpacket);
+          PRINT_STR("%s", (char*)message);
+          PRINTLN;               
       }      
 
       PRINTLN;

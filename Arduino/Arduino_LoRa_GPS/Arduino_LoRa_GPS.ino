@@ -17,12 +17,23 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: November 9th by C. Pham
+ * last update: Jan 15th, 2019 by C. Pham
  */
  
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
+
+/********************************************************************
+ _____              __ _                       _   _             
+/  __ \            / _(_)                     | | (_)            
+| /  \/ ___  _ __ | |_ _  __ _ _   _ _ __ __ _| |_ _  ___  _ __  
+| |    / _ \| '_ \|  _| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \ 
+| \__/\ (_) | | | | | | | (_| | |_| | | | (_| | |_| | (_) | | | |
+ \____/\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
+                          __/ |                                  
+                         |___/                                   
+********************************************************************/
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -138,10 +149,6 @@ unsigned int idlePeriodInMin = 20;
 #define GPS_PIN_POWER_PIN 8
 ///////////////////////////////////////////////////////////////////
 
-#include "gps_light.h"
-gps_light gps(gps_serial);
-//////////////////////////////////////////////////////////////////
-
 #ifdef WITH_APPKEY
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE APPKEY, BUT IF GW CHECKS FOR APPKEY, MUST BE
@@ -149,6 +156,19 @@ gps_light gps(gps_serial);
 uint8_t my_appKey[4]={5, 6, 7, 8};
 ///////////////////////////////////////////////////////////////////
 #endif
+
+/*****************************
+ _____           _      
+/  __ \         | |     
+| /  \/ ___   __| | ___ 
+| |    / _ \ / _` |/ _ \
+| \__/\ (_) | (_| |  __/
+ \____/\___/ \__,_|\___|
+*****************************/ 
+
+#include "gps_light.h"
+gps_light gps(gps_serial);
+//////////////////////////////////////////////////////////////////
 
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
@@ -222,6 +242,34 @@ struct sx1272config {
 
 sx1272config my_sx1272config;
 #endif
+
+char *ftoa(char *a, double f, int precision)
+{
+ long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
+ 
+ char *ret = a;
+ long heiltal = (long)f;
+ itoa(heiltal, a, 10);
+ while (*a != '\0') a++;
+ *a++ = '.';
+ long desimal = abs((long)((f - heiltal) * p[precision]));
+ if (desimal < p[precision-1]) {
+  *a++ = '0';
+ } 
+ itoa(desimal, a, 10);
+ return ret;
+}
+
+/*****************************
+ _____      _               
+/  ___|    | |              
+\ `--.  ___| |_ _   _ _ __  
+ `--. \/ _ \ __| | | | '_ \ 
+/\__/ /  __/ |_| |_| | |_) |
+\____/ \___|\__|\__,_| .__/ 
+                     | |    
+                     |_|    
+******************************/
 
 void setup()
 {
@@ -387,22 +435,16 @@ void setup()
   delay(500);
 }
 
-char *ftoa(char *a, double f, int precision)
-{
- long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
- 
- char *ret = a;
- long heiltal = (long)f;
- itoa(heiltal, a, 10);
- while (*a != '\0') a++;
- *a++ = '.';
- long desimal = abs((long)((f - heiltal) * p[precision]));
- if (desimal < p[precision-1]) {
-  *a++ = '0';
- } 
- itoa(desimal, a, 10);
- return ret;
-}
+/*****************************
+ _                       
+| |                      
+| |     ___   ___  _ __  
+| |    / _ \ / _ \| '_ \ 
+| |___| (_) | (_) | |_) |
+\_____/\___/ \___/| .__/ 
+                  | |    
+                  |_|    
+*****************************/
 
 void loop(void)
 {

@@ -1,7 +1,7 @@
 /* 
  *  LoRa gateway to receive and send command
  *
- *  Copyright (C) 2015-2016 Congduc Pham
+ *  Copyright (C) 2015-2019 Congduc Pham
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -194,6 +194,17 @@
 // Include the SX1272 
 #include "SX1272.h"
 
+/********************************************************************
+ _____              __ _                       _   _             
+/  __ \            / _(_)                     | | (_)            
+| /  \/ ___  _ __ | |_ _  __ _ _   _ _ __ __ _| |_ _  ___  _ __  
+| |    / _ \| '_ \|  _| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \ 
+| \__/\ (_) | | | | | | | (_| | |_| | | | (_| | |_| | (_) | | | |
+ \____/\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
+                          __/ |                                  
+                         |___/                                   
+********************************************************************/
+
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
@@ -235,7 +246,7 @@
 //#define PERIODIC_SENDER 15000
 //#define LORA_LAS
 //#define WITH_SEND_LED
-//#define WITH_AES
+#define WITH_AES
 //#define WITH_APPKEY
 ///////////////////////////////////////////////////////////////////
 
@@ -255,6 +266,15 @@
 uint8_t my_appKey[4]={5, 6, 7, 8};
 ///////////////////////////////////////////////////////////////////
 #endif
+
+/*****************************
+ _____           _      
+/  __ \         | |     
+| /  \/ ___   __| | ___ 
+| |    / _ \ / _` |/ _ \
+| \__/\ (_) | (_| |  __/
+ \____/\___/ \__,_|\___|
+*****************************/ 
 
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
@@ -383,11 +403,11 @@ unsigned char AppSkey[16] = {
 
 unsigned char NwkSkey[16] = {
   0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
+  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3D
 };
 
 unsigned char DevAddr[4] = {
-  0x00, 0x00, 0x00, LORA_ADDR
+  0x01, 0x02, 0x03, LORA_ADDR
 };
 
 uint16_t Frame_Counter_Up = 0x0000;
@@ -553,124 +573,6 @@ void startConfig() {
   PRINT_CSTSTR("%s","as device. Waiting serial input for serial-RF bridge\n");
 }
 
-void setup()
-{
-  int e;
-  delay(3000);
-  randomSeed(analogRead(14));
-
-  // Open serial communications and wait for port to open:
-#if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
-  SerialUSB.begin(38400);
-#else
-  Serial.begin(38400);  
-#endif  
-  // Print a start message
-  PRINT_CSTSTR("%s","LoRa interactive device\n");
-  
-#ifdef ARDUINO_AVR_PRO
-  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");  
-#endif
-#ifdef ARDUINO_AVR_NANO
-  PRINT_CSTSTR("%s","Arduino Nano detected\n");   
-#endif
-#ifdef ARDUINO_AVR_MINI
-  PRINT_CSTSTR("%s","Arduino Mini/Nexus detected\n");  
-#endif
-#ifdef ARDUINO_AVR_MEGA2560
-  PRINT_CSTSTR("%s","Arduino Mega2560 detected\n");  
-#endif
-#ifdef ARDUINO_SAM_DUE
-  PRINT_CSTSTR("%s","Arduino Due detected\n");  
-#endif
-#ifdef __MK66FX1M0__
-  PRINT_CSTSTR("%s","Teensy36 MK66FX1M0 detected\n");
-#endif
-#ifdef __MK64FX512__
-  PRINT_CSTSTR("%s","Teensy35 MK64FX512 detected\n");
-#endif
-#ifdef __MK20DX256__
-  PRINT_CSTSTR("%s","Teensy31/32 MK20DX256 detected\n");
-#endif
-#ifdef __MKL26Z64__
-  PRINT_CSTSTR("%s","TeensyLC MKL26Z64 detected\n");
-#endif
-#ifdef ARDUINO_SAMD_ZERO 
-  PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
-#endif
-#ifdef ARDUINO_AVR_FEATHER32U4 
-  PRINT_CSTSTR("%s","Adafruit Feather32U4 detected\n"); 
-#endif
-#ifdef  ARDUINO_SAMD_FEATHER_M0
-  PRINT_CSTSTR("%s","Adafruit FeatherM0 detected\n");
-#endif
-
-// See http://www.nongnu.org/avr-libc/user-manual/using_tools.html
-// for the list of define from the AVR compiler
-
-#ifdef __AVR_ATmega328P__
-  PRINT_CSTSTR("%s","ATmega328P detected\n");
-#endif 
-#ifdef __AVR_ATmega32U4__
-  PRINT_CSTSTR("%s","ATmega32U4 detected\n");
-#endif 
-#ifdef __AVR_ATmega2560__
-  PRINT_CSTSTR("%s","ATmega2560 detected\n");
-#endif 
-#ifdef __SAMD21G18A__ 
-  PRINT_CSTSTR("%s","SAMD21G18A ARM Cortex-M0 detected\n");
-#endif
-#ifdef __SAM3X8E__ 
-  PRINT_CSTSTR("%s","SAM3X8E ARM Cortex-M3 detected\n");
-#endif
-
-#if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined ARDUINO_SAM_DUE
-    // Print a start message
-  Serial.print(freeMemory());
-  Serial.println(F(" bytes of free memory.")); 
-#endif   
-
-  // Power ON the module
-  e = sx1272.ON();
-  
-  PRINT_CSTSTR("%s","^$**********Power ON: state ");
-  PRINT_VALUE("%d", e);
-  PRINTLN;
-
-  e = sx1272.getSyncWord();
-
-  if (!e) {
-    PRINT_CSTSTR("%s","^$Default sync word: 0x");
-    PRINT_HEX("%X", sx1272._syncWord);
-    PRINTLN;
-  }    
-  
-  if (!e) {
-    radioON=true;
-    startConfig();
-  }
-  
-  FLUSHOUTPUT;
-  delay(1000);
-
-#ifdef LORA_LAS
-  loraLAS.ON(LAS_ON_WRESET);
-   
-  //delay(random(LAS_REG_RAND_MIN,LAS_REG_RAND_MAX));
-  //loraLAS.sendReg(); 
-#endif
-
-#ifdef CAD_TEST
-  PRINT_CSTSTR("%s","Do CAD test\n");
-#endif 
-
-#ifdef PERIODIC_SENDER
-  inter_pkt_time=PERIODIC_SENDER;
-  PRINT_CSTSTR("%s","Periodic sender ON");
-  PRINTLN;
-#endif
-}
-
 void CarrierSense0() {
   // this carrier sense perform nothing -> pure ALOHA
 }
@@ -784,7 +686,7 @@ void CarrierSense1() {
           if (!rssi_retry_count)
             carrierSenseRetry=true;  
           else
-	    carrierSenseRetry=false;            
+      carrierSenseRetry=false;            
       }
       
     } while (carrierSenseRetry);  
@@ -1052,6 +954,146 @@ void CarrierSense3() {
     } while (carrierSenseRetry);  
   }
 }
+
+/*****************************
+ _____      _               
+/  ___|    | |              
+\ `--.  ___| |_ _   _ _ __  
+ `--. \/ _ \ __| | | | '_ \ 
+/\__/ /  __/ |_| |_| | |_) |
+\____/ \___|\__|\__,_| .__/ 
+                     | |    
+                     |_|    
+******************************/
+
+void setup()
+{
+  int e;
+  delay(3000);
+  randomSeed(analogRead(14));
+
+  // Open serial communications and wait for port to open:
+#if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
+  SerialUSB.begin(38400);
+#else
+  Serial.begin(38400);  
+#endif  
+  // Print a start message
+  PRINT_CSTSTR("%s","LoRa interactive device\n");
+  
+#ifdef ARDUINO_AVR_PRO
+  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");  
+#endif
+#ifdef ARDUINO_AVR_NANO
+  PRINT_CSTSTR("%s","Arduino Nano detected\n");   
+#endif
+#ifdef ARDUINO_AVR_MINI
+  PRINT_CSTSTR("%s","Arduino Mini/Nexus detected\n");  
+#endif
+#ifdef ARDUINO_AVR_MEGA2560
+  PRINT_CSTSTR("%s","Arduino Mega2560 detected\n");  
+#endif
+#ifdef ARDUINO_SAM_DUE
+  PRINT_CSTSTR("%s","Arduino Due detected\n");  
+#endif
+#ifdef __MK66FX1M0__
+  PRINT_CSTSTR("%s","Teensy36 MK66FX1M0 detected\n");
+#endif
+#ifdef __MK64FX512__
+  PRINT_CSTSTR("%s","Teensy35 MK64FX512 detected\n");
+#endif
+#ifdef __MK20DX256__
+  PRINT_CSTSTR("%s","Teensy31/32 MK20DX256 detected\n");
+#endif
+#ifdef __MKL26Z64__
+  PRINT_CSTSTR("%s","TeensyLC MKL26Z64 detected\n");
+#endif
+#if defined ARDUINO_SAMD_ZERO && not defined ARDUINO_SAMD_FEATHER_M0
+  PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
+#endif
+#ifdef ARDUINO_AVR_FEATHER32U4 
+  PRINT_CSTSTR("%s","Adafruit Feather32U4 detected\n"); 
+#endif
+#ifdef  ARDUINO_SAMD_FEATHER_M0
+  PRINT_CSTSTR("%s","Adafruit FeatherM0 detected\n");
+#endif
+
+// See http://www.nongnu.org/avr-libc/user-manual/using_tools.html
+// for the list of define from the AVR compiler
+
+#ifdef __AVR_ATmega328P__
+  PRINT_CSTSTR("%s","ATmega328P detected\n");
+#endif 
+#ifdef __AVR_ATmega32U4__
+  PRINT_CSTSTR("%s","ATmega32U4 detected\n");
+#endif 
+#ifdef __AVR_ATmega2560__
+  PRINT_CSTSTR("%s","ATmega2560 detected\n");
+#endif 
+#ifdef __SAMD21G18A__ 
+  PRINT_CSTSTR("%s","SAMD21G18A ARM Cortex-M0 detected\n");
+#endif
+#ifdef __SAM3X8E__ 
+  PRINT_CSTSTR("%s","SAM3X8E ARM Cortex-M3 detected\n");
+#endif
+
+#if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined ARDUINO_SAM_DUE
+    // Print a start message
+  Serial.print(freeMemory());
+  Serial.println(F(" bytes of free memory.")); 
+#endif   
+
+  // Power ON the module
+  e = sx1272.ON();
+  
+  PRINT_CSTSTR("%s","^$**********Power ON: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
+
+  e = sx1272.getSyncWord();
+
+  if (!e) {
+    PRINT_CSTSTR("%s","^$Default sync word: 0x");
+    PRINT_HEX("%X", sx1272._syncWord);
+    PRINTLN;
+  }    
+  
+  if (!e) {
+    radioON=true;
+    startConfig();
+  }
+  
+  FLUSHOUTPUT;
+  delay(1000);
+
+#ifdef LORA_LAS
+  loraLAS.ON(LAS_ON_WRESET);
+   
+  //delay(random(LAS_REG_RAND_MIN,LAS_REG_RAND_MAX));
+  //loraLAS.sendReg(); 
+#endif
+
+#ifdef CAD_TEST
+  PRINT_CSTSTR("%s","Do CAD test\n");
+#endif 
+
+#ifdef PERIODIC_SENDER
+  inter_pkt_time=PERIODIC_SENDER;
+  PRINT_CSTSTR("%s","Periodic sender ON");
+  PRINTLN;
+#endif
+}
+
+/*****************************
+ _                       
+| |                      
+| |     ___   ___  _ __  
+| |    / _ \ / _ \| '_ \ 
+| |___| (_) | (_) | |_) |
+\_____/\___/ \___/| .__/ 
+                  | |    
+                  |_|    
+*****************************/
 
 void loop(void)
 { 
@@ -2100,4 +2142,3 @@ void loop(void)
     }
   } // end of "if (receivedFromSerial || receivedFromLoRa)"
 } 
-

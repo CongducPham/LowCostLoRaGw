@@ -17,11 +17,24 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
+ * last update: Jan 15th, 2019 by C. Pham
+ * 
  */
  
 // Include the SX1272
 #include "SX1272.h"
 #include "my_demo_sensor_code.h"
+
+/********************************************************************
+ _____              __ _                       _   _             
+/  __ \            / _(_)                     | | (_)            
+| /  \/ ___  _ __ | |_ _  __ _ _   _ _ __ __ _| |_ _  ___  _ __  
+| |    / _ \| '_ \|  _| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \ 
+| \__/\ (_) | | | | | | | (_| | |_| | | | (_| | |_| | (_) | | | |
+ \____/\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
+                          __/ |                                  
+                         |___/                                   
+********************************************************************/
 
 // IMPORTANT SETTINGS
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -43,18 +56,6 @@
 
 //#define OLED
 //////////////////////////////////////////////////////////////////
-
-#ifdef OLED
-#include <U8x8lib.h>
-// the OLED used
-#if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
-#else
-//reset is not used, but don't know what the lib will do with that pin, so better to indicate a pn that you do not use
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ A5, /* data=*/ A4, /* reset=*/ A3);
-#endif
-char oled_msg[20];
-#endif
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -78,6 +79,32 @@ char oled_msg[20];
 #define MAX_DBM 14
 #endif
 
+/*****************************
+ _____           _      
+/  __ \         | |     
+| /  \/ ___   __| | ___ 
+| |    / _ \ / _` |/ _ \
+| \__/\ (_) | (_| |  __/
+ \____/\___/ \__,_|\___|
+*****************************/ 
+
+#ifdef OLED
+//you can also power the OLED screen with a digital pin, here pin 8
+#define OLED_PWR_PIN 8
+#include <U8x8lib.h>
+// connection may depend on the board. Use A5/A4 for most Arduino boards. On ESP8266-based board we use GPI05 and GPI04. Heltec ESP32 has embedded OLED.
+#if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
+#elif defined ESP8266 || defined ARDUINO_ESP8266_ESP01
+//U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 5, /* data=*/ 4, /* reset=*/ U8X8_PIN_NONE);
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 12, /* data=*/ 14, /* reset=*/ U8X8_PIN_NONE);
+#else
+//reset is not used
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ A5, /* data=*/ A4, /* reset=*/ U8X8_PIN_NONE);
+#endif
+char oled_msg[20];
+#endif
+
 #define FLOAT_TEMP
 
 #define DEFAULT_DEST_ADDR 1
@@ -89,6 +116,34 @@ char float_str[20];
 uint8_t message[100];
 
 int loraMode=LORAMODE;
+
+char *ftoa(char *a, double f, int precision)
+{
+ long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
+ 
+ char *ret = a;
+ long heiltal = (long)f;
+ itoa(heiltal, a, 10);
+ while (*a != '\0') a++;
+ *a++ = '.';
+ long desimal = abs((long)((f - heiltal) * p[precision]));
+ if (desimal < p[precision-1]) {
+  *a++ = '0';
+ }  
+ itoa(desimal, a, 10);
+ return ret;
+}
+
+/*****************************
+ _____      _               
+/  ___|    | |              
+\ `--.  ___| |_ _   _ _ __  
+ `--. \/ _ \ __| | | | '_ \ 
+/\__/ /  __/ |_| |_| | |_) |
+\____/ \___|\__|\__,_| .__/ 
+                     | |    
+                     |_|    
+******************************/
 
 void setup()
 {
@@ -157,22 +212,17 @@ void setup()
   sensor_Init();
 }
 
-char *ftoa(char *a, double f, int precision)
-{
- long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
- 
- char *ret = a;
- long heiltal = (long)f;
- itoa(heiltal, a, 10);
- while (*a != '\0') a++;
- *a++ = '.';
- long desimal = abs((long)((f - heiltal) * p[precision]));
- if (desimal < p[precision-1]) {
-  *a++ = '0';
- }  
- itoa(desimal, a, 10);
- return ret;
-}
+
+/*****************************
+ _                       
+| |                      
+| |     ___   ___  _ __  
+| |    / _ \ / _ \| '_ \ 
+| |___| (_) | (_) | |_) |
+\_____/\___/ \___/| .__/ 
+                  | |    
+                  |_|    
+*****************************/
 
 void loop(void)
 {

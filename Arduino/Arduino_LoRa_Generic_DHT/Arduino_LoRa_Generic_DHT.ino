@@ -28,6 +28,18 @@
 #include "DHT22_Humidity.h"
 #include "DHT22_Temperature.h"
 
+
+/********************************************************************
+ _____              __ _                       _   _             
+/  __ \            / _(_)                     | | (_)            
+| /  \/ ___  _ __ | |_ _  __ _ _   _ _ __ __ _| |_ _  ___  _ __  
+| |    / _ \| '_ \|  _| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \ 
+| \__/\ (_) | | | | | | | (_| | |_| | | | (_| | |_| | (_) | | | |
+ \____/\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
+                          __/ |                                  
+                         |___/                                   
+********************************************************************/
+
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
@@ -76,38 +88,18 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //#define WITH_AES
-//#define OLED
+#define OLED
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE LORA MODE, NODE ADDRESS 
-#define LORAMODE 4
+#define LORAMODE 1
 uint16_t node_addr=7;
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-uint16_t idlePeriodInMin = 1;
-///////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// COMMENT THIS LINE IF YOU WANT TO DYNAMICALLY SET THE NODE'S ADDR 
-// OR SOME OTHER PARAMETERS BY REMOTE RADIO COMMANDS (WITH_RCVW)
-// LEAVE THIS LINE UNCOMMENTED IF YOU WANT TO USE THE DEFAULT VALUE
-// AND CONFIGURE YOUR DEVICE BY CHANGING MANUALLY THESE VALUES IN 
-// THE SKETCH.
-//
-// ONCE YOU HAVE FLASHED A BOARD WITHOUT FORCE_DEFAULT_VALUE, YOU 
-// WILL BE ABLE TO DYNAMICALLY CONFIGURE IT AND SAVE THIS CONFIGU-
-// RATION INTO EEPROM. ON RESET, THE BOARD WILL USE THE SAVED CON-
-// FIGURATION.
-
-// IF YOU WANT TO REINITIALIZE A BOARD, YOU HAVE TO FIRST FLASH IT 
-// WITH FORCE_DEFAULT_VALUE, WAIT FOR ABOUT 10s SO THAT IT CAN BOOT
-// AND FLASH IT AGAIN WITHOUT FORCE_DEFAULT_VALUE. THE BOARD WILL 
-// THEN USE THE DEFAULT CONFIGURATION UNTIL NEXT CONFIGURATION.
-
-#define FORCE_DEFAULT_VALUE
+uint16_t idlePeriodInMin = 10;
 ///////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
@@ -128,6 +120,15 @@ uint8_t message[80];
 // CHANGE HERE THE NUMBER OF SENSORS, SOME CAN BE NOT CONNECTED
 const int number_of_sensors = 2;
 //////////////////////////////////////////////////////////////////
+
+/*****************************
+ _____           _      
+/  __ \         | |     
+| /  \/ ___   __| | ___ 
+| |    / _ \ / _` |/ _ \
+| \__/\ (_) | (_| |  __/
+ \____/\___/ \__,_|\___|
+*****************************/ 
 
 // array containing sensors pointers
 Sensor* sensor_ptrs[number_of_sensors];
@@ -153,14 +154,18 @@ Sensor* sensor_ptrs[number_of_sensors];
 #endif
 
 #ifdef OLED
-#define OLED_PWR_PIN 8
 #include <U8x8lib.h>
-// the OLED used
+//you can also power the OLED screen with a digital pin, here pin 8
+#define OLED_PWR_PIN 8
+// connection may depend on the board. Use A5/A4 for most Arduino boards. On ESP8266-based board we use GPI05 and GPI04. Heltec ESP32 has embedded OLED.
 #if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
 U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
+#elif defined ESP8266 || defined ARDUINO_ESP8266_ESP01
+//U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 5, /* data=*/ 4, /* reset=*/ U8X8_PIN_NONE);
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 12, /* data=*/ 14, /* reset=*/ U8X8_PIN_NONE);
 #else
-//reset is not used, but don't know what the lib will do with that pin, so better to indicate a pn that you do not use
-U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ A5, /* data=*/ A4, /* reset=*/ 9);
+//reset is not used
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ A5, /* data=*/ A4, /* reset=*/ U8X8_PIN_NONE);
 #endif
 char oled_msg[20];
 #endif
@@ -231,21 +236,49 @@ unsigned char Direction = 0x00;
 unsigned long nextTransmissionTime=0L;
 int loraMode=LORAMODE;
 
-
 #ifdef WITH_EEPROM
 struct sx1272config {
 
   uint8_t flag1;
   uint8_t flag2;
   uint8_t seq;
-  uint16_t addr;
-  uint16_t idle_period;  
-  uint8_t overwrite;
   // can add other fields such as LoRa mode,...
 };
 
 sx1272config my_sx1272config;
 #endif
+
+#ifndef STRING_LIB
+
+char *ftoa(char *a, double f, int precision)
+{
+ long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
+ 
+ char *ret = a;
+ long heiltal = (long)f;
+ itoa(heiltal, a, 10);
+ while (*a != '\0') a++;
+ *a++ = '.';
+ long desimal = abs((long)((f - heiltal) * p[precision]));
+ if (desimal < p[precision-1]) {
+  *a++ = '0';
+ } 
+ itoa(desimal, a, 10);
+ return ret;
+}
+#endif
+
+
+/*****************************
+ _____      _               
+/  ___|    | |              
+\ `--.  ___| |_ _   _ _ __  
+ `--. \/ _ \ __| | | | '_ \ 
+/\__/ /  __/ |_| |_| | |_) |
+\____/ \___|\__|\__,_| .__/ 
+                     | |    
+                     |_|    
+******************************/
 
 void setup()
 {
@@ -305,47 +338,7 @@ void setup()
     sx1272._packetNumber=my_sx1272config.seq;
     PRINT_CSTSTR("%s","Using seq of ");
     PRINT_VALUE("%d", sx1272._packetNumber);
-    PRINTLN;
-
-#ifdef FORCE_DEFAULT_VALUE
-    PRINT_CSTSTR("%s","Forced default\n");
-    my_sx1272config.flag1=0x12;
-    my_sx1272config.flag2=0x35;
-    my_sx1272config.seq=sx1272._packetNumber;
-    my_sx1272config.addr=node_addr;
-    my_sx1272config.idle_period=idlePeriodInMin;    
-    my_sx1272config.overwrite=0;
-    EEPROM.put(0, my_sx1272config);
-#else
-    // get back the node_addr
-    if (my_sx1272config.addr!=0 && my_sx1272config.overwrite==1) {
-      
-        PRINT_CSTSTR("%s","Used stored addr\n");
-        node_addr=my_sx1272config.addr;        
-    }
-    else
-        PRINT_CSTSTR("%s","Stored addr is null\n"); 
-
-    // get back the idle period
-    //if (my_sx1272config.idle_period!=0 && my_sx1272config.overwrite==1) {
-    //  
-    //    PRINT_CSTSTR("%s","Used stored idle period\n");
-    //    idlePeriodInMin=my_sx1272config.idle_period;        
-    //}
-    //else
-    //    PRINT_CSTSTR("%s","Stored idle period is null\n");                 
-#endif  
-
-#ifdef WITH_AES
-    DevAddr[3] = (unsigned char)node_addr;
-#endif            
-    PRINT_CSTSTR("%s","node addr ");
-    PRINT_VALUE("%d", node_addr);
-    PRINTLN;   
-
-    PRINT_CSTSTR("%s","idle period of ");
-    PRINT_VALUE("%d", idlePeriodInMin);
-    PRINTLN;     
+    PRINTLN;    
   }
   else {
     // otherwise, write config and start over
@@ -410,25 +403,17 @@ void setup()
   delay(500);
 }
 
-#ifndef STRING_LIB
 
-char *ftoa(char *a, double f, int precision)
-{
- long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
- 
- char *ret = a;
- long heiltal = (long)f;
- itoa(heiltal, a, 10);
- while (*a != '\0') a++;
- *a++ = '.';
- long desimal = abs((long)((f - heiltal) * p[precision]));
- if (desimal < p[precision-1]) {
-  *a++ = '0';
- } 
- itoa(desimal, a, 10);
- return ret;
-}
-#endif
+/*****************************
+ _                       
+| |                      
+| |     ___   ___  _ __  
+| |    / _ \ / _ \| '_ \ 
+| |___| (_) | (_) | |_) |
+\_____/\___/ \___/| .__/ 
+                  | |    
+                  |_|    
+*****************************/
 
 void loop(void)
 {
@@ -490,10 +475,10 @@ void loop(void)
       PRINTLN;
 
 #ifdef OLED
-        u8x8.clearLine(3);
-        // don't show the '\!' characters
-        sprintf(oled_msg, "%s", (char*)(message+app_key_offset+2)); 
-        u8x8.drawString(0, 3, oled_msg); 
+      u8x8.clearLine(3);
+      // don't show the '\!' characters
+      sprintf(oled_msg, "%s", (char*)(message+app_key_offset+2)); 
+      u8x8.drawString(0, 3, oled_msg); 
 #endif 
 
       PRINT_CSTSTR("%s","Size is ");

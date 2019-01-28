@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Nov 2nd, 2018 by C. Pham
+ * last update: Jan 15th, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -34,6 +34,17 @@
 // Include the SX1272
 #include "SX1272.h"
 #include "my_temp_sensor_code.h"
+
+/********************************************************************
+ _____              __ _                       _   _             
+/  __ \            / _(_)                     | | (_)            
+| /  \/ ___  _ __ | |_ _  __ _ _   _ _ __ __ _| |_ _  ___  _ __  
+| |    / _ \| '_ \|  _| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \ 
+| \__/\ (_) | | | | | | | (_| | |_| | | | (_| | |_| | (_) | | | |
+ \____/\___/|_| |_|_| |_|\__, |\__,_|_|  \__,_|\__|_|\___/|_| |_|
+                          __/ |                                  
+                         |___/                                   
+********************************************************************/
 
 //uncomment if you want to disable WiFi on ESP8266 boards
 //#include <ESP8266WiFi.h>
@@ -145,6 +156,15 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 uint8_t message[50];
 ///////////////////////////////////////////////////////////////////
 
+/*****************************
+ _____           _      
+/  __ \         | |     
+| /  \/ ___   __| | ___ 
+| |    / _ \ / _` |/ _ \
+| \__/\ (_) | (_| |  __/
+ \____/\___/ \__,_|\___|
+*****************************/
+
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
@@ -211,6 +231,38 @@ struct sx1272config {
 
 sx1272config my_sx1272config;
 #endif
+
+#ifndef STRING_LIB
+
+char *ftoa(char *a, double f, int precision)
+{
+ long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
+ 
+ char *ret = a;
+ long heiltal = (long)f;
+ itoa(heiltal, a, 10);
+ while (*a != '\0') a++;
+ *a++ = '.';
+ long desimal = abs((long)((f - heiltal) * p[precision]));
+ if (desimal < p[precision-1]) {
+  *a++ = '0';
+ } 
+ itoa(desimal, a, 10);
+ return ret;
+}
+
+#endif
+
+/*****************************
+ _____      _               
+/  ___|    | |              
+\ `--.  ___| |_ _   _ _ __  
+ `--. \/ _ \ __| | | | '_ \ 
+/\__/ /  __/ |_| |_| | |_) |
+\____/ \___|\__|\__,_| .__/ 
+                     | |    
+                     |_|    
+******************************/
 
 void setup()
 {
@@ -391,26 +443,16 @@ void setup()
   delay(500);
 }
 
-#ifndef STRING_LIB
-
-char *ftoa(char *a, double f, int precision)
-{
- long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
- 
- char *ret = a;
- long heiltal = (long)f;
- itoa(heiltal, a, 10);
- while (*a != '\0') a++;
- *a++ = '.';
- long desimal = abs((long)((f - heiltal) * p[precision]));
- if (desimal < p[precision-1]) {
-  *a++ = '0';
- } 
- itoa(desimal, a, 10);
- return ret;
-}
-
-#endif
+/*****************************
+ _                       
+| |                      
+| |     ___   ___  _ __  
+| |    / _ \ / _ \| '_ \ 
+| |___| (_) | (_) | |_) |
+\_____/\___/ \___/| .__/ 
+                  | |    
+                  |_|    
+*****************************/
 
 void loop(void)
 {
@@ -544,7 +586,7 @@ void loop(void)
       PRINT_CSTSTR("%s","Remaining ToA is ");
       PRINT_VALUE("%d", sx1272.getRemainingToA());
       PRINTLN;
-        
+      
 #if defined LOW_POWER && not defined ARDUINO_SAM_DUE
       PRINT_CSTSTR("%s","Switch to power saving mode\n");
 
