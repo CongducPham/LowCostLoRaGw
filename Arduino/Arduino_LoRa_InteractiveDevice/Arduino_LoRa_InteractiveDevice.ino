@@ -1,5 +1,5 @@
 /* 
- *  LoRa gateway to receive and send command
+ *  LoRa interactive device to receive and send command
  *
  *  Copyright (C) 2015-2019 Congduc Pham
  *
@@ -18,7 +18,7 @@
  *
  ***************************************************************************** 
  * 
- *  Version:                1.8
+ *  Version:                1.8a
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -87,6 +87,8 @@
 */
 
 /*  Change logs
+ *  Feb, 1st, 2019. v1.8a 
+ *        Add support of a small OLED screen in both CAD_TEST and PERIODIC_SENDER mode
  *  June, 29th, 2017. v1.8
  *        Add CarrierSense selection method to perform tests
  *          - CarrierSense0 does nothing -> pure ALOHA
@@ -243,11 +245,13 @@
 /////////////////////////////////////////////////////////////////// 
 //#define SHOW_FREEMEMORY
 //#define CAD_TEST
-//#define PERIODIC_SENDER 15000
+//#define PERIODIC_SENDER 35000
 //#define LORA_LAS
 //#define WITH_SEND_LED
 #define WITH_AES
 //#define WITH_APPKEY
+//new small OLED screen, mostly based on SSD1306 
+//#define OLED
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -275,6 +279,31 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 | \__/\ (_) | (_| |  __/
  \____/\___/ \__,_|\___|
 *****************************/ 
+
+#ifdef OLED
+//reset is not used
+#include <U8x8lib.h>
+//you can also power the OLED screen with a digital pin, here pin 8
+#define OLED_PWR_PIN 8
+// connection may depend on the board. Use A5/A4 for most Arduino boards. On ESP8266-based board we use GPI05 and GPI04. Heltec ESP32 has embedded OLED.
+#if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
+#elif defined ESP8266 || defined ARDUINO_ESP8266_ESP01
+//U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 5, /* data=*/ 4, /* reset=*/ U8X8_PIN_NONE);
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 12, /* data=*/ 14, /* reset=*/ U8X8_PIN_NONE);
+#else
+#ifdef OLED_GND234
+#ifdef OLED_PWR_PIN
+#undef OLED_PWR_PIN
+#define OLED_PWR_PIN 2
+#endif
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 3, /* data=*/ 4, /* reset=*/ U8X8_PIN_NONE);
+#else
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ A5, /* data=*/ A4, /* reset=*/ U8X8_PIN_NONE);
+#endif
+#endif
+char oled_msg[20];
+#endif
 
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
@@ -359,7 +388,7 @@ int dest_addr=DEFAULT_DEST_ADDR;
 
 char cmd[260]="****************";
 char sprintf_buf[100];
-int msg_sn=0;
+uint32_t msg_sn=0;
 
 // number of retries to unlock remote configuration feature
 uint8_t unlocked_try=3;
@@ -389,8 +418,8 @@ unsigned int random_inter_pkt_time=0;
 unsigned long next_periodic_sendtime=0L;
 
 // packet size for periodic sending
-uint8_t MSS=40;
-//uint8_t MSS=240;
+//uint8_t MSS=40;
+uint8_t MSS=220;
 
 #ifdef WITH_AES
 #include "AES-128_V10.h"
@@ -1073,14 +1102,35 @@ void setup()
   //loraLAS.sendReg(); 
 #endif
 
+#ifdef OLED
+#ifdef OLED_PWR_PIN
+  pinMode(OLED_PWR_PIN, OUTPUT);
+  digitalWrite(OLED_PWR_PIN, HIGH);
+#endif
+  u8x8.begin();
+  u8x8.setFont(u8x8_font_chroma48medium8_r);  
+#endif
+
 #ifdef CAD_TEST
   PRINT_CSTSTR("%s","Do CAD test\n");
+#ifdef OLED  
+  u8x8.drawString(0, 0, "CAD TEST");
+  sprintf(oled_msg,"LoRa mode %d", loraMode );
+  u8x8.drawString(0, 1, oled_msg);  
+#endif   
 #endif 
 
 #ifdef PERIODIC_SENDER
   inter_pkt_time=PERIODIC_SENDER;
   PRINT_CSTSTR("%s","Periodic sender ON");
   PRINTLN;
+#ifdef OLED  
+  u8x8.drawString(0, 0, "PERIODIC SEND");
+  sprintf(oled_msg,"LoRa mode %d", loraMode );
+  u8x8.drawString(0, 1, oled_msg);  
+  sprintf(oled_msg,"period=%d", inter_pkt_time);
+  u8x8.drawString(0, 2, oled_msg);  
+#endif    
 #endif
 }
 
@@ -1104,9 +1154,12 @@ void loop(void)
 /////////////////////////////////////////////////////////////////// 
 // ONLY FOR TESTING CAD
 #ifdef CAD_TEST
-
+  uint8_t SX1272_led_cad=4;
+  
   bool CadDetected=false;
   unsigned long firstDetected, lastDetected=0;
+
+  pinMode(SX1272_led_cad, OUTPUT);
   
   while (1) {
   
@@ -1117,23 +1170,47 @@ void loop(void)
       endDoCad=millis();
 
       if (e && !CadDetected) {
-        PRINT_CSTSTR("%s","#########\n");
+        digitalWrite(SX1272_led_cad, HIGH);        
+        PRINT_CSTSTR("%s","###########################\n");
+        PRINT_CSTSTR("%s","no activity for (ms): ");
         PRINT_VALUE("%ld", endDoCad-lastDetected);  
         PRINTLN;
-        PRINT_CSTSTR("%s","#########\n");                
+        PRINT_CSTSTR("%s","###########################\n");                
         firstDetected=endDoCad;
         CadDetected=true;
+#ifdef OLED  
+        u8x8.drawString(0, 0, "#########");
+        u8x8.clearLine(1);
+        sprintf(oled_msg,"%ld", endDoCad-lastDetected);
+        u8x8.drawString(0, 1, oled_msg);        
+        u8x8.drawString(0, 2, "#########");  
+#endif            
       }
 
       if (!e && CadDetected)  {
+        digitalWrite(SX1272_led_cad, LOW);        
+        PRINT_CSTSTR("%s","+++++++++++++++++++++++++++\n");
+        PRINT_CSTSTR("%s","time (ms): ");
         PRINT_VALUE("%ld", endDoCad);
         PRINTLN;
+        PRINT_CSTSTR("%s","duration (ms): ");
         PRINT_VALUE("%ld", endDoCad-firstDetected);  
-        PRINTLN;             
+        PRINTLN;
+        PRINT_CSTSTR("%s","current RSSI: ");             
         PRINT_VALUE("%d", sx1272._RSSI);
         PRINTLN;
         lastDetected=endDoCad;        
         CadDetected=false;
+#ifdef OLED
+        u8x8.clearLine(3);  
+        u8x8.drawString(0, 3, "+++++++++");
+        u8x8.clearLine(4);
+        sprintf(oled_msg,"%ld", endDoCad);
+        u8x8.drawString(0, 4, oled_msg);
+        u8x8.clearLine(5);        
+        sprintf(oled_msg,"%ld", endDoCad-firstDetected);
+        u8x8.drawString(0, 5, oled_msg);
+#endif          
       }       
         
       if (e) {
@@ -1143,13 +1220,26 @@ void loop(void)
         PRINT_CSTSTR("%s"," ");
         PRINT_VALUE("%ld", endDoCad-startDoCad);
         PRINTLN;
+#ifdef OLED
+        u8x8.clearLine(3);  
+        sprintf(oled_msg,"%ld", endDoCad);
+        u8x8.drawString(0, 3, oled_msg);
+        
+        u8x8.clearLine(4);
+        sprintf(oled_msg,"%d", sx1272._RSSI);
+        u8x8.drawString(0, 4, oled_msg);        
+        
+        u8x8.clearLine(5);
+        sprintf(oled_msg,"%d", endDoCad-startDoCad);
+        u8x8.drawString(0, 5, oled_msg);         
+#endif          
       }
 
       // for energy testing, use 12000
       //delay(12000);
       // you can also use 100ms to test CAD frequency impact
       //delay(100);      
-      delay(1000);      
+      delay(200);      
   }
 #endif
 // ONLY FOR TESTING CAD
@@ -1221,7 +1311,12 @@ void loop(void)
 
           if (carrier_sense_method==3)
               CarrierSense3();              
-          
+#ifdef OLED
+          u8x8.clearLine(5);
+          sprintf(oled_msg,"Sending %d Bytes", strlen(cmd));
+          u8x8.drawString(0, 5, oled_msg);
+#endif
+  
           PRINT_CSTSTR("%s","Packet number ");
           PRINT_VALUE("%d",sx1272._packetNumber);
           PRINTLN;
@@ -1231,9 +1326,14 @@ void loop(void)
           PRINTLN;
           
           uint32_t toa = sx1272.getToA(strlen(cmd)+(full_lorawan?0:OFFSET_PAYLOADLENGTH));      
-          PRINT_CSTSTR("%s","ToA is w/4B header ");
+          PRINT_CSTSTR("%s","ToA w/4B header is ");
           PRINT_VALUE("%d",toa);
-          PRINTLN;     
+          PRINTLN;
+#ifdef OLED
+          u8x8.clearLine(6);
+          sprintf(oled_msg,"ToA : ", toa);
+          u8x8.drawString(0, 6, oled_msg);
+#endif               
                     
           long startSend=millis();
           
@@ -1251,7 +1351,14 @@ void loop(void)
           PRINT_CSTSTR("%s","Packet sent, state ");
           PRINT_VALUE("%d",e);
           PRINTLN;
-            
+
+#ifdef OLED
+          u8x8.clearLine(5);          
+          u8x8.clearLine(7);
+          sprintf(oled_msg,"Sending state: ", e);
+          u8x8.drawString(0, 7, oled_msg);
+#endif 
+
           //Serial.flush();
           
           if (random_inter_pkt_time) {                
