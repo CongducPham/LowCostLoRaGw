@@ -74,8 +74,8 @@
 /*  Change logs
  *  Feb, 28th, 2018. v1.8 
  *        add a 4-byte MIC when sending downlink packet: uncomment #define INCLUDE_MIC_IN_DOWNLINK
- *		  packet type is then set to PKT_TYPE_DATA | PKT_FLAG_DATA_ENCRYPTED | PKT_FLAG_DATA_DOWNLINK
- *		  the 4-byte MIC comes right after the payload		
+ *		    packet type is then set to PKT_TYPE_DATA | PKT_FLAG_DATA_ENCRYPTED | PKT_FLAG_DATA_DOWNLINK
+ *		    the 4-byte MIC comes right after the payload		
  *  July, 4th, 2017. v1.75 
  *        receive window set to MAX_TIMEOUT (10000ms defined in SX1272.h)
  *  June, 19th, 2017. v1.74
@@ -219,7 +219,7 @@
 //
 // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-//#define PABOOST
+#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 #endif
 
@@ -398,7 +398,7 @@ int ch;
 #endif
 
 // be careful, max command length is 60 characters
-#define MAX_CMD_LENGTH 60
+#define MAX_CMD_LENGTH 100
 
 char cmd[MAX_CMD_LENGTH]="****************";
 int msg_sn=0;
@@ -1074,15 +1074,15 @@ void loop(void)
          tm_info = localtime(&tv.tv_sec);
 #endif       
 
-         tmp_length=sx1272._payloadlength;
+         //tmp_length=sx1272._payloadlength;
+         tmp_length=sx1272.getPayloadLength();
          
 #if not defined GW_RELAY
 
          sx1272.getSNR();
          sx1272.getRSSIpacket();
-         
-         // we split in 2 parts to use a smaller buffer size
-         sprintf(cmd, "--- rxlora. dst=%d type=0x%.2X src=%d seq=%d", 
+
+         sprintf(cmd, "--- rxlora. dst=%d type=0x%02X src=%d seq=%d", 
                    sx1272.packet_received.dst,
                    sx1272.packet_received.type, 
                    sx1272.packet_received.src,
@@ -1090,36 +1090,40 @@ void loop(void)
                    
          PRINT_STR("%s", cmd);
 
-         sprintf(cmd, " len=%d SNR=%d RSSIpkt=%d BW=%d CR=4/%d SF=%d\n",
+         sprintf(cmd, " len=%d SNR=%d RSSIpkt=%d BW=%d CR=4/%d SF=%d\n", 
                    tmp_length, 
                    sx1272._SNR,
                    sx1272._RSSIpacket,
                    (sx1272._bandwidth==BW_125)?125:((sx1272._bandwidth==BW_250)?250:500),
                    sx1272._codingRate+4,
-                   sx1272._spreadingFactor);
-                   
-         PRINT_STR("%s", cmd);         
+                   sx1272._spreadingFactor);     
 
+         PRINT_STR("%s", cmd);              
+          
          // provide a short output for external program to have information about the received packet
          // ^psrc_id,seq,len,SNR,RSSI
-         sprintf(cmd, "^p%d,%d,%d,%d,%d,%d,%d\n",
+         sprintf(cmd, "^p%d,%d,%d,%d,",
                    sx1272.packet_received.dst,
                    sx1272.packet_received.type,                   
                    sx1272.packet_received.src,
-                   sx1272.packet_received.packnum, 
-                   tmp_length,
-                   sx1272._SNR,
-                   sx1272._RSSIpacket);
+                   sx1272.packet_received.packnum);
                    
-         PRINT_STR("%s", cmd);          
+         PRINT_STR("%s", cmd);       
 
+         sprintf(cmd, "%d,%d,%d\n",
+         tmp_length,
+         sx1272._SNR,
+         sx1272._RSSIpacket);
+         
+         PRINT_STR("%s", cmd); 
+         
          // ^rbw,cr,sf
          sprintf(cmd, "^r%d,%d,%d\n", 
                    (sx1272._bandwidth==BW_125)?125:((sx1272._bandwidth==BW_250)?250:500),
                    sx1272._codingRate+4,
                    sx1272._spreadingFactor);
                    
-         PRINT_STR("%s", cmd);  
+         PRINT_STR("%s", cmd);
 #endif         
 ///////////////////////////////////////////////////////////////////
 
@@ -1133,7 +1137,8 @@ void loop(void)
          if (loraLAS.isLASMsg(sx1272.packet_received.data)) {
            
            //tmp_length=sx1272.packet_received.length-OFFSET_PAYLOADLENGTH;
-           tmp_length=sx1272._payloadlength;
+           //tmp_length=sx1272._payloadlength;
+           tmp_length=sx1272.getPayloadLength();
            
            int v=loraLAS.handleLASMsg(sx1272.packet_received.src,
                                       sx1272.packet_received.data,
@@ -1182,6 +1187,8 @@ void loop(void)
 #else
          // print to stdout the content of the packet
          //
+         FLUSHOUTPUT;
+         
          for ( ; a<tmp_length; a++,b++) {
            PRINT_STR("%c",(char)sx1272.packet_received.data[a]);
 
@@ -1909,4 +1916,3 @@ int main (int argc, char *argv[]){
   return (0);
 }
 #endif
-
