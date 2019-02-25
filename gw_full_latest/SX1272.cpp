@@ -3083,6 +3083,7 @@ uint8_t SX1272::setPreambleLength(uint16_t l)
 */
 uint8_t SX1272::getPayloadLength()
 {
+/*
     uint8_t state = 2;
 
 #if (SX1272_debug_mode > 1)
@@ -3112,6 +3113,8 @@ uint8_t SX1272::getPayloadLength()
 
     state = 0;
     return state;
+*/
+	return _payloadlength;
 }
 
 /*
@@ -4526,6 +4529,8 @@ int8_t SX1272::getPacket()
 /*
  Function: It gets and stores a packet if it is received before ending 'wait' time.
  Returns:  Integer that determines if there has been any error
+   // added by C. Pham
+   state = 5  --> The command has been executed with no errors and an ACK is requested
    state = 3  --> The command has been executed but packet has been incorrectly received
    state = 2  --> The command has not been executed
    state = 1  --> There has been an error while executing the command
@@ -4645,7 +4650,7 @@ int8_t SX1272::getPacket(uint16_t wait)
         writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);	// Setting standby FSK mode
     }
     
-    if( p_received )
+    if (p_received)
     {
         // Store the packet
         if( _modem == LORA )
