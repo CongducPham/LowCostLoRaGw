@@ -74,6 +74,13 @@
 // end
 
 #define SX1272_debug_mode 0
+// added by C. Pham
+#define SX1272_led_send_receive
+
+#ifdef SX1272_led_send_receive
+#define SX1272_led_send 2
+#define SX1272_led_receive 3
+#endif
 
 //! MACROS //
 #define bitRead(value, bit) (((value) >> (bit)) & 0x01)  // read a bit
@@ -775,7 +782,7 @@ public:
   	\param uint8_t ret : number of retries.
 	\return '0' on success, '1' otherwise
 	 */
-	uint8_t setRetries(uint8_t ret);
+	//uint8_t setRetries(uint8_t ret);
 
 	//! It gets the maximum current supply by the module.
 	/*!
@@ -912,7 +919,7 @@ public:
 	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t setPacket(uint8_t dest, char *payload);
+	//uint8_t setPacket(uint8_t dest, char *payload);
 
 	//! It writes a packet in FIFO in order to send it.
 	/*!
@@ -971,7 +978,7 @@ public:
 	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketMAXTimeout(uint8_t dest, char *payload);
+	//uint8_t sendPacketMAXTimeout(uint8_t dest, char *payload);
 
 	//! It tries to send the packet wich payload is a parameter before ending MAX_TIMEOUT.
 	/*!
@@ -989,7 +996,7 @@ public:
 	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeout(uint8_t dest, char *payload);
+	//uint8_t sendPacketTimeout(uint8_t dest, char *payload);
 
 	//! It sends the packet wich payload is a parameter before ending MAX_TIMEOUT.
 	/*!
@@ -1007,7 +1014,7 @@ public:
 	\param uint16_t wait : time to wait.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeout(uint8_t dest, char *payload, uint16_t wait);
+	//uint8_t sendPacketTimeout(uint8_t dest, char *payload, uint16_t wait);
 
 	//! It sends the packet wich payload is a parameter before ending 'wait' time.
 	/*!
@@ -1025,7 +1032,7 @@ public:
 	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketMAXTimeoutACK(uint8_t dest, char *payload);
+	//uint8_t sendPacketMAXTimeoutACK(uint8_t dest, char *payload);
 
 	//! It sends the packet wich payload is a parameter before MAX_TIMEOUT, and replies with ACK.
 	/*!
@@ -1042,7 +1049,7 @@ public:
 	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeoutACK(uint8_t dest, char *payload);
+	//uint8_t sendPacketTimeoutACK(uint8_t dest, char *payload);
 
 	//! It sends the packet wich payload is a parameter before a timeout, and replies with ACK.
 	/*!
@@ -1060,7 +1067,7 @@ public:
 	\param uint16_t wait : time to wait to send the packet.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeoutACK(uint8_t dest, char *payload, uint16_t wait);
+	//uint8_t sendPacketTimeoutACK(uint8_t dest, char *payload, uint16_t wait);
 
 	//! It sends the packet wich payload is a parameter before 'wait' time, and replies with ACK.
 	/*!
@@ -1091,7 +1098,7 @@ public:
   	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	 */
-	uint8_t setPayload(char *payload);
+	//uint8_t setPayload(char *payload);
 
 	//! It sets the payload of the packet that is going to be sent.
   	/*!
@@ -1121,7 +1128,7 @@ public:
 	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketMAXTimeoutACKRetries(uint8_t dest, char *payload);
+	//uint8_t sendPacketMAXTimeoutACKRetries(uint8_t dest, char *payload);
 
 	//! It sends a packet, waits to receive an ACK and updates the _retries value, before ending MAX_TIMEOUT time.
 	/*!
@@ -1130,7 +1137,7 @@ public:
 	\param uint16_t length : payload buffer length.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketMAXTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length);
+	//uint8_t sendPacketMAXTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length);
 
 	//! It sends a packet, waits to receive an ACK and updates the _retries value.
 	/*!
@@ -1138,7 +1145,7 @@ public:
 	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeoutACKRetries(uint8_t dest, char *payload);
+	//uint8_t sendPacketTimeoutACKRetries(uint8_t dest, char *payload);
 
 	//! It sends a packet, waits to receive an ACK and updates the _retries value.
 	/*!
@@ -1147,7 +1154,7 @@ public:
 	\param uint16_t length : payload buffer length.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length);
+	//uint8_t sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length);
 
 	//! It sends a packet, waits to receive an ACK and updates the _retries value, before ending 'wait' time.
 	/*!
@@ -1156,7 +1163,7 @@ public:
 	\param uint16_t wait : time to wait while trying to send the packet.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeoutACKRetries(uint8_t dest, char *payload, uint16_t wait);
+	//uint8_t sendPacketTimeoutACKRetries(uint8_t dest, char *payload, uint16_t wait);
 
 	//! It sends a packet, waits to receive an ACK and updates the _retries value, before ending 'wait' time.
 	/*!
@@ -1166,7 +1173,7 @@ public:
 	\param uint16_t wait : time to wait while trying to send the packet.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length, uint16_t wait);
+	//uint8_t sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length, uint16_t wait);
 
 	//! It gets the internal temperature of the module.
 	/*!

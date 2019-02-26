@@ -464,6 +464,12 @@ uint8_t SX1272::ON()
     Serial.print(remainingToA);
     Serial.println();
 #endif
+
+#ifdef SX1272_led_send_receive
+    // added by C. Pham
+    pinMode(SX1272_led_send,OUTPUT);
+    pinMode(SX1272_led_receive,OUTPUT);
+#endif
     //end
 
     //init random generator
@@ -3136,6 +3142,7 @@ uint8_t SX1272::setPreambleLength(uint16_t l)
 */
 uint8_t SX1272::getPayloadLength()
 {
+/*
     uint8_t state = 2;
 
 #if (SX1272_debug_mode > 1)
@@ -3165,6 +3172,8 @@ uint8_t SX1272::getPayloadLength()
 
     state = 0;
     return state;
+*/    
+    return _payloadlength;
 }
 
 /*
@@ -3560,6 +3569,10 @@ int16_t SX1272::getRSSIpacket()
    state = 0  --> The command has been executed with no errors
    state = -1 -->
 */
+
+
+/* 	DISABLE ALL RETRIES VERSION
+	
 uint8_t SX1272::setRetries(uint8_t ret)
 {
     uint8_t state = 2;
@@ -3593,6 +3606,8 @@ uint8_t SX1272::setRetries(uint8_t ret)
     }
     return state;
 }
+
+*/ 
 
 /*
  Function: Gets the current supply limit of the power amplifier, protecting battery chemistries.
@@ -4401,6 +4416,10 @@ boolean	SX1272::availableData(uint16_t wait)
 #if (SX1272_debug_mode > 0)
             Serial.println(F("## Valid Header received in LoRa mode ##"));
 #endif
+
+#ifdef SX1272_led_send_receive
+            digitalWrite(SX1272_led_receive, HIGH);
+#endif
             _hreceived = true;
 
 #ifdef W_NET_KEY
@@ -4527,6 +4546,10 @@ boolean	SX1272::availableData(uint16_t wait)
             Serial.println(F("## Packet received is not for me ##"));
             Serial.println();
 #endif
+
+#ifdef SX1272_led_send_receive
+            digitalWrite(SX1272_led_receive, LOW);
+#endif
         }
     }
 
@@ -4617,6 +4640,10 @@ int8_t SX1272::getPacket(uint16_t wait)
         if ((bitRead(value, 6) == 1)) {
 #if (SX1272_debug_mode > 0)
             Serial.println(F("## Packet received in LoRa mode ##"));
+#endif
+
+#ifdef SX1272_led_send_receive
+            digitalWrite(SX1272_led_receive, LOW);
 #endif
             //CrcOnPayload?
             if (bitRead(readRegister(REG_HOP_CHANNEL),6)) {
@@ -5248,6 +5275,10 @@ uint8_t SX1272::setTimeout()
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+/* 	DISABLED TO AVOID AMBIGUITY
+	WE ONLY USE THE uint8_t VERSION
+	
 uint8_t SX1272::setPayload(char *payload)
 {
     uint8_t state = 2;
@@ -5287,6 +5318,8 @@ uint8_t SX1272::setPayload(char *payload)
     state_f = setPacketLength();	// Setting packet length in packet structure
     return state_f;
 }
+
+*/
 
 /*
  Function: It sets an uint8_t array payload packet in a packet struct.
@@ -5330,6 +5363,10 @@ uint8_t SX1272::setPayload(uint8_t *payload)
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+/* 	DISABLED TO AVOID AMBIGUITY
+	WE ONLY USE THE uint8_t VERSION
+	
 uint8_t SX1272::setPacket(uint8_t dest, char *payload)
 {
     int8_t state = 2;
@@ -5467,6 +5504,8 @@ uint8_t SX1272::setPacket(uint8_t dest, char *payload)
 
     return state;
 }
+
+*/
 
 /*
  Function: It sets a packet struct in FIFO in order to sent it.
@@ -5661,6 +5700,9 @@ uint8_t SX1272::sendWithTimeout(uint16_t wait)
     Serial.println(F("Starting 'sendWithTimeout'"));
 #endif
 
+#ifdef SX1272_led_send_receive
+    digitalWrite(SX1272_led_send, HIGH);
+#endif
     // clearFlags();	// Initializing flags
 
     // wait to TxDone flag
@@ -5712,6 +5754,11 @@ uint8_t SX1272::sendWithTimeout(uint16_t wait)
         }
         state = 1;
     }
+
+#ifdef SX1272_led_send_receive
+    digitalWrite(SX1272_led_send, LOW);
+#endif
+
     if( bitRead(value, 3) == 1 )
     {
         state = 0;	// Packet successfully sent
@@ -5753,10 +5800,16 @@ uint8_t SX1272::sendWithTimeout(uint16_t wait)
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+/* 	DISABLED TO AVOID AMBIGUITY
+	WE ONLY USE THE uint8_t VERSION
+	
 uint8_t SX1272::sendPacketMAXTimeout(uint8_t dest, char *payload)
 {
     return sendPacketTimeout(dest, payload, MAX_TIMEOUT);
 }
+
+*/
 
 /*
  Function: Configures the module to transmit information.
@@ -5777,6 +5830,10 @@ uint8_t SX1272::sendPacketMAXTimeout(uint8_t dest,  uint8_t *payload, uint16_t l
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+/* 	DISABLED TO AVOID AMBIGUITY
+	WE ONLY USE THE uint8_t VERSION
+	
 uint8_t SX1272::sendPacketTimeout(uint8_t dest, char *payload)
 {
     uint8_t state = 2;
@@ -5793,6 +5850,8 @@ uint8_t SX1272::sendPacketTimeout(uint8_t dest, char *payload)
     }
     return state;
 }
+
+*/
 
 /*
  Function: Configures the module to transmit information.
@@ -5835,6 +5894,10 @@ uint8_t SX1272::sendPacketTimeout(uint8_t dest, uint8_t *payload, uint16_t lengt
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+/* 	DISABLED TO AVOID AMBIGUITY
+	WE ONLY USE THE uint8_t VERSION
+	
 uint8_t SX1272::sendPacketTimeout(uint8_t dest, char *payload, uint16_t wait)
 {
     uint8_t state = 2;
@@ -5851,6 +5914,8 @@ uint8_t SX1272::sendPacketTimeout(uint8_t dest, char *payload, uint16_t wait)
     }
     return state;
 }
+
+*/
 
 /*
  Function: Configures the module to transmit information.
@@ -5892,10 +5957,16 @@ uint8_t SX1272::sendPacketTimeout(uint8_t dest, uint8_t *payload, uint16_t lengt
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+/* 	DISABLED TO AVOID AMBIGUITY
+	WE ONLY USE THE uint8_t VERSION
+	
 uint8_t SX1272::sendPacketMAXTimeoutACK(uint8_t dest, char *payload)
 {
     return sendPacketTimeoutACK(dest, payload, MAX_TIMEOUT);
 }
+
+*/
 
 /*
  Function: Configures the module to transmit information and receive an ACK.
@@ -5917,6 +5988,10 @@ uint8_t SX1272::sendPacketMAXTimeoutACK(uint8_t dest, uint8_t *payload, uint16_t
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+/* 	DISABLED TO AVOID AMBIGUITY
+	WE ONLY USE THE uint8_t VERSION
+	
 uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, char *payload)
 {
     uint8_t state = 2;
@@ -5966,6 +6041,8 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, char *payload)
 #endif
     return state_f;
 }
+
+*/
 
 /*
  Function: Configures the module to transmit information and receive an ACK.
@@ -6035,6 +6112,10 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, uint8_t *payload, uint16_t le
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+/* 	DISABLED TO AVOID AMBIGUITY
+	WE ONLY USE THE uint8_t VERSION
+	
 uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, char *payload, uint16_t wait)
 {
     uint8_t state = 2;
@@ -6084,6 +6165,8 @@ uint8_t SX1272::sendPacketTimeoutACK(uint8_t dest, char *payload, uint16_t wait)
 #endif
     return state_f;
 }
+
+*/
 
 /*
  Function: Configures the module to transmit information and receive an ACK.
@@ -6347,22 +6430,15 @@ uint8_t SX1272::getACK(uint16_t wait)
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+/* 	DISABLE ALL RETRIES VERSION
+	
 uint8_t SX1272::sendPacketMAXTimeoutACKRetries(uint8_t dest, char  *payload)
 {
     return sendPacketTimeoutACKRetries(dest, payload, MAX_TIMEOUT);
 }
 
-/*
- Function: Configures the module to transmit information with retries in case of error.
- Returns: Integer that determines if there has been any error
-   state = 2  --> The command has not been executed
-   state = 1  --> There has been an error while executing the command
-   state = 0  --> The command has been executed with no errors
 */
-uint8_t SX1272::sendPacketMAXTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length16)
-{
-    return sendPacketTimeoutACKRetries(dest, payload, length16, MAX_TIMEOUT);
-}
 
 /*
  Function: Configures the module to transmit information with retries in case of error.
@@ -6371,6 +6447,28 @@ uint8_t SX1272::sendPacketMAXTimeoutACKRetries(uint8_t dest, uint8_t *payload, u
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+
+/* 	DISABLE ALL RETRIES VERSION
+	
+uint8_t SX1272::sendPacketMAXTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length16)
+{
+    return sendPacketTimeoutACKRetries(dest, payload, length16, MAX_TIMEOUT);
+}
+
+*/
+
+/*
+ Function: Configures the module to transmit information with retries in case of error.
+ Returns: Integer that determines if there has been any error
+   state = 2  --> The command has not been executed
+   state = 1  --> There has been an error while executing the command
+   state = 0  --> The command has been executed with no errors
+*/
+
+
+/* 	DISABLE ALL RETRIES VERSION
+	
 uint8_t SX1272::sendPacketTimeoutACKRetries(uint8_t dest, char *payload)
 {
     uint8_t state = 2;
@@ -6392,6 +6490,8 @@ uint8_t SX1272::sendPacketTimeoutACKRetries(uint8_t dest, char *payload)
     return state;
 }
 
+*/
+
 /*
  Function: Configures the module to transmit information with retries in case of error.
  Returns: Integer that determines if there has been any error
@@ -6399,6 +6499,10 @@ uint8_t SX1272::sendPacketTimeoutACKRetries(uint8_t dest, char *payload)
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+
+/* 	DISABLE ALL RETRIES VERSION
+	
 uint8_t SX1272::sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length16)
 {
     uint8_t state = 2;
@@ -6421,6 +6525,8 @@ uint8_t SX1272::sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint
     return state;
 }
 
+*/
+
 /*
  Function: Configures the module to transmit information with retries in case of error.
  Returns: Integer that determines if there has been any error
@@ -6428,6 +6534,10 @@ uint8_t SX1272::sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+
+/* 	DISABLE ALL RETRIES VERSION
+	
 uint8_t SX1272::sendPacketTimeoutACKRetries(uint8_t dest, char *payload, uint16_t wait)
 {
     uint8_t state = 2;
@@ -6449,6 +6559,8 @@ uint8_t SX1272::sendPacketTimeoutACKRetries(uint8_t dest, char *payload, uint16_
     return state;
 }
 
+*/
+
 /*
  Function: Configures the module to transmit information with retries in case of error.
  Returns: Integer that determines if there has been any error
@@ -6456,6 +6568,10 @@ uint8_t SX1272::sendPacketTimeoutACKRetries(uint8_t dest, char *payload, uint16_
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
+
+
+/* 	DISABLE ALL RETRIES VERSION
+	
 uint8_t SX1272::sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint16_t length16, uint16_t wait)
 {
     uint8_t state = 2;
@@ -6476,6 +6592,8 @@ uint8_t SX1272::sendPacketTimeoutACKRetries(uint8_t dest, uint8_t *payload, uint
 
     return state;
 }
+
+*/
 
 /*
  Function: It gets the temperature from the measurement block module.
