@@ -30,6 +30,7 @@ December 12th, 2018
 		* `git clone https://github.com/adafruit/Adafruit_Python_SSD1306.git`
 		* `cd Adafruit_Python_SSD1306`
 		* `sudo python setup.py install`
+		* then don't forget to enable i2c interface by launching `sudo raspi-config` (interfacing options)
 
 November 21st, 2018
 -------------------

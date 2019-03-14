@@ -60,14 +60,24 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 				fi		
 		elif [ "$board" = "a02082" ] || [ "$board" = "a22082" ]
 			then
-				echo "You have a Raspberry 3"
+				echo "You have a Raspberry 3B"
 				echo "Compiling for Raspberry 2 and 3"
 				if [ "$downlink" = "0" ]
 					then 
 						make lora_gateway_pi2
 					else
 						make lora_gateway_pi2_downlink 
-				fi	
+				fi
+		elif [ "$board" = "a020d3" ]
+			then
+				echo "You have a Raspberry 3B+"
+				echo "Compiling for Raspberry 2 and 3"
+				if [ "$downlink" = "0" ]
+					then 
+						make lora_gateway_pi2
+					else
+						make lora_gateway_pi2_downlink 
+				fi						
 		elif [ "$board" = "900092" ] || [ "$board" = "900093" ]
 			then
 				echo "You have a Raspberry Zero"
