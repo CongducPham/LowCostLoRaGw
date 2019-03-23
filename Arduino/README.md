@@ -23,7 +23,7 @@ All the examples uses so-called LoRa mode 1 (BW125, CR45, SF12) at 865.2 Mhz (`C
 
 **`Arduino_LoRa_Simple_DHT`** shows how a more elaborated digital sensor such as the DHT22 (also known as AM2302) can be used. Code for DHT sensor is provided by the DHT library by Adafruit. This example therefore shows how you can use libraries provided by third-parties which is most likely the approach that you will use if you need to support a new physical sensor. Note that the DHT code can also be used for the AM2305 sensor. One advantage of the AM2305 is that it usually comes in an outdoor casing which make it suitable for outdoor and real-world deployment scenarios. Note that as it is a very simple example, only one physical measure is provided. In the example, it is the temperature even if the DHT22 sensor can provide both temperature and humidity. The sensor is connected on pin A0 and is powered with digital pin 9.
 
-**`Arduino_LoRa_temp`** ends the simple temperature example serie. It illustrates a more complex example with AES encryption and the possibility to send LoRaWAN packet. It can also open a receive window after every transmission to wait for downlink message coming from the gateway (to do so, uncomment `#define WTH_RCVW`). The template shows for instance how an '/@Ax#' command from the gateway can be parsed to set the node's address to 'x'. It can serve as a template for a more complex LoRa IoT device with actuation capability on downlink packets from the gateway. The sensor is connected on pin A0 and is powered with digital pin 9.
+**`Arduino_LoRa_temp`** ends the simple temperature example serie. It illustrates a more complex example with AES encryption and the possibility to send LoRaWAN packet. It can also open a receive window after every transmission to wait for downlink message coming from the gateway (to do so, uncomment `#define WTH_RCVW`). The template shows for instance how an '/@Ax#' command from the gateway can be parsed to set the node's address to 'x'. It can serve as a template for a more complex LoRa IoT device with actuation capability on downlink packets from the gateway. The sensor is connected on pin A0 and is powered with digital pin 9. `Arduino_LoRa_temp` has been extended to provide a limited support of LoRaWAN. Refer to section `LoRaWAN example and support` for more information.
 
 **`Arduino_GPS_Parser_GGA`** is a very simple GPS example used to introduce the usage of GPS sensor modules. GPS modules are very popular sensors as geolocalization capabilities are quite attractive in IoT applications. Besides, these modules are becoming less and less expansive as a GPS module can be bought for about 5€ now (for instance the well-known UBlox 6M/7M/M8N modules). The program constantly reads data from the GPS serial (`gps_serial`) and will try to decode GPGGA messages. This example can served as a basis for a tracking device that parses in a very light-weight manner the GPGGA NMEA message. Once a fix is obtained, the GPGGA message will provide localization data and the program will convert the latitude and longitude into decimal degree that can directly be copied/pasted into GoogleMap for instance.
 
@@ -409,14 +409,26 @@ For more information on dynamic configuration of end-device, please read careful
 	
 For more information on how to perform downlink transmission from the gateway, please refer to the following [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md).
 
-LoRaWAN support
----------------
+LoRaWAN example and support
+---------------------------
 
-Limited LoRaWAN support is provided in `Arduino_LoRa_temp` and `Arduino_LoRa_Generic_Sensor` with the following define statements:
+`Arduino_LoRa_LMIC_ABP_BASIC` is the basic LoRaWAN ABP (Activation By Personalization) example from Thomas Telkamp and Matthijs Kooijman using the LMIC port for Arduino. It sends "Hello from LMIC" using DR_SF12 (i.e. BW125SF12). In order to use `Arduino_LoRa_LMIC_ABP_BASIC`, you need to create a device for instance on TTN to get the device short address (32 bits) and, if you want, both NwkSKey and AppSKey. These information have to be filled in the example code. A nice tutorial can be found on [https://medium.com/kkbankol-events/tutorial-build-a-open-source-smart-city-based-on-lora-7ca76b9a098](https://medium.com/kkbankol-events/tutorial-build-a-open-source-smart-city-based-on-lora-7ca76b9a098). Don't forget to connect pin 7,8,9 to DIO0, DIO1 and DIO2 of the radio module. You can use the `Arduino_LoRa_LMIC_ABP_BASIC` example to send data either to a regular LoRaWAN gateway (which of course works) and more interestingly to our low-cost single channel LoRa gateway that has to be configured as follows:
 
+	- set mode to 11 in `gateway_conf.json` to configure for LoRaWAN reception on single channel (868.1MHz)
+	- set "raw" to true in `gateway_conf.json` 
+	- set "aes" to true if you want local AES decryption
+		- but then, indicate both NwkSKey and AppSKey in `loraWAN_config.py`
+		- these keys can be found on your TTN account if you are using TTN LoRaWAN
+		
+Normally `Arduino_LoRa_LMIC_ABP_BASIC` use 868.1, 868.3 and 868.5. If you send to the low-cost gateway, you will loose 2 packets. You can disable 868.3 and 868.5 by uncommenting a small portion of code at the end of the `Arduino_LoRa_LMIC_ABP_BASIC` example.			
+		
+There is also the demonstration of a limited LoRaWAN support using our library provided in `Arduino_LoRa_temp` when enabling LoRaWAN with the following define statements:
+
+	#define AES
 	#define LORAWAN
-	
-Please refer to the [README-aes_lorawan](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md) file.
+	#define TO_LORAWAN_GW
+
+The setting will be BW125SF12 using frequency 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433. Again, you need to create a device for instance on TTN to get the device short address (32 bits) and, if you want, both NwkSKey and AppSKey. These information have to be filled in the example code. You can use the same device definition for both `Arduino_LoRa_LMIC_ABP_BASIC` and `Arduino_LoRa_temp`. Both examples can send to a regular LoRaWAN gateway and to our low-cost gateway. Refer to the [README-aes_lorawan](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md) file for more details on the limited LoRaWAN support.
 
 Using the RadioHead library for the end-device
 ----------------------------------------------

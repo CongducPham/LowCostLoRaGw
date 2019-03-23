@@ -250,8 +250,8 @@
 #endif
 
 #ifdef ARDUINO
-// and SPI library on Arduino platforms
-#include <SPI.h>
+  // and SPI library on Arduino platforms
+  #include <SPI.h>
   
   #define PRINTLN                   Serial.println("")              
   #define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
@@ -362,7 +362,7 @@ uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_433,CH_01_433,CH_02_433,CH_03_4
 // DEFAULT LORA MODE
 #define LORAMODE 1
 // the special mode to test BW=125MHz, CR=4/5, SF=12
-// on the 868.1MHz channel
+// on the 868.1MHz channel for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433
 //#define LORAMODE 11
 ///////////////////////////////////////////////////////////////////
 
@@ -445,6 +445,7 @@ uint8_t optCH=0;
 bool  optRAW=false;
 double optFQ=-1.0;
 uint8_t optSW=0x12;
+bool  optHEX=false;
 ///////////////////////////////////////////////////////////////////
 
 #if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
@@ -539,10 +540,30 @@ void startConfig() {
   
   // Select frequency channel
   if (loraMode==11) {
+  	PRINT_CSTSTR("%s","^$Configuring for LoRaWAN\n");
     // if we start with mode 11, then switch to 868.1MHz for LoRaWAN test
     // Note: if you change to mode 11 later using command /@M11# for instance, you have to use /@C18# to change to the correct channel
+#ifdef BAND868
     e = sx1272.setChannel(CH_18_868);
-    PRINT_CSTSTR("%s","^$Channel CH_18_868: state ");    
+    PRINT_CSTSTR("%s","^$Channel CH_18_868(868.1MHz): state ");
+#elif defined BAND900
+	//hardcoded with the first LoRaWAN frequency
+	loraChannel=923.2*1000000.0*RH_LORA_FCONVERT;
+    e = sx1272.setChannel(loraChannel);
+    PRINT_CSTSTR("%s","^$Set frequency to 923.2MHz: state ");
+#elif defined BAND433
+	//hardcoded with the first LoRaWAN frequency
+	loraChannel=433.175*1000000.0*RH_LORA_FCONVERT;
+    e = sx1272.setChannel(loraChannel);
+    PRINT_CSTSTR("%s","^$Set frequency to 433.175MHz: state ");
+#endif 
+
+	//set raw mode for LoRaWAN
+	//overriding existing configuration
+	optRAW=true;
+	
+	//set sync word for LoRaWAN
+	optSW=0x34;
   }
   else {
     e = sx1272.setChannel(loraChannel);
@@ -681,6 +702,11 @@ void setup()
   PRINT_CSTSTR("%s","^$**********Power ON: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
+  
+  if (!e) {
+    radioON=true;
+    startConfig();
+  }
 
   e = sx1272.getSyncWord();
 
@@ -700,12 +726,7 @@ void setup()
     PRINT_VALUE("%d",e);  
     PRINTLN;
   }
-  
-  if (!e) {
-    radioON=true;
-    startConfig();
-  }
-  
+    
   FLUSHOUTPUT;
   delay(1000);
 
@@ -1190,7 +1211,15 @@ void loop(void)
          FLUSHOUTPUT;
          
          for ( ; a<tmp_length; a++,b++) {
-           PRINT_STR("%c",(char)sx1272.packet_received.data[a]);
+         	
+			  if (optHEX) {
+			  	if ((uint8_t)sx1272.packet_received.data[a]<16)
+			  		PRINT_CSTSTR("%s","0");
+			  	PRINT_HEX("%X",	(uint8_t)sx1272.packet_received.data[a]);
+			  	PRINT_CSTSTR("%s"," ");	
+			  }
+			  else
+			  	PRINT_STR("%c",(char)sx1272.packet_received.data[a]);
 
            if (b<MAX_CMD_LENGTH)
               cmd[b]=(char)sx1272.packet_received.data[a];
@@ -1837,12 +1866,13 @@ int main (int argc, char *argv[]){
 #ifdef DOWNLINK      
       {"ndl", no_argument, 0,    'j' },       
 #endif                            
+      {"hex", no_argument, 0,    'k' },
       {0, 0, 0,  0}
   };
   
   int long_index=0;
   
-  while ((opt = getopt_long(argc, argv,"a:bc:d:e:fg:h:i:j", 
+  while ((opt = getopt_long(argc, argv,"a:bc:d:e:fg:h:i:jk", 
                  long_options, &long_index )) != -1) {
       switch (opt) {
            case 'a' : loraMode = atoi(optarg);
@@ -1881,7 +1911,9 @@ int main (int argc, char *argv[]){
 #ifdef DOWNLINK                       
 			case 'j' : optNDL=true;
                break;    
-#endif                                                     
+#endif
+           case 'k' : optHEX=true;
+               break;                                                     
            //default: print_usage(); 
            //    exit(EXIT_FAILURE);
       }

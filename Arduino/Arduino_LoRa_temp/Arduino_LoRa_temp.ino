@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Jan 15th, 2019 by C. Pham
+ * last update: March 23rd, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -115,6 +115,9 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
+// 
+// FOR TTN, ENABLE WITH_AES & LORAWAN & TO_LORAWAN_GW
+//
 #define WITH_EEPROM
 #define WITH_APPKEY
 //if you are low on program memory, comment STRING_LIB to save about 2K
@@ -122,14 +125,14 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //Use LoRaWAN AES-like encryption
-//#define WITH_AES
+#define WITH_AES
 //Use our Lightweight Stream Cipher (LSC) algorithm
 //#define WITH_LSC
 //#define LORAWAN
 //#define TO_LORAWAN_GW
 //#define WITH_ACK
 //this will enable a receive window after every transmission
-#define WITH_RCVW
+//#define WITH_RCVW
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -251,19 +254,25 @@ unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #include <Base64.h> 
 #endif
 
-unsigned char AppSkey[16] = {
-  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
-};
+//For TTN, use ABP mode
+//
+//Enter here your App Session Key from the TTN device info (same order, i.e. msb)
+unsigned char AppSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+//this is the default as LoRaWAN example
+//unsigned char AppSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
 
-unsigned char NwkSkey[16] = {
-  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
-};
+//Enter here your Network Session Key from the TTN device info (same order, i.e. msb)
+unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+//this is the default as LoRaWAN example
+//unsigned char NwkSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
 
-unsigned char DevAddr[4] = {
-  0x00, 0x00, 0x00, node_addr
-};
+#ifdef TO_LORAWAN_GW
+//Enter here your Device Address from the TTN device info (same order, i.e. msb)
+//example 0x12345678
+unsigned char DevAddr[4] = { 0x12, 0x34, 0x56, 0x78 };
+#else
+unsigned char DevAddr[4] = { 0x00, 0x00, 0x00, node_addr };
+#endif
 
 uint16_t Frame_Counter_Up = 0x0000;
 // we use the same convention than for LoRaWAN as we will use the same AES convention
@@ -292,6 +301,7 @@ uint8_t LSC_Nonce[16] = {
 unsigned long nextTransmissionTime=0L;
 
 #ifdef TO_LORAWAN_GW
+//we force to use BW12SF12
 int loraMode=1;
 #else
 int loraMode=LORAMODE;
@@ -499,7 +509,7 @@ void setup()
         PRINT_CSTSTR("%s","Stored idle period is null\n");                 
 #endif  
 
-#ifdef WITH_AES
+#if defined WITH_AES and not defined TO_LORAWAN_GW
     DevAddr[3] = (unsigned char)node_addr;
 #endif            
     PRINT_CSTSTR("%s","Using node addr of ");
@@ -536,7 +546,25 @@ void setup()
 #endif  
 
   // Select frequency channel
+#ifdef TO_LORAWAN_GW
+#ifdef BAND868
+  //868.1MHz
+  e = sx1272.setChannel(CH_18_868);
+  PRINT_CSTSTR("%s","Set frequency to 868.1MHz: state ");
+#elif defined BAND900
+  //hardcoded with the first LoRaWAN frequency
+  float loraChannel=923.2*1000000.0*RH_LORA_FCONVERT;
+  e = sx1272.setChannel(loraChannel);
+  PRINT_CSTSTR("%s","Set frequency to 923.2MHz: state ");
+#elif defined BAND433
+  //hardcoded with the first LoRaWAN frequency
+  float loraChannel=433.175*1000000.0*RH_LORA_FCONVERT;
+  e = sx1272.setChannel(loraChannel);
+  PRINT_CSTSTR("%s","Set frequency to 433.175MHz: state ");
+#endif 
+#else
   e = sx1272.setChannel(DEFAULT_CHANNEL);
+#endif  
   PRINT_CSTSTR("%s","Setting Channel: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
@@ -555,6 +583,8 @@ void setup()
   // e = sx1272.setPower(powerLevel);  
 
   e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
+
+  //e = sx1272.setPowerDBM((uint8_t)20);
   
   PRINT_CSTSTR("%s","Setting Power: state ");
   PRINT_VALUE("%d", e);
@@ -568,7 +598,7 @@ void setup()
 
 #ifdef TO_LORAWAN_GW
   e = sx1272.setSyncWord(0x34);
-  PRINT_CSTSTR("%s","Set sync word to 0x34 state ");
+  PRINT_CSTSTR("%s","Set sync word to 0x34: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
 #endif  
@@ -655,6 +685,10 @@ void loop(void)
       // the recommended format if now \!TC/22.5
 #ifdef STRING_LIB
       r_size=sprintf((char*)message+app_key_offset,"\\!#%d#%s/%s",field_index,nomenclature_str,String(temp).c_str());
+      
+      //for test with TTN
+      //r_size=sprintf((char*)message+app_key_offset,"Hello from UPPA");
+      
 #else
       char float_str[10];
       ftoa(float_str,temp,2);

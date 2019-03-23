@@ -1,6 +1,18 @@
 Change logs
 ===========
 
+March 23rd, 2019
+----------------
+- lora_gateway.cpp
+	* fix bug for LoRaWAN reception by gateway
+		- set mode to 11 in `gateway_conf.json` to configure for LoRaWAN reception on single channel
+		- set "raw" to true in `gateway_conf.json` 
+		- set "aes" to true if you want local AES decryption
+			- but then, indicate both NwkSKey and AppSKey in `loraWAN_config.py`
+		- support for TTN is under study
+		- BW=125MHz, CR=4/5, SF=12. 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433
+		- special thanks to Fabien Ferrero from U. Nice as finding these bugs was make possible during the test campaign in Danang, Vietnam, where he installed a LoRaWAN gateway on top of the Danang Software Park (DSP) building.
+		
 January 15th, 2019
 -------------------
 - v3.9 post-processing_gw.py
