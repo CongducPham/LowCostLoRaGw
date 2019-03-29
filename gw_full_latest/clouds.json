@@ -90,6 +90,12 @@
 	],
 	"encrypted_clouds" : [
 		{	
+			"name":"TheThingsNetwork cloud",
+			"script":"python CloudTTN.py",
+			"type":"TTN",			
+			"enabled":false			
+		},	
+		{	
 			"name":"NodeRed flow",
 			"script":"python CloudNodeRed.py",
 			"type":"nodered",			
@@ -109,6 +115,12 @@
 		}
 	],
 	"lorawan_encrypted_clouds" : [
+		{	
+			"name":"TheThingsNetwork cloud",
+			"script":"python CloudTTN.py",
+			"type":"TTN",			
+			"enabled":false			
+		},	
 		{	
 			"name":"NodeRed flow",
 			"script":"python CloudNodeRed.py",

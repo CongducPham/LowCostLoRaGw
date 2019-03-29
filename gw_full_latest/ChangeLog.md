@@ -1,17 +1,35 @@
 Change logs
 ===========
 
+March 26rd, 2019
+----------------
+- add support of TheThingsNetwork (TTN): `CloudTTN.py`, `key_TTN.py` and `scripts/ttn/ttn_stats.py` are added
+- the regular gateway id has been changed from 00000027EBD1B236 (for instance) to 0000B827EBD1B236 to take the 6 bytes of the eth0 MAC address
+- the gateway id for TTN will then be defined as B827EBFFFFD1B236
+- there is a dedicated README file for TTN support and configuration
+	- https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-TTN.md
+- you need to create an account on TTN. Follow tutorials on Internet
+- you need to register your gateway on TTN first (using the gw TTN id). Follow tutorials on Internet
+	- it is good to mention that it is a low-cost single channel gateway and also indicating the listening frequency
+	- see for instance our test gateway: https://console.thethingsnetwork.org/gateways/eui-b827ebffffd1b236
+- you need to create an application on TTN. Follow tutorials on Internet
+- you need to create a device on TTN in ABP mode. Follow tutorials on Internet
+- get the DevAddr, the Network Session Key and the App Session Key from the TTN console to fill-in the Arduino examples (`Arduino_LoRa_LMIC_ABP_BASIC` or `Arduino_LoRa_temp`) to create a device capable sending LoRaWAN packets
+- read change logs of March 23rd, 2019 for additional details 
+
 March 23rd, 2019
 ----------------
-- lora_gateway.cpp
-	* fix bug for LoRaWAN reception by gateway
-		- set mode to 11 in `gateway_conf.json` to configure for LoRaWAN reception on single channel
-		- set "raw" to true in `gateway_conf.json` 
-		- set "aes" to true if you want local AES decryption
-			- but then, indicate both NwkSKey and AppSKey in `loraWAN_config.py`
-		- support for TTN is under study
-		- BW=125MHz, CR=4/5, SF=12. 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433
-		- special thanks to Fabien Ferrero from U. Nice as finding these bugs was make possible during the test campaign in Danang, Vietnam, where he installed a LoRaWAN gateway on top of the Danang Software Park (DSP) building.
+- improved LoRaWAN support
+- v1.9 lora_gateway.cpp
+	* fix bug for LoRaWAN reception by low-cost gateway
+- set mode to 11 in `gateway_conf.json` to configure for LoRaWAN reception on single channel
+- when mode is set to 11, specific bw, cr and sf in `gateway_conf.json` can be taken into account, so make sure they are set correctly. LoRaWAN mostly uses BW125. You can change SF
+- set "raw" to true in `gateway_conf.json` 
+- set "aes" to true if you want local AES decryption
+	- but then, indicate both NwkSKey and AppSKey in `loraWAN_config.py`
+- BW=125MHz, CR=4/5, SF=12. 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433 by default
+- you can specify another customized frequency if you want. That should match the one of the end-device of course
+- special thanks to Fabien Ferrero from U. Nice as finding these bugs was make possible during the test campaign in Danang, Vietnam, where he installed a LoRaWAN gateway on top of the Danang Software Park (DSP) building.
 		
 January 15th, 2019
 -------------------
@@ -48,9 +66,15 @@ November 21st, 2018
 -------------------
 - scripts/start_gw.sh
 	* run `piShutdown.py` script at startup (use the RPI2 long header by default)
-		- to shutdown the gateway properly by connecting GPIO26 (pin 37) to ground which can be pin 39 that is next to pin 37.
-		- to reboot the gateway by connecting GPIO21 (pin 40) to ground which can be pin 39 that is next to pin 40.
-		- if you need to use GPIO26 or GPIO21, edit `scripts/piShutdown.py` to use other pins.
+		- to shutdown the gateway properly by connecting GPIO26 (pin 37) to ground which can be pin 39 that is next to pin 37
+			+-> | 37 || 38 |
+			+-> | 39 || 40 |
+				+----++----+
+				   ^	 ^
+				   +-----+ reboot
+				   
+		- to reboot the gateway by connecting GPIO21 (pin 40) to ground which can be pin 39 that is next to pin 40
+		- if you have other usage for GPIO26 or GPIO21, edit `scripts/piShutdown.py` to use other pins for shutdown/reboot
 	
 November 13th, 2018
 -------------------

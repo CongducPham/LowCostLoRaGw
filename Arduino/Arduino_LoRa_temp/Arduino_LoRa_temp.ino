@@ -2,7 +2,7 @@
  *  temperature sensor on analog A0 to test the LoRa gateway
  *  extended version with AES and custom Carrier Sense features
  *  
- *  Copyright (C) 2016-2018 Congduc Pham, University of Pau, France
+ *  Copyright (C) 2016-2019 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: March 23rd, 2019 by C. Pham
+ * last update: March 26th, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -46,77 +46,13 @@
                          |___/                                   
 ********************************************************************/
 
-// IMPORTANT SETTINGS
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
-// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-#define PABOOST
-/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE NODE ADDRESS 
-uint8_t node_addr=6;
-//////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE LORA MODE
-#define LORAMODE  1
-//////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 30;
-///////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// please uncomment only 1 choice
-//
-#define ETSI_EUROPE_REGULATION
-//#define FCC_US_REGULATION
-//#define SENEGAL_REGULATION
-///////////////////////////////////////////////////////////////////
-
-// IMPORTANT
-///////////////////////////////////////////////////////////////////
-// please uncomment only 1 choice
-#define BAND868
-//#define BAND900
-//#define BAND433
-//////////////////////////////////////////////////////////////////
-
-#ifdef ETSI_EUROPE_REGULATION
-#define MAX_DBM 14
-// previous way for setting output power
-// char powerLevel='M';
-#elif defined SENEGAL_REGULATION
-#define MAX_DBM 10
-// previous way for setting output power
-// 'H' is actually 6dBm, so better to use the new way to set output power
-// char powerLevel='H';
-#elif defined FCC_US_REGULATION
-#define MAX_DBM 14
-#endif
-
-#ifdef BAND868
-#ifdef SENEGAL_REGULATION
-const uint32_t DEFAULT_CHANNEL=CH_04_868;
-#else
-const uint32_t DEFAULT_CHANNEL=CH_10_868;
-#endif
-#elif defined BAND900
-const uint32_t DEFAULT_CHANNEL=CH_05_900;
-// For HongKong, Japan, Malaysia, Singapore, Thailand, Vietnam: 920.36MHz     
-//const uint32_t DEFAULT_CHANNEL=CH_08_900;
-#elif defined BAND433
-const uint32_t DEFAULT_CHANNEL=CH_00_433;
-#endif
-
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
 // 
-// FOR TTN, ENABLE WITH_AES & LORAWAN & TO_LORAWAN_GW
+// FOR SIMPLY DOING AES ENCRYTION: ENABLE AES
+// FOR TTN WITHOUT LORAWAN: ENABLE WITH_AES & EXTDEVADDR 
+// FOR TTN WITH LORAWAN: ENABLE WITH_AES & LORAWAN
 //
 #define WITH_EEPROM
 #define WITH_APPKEY
@@ -125,11 +61,13 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //Use LoRaWAN AES-like encryption
-#define WITH_AES
+//#define WITH_AES
 //Use our Lightweight Stream Cipher (LSC) algorithm
 //#define WITH_LSC
+//If you want to upload on TTN without LoRaWAN you have to provide the 4 bytes DevAddr and uncomment #define EXTDEVADDR
+//#define EXTDEVADDR
+//Use native LoRaWAN packet format to send to LoRaWAN gateway
 //#define LORAWAN
-//#define TO_LORAWAN_GW
 //#define WITH_ACK
 //this will enable a receive window after every transmission
 //#define WITH_RCVW
@@ -146,9 +84,49 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
 ///////////////////////////////////////////////////////////////////
 
+// IMPORTANT SETTINGS
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 8
-#define field_index 1
+// please uncomment only 1 choice
+//
+#define ETSI_EUROPE_REGULATION
+//#define FCC_US_REGULATION
+//#define SENEGAL_REGULATION
+///////////////////////////////////////////////////////////////////
+
+// IMPORTANT
+///////////////////////////////////////////////////////////////////
+// please uncomment only 1 choice
+#define BAND868
+//#define BAND900
+//#define BAND433
+//////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+#define PABOOST
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE NODE ADDRESS BETWEEN 2 AND 255
+uint8_t node_addr=6;
+//////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE LORA MODE
+#define LORAMODE  1
+//////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE SPREADING FACTOR ONLY FOR LORAWAN MODE
+#ifdef LORAWAN
+int SF=12;
+#endif
+//////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
+unsigned int idlePeriodInMin = 30;
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -178,6 +156,78 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 uint8_t my_appKey[4]={5, 6, 7, 8};
 ///////////////////////////////////////////////////////////////////
 #endif
+
+///////////////////////////////////////////////////////////////////
+// ENCRYPTION CONFIGURATION AND KEYS FOR LORAWAN
+#ifdef WITH_AES
+#include "AES-128_V10.h"
+#include "Encrypt_V31.h"
+#define AES_SHOWB64
+#ifdef AES_SHOWB64
+#include <Base64.h> 
+#endif
+
+///////////////////////////////////////////////////////////////////
+//For TTN, use specify ABP mode on the TTN device setting
+
+///////////////////////////////////////////////////////////////////
+//ENTER HERE your App Session Key from the TTN device info (same order, i.e. msb)
+unsigned char AppSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+///////////////////////////////////////////////////////////////////
+//this is the default as LoRaWAN example
+//unsigned char AppSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
+
+///////////////////////////////////////////////////////////////////
+//ENTER HERE your Network Session Key from the TTN device info (same order, i.e. msb)
+unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+///////////////////////////////////////////////////////////////////
+//this is the default as LoRaWAN example
+//unsigned char NwkSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
+
+///////////////////////////////////////////////////////////////////
+// LORAWAN OR EXTENDED DEVICE ADDRESS FOR LORAWAN CLOUD
+#if defined LORAWAN || defined EXTDEVADDR
+///////////////////////////////////////////////////////////////////
+//ENTER HERE your Device Address from the TTN device info (same order, i.e. msb). Example for 0x12345678
+unsigned char DevAddr[4] = { 0x12, 0x34, 0x56, 0x78 };
+///////////////////////////////////////////////////////////////////
+
+#else
+///////////////////////////////////////////////////////////////////
+// DO NOT CHANGE HERE
+unsigned char DevAddr[4] = { 0x00, 0x00, 0x00, node_addr };
+///////////////////////////////////////////////////////////////////
+#endif
+
+///////////////////////////////////////////////////////////////////
+// DO NOT CHANGE HERE
+uint16_t Frame_Counter_Up = 0x0000;
+// we use the same convention than for LoRaWAN as we will use the same AES convention
+// See LoRaWAN specifications
+unsigned char Direction = 0x00;
+///////////////////////////////////////////////////////////////////
+#endif
+
+///////////////////////////////////////////////////////////////////
+// ENCRYPTION CONFIGURATION AND KEYS FOR LSC ENCRYPTION METHOD
+#ifdef WITH_LSC
+#include "LSC_Encrypt.h"
+#define LSC_SHOWB64
+#ifdef LSC_SHOWB64
+#include <Base64.h> 
+#endif
+///////////////////////////////////////////////////////////////////
+// DO NOT CHANGE HERE
+#define MICv2
+#define MIC 4
+///////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+//ENTER HERE your LSC encryption key
+uint8_t LSC_Nonce[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
+///////////////////////////////////////////////////////////////////
+#endif
+///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 // IF YOU SEND A LONG STRING, INCREASE THE SIZE OF MESSAGE
@@ -214,6 +264,33 @@ uint8_t message[80];
 #include <EEPROM.h>
 #endif
 
+#ifdef ETSI_EUROPE_REGULATION
+#define MAX_DBM 14
+// previous way for setting output power
+// char powerLevel='M';
+#elif defined SENEGAL_REGULATION
+#define MAX_DBM 10
+// previous way for setting output power
+// 'H' is actually 6dBm, so better to use the new way to set output power
+// char powerLevel='H';
+#elif defined FCC_US_REGULATION
+#define MAX_DBM 14
+#endif
+
+#ifdef BAND868
+#ifdef SENEGAL_REGULATION
+const uint32_t DEFAULT_CHANNEL=CH_04_868;
+#else
+const uint32_t DEFAULT_CHANNEL=CH_10_868;
+#endif
+#elif defined BAND900
+const uint32_t DEFAULT_CHANNEL=CH_05_900;
+// For HongKong, Japan, Malaysia, Singapore, Thailand, Vietnam: 920.36MHz     
+//const uint32_t DEFAULT_CHANNEL=CH_08_900;
+#elif defined BAND433
+const uint32_t DEFAULT_CHANNEL=CH_00_433;
+#endif
+
 #define DEFAULT_DEST_ADDR 1
 
 #ifdef WITH_ACK
@@ -244,64 +321,10 @@ RTCZero rtc;
 unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
 
-#ifdef WITH_AES
-
-#include "AES-128_V10.h"
-#include "Encrypt_V31.h"
-
-#define AES_SHOWB64
-#ifdef AES_SHOWB64
-#include <Base64.h> 
-#endif
-
-//For TTN, use ABP mode
-//
-//Enter here your App Session Key from the TTN device info (same order, i.e. msb)
-unsigned char AppSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-//this is the default as LoRaWAN example
-//unsigned char AppSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
-
-//Enter here your Network Session Key from the TTN device info (same order, i.e. msb)
-unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-//this is the default as LoRaWAN example
-//unsigned char NwkSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
-
-#ifdef TO_LORAWAN_GW
-//Enter here your Device Address from the TTN device info (same order, i.e. msb)
-//example 0x12345678
-unsigned char DevAddr[4] = { 0x12, 0x34, 0x56, 0x78 };
-#else
-unsigned char DevAddr[4] = { 0x00, 0x00, 0x00, node_addr };
-#endif
-
-uint16_t Frame_Counter_Up = 0x0000;
-// we use the same convention than for LoRaWAN as we will use the same AES convention
-// See LoRaWAN specifications
-unsigned char Direction = 0x00;
-
-#endif
-
-#ifdef WITH_LSC
-
-#include "LSC_Encrypt.h"
-#define LSC_SHOWB64
-#ifdef LSC_SHOWB64
-#include <Base64.h> 
-#endif
-#define MICv2
-#define MIC 4
-
-uint8_t LSC_Nonce[16] = {
-  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C                                
-};
-
-#endif
-
 unsigned long nextTransmissionTime=0L;
 
-#ifdef TO_LORAWAN_GW
-//we force to use BW12SF12
+#ifdef LORAWAN
+//we first set to use BW12SF12
 int loraMode=1;
 #else
 int loraMode=LORAMODE;
@@ -509,7 +532,7 @@ void setup()
         PRINT_CSTSTR("%s","Stored idle period is null\n");                 
 #endif  
 
-#if defined WITH_AES and not defined TO_LORAWAN_GW
+#if defined WITH_AES && not defined EXTDEVADDR && not defined LORAWAN
     DevAddr[3] = (unsigned char)node_addr;
 #endif            
     PRINT_CSTSTR("%s","Using node addr of ");
@@ -545,8 +568,16 @@ void setup()
   sx1272._RSSIonSend=false;
 #endif  
 
+#ifdef LORAWAN
+  //we can also change the SF value for LoRaWAN
+  e = sx1272.setSF(SF);
+  PRINT_CSTSTR("%s","Set SF to ");
+  PRINT_VALUE("%d", SF);    
+  PRINT_CSTSTR("%s",": state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;  
+  
   // Select frequency channel
-#ifdef TO_LORAWAN_GW
 #ifdef BAND868
   //868.1MHz
   e = sx1272.setChannel(CH_18_868);
@@ -564,8 +595,9 @@ void setup()
 #endif 
 #else
   e = sx1272.setChannel(DEFAULT_CHANNEL);
+  PRINT_CSTSTR("%s","Setting Channel: state ");  
 #endif  
-  PRINT_CSTSTR("%s","Setting Channel: state ");
+
   PRINT_VALUE("%d", e);
   PRINTLN;
   
@@ -596,7 +628,7 @@ void setup()
   PRINT_VALUE("%d", e);
   PRINTLN;
 
-#ifdef TO_LORAWAN_GW
+#ifdef LORAWAN
   e = sx1272.setSyncWord(0x34);
   PRINT_CSTSTR("%s","Set sync word to 0x34: state ");
   PRINT_VALUE("%d", e);
@@ -684,9 +716,9 @@ void loop(void)
 
       // the recommended format if now \!TC/22.5
 #ifdef STRING_LIB
-      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#%s/%s",field_index,nomenclature_str,String(temp).c_str());
+      r_size=sprintf((char*)message+app_key_offset,"\\!%s/%s",nomenclature_str,String(temp).c_str());
       
-      //for test with TTN
+      //for range test with a LoRaWAN gateway on TTN
       //r_size=sprintf((char*)message+app_key_offset,"Hello from UPPA");
       
 #else
@@ -694,7 +726,7 @@ void loop(void)
       ftoa(float_str,temp,2);
       // this is for testing, uncomment if you just want to test, without a real temp sensor plugged
       //strcpy(float_str, "21.55567");
-      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#%s/%s",field_index,nomenclature_str,float_str);
+      r_size=sprintf((char*)message+app_key_offset,"\\!%s/%s",nomenclature_str,float_str);
 #endif
 
       PRINT_CSTSTR("%s","Sending ");
@@ -962,7 +994,6 @@ void loop(void)
 #endif   
 #endif
 
-
       sx1272.CarrierSense();
 
       startSend=millis();
@@ -1076,6 +1107,7 @@ void loop(void)
 
             switch ((char)message[i]) {
 
+#ifndef LORAWAN
                   // set the node's address, /@A10# to set the address to 10 for instance
                   case 'A': 
 
@@ -1090,7 +1122,7 @@ void loop(void)
                               cmdValue = node_addr;
                       // set node addr        
                       node_addr=cmdValue; 
-#ifdef WITH_AES
+#ifdef WITH_AES 
                       DevAddr[3] = (unsigned char)node_addr;
 #endif
                       
@@ -1109,9 +1141,8 @@ void loop(void)
                       my_sx1272config.overwrite=1;
                       EEPROM.put(0, my_sx1272config);
 #endif
-
                       break;        
-
+#endif
                   // set the time between 2 transmissions, /@I10# to set to 10 minutes for instance
                   case 'I': 
 

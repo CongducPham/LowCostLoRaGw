@@ -13,6 +13,10 @@ Quick start
 There are additional dedicated README files
 -------------------------------------------
 
+- better support of LoRaWAN and connection to TTN platform
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-TTN.md) for TTN support and configuration
+	- [section](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino#lorawan-example-and-support) for the device side
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md) for updated info on LoRaWAN
 - remote access to your gateway from anywhere with `ngrok`
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-remote-access-ngrok.md)
 - interfacing with Node-Red
@@ -21,8 +25,8 @@ There are additional dedicated README files
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
 - encryption and native LoRaWAN frame format
 	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md)
-	- end-device can send native LoRaWAN packets
-	- low-level gateway provides raw output for post_processing_gw.py to handle LoRaWAN packets
+	- gateway can receive LoRaWAN packets from LoRaWAN devices (including Arduino LMIC based device)
+	- low-level gateway can provide raw output for `post_processing_gw.py` to handle LoRaWAN packets and push to TTN using CloudTTN.py for instance
 - downlink features: to send from gateway to end-device
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
 - manual installation procedure

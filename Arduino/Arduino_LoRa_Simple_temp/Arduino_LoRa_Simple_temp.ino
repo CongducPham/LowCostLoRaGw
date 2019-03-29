@@ -1,7 +1,7 @@
 /*
  *  Fully operational temperature sensor on analog A0 to test the LoRa gateway
  *
- *  Copyright (C) 2016-2018 Congduc Pham, University of Pau, France
+ *  Copyright (C) 2016-2019 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,13 +17,12 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Jan 15th, 2019 by C. Pham
+ * last update: March 26th, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
  */
 
-// IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // add here some specific board define statements if you want to implement user-defined specific settings
 // A/ LoRa radio node from IoTMCU: https://www.tindie.com/products/IOTMCU/lora-radio-node-v10/
@@ -49,71 +48,6 @@
 //uncomment if you want to disable WiFi on ESP8266 boards
 //#include <ESP8266WiFi.h>
 
-// IMPORTANT SETTINGS
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
-// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-#define PABOOST
-/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE NODE ADDRESS 
-#define node_addr 6
-//////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE LORA MODE
-#define LORAMODE  1
-//////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 10;
-///////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// please uncomment only 1 choice
-//
-#define ETSI_EUROPE_REGULATION
-//#define FCC_US_REGULATION
-//#define SENEGAL_REGULATION
-/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// please uncomment only 1 choice
-#define BAND868
-//#define BAND900
-//#define BAND433
-///////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-#ifdef ETSI_EUROPE_REGULATION
-#define MAX_DBM 14
-// previous way for setting output power
-// char powerLevel='M';
-#elif defined SENEGAL_REGULATION
-#define MAX_DBM 10
-// previous way for setting output power
-// 'H' is actually 6dBm, so better to use the new way to set output power
-// char powerLevel='H';
-#elif defined FCC_US_REGULATION
-#define MAX_DBM 14
-#endif
-
-#ifdef BAND868
-#ifdef SENEGAL_REGULATION
-const uint32_t DEFAULT_CHANNEL=CH_04_868;
-#else
-const uint32_t DEFAULT_CHANNEL=CH_10_868;
-#endif
-#elif defined BAND900
-//const uint32_t DEFAULT_CHANNEL=CH_05_900;
-// For HongKong, Japan, Malaysia, Singapore, Thailand, Vietnam: 920.36MHz     
-const uint32_t DEFAULT_CHANNEL=CH_08_900;
-#elif defined BAND433
-const uint32_t DEFAULT_CHANNEL=CH_00_433;
-#endif
-
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
@@ -138,9 +72,42 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
 ///////////////////////////////////////////////////////////////////
 
+// IMPORTANT SETTINGS
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// please uncomment only 1 choice
+//
+#define ETSI_EUROPE_REGULATION
+//#define FCC_US_REGULATION
+//#define SENEGAL_REGULATION
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// please uncomment only 1 choice
+#define BAND868
+//#define BAND900
+//#define BAND433
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
+//#define PABOOST
+/////////////////////////////////////////////////////////////////////////////////////////////////////////// 
+
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE THINGSPEAK FIELD BETWEEN 1 AND 8
-#define field_index 3
+// CHANGE HERE THE NODE ADDRESS 
+#define node_addr 8
+//////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE LORA MODE
+#define LORAMODE  4
+//////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
+unsigned int idlePeriodInMin = 10;
 ///////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
@@ -182,6 +149,33 @@ uint8_t message[50];
 
 #ifdef WITH_EEPROM
 #include <EEPROM.h>
+#endif
+
+#ifdef ETSI_EUROPE_REGULATION
+#define MAX_DBM 14
+// previous way for setting output power
+// char powerLevel='M';
+#elif defined SENEGAL_REGULATION
+#define MAX_DBM 10
+// previous way for setting output power
+// 'H' is actually 6dBm, so better to use the new way to set output power
+// char powerLevel='H';
+#elif defined FCC_US_REGULATION
+#define MAX_DBM 14
+#endif
+
+#ifdef BAND868
+#ifdef SENEGAL_REGULATION
+const uint32_t DEFAULT_CHANNEL=CH_04_868;
+#else
+const uint32_t DEFAULT_CHANNEL=CH_10_868;
+#endif
+#elif defined BAND900
+//const uint32_t DEFAULT_CHANNEL=CH_05_900;
+// For HongKong, Japan, Malaysia, Singapore, Thailand, Vietnam: 920.36MHz     
+const uint32_t DEFAULT_CHANNEL=CH_08_900;
+#elif defined BAND433
+const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
 
 #define DEFAULT_DEST_ADDR 1
@@ -499,13 +493,13 @@ void loop(void)
       
       // the recommended format if now \!TC/22.5
 #ifdef STRING_LIB
-      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#%s/%s",field_index,nomenclature_str,String(temp).c_str());
+      r_size=sprintf((char*)message+app_key_offset,"\\!%s/%s",nomenclature_str,String(temp).c_str());
 #else
       char float_str[10];
       ftoa(float_str,temp,2);
       // this is for testing, uncomment if you just want to test, without a real temp sensor plugged
       //strcpy(float_str, "21.55567");
-      r_size=sprintf((char*)message+app_key_offset,"\\!#%d#%s/%s",field_index,nomenclature_str,float_str);
+      r_size=sprintf((char*)message+app_key_offset,"\\!%s/%s",nomenclature_str,float_str);
 #endif
 
       PRINT_CSTSTR("%s","Sending ");

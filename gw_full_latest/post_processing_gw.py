@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v3.9 - image modification and need to incorporate aux_radio features
+# v3.9a - image modification and need to incorporate aux_radio features
 # + copy post-processing feature
 #------------------------------------------------------------
 
@@ -99,13 +99,20 @@ LORAWAN_HEADER_SIZE=13
 #last pkt information
 #------------------------------------------------------------
 pdata="0,0,0,0,0,0,0,0"
-rdata="0,0,0"
+rdata="0,0,0,0"
 tdata="N/A"
 
 short_info_1="N/A"
 short_info_2="N/A"
 short_info_3="N/A"
-npkt=0
+
+#use same variable name than Semtech Packet Forwarder
+rxnb=0 #Number of radio packets received (unsigned integer)
+rxok=0 #Number of radio packets received with a valid PHY CRC
+rxfw=0 #Number of radio packets forwarded (unsigned integer)
+ackr=0 #Percentage of upstream datagrams that were acknowledged
+dwnb=0 #Number of downlink datagrams received (unsigned integer)
+txnb=0 #Number of packets emitted (unsigned integer)
 
 dst=0
 ptype=0
@@ -430,17 +437,7 @@ except KeyError:
 	_gw_status = 0		
 
 if _gw_status < 0:
-	_gw_status = 0 
-
-# if _gw_status:
-# 	try:
-# 		_gw_lat = json_array["gateway_conf"]["ref_latitude"]
-# 	except KeyError:
-# 		_gw_lat = "undef"
-# 	try:
-# 		_gw_long = json_array["gateway_conf"]["ref_longitude"]
-# 	except KeyError:
-# 		_gw_long = "undef"		
+	_gw_status = 0 		
 					
 def status_target():
 	while True:
@@ -449,9 +446,20 @@ def status_target():
 		if _gw_downlink:
 			print 'post status: will check for downlink requests every %d seconds' % _gw_downlink
 		print 'post status: executing periodic tasks'
-		sys.stdout.flush()		
+		sys.stdout.flush()
+		
+		#build the stat string: 
+		stats_str=""
+		stats_str+=str(rxnb)+","
+		stats_str+=str(rxok)+","
+		stats_str+=str(rxfw)+","
+		stats_str+=str(ackr)+","
+		stats_str+=str(dwnb)+","
+		stats_str+=str(txnb)
+						
 		try:
-			os.system('python post_status_processing_gw.py')
+			cmd_arg='python post_status_processing_gw.py'+" \""+stats_str+"\""+" 2> /dev/null" 
+			os.system(cmd_arg)
 		except:
 			print "Error when executing post_status_processing_gw.py"			
 		global _gw_status
@@ -917,9 +925,10 @@ while True:
 				info_str="rawFormat(len=%d SNR=%d RSSI=%d)" % (datalen,SNR,RSSI)	
 			print info_str
 
-			npkt=npkt+1
+			rxnb=rxnb+1
+			rxok=rxnb
 			
-			short_info_1="src=%d seq=%d #pk=%d" % (src,seq,npkt)
+			short_info_1="src=%d seq=%d #pk=%d" % (src,seq,rxnb)
 			short_info_2="SNR=%d RSSI=%d" % (SNR,RSSI)
 			
 			#here we check for pending downlink message that need to be sent back to the end-device
@@ -986,7 +995,18 @@ while True:
 		if (ch=='t'):
 			tdata = sys.stdin.readline()
 			print "rcv timestamp (^t): "+tdata
+			tdata = tdata.replace('\n','')
 			short_info_3=tdata.split('+')[0]
+			
+			if (dateutil_tz==True):
+				print "adding time zone info"
+				#adding time zone info to tdata to get time zone information when uploading to clouds
+				localdt = datetime.datetime.now(dateutil.tz.tzlocal())
+				i=localdt.isoformat().find("+")
+				tdata = tdata+localdt.isoformat()[i:]
+				print "new rcv timestamp (^t): %s" % tdata
+			else:
+				tdata = tdata+"+00:00"
 									
 		if (ch=='l'):
 			#TODO: LAS service	
@@ -1054,11 +1074,6 @@ while True:
 			elif (ch=='!'): 
 
 				ldata = getAllLine()
-				
-				if (dateutil_tz==True):
-					#replacing tdata to get time zone information when uploading to clouds
-					localdt = datetime.datetime.now(dateutil.tz.tzlocal())
-					tdata = localdt.replace(microsecond=0).isoformat()
 				
 				print "number of enabled clouds is %d" % len(_enabled_clouds)	
 				

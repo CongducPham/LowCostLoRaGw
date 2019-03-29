@@ -8,9 +8,9 @@
 		"freq" : -1
 	},
 	"gateway_conf" : {
-		"gateway_ID" : "000000XXXXXXXXXX",
-		"ref_latitude" : "my_lat",
-		"ref_longitude" : "my_long",
+		"gateway_ID" : "000000XXXXXXDEF0",
+		"ref_latitude" : "43.314106",
+		"ref_longitude" : "-0.363887",
 		"wappkey" : false,
 		"raw" : false,
 		"aes" : false,
@@ -20,15 +20,16 @@
 		"auto_update" : false,
 		"dht22" : 0,
 		"dht22_mongo": false,
-		"downlink" : 0,
+		"downlink" : 0,	
 		"status" : 600,
 		"aux_radio" : 0
 	},
 	"status_conf" : {
 		"dynamic_gps" : false,
-		"gps_port" : "/dev/ttyACM0",		
-		"copy_post_processing_log" : false
-	},		
+		"gps_port" : "/dev/ttyACM0",
+		"copy_post_processing_log" : false,
+		"ttn_status" : true
+	},	
 	"alert_conf" : {
 		"use_mail" : false,
 		"contact_mail" : "the_contact_mail_address,another_contact_mail_address_if_needed",

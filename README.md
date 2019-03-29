@@ -75,7 +75,10 @@ Look also at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.
 
 Main features of gateway
 ------------------------
-
+- **NEW** better support of LoRaWAN and connection to TTN platform
+	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-TTN.md) for TTN support and configuration
+	- see this [section](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino#lorawan-example-and-support) for the device side
+	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md) for updated info on LoRaWAN
 - **NEW** remote access to your gateway from anywhere with `remot3.it`
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-remote-access-remot3it.md)
 - remote access to your gateway from anywhere with `ngrok`
@@ -87,12 +90,12 @@ Main features of gateway
 	- `raspap-webgui` from https://github.com/billz/raspap-webgui has been integrated and can be accessed at http://`gw_ip_address`/raspap-webgui. When the gateway is configured as a WiFi client, `raspap-webgui` is especially useful to dynamically discover and configure additional WiFi networks. Read this [section](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest#make-your-gateway-a-wifi-client) prior to use `raspap-webgui`.	
 - simple, flexible and generic cloud management approach
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
-	- Look at the provided cloud script examples to see how IoT clouds such as ThingSpeak, GroveStreams, MQTT,... are supported
+	- look at the provided cloud script examples to see how IoT clouds such as TTN, ThingSpeak, GroveStreams, MQTT,... are supported
 	- a cloud script can be used to generalize the upload of data using SMS, ftp, file, MQTT, Node-Red flow,...
 - encryption and native LoRaWAN frame format
 	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md)
-	- end-device can send native LoRaWAN packets (for instance using a LoRaWAN radio chip such as RN2483)
-	- low-level gateway provides raw output for post_processing_gw.py to handle LoRaWAN packets
+	- gateway can receive LoRaWAN packets from LoRaWAN devices (including Arduino LMIC based device)
+	- low-level gateway can provide raw output for `post_processing_gw.py` to handle LoRaWAN packets and push to TTN using `CloudTTN.py` for instance
 - downlink features: to send from gateway to end-device
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md) 	 	
 - an alert mail can be sent to a list of contact email addresses to notify when gateway is starting and when the radio module has been reset

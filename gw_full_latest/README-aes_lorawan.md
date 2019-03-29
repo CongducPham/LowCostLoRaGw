@@ -1,30 +1,43 @@
 Support for AES encryption and basic LoRaWAN with the low-cost LoRa platform
 ============================================================================
 
-Decription 
-----------
+Description 
+-----------
 
 This module will add AES encryption as well as limited LoRaWAN support for both end-devices and post-processing at gateway level:
 
-- end-device can use LoRaWAN-like encryption (AES-CTR) to encrypt the payload, but still using our non-LoRaWAN packet format. This case is referred to as encapsulated LoRaWAN packet. The packet can be received natively by our low-cost gateway (see our packet header format in [section 3 of the low-cost gateway web site](http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)). The source address is then only coded on 1 byte.
-- end-device can additionally decide to forge a simple LoRaWAN packet with encrypted payload and MIC computation as described by LoRaWAN specification. This case is referred to as native LoRaWAN packet. The packet can be received by our low-cost gateway (see below) as well as by a LoRaWAN gateway. The device address is a 4-byte address following the LoRaWAN specification.
+- end-device can use LoRaWAN-like encryption (AES-CTR) to encrypt the payload, but still using our non-LoRaWAN packet format. This case is referred to as **encapsulated LoRaWAN encrypted mode**. The packet can be received natively by our low-cost gateway (see our packet header format in [section 3 of the low-cost gateway web site](http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)). The source address is then only coded on 1 byte.
+
+- end-device can additionally decide to forge a LoRaWAN packet with encrypted payload and MIC computation as described by LoRaWAN specification. This case is referred to as **native LoRaWAN mode**. There is therefore no additional header to the LoRaWAN packet and the sync word is set to the LoRaWAN public value, i.e. 0x34. The packet can be received by our low-cost gateway (see below) as well as by a LoRaWAN gateway. The device address is a 4-byte address following the LoRaWAN specification.
+
 - in both cases, both AppSKey and NwkSKey need to be known by the end-device, therefore the Activation by Personalization (ABP) approach is used here. 
-- post_processing_gw.py is able to locally check integrity and decrypt the encryted payload or/and the LoRaWAN packet if both NwkSKey and AppSKey are also known at the gateway's post-processing level. post_processing_gw.py uses loraWAN.py script for that purpose. loraWAN.py uses NwkSKey and AppSKey from loraWAN_config.py.
-- in case these keys are not stored on the gateway, post_processing_gw.py can upload the encrypted data (actually the whole LoRaWAN frame with necessary information for decryption provided that AppSKey and NwkSKey are known) on an Internet cloud like a traditional LoRaWAN gateway would do. We provide 2 examples using Firebase, CloudFireBaseAES.py and CloudFireBaseLWAES.py, and 1 example using MQTT,CloudMQTT.py, to store the encryted frame.
-	- CloudFireBaseAES.py uploads an encapsulated encrypted LoRaWAN packet.
-	- CloudFireBaseLWAES.py uploads a native encrypted LoRaWAN packet.
-	- CloudMQTT.py published a native encrypted LoRaWAN packet.	
-- clouds.json has 2 additional cloud sections, "encrypted_clouds" and "lorawan_encrypted_clouds", to indicate scripts that will be called to decrypt respectively encapsulated and native LoRaWAN packets. In the provided examples, "python CloudFireBaseAES.py" will be used for "encrypted_clouds" while "python CloudFireBaseLWAES.py" and "python CloudMQTT.py" will be used for "lorawan_encrypted_clouds".
-- the LoRaWAN encryption/decryption and MIC integrity functionalities at the gateway (post_processing_gw.py) are provided by the LoRaWAN python library by Jeroen Nijhof. See "How to update your gateway" section.
-- the LoRaWAN encryption and packet forging procedure use the AES library and examples provided by Gerben den Hartog at https://github.com/Ideetron/RFM95W_Nexus/tree/master/LoRaWAN_V31. Arduino_LoRa_temp.ino has been updated with these encryption and simple LoRaWAN capabilities. To enable payload encryption, uncomment #define WITH_AES. To further use only LoRaWAN packet format uncomment #define LORAWAN.
-- the lora_gateway program can provide raw data to post_processing_gw.py by using the --raw option (start_gw.py will use --raw for the lora_gateway program if ["gateway_conf"]["raw"] is true). This is required to handle native LoRaWAN packets. 
-- post_processing_gw.py can also detect, decode and handle LoRaWAN packet with the ["gateway_conf"]["raw"] option.
-- you can use raw format for both lora_gateway and post_processing_gw.py and **still be able** to use the non-LoRaWAN mode because post_processing_gw.py can distinguish between non-LoRaWAN packet format and LoRaWAN packet format. Therefore if you have mixed scenarios you can use the ["gateway_conf"]["raw"] to be able to handle both cases: encapsulated and native LoRaWAN packet.
 
-**Important**: when end-device is using encryption (#define WITH_AES) we use the LoRaWAN packet format and encryption procedure because we simply want to reuse the LoRaWAN python library for decryption. The 4-byte appkey can still be used as an additional way to filter out messages. 
+- `post_processing_gw.py` is able to locally check integrity and decrypt the encrypted payload or/and the LoRaWAN packet if both NwkSKey and AppSKey are also known at the gateway's post-processing level. `post_processing_gw.py` uses `loraWAN.py` script for that purpose. `loraWAN.py` uses NwkSKey and AppSKey from `loraWAN_config.py`.
 
-How to update your gateway
-==========================
+- in case these keys are not stored on the gateway, `post_processing_gw.py` can upload the encrypted data (actually the whole LoRaWAN frame with necessary information for decryption provided that AppSKey and NwkSKey are known) on an Internet cloud like a traditional LoRaWAN gateway would do. We provide 2 examples using TheThingsNetwork (`CloudTTN.py`) and Firebase (`CloudFireBaseAES.py` and `CloudFireBaseLWAES.py`) and 1 example using MQTT (`CloudMQTT.py`), to store the encrypted frame:
+	- `CloudTTN.py` uploads both encapsulated encrypted and native LoRaWAN packet to the TTN platform
+	- `CloudFireBaseAES.py` uploads an encapsulated encrypted packet
+	- `CloudFireBaseLWAES.py` uploads a native LoRaWAN packet
+	- `CloudMQTT.py` publishes both encapsulated encrypted and native  LoRaWAN packet
+	
+- `clouds.json` has 2 additional cloud sections, `encrypted_clouds` and `lorawan_encrypted_clouds`, to indicate scripts that will be called to handle respectively encapsulated and native LoRaWAN packets. In the provided examples, `python CloudFireBaseAES.py` will be used for `encrypted_clouds` while `python CloudFireBaseLWAES.py` will be used for `lorawan_encrypted_clouds`. `python CloudTTN.py` and `python CloudMQTT.py` are declared to handle both type of clouds.
+
+- the LoRaWAN encryption/decryption and MIC integrity functionalities at the gateway (`post_processing_gw.py`) are provided by the LoRaWAN python library by Jeroen Nijhof. See "How to update your gateway" section.
+
+- the LoRaWAN encryption and packet forging procedure use the AES library and examples provided by Gerben den Hartog at https://github.com/Ideetron/RFM95W_Nexus/tree/master/LoRaWAN_V31. `Arduino_LoRa_temp.ino` has been updated with these encryption and simple LoRaWAN capabilities. To enable payload encryption, uncomment #define WITH_AES. To further use LoRaWAN packet format to be able to send to a LoRaWAN gateway, uncomment also #define LORAWAN.
+
+- the `lora_gateway` program can provide raw data to `post_processing_gw.py` by using the `--raw` option (`start_gw.py` will set the `--raw` option for the lora_gateway program if `["gateway_conf"]["raw"]` is true). This is required to handle native LoRaWAN packets.
+
+- `post_processing_gw.py` can also detect, decode and handle LoRaWAN packet with the `["gateway_conf"]["raw"]` option.
+
+- you can use raw format for both `lora_gateway` and `post_processing_gw.py` and **still be able** to use our packet format because `post_processing_gw.py` can distinguish between these 2 formats. Therefore if you have mixed scenarios you can set `["gateway_conf"]["raw"]` to true to be able to handle all cases: non-encrypted, encapsulated encrypted and native LoRaWAN packet.
+
+**Important**: when end-device is simply using encryption (#define WITH_AES) and not LoRaWAN, we still use the LoRaWAN packet format and encryption procedure because we simply want to reuse the LoRaWAN python library for decryption. But the packet will not be received by a LoRaWAN gateway. The 4-byte appkey can still be used as an additional way to filter out messages. 
+
+Detailed information are added in the next paragraphs for the advanced readers who wants to better understand the whole encryption procedure.
+
+How to update your gateway (note that the SD card image has already all the required dependencies)
+==================================================================================================
 	
 You may need the python-crypto package
 
@@ -56,7 +69,7 @@ and DevAddr is:
 	  0x02, 0x01, 0x05, 0x04
 	};		
 
-We use the AES-CTR encrypting mode of LoRaWAN with FCnt=0 and Direction=0 (uplink). The example uses the Arduino_LoRa_temp that is an extended version of Arduino_LoRa_Simple_temp updated with AES and LoRaWAN capabilities.
+We use the AES-CTR encrypting mode of LoRaWAN with FCnt=0 and Direction=0 (uplink). The example uses the `Arduino_LoRa_temp` that is an extended version of Arduino_LoRa_Simple_temp updated with AES and LoRaWAN capabilities.
 
 	LoRa temperature sensor
 	Teensy31/32 detected
@@ -164,12 +177,12 @@ then you are ready to use them without the additional steps.
 	>>> print bytearray(lorawan.get_payload())
 	\!#3#TC/75.8
 	
-Example 2: post-processing_gw.py handling a fake LoRaWAN packet for local decryption and processing
+Example 2: `post-processing_gw.py` handling a fake LoRaWAN packet for local decryption and processing
 ===================================================================================================
 
-post_processing_gw.py will be run in raw mode to accept packets in raw format and with local AES to locally decrypt. post_processing_gw.py will then detect a LoRaWAN packet format and starts the packet processing. Here, we will show the result of a test using test-loraWAN-2.py that emulates an output from the low-level lora_gateway program.
+`post_processing_gw.py` will be run in raw mode to accept packets in raw format and with local AES to locally decrypt. `post_processing_gw.py` will then detect a LoRaWAN packet format and starts the packet processing. Here, we will show the result of a test using `test-loraWAN-2.py` that emulates an output from the low-level `lora_gateway` program.
 
-test-loraWAN-2.py:
+`test-loraWAN-2.py`:
 
 	import sys
 	print "^p0,0,0,0,26,8,-45"
@@ -181,7 +194,7 @@ Then we issued the following command:
 
 	> python test-loraWAN-2.py | python post_processing_gw.py
 	
-with both ["gateway_conf"]["raw"] and ["gateway_conf"]["aes"] set to true; ["gateway_conf"]["wappkey"] is set to false.
+with both `["gateway_conf"]["raw"]` and `["gateway_conf"]["aes"]` set to true; `["gateway_conf"]["wappkey"]` is set to false.
 	
 Output is shown below:
 
@@ -220,12 +233,12 @@ Output is shown below:
 	ThingSpeak: returned code from server is 201
 	--> cloud end
 
-When a LoRaWAN packet is received, post_processing_gw.py will convert the raw packet content into a list of bytes, lorapkt, and call loraWAN_process_pkt:
+When a LoRaWAN packet is received, `post_processing_gw.py` will convert the raw packet content into a list of bytes, `lorapkt`, and call `loraWAN_process_pkt`:
 
 	from loraWAN import loraWAN_process_pkt
 	plain_payload=loraWAN_process_pkt(lorapkt)
 	
-loraWAN_process_pkt() is provided by loraWAN.py:
+`loraWAN_process_pkt()` is provided by `loraWAN.py`:
 
 	import LoRaWAN
 	from LoRaWAN.MHDR import MHDR
@@ -256,12 +269,12 @@ loraWAN_process_pkt() is provided by loraWAN.py:
 		else:
 			return "###BADMIC###"	
 	
-If post_processing_gw.py cannot decrypt the payload because encryption keys are not available then you can use a json cloud (such as Firebase) to store the encrypted payload in base64 format. Note that NwkSkey is not available, then MIC computation can not be performed therefore you are not sure at the gateway level that the encrypted payload comes from the right sensor or not. LoRaWAN gateways have the same issue as NwkSKey is stored in LoRaWAN network server.
+If `post_processing_gw.py` cannot decrypt the payload because encryption keys are not available then you can use a json cloud (such as Firebase) to store the encrypted payload in base64 format. Note that if NwkSkey is not available, then MIC computation can not be performed therefore you are not sure at the gateway level that the encrypted payload comes from the right sensor or not. LoRaWAN gateways have the same issue as NwkSKey is stored in LoRaWAN network server.
 
-Example 3: full example with real sensor and the low-cost gateway: no native LoRaWAN format
-===========================================================================================
+Example 3: full example with real sensor and the low-cost gateway: encrypted only format
+========================================================================================
 
-The end-device will use LoRaWAN packet format only to ease the encryption procedure. In the Arduino_LoRa_temp example, #define WITH_AES is uncommented. Therefore both lora_gateway and post_processing_gw.py run in normal mode (with packet header) to process an encapsulated encrypted LoRaWAN-like packet. 
+The end-device will use LoRaWAN packet format only to ease the encryption procedure. In the `Arduino_LoRa_temp` example, #define WITH_AES is uncommented. Therefore both `lora_gateway` and `post_processing_gw.py` run in normal mode (with our packet header) to process an encapsulated encrypted LoRaWAN-like packet. 
 
 We use the following settings for our temperature sensor:
 
@@ -331,7 +344,7 @@ The gateway is started with:
 
 	> sudo ./lora_gateway --mode 1 | python post_processing_gw.py 
 	
-Note that both lora_gateway and post_processing_gw.py are in normal mode, i.e. ["gateway_conf"]["raw"] is false. post_processing_gw.py uses local AES decryption, i.e. and ["gateway_conf"]["aes"] is true.
+Note that both `lora_gateway` and `post_processing_gw.py` are in normal mode, i.e. `["gateway_conf"]["raw"]` is false. `post_processing_gw.py` uses local AES decryption, i.e. `["gateway_conf"]["aes"]` is true.
 
 	enable local AES decryption
 	Parsing cloud declarations
@@ -387,7 +400,7 @@ Note that both lora_gateway and post_processing_gw.py are in normal mode, i.e. [
 Example 4: full example with real sensor and low-cost gateway: native LoRaWAN format
 ====================================================================================
 
-The end-device will use LoRaWAN packet format (no additional header). In the Arduino_LoRa_temp example, both #define WITH_AES and #define LORAWAN are uncommented. Therefore both lora_gateway and post_processing_gw.py are in raw mode format to transparently process native LoRaWAN packet.
+The end-device will use native LoRaWAN packet format (no additional header). In the `Arduino_LoRa_temp` example, both #define WITH_AES and #define LORAWAN are uncommented. Therefore both `lora_gateway` and `post_processing_gw.py` are in raw mode format to transparently process native LoRaWAN packet.
 
 We use the following settings for our temperature sensor:
 
@@ -456,7 +469,7 @@ The gateway is started with:
 
 	> sudo ./lora_gateway --mode 1 --raw | python post_processing_gw.py
 	
-Note that both lora_gateway and post_processing_gw.py are in raw mode format to transparently process native LoRaWAN packet. Again, post_processing_gw.py uses local AES decryption. Therefore, here again, both ["gateway_conf"]["raw"] and ["gateway_conf"]["aes"] are set to true.
+Note that both `lora_gateway` and `post_processing_gw.py` are in raw mode format to transparently process native LoRaWAN packet. Again, `post_processing_gw.py` uses local AES decryption. Therefore, here again, both `["gateway_conf"]["raw"]` and `["gateway_conf"]["aes"]` are set to true.
 
 	raw output from gateway. post_processing_gw will handle packet format
 	enable local AES decryption
@@ -518,8 +531,7 @@ The gateway is launched as follows:
 	
 	> sudo ./lora_gateway --mode 1 --raw --sw 34 --freq 868.1| python post_processing_gw.py
 	
-which additionally sets the sync word to 0x34 for LoRaWAN and the frequency to one the pre-defined LoRaWAN uplink frequency (i.e. 868.1MHz). Therefore, here again, both ["gateway_conf"]["raw"] and ["gateway_conf"]["aes"] are set to true.	
-
+which additionally sets the sync word to 0x34 for LoRaWAN networks and the frequency to one of the pre-defined LoRaWAN uplink frequency (here 868.1MHz). Therefore, here again, both `["gateway_conf"]["raw"]` and `["gateway_conf"]["aes"]` are set to true.	
 	
 Gateway output
 --------------
@@ -553,7 +565,7 @@ Gateway output
 mDot configuration
 ------------------
 	
-The mDot is a LoRaWAN radio module from MultiTech. The mdot will be configured by ABP, with the AppSKey and NwkSKey matching those declared in loraWAN.py. Here is the configuration commands issued with a serial tool. Baud rate is 115200. Lines with # are comment lines that were added for clarity purposes.
+The mDot is a LoRaWAN radio module from MultiTech. The mdot will be configured by ABP, with the AppSKey and NwkSKey matching those declared in `loraWAN.py`. Here is the configuration commands issued with a serial tool. Baud rate is 115200. Lines with `#` are comment lines that were added for clarity purposes.
 
 	# Network Joining mode : manual
 	AT+NJM=0
@@ -687,10 +699,10 @@ Gateway output, continued
 	plain payload is : HelloWorld_1
 	HelloWorld_1
 
-Example 6: use CloudFireBaseAES.py to upload an encapsulated encrypted LoRaWAN packet
+Example 6: use `CloudFireBaseAES.py` to upload an encapsulated encrypted LoRaWAN packet
 =====================================================================================
 
-clouds.json contains the following section:
+`clouds.json` contains the following section:
 
 	"encrypted_clouds" : [
 		{
@@ -702,7 +714,7 @@ clouds.json contains the following section:
 		}
 	]
 
-post_processing_gw.py will not decrypt locally the encrypted packet (["gateway_conf"]["aes"] is false). This is the case when NwkSKey and AppSKey are not available on the gateway. post_processing_gw.py will call "python CloudFireBaseAES.py" with appropriate parameters. See the new cloud management design [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md).
+`post_processing_gw.py` will not decrypt locally the encrypted packet because `["gateway_conf"]["aes"]` is false. This is the case when NwkSKey and AppSKey are not available on the gateway. `post_processing_gw.py` will call `python CloudFireBaseAES.py` with appropriate parameters. See the new cloud management design [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md).
 
 	> python test-loraWAN-3.py | python post_processing_gw.py
 
@@ -779,13 +791,13 @@ A LoRaWAN packet has the following format:
 
 	MHDR[1] | DevAddr[4] | FCtrl[1] | FCnt[2] | FPort[1] | EncryptedPayload | MIC[4]
 	
-The encapsulated LoRaWAN format means that the LoRaWAN packet is considered as a payload in our packet format which adds a 4-byte header (see our packet header format in [section 3 of the low-cost gateway web site](http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)):
+The encapsulated encrypted format means that the encrypted LoRaWAN-like packet is considered as a payload in our packet format which adds a 4-byte header (see our packet header format in [section 3 of the low-cost gateway web site](http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html)):
 
-	dst[1] | ptype[1] | src[1] | seq[1] | payload	
+	dst[1] | ptype[1] | src[1] | seq[1] | encrypted_payload	
 	
-On Firebase, LoRaWAN specific fields that are implied in the AES encrypting/integrity process are stored (FCnt, MIC and devAddr) as well as our packet format header fields (ptype, src and seq). The packet has our defined packet type which is 0x14 for "DATA ENCRYPTED". Note that sequence number can be different than FCnt.
+On Firebase, LoRaWAN specific fields that are implied in the AES encrypting/integrity process are stored (`FCnt`, `MIC` and `devAddr`) as well as our packet format header fields (ptype, src and seq). The packet has our defined packet type which is 0x14 for "DATA ENCRYPTED". Note that sequence number can be different than `FCnt`.
 
-test-loraWAN-3.py injects the following LoRaWAN packet:
+`test-loraWAN-3.py` injects the following LoRaWAN packet:
 
 	| \x40 | \x06\x00\x00\x00 | \x00 | \x00\x00 | \x01 | \x4F\x29\xE7\x49\x77\xA1\xC2\xE7\x81\xE6\x16\xA6\x68 | \xFD\x75\x68\x74 |
 	^ start of LoRaWAN packet						   ^ start of LoRaWAN payload--------------------------->
@@ -795,12 +807,12 @@ which is encapsulated with our packet format to give:
 	| \x01 | \x14 | \x06 | \x00 | \x40 | \x06\x00\x00\x00 | \x00 | \x00\x00 | \x01 | \x4F\x29\xE7\x49\x77\xA1\xC2\xE7\x81\xE6\x16\xA6\x68 | \xFD\x75\x68\x74 |
 								^ start of LoRaWAN packet						   ^ start of LoRaWAN payload--------------------------->
 								
-frame_b64 contains the encrypted LoRaWAN packet in base64 format while data_b64 only contains the encryted LoRaWAN payload in base64 format.
+`frame_b64` contains the encrypted LoRaWAN packet in base64 format while `data_b64` only contains the encrypted LoRaWAN payload in base64 format.
 
-Example 7: use CloudFireBaseLWAES.py to upload a native encrypted LoRaWAN packet
+Example 7: use `CloudFireBaseLWAES.py` to upload a native encrypted LoRaWAN packet
 =================================================================================
 
-clouds.json contains the following section:
+`clouds.json` contains the following section:
 
 	"lorawan_encrypted_clouds" : [
 		{
@@ -812,11 +824,11 @@ clouds.json contains the following section:
 		}
 	]
 	
-post_processing_gw.py will not decrypt locally the encrypted packet (["gateway_conf"]["aes"] is false). This is the case when NwkSKey and AppSKey are not available on the gateway. post_processing_gw.py will call "python CloudFireBaseLWAES.py" with appropriate parameters. See the new cloud management design [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md).
+`post_processing_gw.py` will not locally decrypt the encrypted packet (`["gateway_conf"]["aes"]` is false). This is the case when NwkSKey and AppSKey are not available on the gateway. `post_processing_gw.py` will call `python CloudFireBaseLWAES.py` with appropriate parameters. See the new cloud management design [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md).
 
 	> python test-loraWAN-2.py | python post_processing_gw.py
 	
-with ["gateway_conf"]["raw"] set to true.		
+with `["gateway_conf"]["raw"]` set to true.		
 	
 output
 ------
@@ -889,14 +901,14 @@ A LoRaWAN packet has the following format:
 		
 Here, in the native LoRaWAN format, only LoRaWAN packet fields are stored (FCnt, FPort, MIC and devAddr) as it is a native LoRaWAN packet without additional header.
 
-test-loraWAN-2.py injects the following LoRaWAN packet:
+`test-loraWAN-2.py` injects the following LoRaWAN packet:
 
 	| \x40 | \x06\x00\x00\x00 | \x00 | \x00\x00 | \x01 | \x4F\x29\xE7\x49\x77\xA1\xC2\xE7\x81\xE6\x16\xA6\x68 | \xFD\x75\x68\x74 |
 	^ start of LoRaWAN packet						   ^ start of LoRaWAN payload--------------------------->
 
 without any additional packet header.
 
-Example 8: use CloudMQTT.py to publish a native encrypted LoRaWAN packet
+Example 8: use `CloudMQTT.py` to publish a native encrypted LoRaWAN packet
 =============================================================================
 
 clouds.json contains the following section:
@@ -910,11 +922,11 @@ clouds.json contains the following section:
 		}
 	]
 
-post_processing_gw.py will not decrypt locally the encrypted packet (["gateway_conf"]["aes"] is false). This is the case when NwkSKey and AppSKey are not available on the gateway. post_processing_gw.py will call "python CloudMQTT.py" with appropriate parameters. See the new cloud management design [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md).
+`post_processing_gw.py` will not decrypt locally the encrypted packet (`["gateway_conf"]["aes"]` is false). This is the case when NwkSKey and AppSKey are not available on the gateway. `post_processing_gw.py` will call `python CloudMQTT.py` with appropriate parameters. See the new cloud management design [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_advanced/new_cloud_design/README-NewCloud.md).
 
 	> python test-loraWAN-2.py | python post_processing_gw.py
 	
-with ["gateway_conf"]["raw"] set to true.		
+with `["gateway_conf"]["raw"]` set to true.		
 	
 output
 ------
@@ -984,7 +996,7 @@ Once the LoRaWAN packet is stored in base64 format (frame_b64) in the cloud, it 
 	^r125,5,12
 	??\!#3#TC/22.50	
 
-Once the application has the plain payload, it can further push the plain data into other IoT clouds. For instance, a final app running on a Linux machine can simply use post_processing_gw.py with the plain data to upload data to IoT clouds just as a gateway with NwkSKey and AppSKey would do.
+Once the application has the plain payload, it can further push the plain data into other IoT clouds. For instance, a final app running on a Linux machine can simply use `post_processing_gw.py` with the plain data to upload data to IoT clouds just as a gateway with NwkSKey and AppSKey would do.
 
 	> python loraWAN.py "QAYAAAAAAAABTynnSXehwueB5hamaP11aHQ=" "1,20,6,0,26,8,-45" "125,5,12" | python post_processing_gw.py
 	Parsing cloud declarations
@@ -1024,32 +1036,32 @@ Once the application has the plain payload, it can further push the plain data i
 	ThingSpeak: returned code from server is 218
 	--> cloud end
 
-If you use this feature where post_processing_gw.py takes its input from loraWAN.py, **you have to pass at least 2 arguments**: the base64-encoded string and the packet info string. loraWAN.py set the packet type and the data length to the appropriate value for post_processing_gw.py. post_processing_gw.py uses exactely the same cloud configuration than a normal gateway would have. Note the 2 '?' in front of the plain data. These are normally the data prefix \xFF\xFE inserted by the lora_gateway program and emulated by loraWAN.py. The '?' in front of the other lines indicate to post_processing_gw.py that these lines should be ignored.
+If you use this feature where `post_processing_gw.py` takes its input from loraWAN.py, **you have to pass at least 2 arguments**: the base64-encoded string and the packet info string. `loraWAN.py` set the packet type and the data length to the appropriate value for `post_processing_gw.py`. `post_processing_gw.py` uses exactely the same cloud configuration than a normal gateway would have. Note the 2 '?' in front of the plain data. These are normally the data prefix \xFF\xFE inserted by the `lora_gateway` program and emulated by `loraWAN.py`. The '?' in front of the other lines indicate to `post_processing_gw.py` that these lines should be ignored.
 
 List of new files
 =================
 
-- loraWAN.py: does the decryption of the LoRaWAN packet with encrypted payload for post_processing_gw.py
-- loraWAN_config.py: stores the NwkSKey and AppSKey 
-- test-loraWAN-1.py: shows how to decrypt a LoRaWAN packet with encrypted payload
-	- usage: python test-loraWAN-1.py
-- test-loraWAN-2.py: injects a fake native LoRaWAN packet into post_processing_gw.py
-	- usage with local decryption: python test-loraWAN-2.py | python post_processing_gw.py
-	- both both ["gateway_conf"]["raw"] and ["gateway_conf"]["aes"] are set to true
-- test-loraWAN-3.py: injects a fake encapsulated LoRaWAN packet into post_processing_gw.py
-	- usage with local decryption: python test-loraWAN-3.py | python post_processing_gw.py
-	- both both ["gateway_conf"]["raw"] and ["gateway_conf"]["aes"] are set to true	
-- README-aes_lorawan.md: this README file
+- `loraWAN.py`: does the decryption of the LoRaWAN packet with encrypted payload for `post_processing_gw.py`
+- `loraWAN_config.py`: stores the NwkSKey and AppSKey 
+- `test-loraWAN-1.py`: shows how to decrypt a LoRaWAN packet with encrypted payload
+	- usage: `python test-loraWAN-1.py`
+- `test-loraWAN-2.py`: injects a fake native LoRaWAN packet into `post_processing_gw.py`
+	- usage with local decryption: `python test-loraWAN-2.py | python post_processing_gw.py`
+	- both `["gateway_conf"]["raw"]` and `["gateway_conf"]["aes"]` should be set to true
+- `test-loraWAN-3.py`: injects a fake encapsulated LoRaWAN packet into `post_processing_gw.py`
+	- usage with local decryption: `python test-loraWAN-3.py | python post_processing_gw.py`
+	- both ["gateway_conf"]["raw"] and ["gateway_conf"]["aes"] should be set to true	
+- `README-aes_lorawan.md`: this README file
 
 Files that will be updated
 ==========================
 
-- post_processing_gw.py: updated with the AES part
+- `post_processing_gw.py`: updated with the encryption and LoRaWAN part
 
 Files that need to be updated
 =============================
 
-- gateway_conf.json: set "raw" and "aes" to true according to your needs so that start_gw.py can start the gateway with the correct settings
+- `gateway_conf.json`: set "raw" and "aes" to true according to your needs so that `start_gw.py` can start the gateway with the correct settings
 
 		
 

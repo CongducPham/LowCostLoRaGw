@@ -428,7 +428,9 @@ There is also the demonstration of a limited LoRaWAN support using our library p
 	#define LORAWAN
 	#define TO_LORAWAN_GW
 
-The setting will be BW125SF12 using frequency 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433. Again, you need to create a device for instance on TTN to get the device short address (32 bits) and, if you want, both NwkSKey and AppSKey. These information have to be filled in the example code. You can use the same device definition for both `Arduino_LoRa_LMIC_ABP_BASIC` and `Arduino_LoRa_temp`. Both examples can send to a regular LoRaWAN gateway and to our low-cost gateway. Refer to the [README-aes_lorawan](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md) file for more details on the limited LoRaWAN support.
+The setting will be BW125SF12 using frequency 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433. Again, you need to create a device for instance on TTN to get the device short address (32 bits) and, if you want, both NwkSKey and AppSKey. These information have to be filled in the example code. You can use the same device definition for both `Arduino_LoRa_LMIC_ABP_BASIC` and `Arduino_LoRa_temp`. Both examples can send to a regular LoRaWAN gateway and to our low-cost gateway. 
+
+The low-cost gateway can then push received data to TTN platform with the addition of `CloudTTN.py` in the LoRaWAN encrypted cloud section of `clouds.json`. Refer to the [README-aes_lorawan](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md) file for more details on the limited LoRaWAN support and how to send data to TTN.
 
 Using the RadioHead library for the end-device
 ----------------------------------------------

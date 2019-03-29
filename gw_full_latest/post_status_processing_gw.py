@@ -76,6 +76,19 @@ for line in lines :
 #change it into a python array
 gw_json_array = json.loads(array)
 
+#you can use the gw id in case you need it
+_gwid = gw_json_array["gateway_conf"]["gateway_ID"]
+
+#you can use the gw GPS coordinates in case you need it
+try:
+	_gw_lat = gw_json_array["gateway_conf"]["ref_latitude"]
+except KeyError:
+	_gw_lat = "undef"
+try:
+	_gw_long = gw_json_array["gateway_conf"]["ref_longitude"]
+except KeyError:
+	_gw_long = "undef"
+
 #------------------------------------------------------------
 #add you own functions here 
 #------------------------------------------------------------
@@ -162,17 +175,27 @@ def get_gps():
 #add whatever you want in the main function 
 #------------------------------------------------------------
 
-def main():
-
+def main(stats_str):
+	
 	print 'post status: start running'
 	sys.stdout.flush()
+	
+	#in case you need these information passed by post_processing_gw.py
+	arr = map(int,stats_str.split(','))
+	rxnb=arr[0]
+	rxok=arr[1]				
+	rxfw=arr[2]
+	ackr=arr[3]
+	dwnb=arr[4]
+	txnb=arr[5]
 	
 	#------------------------------------------------------------
 	#HERE ADD what ever you want
 	#------------------------------------------------------------
 
 	#------------------------------------------------------------
-	#update GPS coordinates if a GPS is connected to the Raspberry?
+	#update GPS coordinates if a GPS is connected to the RPI
+	#------------------------------------------------------------
 	try:
 		dynamic_gps = gw_json_array["status_conf"]["dynamic_gps"]
 	except KeyError:
@@ -184,14 +207,42 @@ def main():
 
 	#------------------------------------------------------------		
 	#print current GPS
-	print 'post status: show current GPS position'
-	show_gps()
+	#------------------------------------------------------------
+	
+	#print 'post status: show current GPS position'
+	#show_gps()
 
 	#------------------------------------------------------------
 	#notify for WAZIUP gw status?
+	#------------------------------------------------------------
+	
 	
 	#------------------------------------------------------------
-	#notify for TTN gw status?
+	#notify for TTN gw status
+	#------------------------------------------------------------
+	try:
+		ttn_status = gw_json_array["status_conf"]["ttn_status"]
+	except KeyError:
+		ttn_status = False
+
+	lora_mode = gw_json_array["radio_conf"]["mode"]
+	
+	if lora_mode != 11:
+		ttn_status = False
+			
+	if ttn_status:
+		#build the ttn_gwid which is defined to be _gwid[4:10]+"FFFF"+_gwid[10:]
+		#_gwid is normally defined as eth0 MAC address filled by 0 in front: 0000B827EBD1B236
+		ttn_gwid=_gwid[4:10]+"FFFF"+_gwid[10:]	
+		
+		gps_str=_gw_lat+","+_gw_long
+		
+		try:
+			#provide the stat string, the gps coordinates and the ttn gw id
+			cmd_arg='python scripts/ttn/ttn_stats.py'+" \""+stats_str+"\""+" \""+gps_str+"\""+" \""+ttn_gwid+"\""
+			os.system(cmd_arg)		
+		except:
+			print "post status: error when executing %s" % cmd_arg
 
 	#------------------------------------------------------------	
 	print 'post status: exiting'
@@ -199,4 +250,4 @@ def main():
 	
 	
 if __name__ == "__main__":
-	main()
+	main(sys.argv[1])
