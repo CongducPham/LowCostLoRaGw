@@ -70,8 +70,10 @@ def start_config_from_json() :
 		pass
 	
 	try:		
-		if gateway_json_array["radio_conf"]["mode"] != -1 :
+		if gateway_json_array["radio_conf"]["mode"] != -1:
 			call_string_cpp += " --mode %s" % str(gateway_json_array["radio_conf"]["mode"])
+			if gateway_json_array["radio_conf"]["mode"] == 11:
+				call_string_cpp += " --bw %s --cr %s --sf %s" % (str(gateway_json_array["radio_conf"]["bw"]),str(gateway_json_array["radio_conf"]["cr"]),str(gateway_json_array["radio_conf"]["sf"]))
 		else :
 			call_string_cpp += " --bw %s --cr %s --sf %s" % (str(gateway_json_array["radio_conf"]["bw"]),str(gateway_json_array["radio_conf"]["cr"]),str(gateway_json_array["radio_conf"]["sf"]))
 	except KeyError:
