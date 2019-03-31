@@ -529,7 +529,7 @@ require 'header.php';
 										 </tbody>
     								    </table>
     								    <p>For LoRaWAN, if the gateway ID is 0000B827EBEFC4A6, then use B827EB<b>FFFF</b>EFC4A6 for the gateway EUI on LoRaWAN network server platform such as TheThingsNetwork (TTN) for instance.</p>
-    								    <p>If LoRaWAN mode is enabled, set AES to false to upload the encrypted LoRaWAN packet to the network server</p>
+    								    <p>If LoRaWAN mode is enabled, set raw to true and AES to false to upload the encrypted LoRaWAN packet to the network server.</p>
     							      </div>
     							    </div>
     							
