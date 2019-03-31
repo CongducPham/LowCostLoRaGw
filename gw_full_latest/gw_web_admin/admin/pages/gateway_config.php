@@ -91,9 +91,9 @@ require 'header.php';
    										    	<div id="div_mode_select" class="form-group">
                                             		<label>Select a mode</label>
                                             		<select id="mode_select" class="form-control">
-                                                		<option selected>1</option> <option>2</option> <option>3</option> <option>4</option>
+                                                		<option>-1</option> <option selected>1</option> <option>2</option> <option>3</option> <option>4</option>
                                                 		<option>5</option> <option>6</option> <option>7</option> <option>8</option>
-                                                		<option>9</option> <option>10</option>
+                                                		<option>9</option> <option>10</option> <option>11</option>
                                            			</select>
                                         		</div>
                                         	</td> 
@@ -101,7 +101,25 @@ require 'header.php';
    										    		<button id="btn_edit_mode" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>	
    										   </tr>
-   					
+
+										   <tr>
+    									    <td>Spreading Factor</td>
+    										<td id="sf_value"><?php echo $radio_conf['sf']; ?></td>
+    										<td align="right"><button id="btn_edit_sf" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										    <td id="td_edit_sf">
+   										    	<div id="div_sf_select" class="form-group">
+                                            		<label>Select a SF</label>
+                                            		<select id="sf_select" class="form-control">
+                                                		<option>7</option> <option>8</option>
+                                                		<option>9</option> <option>10</option> <option>11</option> <option selected>12</option>
+                                           			</select>
+                                        		</div>
+                                        	</td> 
+   										    <td id="sf_submit" align="right">
+   										    		<button id="btn_edit_sf" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>	
+   										   </tr>
+   										      					
    										   <tr>
     									    <td>Frequency</td>
     										<td id="freq_value"><?php echo $radio_conf['freq']; ?></td>
@@ -159,8 +177,10 @@ require 'header.php';
    										   
 										</tbody>
     								  </table>
-    								  <p>PA_BOOST is required for some radio modules such as inAir9B, RFM92W, RFM95W, NiceRF LoRa1276</p>
-    								  <p>After changing the PA_BOOST settings, run <b>Gateway Update/Basic config</b> to recompile the low-level gateway program</p> 
+    								  <p>Use mode=11 to indicate LoRaWAN mode. Only in this case you can also select the Spreading Factor SF.</p>
+    								  <p>Change frequency if needed. Leave frequency as -1 to use default values (for LoRaWAN mode: 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433).</p>
+    								  <p>PA_BOOST is required for some radio modules such as inAir9B, RFM92W, RFM95W, NiceRF LoRa1276.</p>
+    								  <p>After changing the PA_BOOST settings, run <b>Gateway Update/Basic config</b> to recompile the low-level gateway program.</p> 
     							     </div>
     							     
     							  </div>
@@ -508,6 +528,8 @@ require 'header.php';
    										   </tr>  										   
 										 </tbody>
     								    </table>
+    								    <p>For LoRaWAN, if the gateway ID is 0000B827EBEFC4A6, then use B827EB<b>FFFF</b>EFC4A6 for the gateway EUI on LoRaWAN network server platform such as TheThingsNetwork (TTN) for instance.</p>
+    								    <p>If LoRaWAN mode is enabled, set AES to false to upload the encrypted LoRaWAN packet to the network server</p>
     							      </div>
     							    </div>
     							

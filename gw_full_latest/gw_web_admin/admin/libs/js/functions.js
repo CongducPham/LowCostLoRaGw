@@ -56,7 +56,45 @@ var maxAddr = 255;
     		//$("#radio_msg").hide().delay(3000);
     	}
     });
+
+//==================================
+// Setting SF
+//==================================
+    $('#td_edit_sf').hide();
+    $('#sf_submit').hide();
+    $("#radio_msg").hide();
     
+    $('#btn_edit_sf').click(function() {	
+    	$('#td_edit_sf').show();
+    	$('#sf_submit').show();
+    });
+ 
+    $('#sf_submit').click(function() {	
+    	sf = $('#sf_select').val();
+    	
+    	if(sf == ''){
+    		//alert("Please select one mode!");
+		setTimeout(function(){
+			$('#radio_msg').html("Please select one sf!");
+			}, 3000);
+    	}
+    	else{ 
+    		$.get("process.php", {sf: sf}, function(data){
+				//$('#radio_msg').html(data);
+				//$('#radio_msg').show();
+				$("#gw_config_msg").html(data);
+            			//erase message after 5 seconds
+	   			setTimeout(function() {
+  					$('#gw_config_msg').html("");
+	     			},5000);
+        	});
+    		
+        	$('#sf_value').html(sf);
+        	$('#td_edit_sf').hide();
+    		$('#sf_submit').hide();
+    	}
+    });
+        
 //==================================
 // Setting frequency
 //==================================

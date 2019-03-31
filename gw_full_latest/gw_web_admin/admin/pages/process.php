@@ -27,6 +27,22 @@ if (isset($_GET["mode"]) && (! empty($_GET["mode"]))) {
 }
 
 /*************************
+ * Setting SF
+ *************************/
+if (isset($_GET["sf"]) && (! empty($_GET["sf"]))) {
+    
+    $sf = htmlspecialchars($_GET["sf"]);
+	$output = update_gw_conf("radio_conf","sf", $sf);
+	
+	if($output == 0){
+		echo '<p><center><font color="green">LoRa SF updated</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to update LoRa SF</font></center></p>';	
+	}
+}
+
+/*************************
  * Setting frequency
  *************************/
 if (isset($_GET["band"]) && isset($_GET["freq"])) {
