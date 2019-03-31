@@ -158,7 +158,7 @@ tr -d '\n' < /home/pi/lora_gateway/gateway_id.txt | md5sum - | cut -d ' ' --fiel
 echo "Done"
 
 echo "Replacing gw id in /home/pi/lora_gateway/gateway_conf.json"
-sed -i -- 's/"0000.*"/"0000'"$gwid"'"/g' /home/pi/lora_gateway/gateway_conf.json
+sed -i -- 's/gateway_ID".*"0000.*"/gateway_ID": "0000'"$gwid"'"/g' /home/pi/lora_gateway/gateway_conf.json
 echo "Done"
 
 if [ ! -d /home/pi/Dropbox/LoRa-test ]
