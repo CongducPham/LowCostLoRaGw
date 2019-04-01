@@ -18,7 +18,7 @@ void sensor_Init() {
   // for the temperature sensor
   pinMode(PIN_READ, INPUT);
   pinMode(PIN_POWER, OUTPUT);
-  dht.begin();
+  //dht.begin();
 }
 ///////////////////////////////////////////////////////////////////
 
@@ -28,12 +28,16 @@ void sensor_Init() {
 
 double sensor_getValue() {
 
+  dht.begin();
+  delay(2000);
+  
   //read the raw sensor value
   //float h = dht.readHumidity();
   float t = dht.readTemperature();
 
   if (isnan(t)) {
     Serial.println("Failed to read from DHT sensor!");
+    return -1;
   }
   else {         
     Serial.print("Temperature: ");

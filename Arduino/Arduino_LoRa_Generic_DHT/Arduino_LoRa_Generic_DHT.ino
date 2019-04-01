@@ -40,6 +40,20 @@
                          |___/                                   
 ********************************************************************/
 
+///////////////////////////////////////////////////////////////////
+// COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
+// ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
+#define WITH_EEPROM
+#define SERIAL_MONITOR
+//#define WITH_APPKEY
+//if you are low on program memory, comment STRING_LIB to save about 2K
+//#define STRING_LIB
+#define LOW_POWER
+#define LOW_POWER_HIBERNATE
+//#define WITH_AES
+#define OLED
+///////////////////////////////////////////////////////////////////
+
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice
@@ -57,18 +71,6 @@
 //#define BAND433
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifdef ETSI_EUROPE_REGULATION
-#define MAX_DBM 14
-#endif
-
-#ifdef BAND868
-const uint32_t DEFAULT_CHANNEL=CH_10_868;
-#elif defined BAND900
-const uint32_t DEFAULT_CHANNEL=CH_05_900;
-#elif defined BAND433
-const uint32_t DEFAULT_CHANNEL=CH_00_433;
-#endif
-
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -78,23 +80,9 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////
-// COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
-// ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
-#define WITH_EEPROM
-#define SERIAL_MONITOR
-//#define WITH_APPKEY
-//if you are low on program memory, comment STRING_LIB to save about 2K
-//#define STRING_LIB
-#define LOW_POWER
-#define LOW_POWER_HIBERNATE
-//#define WITH_AES
-#define OLED
-///////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE LORA MODE, NODE ADDRESS 
 #define LORAMODE 1
-uint16_t node_addr=7;
+uint16_t node_addr=8;
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -151,6 +139,33 @@ Sensor* sensor_ptrs[number_of_sensors];
 
 #ifdef WITH_EEPROM
 #include <EEPROM.h>
+#endif
+
+#ifdef ETSI_EUROPE_REGULATION
+#define MAX_DBM 14
+// previous way for setting output power
+// char powerLevel='M';
+#elif defined SENEGAL_REGULATION
+#define MAX_DBM 10
+// previous way for setting output power
+// 'H' is actually 6dBm, so better to use the new way to set output power
+// char powerLevel='H';
+#elif defined FCC_US_REGULATION
+#define MAX_DBM 14
+#endif
+
+#ifdef BAND868
+#ifdef SENEGAL_REGULATION
+const uint32_t DEFAULT_CHANNEL=CH_04_868;
+#else
+const uint32_t DEFAULT_CHANNEL=CH_10_868;
+#endif
+#elif defined BAND900
+//const uint32_t DEFAULT_CHANNEL=CH_05_900;
+// For HongKong, Japan, Malaysia, Singapore, Thailand, Vietnam: 920.36MHz     
+const uint32_t DEFAULT_CHANNEL=CH_08_900;
+#elif defined BAND433
+const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
 
 #ifdef OLED
@@ -345,9 +360,9 @@ void setup()
     my_sx1272config.flag1=0x12;
     my_sx1272config.flag2=0x35;
     my_sx1272config.seq=sx1272._packetNumber;
-    my_sx1272config.addr=node_addr;
-    my_sx1272config.idle_period=idlePeriodInMin;
-    my_sx1272config.overwrite=0;
+    //my_sx1272config.addr=node_addr;
+    //my_sx1272config.idle_period=idlePeriodInMin;
+    //my_sx1272config.overwrite=0;
   }
 #endif
   
