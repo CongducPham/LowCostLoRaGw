@@ -76,7 +76,9 @@ require 'header.php';
 								<li><a href="#cloudNodeRed-pills" data-toggle="tab">Cloud Node-RED </a>
 								</li>
                             </ul>
-
+							</br>
+            				<p>&nbsp;&nbsp;&nbsp;&nbsp;After changing cloud parameters, you need to reboot for changes to take effect.</p>
+                            
                             <!-- Tab panes -->
                             <div class="tab-content">
 								<?php 

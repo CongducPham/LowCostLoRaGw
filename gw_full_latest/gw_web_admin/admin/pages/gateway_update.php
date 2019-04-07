@@ -63,11 +63,14 @@ require 'header.php';
                                 </li>
                             </ul>
 
+							</br>
+            				<p>&nbsp;&nbsp;&nbsp;&nbsp;Run <b>Basic config</b> after any update and reboot for new version to be applied.</p>
+            				
                             <!-- Tab panes -->
                             <div class="tab-content">
                             
                             	<div class="tab-pane fade in active" id="new_install-pills">
-                                   	</br></br>
+                                   	</br>
                                    
                                    		<table border="0">
                                    		<tr>
@@ -101,7 +104,7 @@ require 'header.php';
                         		<!-- tab-pane -->
                         		
                         		<div class="tab-pane fade" id="full_update-pills">
-                                   	</br></br>
+                                   	</br>
                                    
                                    		<table border="0">
                                    		<tr>
@@ -135,7 +138,7 @@ require 'header.php';
                         		<!-- tab-pane -->
                         		
                         		<div class="tab-pane fade" id="basic_conf-pills">
-                                   	</br></br>
+                                   	</br>
                                    
                                    		<p>
                                    			<button id="btn_gw_basic_conf" type="button" class="btn btn-primary" href="process.php?gw_basic_conf=true">   <span class="fa fa-edit"></button>
@@ -186,7 +189,7 @@ require 'header.php';
                                 <!-- tab-pane -->
 
 								<div class="tab-pane fade" id="update_web_admin-pills">
-                                   	</br></br>
+                                   	</br>
                     
                                    		<p>
                                    			<button id="btn_update_web_admin" type="button" class="btn btn-primary" href="process.php?update_web_admin=true">   <span class="fa fa-upload"></button>

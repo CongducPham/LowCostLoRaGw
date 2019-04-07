@@ -65,10 +65,12 @@ require 'header.php';
                                 <li><a href="#downlink-pills" data-toggle="tab">Downlink Request</a>
                                 </li>
                                 <li><a href="#copy-log-pills" data-toggle="tab">Get post-processing.log file</a>
-                                </li>       
-                                                        
+                                </li>                                                               
                             </ul>
 
+							</br>
+            				<p>&nbsp;&nbsp;&nbsp;&nbsp;After changing gateway parameters, you need to reboot for changes to take effect.</p>
+            				
                             <!-- Tab panes -->
                             <div class="tab-content">
                             	<div class="tab-pane fade in active" id="radio_conf-pills">

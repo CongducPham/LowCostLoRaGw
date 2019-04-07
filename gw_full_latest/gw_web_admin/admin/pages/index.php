@@ -13,11 +13,10 @@ if(!isset($_SESSION['username'])){
 $radio_conf= null; $gw_conf= null; $alert_conf = null;
 process_gw_conf_json($radio_conf, $gw_conf, $alert_conf);
 
+$maxAddr = 255;
+
 require 'header.php';
 ?>
-
-
-
             <div class="navbar-default sidebar" role="navigation">
                 <div class="sidebar-nav navbar-collapse">
                     <ul class="nav" id="side-menu">
@@ -66,9 +65,12 @@ require 'header.php';
                                 <li><a href="#downlink-pills" data-toggle="tab">Downlink Request</a>
                                 </li>
                                 <li><a href="#copy-log-pills" data-toggle="tab">Get post-processing.log file</a>
-                                </li>                                
+                                </li>                                                               
                             </ul>
 
+							</br>
+            				<p>&nbsp;&nbsp;&nbsp;&nbsp;After changing gateway parameters, you need to reboot for changes to take effect.</p>
+            				
                             <!-- Tab panes -->
                             <div class="tab-content">
                             	<div class="tab-pane fade in active" id="radio_conf-pills">
@@ -91,9 +93,9 @@ require 'header.php';
    										    	<div id="div_mode_select" class="form-group">
                                             		<label>Select a mode</label>
                                             		<select id="mode_select" class="form-control">
-                                                		<option selected>1</option> <option>2</option> <option>3</option> <option>4</option>
+                                                		<option>-1</option> <option selected>1</option> <option>2</option> <option>3</option> <option>4</option>
                                                 		<option>5</option> <option>6</option> <option>7</option> <option>8</option>
-                                                		<option>9</option> <option>10</option>
+                                                		<option>9</option> <option>10</option> <option>11</option>
                                            			</select>
                                         		</div>
                                         	</td> 
@@ -101,7 +103,25 @@ require 'header.php';
    										    		<button id="btn_edit_mode" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>	
    										   </tr>
-   					
+
+										   <tr>
+    									    <td>Spreading Factor</td>
+    										<td id="sf_value"><?php echo $radio_conf['sf']; ?></td>
+    										<td align="right"><button id="btn_edit_sf" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										    <td id="td_edit_sf">
+   										    	<div id="div_sf_select" class="form-group">
+                                            		<label>Select a SF</label>
+                                            		<select id="sf_select" class="form-control">
+                                                		<option>7</option> <option>8</option>
+                                                		<option>9</option> <option>10</option> <option>11</option> <option selected>12</option>
+                                           			</select>
+                                        		</div>
+                                        	</td> 
+   										    <td id="sf_submit" align="right">
+   										    		<button id="btn_edit_sf" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>	
+   										   </tr>
+   										      					
    										   <tr>
     									    <td>Frequency</td>
     										<td id="freq_value"><?php echo $radio_conf['freq']; ?></td>
@@ -130,10 +150,12 @@ require 'header.php';
     												
     												if ($current_paboost=='')
 													{
-    													echo "Disabled";    
+    													echo "Disabled";
+    													$current_paboost=false;    
 													}
 													else {
-   					 									echo "Enabled";   
+   					 									echo "Enabled";
+   					 									$current_paboost=true;   
 													}
     											?>    										
     										</td>
@@ -142,12 +164,13 @@ require 'header.php';
    										    	<div id="div_paboost_options" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
+                                           			<fieldset id="paboost_group" >
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="paboost_true" value="Enabled" checked>Enabled
+                                                    		<input type="radio" name="paboost_group" id="paboost_true" value="Enabled" <?php if($current_paboost) echo "checked"?> >Enabled
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="paboost_false" value="Disabled" checked>Disabled
+                                                    		<input type="radio" name="paboost_group" id="paboost_false" value="Disabled" <?php if(!$current_paboost) echo "checked"?> >Disabled
                                                 		</label>
                                             		</div>
                                         		</div>
@@ -159,8 +182,10 @@ require 'header.php';
    										   
 										</tbody>
     								  </table>
-    								  <p>PA_BOOST is required for some radio modules such as inAir9B, RFM92W, RFM95W, NiceRF LoRa1276</p>
-    								  <p>After changing the PA_BOOST settings, run <b>Gateway Update/Basic config</b> to recompile the low-level gateway program</p> 
+    								  <p>Use mode=11 to indicate LoRaWAN mode. Only in this case you can also select the Spreading Factor SF.</p>
+    								  <p>Change frequency if needed. Leave frequency as -1 to use default values (for LoRaWAN mode: 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433).</p>
+    								  <p>PA_BOOST is required for some radio modules such as inAir9B, RFM92W, RFM95W, NiceRF LoRa1276.</p>
+    								  <p>After changing the PA_BOOST settings, run <b>Gateway Update/Basic config</b> to recompile the low-level gateway program.</p> 
     							     </div>
     							     
     							  </div>
@@ -189,12 +214,273 @@ require 'header.php';
    										    	<div id="div_update_gw_id" class="form-group">
                                             		<label>Gateway ID</label>
 													<input id="gw_id_input" class="form-control" placeholder="New value" type="text" value="" autofocus>
+													<p><font color="red">WARNING: the gateway id is normally derived from the MAC address of the gateway. When you run Update/Basic config the gateway id will be automatically determined so it is not recommended to manually edit the gateway id.</font></p>
                                         		</div>
                                         	</td> 
    										    <td id="td_gw_id_submit" align="right">
    										    		<button id="gw_id_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
    										   
+   										   </tr>
+    									    <td>Gateway ID MD5 hashed</td>
+    										<td id="gw_id_md5_value">
+    											<?php
+    												$gw_id_md5=exec('cat /home/pi/lora_gateway/gateway_id.md5');
+    												
+    												if ($gw_id_md5=='')
+													{
+    													echo "not defined";    
+													}
+													else {
+   					 									echo $gw_id_md5;   
+													}
+    											?>     										
+    										</td>
+											<td align="right">not editable </td>
+   										   </tr>   										   
+	
+   										   <!-- ajout de l'adresse ip et de l'adresse mac -->
+   										   <tr>
+   										   <td>IP address</td>
+   										   <td id="ip_address_value">
+   										   		<?php 
+													ob_start(); 
+													system("ifconfig eth0");
+													$mycom=ob_get_contents(); 
+													ob_clean(); 
+													$findme = "inet addr"; 
+													$pip = strpos($mycom, $findme); 
+													$next = "Bcast";
+													$nextword = strpos($mycom, $next);
+													if ($nextword === false) {
+														ob_start();
+														system("ifconfig ppp0");
+														$mycom=ob_get_contents(); 
+														ob_clean(); 
+														$findme = "inet addr"; 
+														$pip = strpos($mycom, $findme); 
+														$next = "P-t-P";
+														$nextword = strpos($mycom, $next);
+														if ($nextword === false) {
+															ob_start();
+															system("ifconfig wlan0");
+															$mycom=ob_get_contents(); 
+															ob_clean(); 
+															$findme = "inet addr"; 
+															$pip = strpos($mycom, $findme); 
+															$next = "Bcast";
+															$nextword = strpos($mycom, $next);
+															if ($nextword === false) {
+																echo "cannot be determined";
+															}
+															else {
+																$length = $nextword - $pip - strlen($findme) - strlen($next) +3;
+																$ip=substr($mycom,($pip+(strlen($findme)+1)),$length); 
+																echo "wlan0: $ip";
+															}														
+														}
+														else {
+															$length = $nextword - $pip - strlen($findme) - strlen($next) +3;
+															$ip=substr($mycom,($pip+(strlen($findme)+1)),$length); 
+															echo "ppp0: $ip";														
+														}													
+													}
+													else {
+														$length = $nextword - $pip - strlen($findme) - strlen($next) +3;
+														$ip=substr($mycom,($pip+(strlen($findme)+1)),$length); 
+														echo "eth0: $ip";													
+													} 
+												?>
+   										   </td>
+   										   <td align="right">not editable</td>
+   										   </tr>	
+   										   
+   										   <tr>
+   										   	<td>Mac addresss</td>
+   										   	<td id="mac_address_value">
+   										   		<?php 
+													ob_start(); 
+													system("ifconfig eth0"); 
+													$mycom=ob_get_contents(); 
+													ob_clean(); 
+													$findme = "HWaddr"; 
+													$pmac = strpos($mycom, $findme); 
+													$mac=substr($mycom,($pmac+7),17); 
+													echo "eth0: $mac"; 
+												?>
+   										   	</td> 
+   										   	<td align="right">not editable</td>
+   										   </tr>	
+   										   <tr>
+   										   		<td>GPS coordinates</td>
+   										   		<td>
+   										   			<div id="latitude_gw_conf">
+   										   				<?php echo  $gw_conf['ref_latitude'];?>
+   										   			</div>
+   										   			<div id="longitude_gw_conf" >
+   										   			 	<?php echo  $gw_conf['ref_longitude'];?>
+   										   			</div>
+   										   			<!--
+													<div id="div_select_display_format" class="btn-group" data-toggle="buttons">
+   										   				<div id="div_update_display_format" class="form-group">
+   										   				<label>
+                                                    		<input type="radio" name="optionsRadios" id="display_format_dd" value="dd" checked> Decimal degree
+                                                		</label>
+                                                		</br>
+                                                		<label>
+                                                    		<input type="radio" name="optionsRadios" id="display_format_dms" value="dms" > Degree, minute, second
+                                                		</label>
+                                                		</div>
+   										   			</div>
+													-->
+   										   			<div id="latitude_value" class="display:inline">
+   														<?php echo  "Latitude : " . $gw_conf['ref_latitude'];?>
+   										   			</div>
+   										   			<div id="longitude_value" class="display:inline	">
+   										   			 	<?php echo  "Longitude : " . $gw_conf['ref_longitude'];?>
+   										   			</div>
+   										   			
+   										   			
+   										   		</td>
+   										   		<td align="right" id="td_settings_gw_position">
+   										   			<button id="btn_edit_gw_position" type="button" class="btn btn-primary">
+   										   				<span class="fa fa-edit"></span>
+   										   			</button>
+   										   		</td>
+   										   	</tr>
+   										   	<tr>
+   										   		<td id="td_edit_gw_position">
+   										   			<div id="div_select_format_position" class="btn-group" data-toggle="buttons">
+   										   				<div id="div_update_format_position" class="form-group">
+   										   				<label>
+                                                    		<input type="radio" name="optionsRadios" id="format_dd" value="dd" checked> Decimal degree
+                                                		</label>
+                                                		</br>
+                                                		<label>
+                                                    		<input type="radio" name="optionsRadios" id="format_dms" value="dms" > Degree, minute, second
+                                                		</label>
+                                                		</div>
+								<div id="div_info_format" class="alert alert-danger"></div>
+   										   			</div>
+   										   		</td>
+   										   		<td id="td_format_position_dd">
+   										   			<div id="div_update_dd_position" class="form-group">
+   										   				<div class="radio">
+   										   				<label>Latitude</label>
+   										   				<input id="latitude_dd_input" class="form-control" placeholder="43.2951" name="latitude" type="number_dd" value=""  autofocus>
+   										   				</br>
+   										   				<label>Longitude</label>
+   										   				<input id="longitude_dd_input" class="form-control" placeholder="-0.3707970000000387" name="longitude_dd" type="number" value="" >
+   										 				</br>		
+   										 				</div>	
+   										   			</div>
+													
+   										   		</td>
+   										   		<td id="td_format_position_dms">
+   										   			<div id="div_update_dms_position" class="form-group">				
+   										   				<label>Latitude</label>
+   										   				<div class="radio" align="left">
+   										   				<fieldset id="latitude_group" >	
+   										   					<label>
+   										   					<input type="radio" name="latitude_group" id="latitude_north" value="N" checked>N
+   										   					</label>
+   										   					<label>
+   										   					<input type="radio" name="latitude_group" id="latitude_south" value="S" >S
+   										   					</label>
+   										   					</br>
+   										   				</fieldset>
+   										   				</div>
+   										   				<input id="latitude_degree_input" class="form-control" placeholder="43" name="latitude_degree" type="number" value="">
+   										   				<input id="latitude_minute_input" class="form-control" placeholder="17" name="latitude_minute" type="number" value="">
+   										   				<input id="latitude_second_input" class="form-control" placeholder="42.36" name="latitude_second" type="number" value="">
+   										   				</br>			   			
+   										   				<label>Longitude</label>
+   										   				<div class="radio" align="left" >
+   										   				<fieldset id="longitude_group">	
+   										   					<label>
+   										   					<input type="radio" name="longitude_group" id="longitude_east" value="E" checked>E
+   										   					</label>
+   										   					<label>
+   										   					<input type="radio" name="longitude_group" id="latitude_west" value="W" >W
+   										   					</label>
+   										   					</br>
+   										   				</fieldset>
+   										   				</div>
+   										   				<input id="longitude_degree_input" class="form-control" placeholder="0" name="longitude_degree" type="number" value="">
+   										   				<input id="longitude_minute_input" class="form-control" placeholder="22" name="longitude_minute" type="number" value="">
+   										   				<input id="longitude_second_input" class="form-control" placeholder="14.869" name="longitude_second" type="number" value="">
+   										   				</br>
+   										   			</div>
+   										   		</td> 
+   										   		<td  id="td_submit_position" align="right">
+   										   			<button align="right" id="btn_submit_position" class="btn btn-primary">Submit<span class="fa fa-arrow-right"></span></button>
+   										   		</td>
+   										   </tr>
+    										   <tr>
+   										   		<td>wappkey</td>
+   										   		<td id="wappkey_value">
+   										   		<?php 
+    												if($gw_conf['wappkey'])
+													{
+    													echo "true";    
+													}
+													else {
+   					 									echo "false";   
+													}
+   										   		?>
+   										   		</td>
+   										   		<td align="right" ><button id="btn_edit_wappkey" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   		<td id="td_edit_wappkey">
+   										   			<div id="div_wappkey" class="form-group">
+   										   				<div class="radio">
+   										   				<fieldset id="wappkey_group" >	
+   										   				<label>
+   										   					<input type="radio" name="wappkey_group" id="wappkey_true" value="true" <?php if($gw_conf['wappkey']) echo "checked"?> >True
+   										   				</label>
+   										   				</br>
+   										   				<label>
+   										   					<input type="radio" name="wappkey_group" id="wappkey_false" value="false" <?php if(!$gw_conf['wappkey']) echo "checked"?> >False
+   										   				</label>
+   										   				</fieldset>
+   										   				</div>
+   										   			</div>
+   										   		</td>
+   										   		<td id="td_wappkey_submit" align="right">
+   										   			<button id="btn_wappkey_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										   		</td>
+   										   </tr>     										   
+   										   <tr>
+   										   		<td>raw format</td>
+   										   		<td id="raw_value">
+   										   		<?php 
+    												if($gw_conf['raw'])
+													{
+    													echo "true";    
+													}
+													else {
+   					 									echo "false";   
+													}
+   										   		?>
+   										   		</td>
+   										   		<td align="right" ><button id="btn_edit_raw" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   		<td id="td_edit_raw">
+   										   			<div id="div_edit_raw" class="form-group">
+   										   				<div class="radio">
+   										   				<fieldset id="raw_group" >	
+   										   				<label>
+   										   					<input type="radio" name="raw_group" id="raw_true" value="true" <?php if($gw_conf['raw']) echo "checked"?> >True
+   										   				</label>
+   										   				</br>
+   										   				<label>
+   										   					<input type="radio" name="raw_group" id="raw_false" value="false" <?php if(!$gw_conf['raw']) echo "checked"?> >False
+   										   				</label>
+   										   				</fieldset>
+   										   				</div>
+   										   			</div>
+   										   		</td>
+   										   		<td id="td_raw_submit" align="right">
+   										   			<button id="btn_raw_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										   		</td>
    										   </tr>
    										   <tr>
     									    <td>AES</td>
@@ -212,16 +498,18 @@ require 'header.php';
     										</td>
     										<td align="right"><button id="btn_edit_aes" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
    										   	<td id="td_edit_aes">
-   										    	<div id="div_aes_options" class="form-group">
+   										    	<div id="div_edit_aes" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
+                                           			<fieldset id="aes_group" >
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="aes_true" value="true" checked>True
+                                                    		<input type="radio" name="aes_group" id="aes_true" value="true" <?php if($gw_conf['aes']) echo "checked"?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="aes_false" value="false" checked>False
+                                                    		<input type="radio" name="aes_group" id="aes_false" value="false" <?php if(!$gw_conf['aes']) echo "checked"?> >False
                                                 		</label>
+                                                		</fieldset>
                                             		</div>
                                         		</div>
                                         	</td> 
@@ -229,6 +517,7 @@ require 'header.php';
    										    		<button id="btn_aes_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
    										   </tr>
+   										   
    										   <tr>
     									    <td>downlink</td>
     										<td id="downlink_value">
@@ -245,10 +534,29 @@ require 'header.php';
    										    <td id="td_downlink_submit" align="right">
    										    		<button id="btn_downlink_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
-   										   </tr>  										   
-   										   
+   										   </tr> 
+
+    									    <td>status</td>
+    										<td id="status_value">
+    											<?php echo $gw_conf['status'];?>
+    										</td>
+    										<td align="right"><button id="btn_edit_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_status">
+   										    	<div id="div_update_status" class="form-group">
+                                            		<label>Status timer</label>
+                                					<input id="status_input" class="form-control" placeholder="status timer in seconds" name="status" type="number" value="" autofocus>
+                                        			<p><font color="red">Enter 00 for 0. Specifying a value different from 0 will periodically trigger the post-processing_status script. Note that gateway status report on TTN will need a status value different from 0.</font></p>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_status_submit" align="right">
+   										    		<button id="btn_status_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr> 
+   										      										       										   							   										   
 										 </tbody>
     								    </table>
+    								    <p>For LoRaWAN, if the gateway ID is 0000B827EBEFC4A6, then use B827EB<b>FFFF</b>EFC4A6 for the gateway EUI on LoRaWAN network server platform such as TheThingsNetwork (TTN) for instance.</p>
+    								    <p>If LoRaWAN mode is enabled, set raw to true and AES to false to upload the encrypted LoRaWAN packet to the network server.</p>
     							      </div>
     							    </div>
     							
@@ -285,13 +593,15 @@ require 'header.php';
    										    	<div id="div_use_mail_options" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
+                                           			<fieldset id="use_mail_group" >
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="use_mail_true" value="true" checked>True
+                                                    		<input type="radio" name="use_mail_group" id="use_mail_true" value="true" <?php if($alert_conf['use_mail']) echo "checked"?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="use_mail_false" value="false" >False
+                                                    		<input type="radio" name="use_mail_group" id="use_mail_false" value="false" <?php if(!$alert_conf['use_mail']) echo "checked"?> >False
                                                 		</label>
+                                                		</fieldset>
                                             		</div>
                                         		</div>
                                         	</td> 
@@ -401,13 +711,15 @@ require 'header.php';
    										    	<div id="div_use_sms_options" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
+                                           			<fieldset id="use_sms_group" >
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="use_sms_true" value="true" >True
+                                                    		<input type="radio" name="use_sms_group" id="use_sms_true" value="true" <?php if($alert_conf['use_sms']) echo "checked"?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="use_sms_false" value="false" checked>False
+                                                    		<input type="radio" name="use_sms_group" id="use_sms_false" value="false" <?php if(!$alert_conf['use_sms']) echo "checked"?> >False
                                                 		</label>
+                                                		</fieldset>
                                             		</div>
                                         		</div>
                                         	</td> 
@@ -465,7 +777,7 @@ require 'header.php';
                             						<fieldset>
                                 						<div class="form-group">
                                 							<label>Destination</label>
-                                							<input class="form-control" placeholder="Between 2 and 255" name="destination" type="number" value="" min="2" max="255" autofocus>
+                                							<input class="form-control" placeholder="Between 2 and <?php echo $maxAddr; ?>" name="destination" type="number" value="" min="2" max="<?php echo $maxAddr; ?>" autofocus>
                                 						</div>
                                 						<div class="form-group">
                                 							<label>Message</label>
