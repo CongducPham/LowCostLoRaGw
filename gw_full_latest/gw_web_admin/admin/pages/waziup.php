@@ -18,12 +18,13 @@
 				<div id="div_waziup_status_options" class="form-group">
 					
 					<div class="radio">
+					<fieldset id="waziup_status_group" >
 						<label>
-							<input type="radio" name="optionsRadios" id="waziup_true" value="true" checked>True
+							<input type="radio" name="waziup_status_group" id="waziup_true" value="true" checked>True
 						</label>
 						</br>
 						<label>
-							<input type="radio" name="optionsRadios" id="waziup_false" value="false" >False
+							<input type="radio" name="waziup_status_group" id="waziup_false" value="false" >False
 						</label>
 					</div>
 				</div>
@@ -164,13 +165,15 @@
 				<div id="div_visibility_options" class="form-group">
 					
 					<div class="radio">
+					<fieldset id="waziup_visibility_group" >
 						<label>
-							<input type="radio" name="optionsRadios" id="visibility_public" value="public" checked>Public
+							<input type="radio" name="waziup_visibility_group" id="visibility_public" value="public" <?php if($key_clouds['visibility']=="public") echo "checked"?> >Public
 						</label>
 						</br>
 						<label>
-							<input type="radio" name="optionsRadios" id="visibility_private" value="private" >Private
+							<input type="radio" name="waziup_visibility_group" id="visibility_private" value="private" <?php if($key_clouds['visibility']=="private") echo "checked"?> >Private
 						</label>
+						</fieldset>
 					</div>
 				</div>
 			</td> 

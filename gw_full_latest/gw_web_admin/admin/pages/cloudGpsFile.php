@@ -16,13 +16,15 @@
 				<td id="td_edit_cloudGpsFile_status">
 					<div id="div_cloudGpsFile_status_options" class="form-group">					
 						<div class="radio">
+						<fieldset id="cloudGpsFile_status_group" >
 							<label>
-								<input type="radio" name="optionsRadios" id="cloudGpsFile_true" value="true" checked>True
+								<input type="radio" name="cloudGpsFile_status_group" id="cloudGpsFile_true" value="true" checked>True
 							</label>
 							</br>
 							<label>
-								<input type="radio" name="optionsRadios" id="cloudGpsFile_false" value="false" >False
+								<input type="radio" name="cloudGpsFile_status_group" id="cloudGpsFile_false" value="false" >False
 							</label>
+							</fieldset>
 						</div>
 					</div>
 				</td> 
@@ -144,13 +146,17 @@
 				<td align="right"><button id="btn_edit_cloudGpsFile_sms" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
 				<td id="td_edit_cloudGpsFile_sms">
 					<div id="div_cloudGpsFile_sms" class="form-group">
+						<div class="radio">
+						<fieldset id="cloudGpsFile_sms_group" >					
 							<label>
-								<input type="radio" name="optionsRadios" id="cloudGpsFile_sms_true" value="true" checked>Enable
+								<input type="radio" name="cloudGpsFile_sms_group" id="cloudGpsFile_sms_true" value="true" <?php if($key_clouds['gpsfile_sms'] == 1) echo "checked"?> >Enable
 							</label>
 							</br>
 							<label>
-								<input type="radio" name="optionsRadios" id="cloudGpsFile_sms_false" value="false" >Disable
+								<input type="radio" name="cloudGpsFile_sms_group" id="cloudGpsFile_sms_false" value="false" <?php if($key_clouds['gpsfile_sms'] == 0) echo "checked"?> >Disable
 							</label>
+							</fieldset>
+						</div>							
 					</div>
 				</td>
 				<td id="td_cloudGpsFile_sms_submit" align="right">

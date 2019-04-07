@@ -104,15 +104,16 @@ require 'header.php';
     										<td align="right"><button id="btn_edit_thingspeak_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
    										   	<td id="td_edit_thingspeak_status">
    										    	<div id="div_thingspeak_status_options" class="form-group">
-                                            		
                                            			<div class="radio">
+                                           			<fieldset id="thingspeak_status_group" >
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="thingspeak_true" value="true" checked>True
+                                                    		<input type="radio" name="thingspeak_status_group" id="thingspeak_true" value="true" checked>True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="thingspeak_false" value="false" >False
+                                                    		<input type="radio" name="thingspeak_status_group" id="thingspeak_false" value="false" >False
                                                 		</label>
+                                                		</fieldset>
                                             		</div>
                                         		</div>
                                         	</td> 

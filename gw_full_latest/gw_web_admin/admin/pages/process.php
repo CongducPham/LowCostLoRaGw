@@ -105,57 +105,6 @@ if (isset($_GET["gateway_ID"])) {
 	}
 }
 
-/*************************
- * Setting raw
- *************************/
-
-
-if (isset($_GET["raw"])) {
-    
-    $raw = htmlspecialchars($_GET["raw"]);
-	$output = update_gw_conf("gateway_conf","raw", $raw);
-	
-		if($output == 0){
-			echo '<p><center><font color="green">Raw setting updated</font></center></p>';
-		}
-		else{
-			echo '<p><center><font color="red">Failed to update raw setting</font></center></p>';	
-		}
-}
-
-/*************************
- * Setting wappkey
- *************************/
-
-
-if (isset($_GET["wappkey"])) {
-    
-    $wappkey = htmlspecialchars($_GET["wappkey"]);
-	$output = update_gw_conf("gateway_conf","wappkey", $wappkey);
-	
-		if($output == 0){
-			echo '<p><center><font color="green">Wappkey setting updated</font></center></p>';
-		}
-		else{
-			echo '<p><center><font color="red">Failed to update wappkey setting</font></center></p>';	
-		}
-}
-
-/*************************
- * Setting AES
- *************************/
-if (isset($_GET["aes"]) && (! empty($_GET["aes"]))) {
-    
-    $aes = htmlspecialchars($_GET["aes"]);
-	$output = update_gw_conf("gateway_conf","aes", $aes);
-	
-	if($output == 0){
-		echo '<p><center><font color="green">AES option updated</font></center></p>';
-	}
-	else{
-		echo '<p><center><font color="red">Failed to update AES option</font></center></p>';	
-	}
-}
 
 /*************************
  * Setting localization
@@ -185,6 +134,57 @@ if (isset($_GET["aes"]) && (! empty($_GET["aes"]))) {
 }
 
 /*************************
+ * Setting wappkey
+ *************************/
+
+if (isset($_GET["wappkey"])) {
+    
+    $wappkey = htmlspecialchars($_GET["wappkey"]);
+	$output = update_gw_conf("gateway_conf","wappkey", $wappkey);
+	
+		if($output == 0){
+			echo '<p><center><font color="green">Wappkey setting updated</font></center></p>';
+		}
+		else{
+			echo '<p><center><font color="red">Failed to update wappkey setting</font></center></p>';	
+		}
+}
+
+/*************************
+ * Setting raw
+ *************************/
+
+if (isset($_GET["raw"])) {
+    
+    $raw = htmlspecialchars($_GET["raw"]);
+	$output = update_gw_conf("gateway_conf","raw", $raw);
+	
+		if($output == 0){
+			echo '<p><center><font color="green">Raw setting updated</font></center></p>';
+		}
+		else{
+			echo '<p><center><font color="red">Failed to update raw setting</font></center></p>';	
+		}
+}
+
+/*************************
+ * Setting AES
+ *************************/
+ 
+if (isset($_GET["aes"]) && (! empty($_GET["aes"]))) {
+    
+    $aes = htmlspecialchars($_GET["aes"]);
+	$output = update_gw_conf("gateway_conf","aes", $aes);
+	
+	if($output == 0){
+		echo '<p><center><font color="green">AES option updated</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to update AES option</font></center></p>';	
+	}
+}
+
+/*************************
  * Setting downlink
  *************************/
 if (isset($_GET["downlink"]) && (! empty($_GET["downlink"]))) {
@@ -204,6 +204,28 @@ if (isset($_GET["downlink"]) && (! empty($_GET["downlink"]))) {
 		echo '<p><center><font color="red">Failed to update downlink timer</font></center></p>';	
 	}
 }
+
+/*************************
+ * Setting status
+ *************************/
+if (isset($_GET["status"]) && (! empty($_GET["status"]))) {
+    
+    $status = htmlspecialchars($_GET["status"]);
+    
+    if ($status == '') {
+    	$status=0;
+    }
+    	
+	$output = update_gw_conf("gateway_conf","status", $status);
+	
+	if($output == 0){
+		echo '<p><center><font color="green">status timer updated</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to update status timer</font></center></p>';	
+	}
+}
+
 
 //+++++++++++++++++++++++++++++++++++++
 // DOWNLINK REQUEST

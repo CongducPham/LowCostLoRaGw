@@ -15,15 +15,16 @@
 				<td align="right"><button id="btn_edit_cloudNodeRed_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
 				<td id="td_edit_cloudNodeRed_status">
 					<div id="div_cloudNodeRed_status_options" class="form-group">
-						
 						<div class="radio">
+						<fieldset id="cloudNodeRed_status_group" >
 							<label>
-								<input type="radio" name="optionsRadios" id="cloudNodeRed_true" value="true" checked>True
+								<input type="radio" name="cloudNodeRed_status_group" id="cloudNodeRed_true" value="true" checked>True
 							</label>
 							</br>
 							<label>
-								<input type="radio" name="optionsRadios" id="cloudNodeRed_false" value="false" >False
+								<input type="radio" name="cloudNodeRed_status_group" id="cloudNodeRed_false" value="false" >False
 							</label>
+							</fieldset>
 						</div>
 					</div>
 				</td> 

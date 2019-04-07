@@ -43,7 +43,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
         	});
     		
         	$('#mode_value').html(mode);
@@ -86,7 +86,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
         	});
     		
         	$('#sf_value').html(sf);
@@ -147,7 +147,7 @@ var maxAddr = 255;
             	//erase message after 5 seconds
 	   	setTimeout(function() {
   			$('#gw_config_msg').html("");
-	     	},5000);
+	     	},2000);
         });
 	
 	if(freq != '' && band != ''){
@@ -204,7 +204,7 @@ var maxAddr = 255;
     });
  
     $('#btn_paboost_submit').click(function() {	
-    	paboost = $( "input:checked" ).val();
+    	paboost = $( "#paboost_group input:checked" ).val();
         $.get("process.php", {paboost: paboost}, function(data){
             // handle the response (*) by storing the message into the DIV#message
             //$('#gw_full_update_msg').html(res);
@@ -212,11 +212,10 @@ var maxAddr = 255;
 	    //erase message after 5 seconds
 	    setTimeout(function() {
   		$('#gw_config_msg').html("");
-	    },5000);
+	    },2000);
         });
     	
-	if(paboost != '') 
-        	$('#paboost_value').html(paboost);
+        $('#paboost_value').html(paboost);
         $('#td_edit_paboost').hide();
     	$('#td_paboost_submit').hide();
     });
@@ -248,47 +247,17 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
         });
     	
-	if(gw_id != '')	
-        	$('#gw_id_value').html(gw_id);
-        $('#gw_id_input').val("");
-        $('#td_edit_gw_id').hide();
-    	$('#td_gw_id_submit').hide();
+		if(gw_id != '')	{
+				$('#gw_id_value').html(gw_id);
+			$('#gw_id_input').val("");
+			$('#td_edit_gw_id').hide();
+			$('#td_gw_id_submit').hide();
+    	}
     });
 
-//==================================
-// Setting AES
-//==================================
-    $('#td_edit_aes').hide();
-    $('#td_aes_submit').hide();
-    $("#gw_msg").hide();
-    //$("#div_mode_select").hide();
-    
-    $('#btn_edit_aes').click(function() {	
-    	$('#td_edit_aes').show();
-    	$('#td_aes_submit').show();
-    });
- 
-    $('#btn_aes_submit').click(function() {	
-    	aes = $( "input:checked" ).val();
-    	//alert(aes);
-    	$.get("process.php", {aes: aes}, function(data){	
-			//$('#gw_msg').html(data);
-			//$('#gw_msg').show();
-			$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},5000); 	
-        });
-    	
-	if(aes != '') 
-        	$('#aes_value').html(aes);
-        $('#td_edit_aes').hide();
-    	$('#td_aes_submit').hide();
-    });
     
 //==================================
 // Gateway settings localization 
@@ -366,7 +335,7 @@ var maxAddr = 255;
 		    			//erase message after 5 seconds
 		   			setTimeout(function() {
 	  					$('#gw_config_msg').html("");
-		     			},5000);
+		     			},2000);
 		});
 		$('#latitude_gw_conf').html(ref_latitude);
 		$('#longitude_gw_conf').html(ref_longitude);
@@ -418,35 +387,6 @@ var maxAddr = 255;
 		$('#longitude_value').html("Longitude : "+$('#longitude_gw_conf').html());
 	});
 */
-	
-//==================================
-// Setting raw
-//==================================	
- 	$('#td_edit_raw').hide();
-	$('#td_raw_submit').hide();
-	
-	$('#btn_edit_raw').click(function(){
-		$('#td_edit_raw').show();
-		$('#td_raw_submit').show();
-	});
-	
-	$('#btn_raw_submit').click(function(){
-		raw = $( "#raw_group input:checked" ).val();
-		alert(raw);
-		$.get("process.php", {raw: raw}, function(data){	
-			$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},5000);
-        });
-    	
-		if(raw != ''){
-    		$('#raw_value').html(raw);
-        	$('#td_edit_raw').hide();
-    		$('#td_raw_submit').hide();
-    	}
-	});
 
 //==================================
 //# Setting wappkey
@@ -461,21 +401,77 @@ var maxAddr = 255;
 	
 	$('#btn_wappkey_submit').click(function(){
 		wappkey = $( "#wappkey_group input:checked" ).val();
-		alert(wappkey);
+		//alert(wappkey);
 		$.get("process.php", {wappkey: wappkey}, function(data){	
 			$("#gw_config_msg").html(data);
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
         });
     	
-		if(wappkey != ''){
-    		$('#wappkey_value').html(wappkey);
-        	$('#td_edit_wappkey').hide();
-    		$('#td_wappkey_submit').hide();
-    	}
+    	$('#wappkey_value').html(wappkey);
+        $('#td_edit_wappkey').hide();
+    	$('#td_wappkey_submit').hide();
 	});
+		
+//==================================
+// Setting raw
+//==================================	
+ 	$('#td_edit_raw').hide();
+	$('#td_raw_submit').hide();
+	
+	$('#btn_edit_raw').click(function(){
+		$('#td_edit_raw').show();
+		$('#td_raw_submit').show();
+	});
+	
+	$('#btn_raw_submit').click(function(){
+		raw = $( "#raw_group input:checked" ).val();
+		//alert(raw);
+		$.get("process.php", {raw: raw}, function(data){	
+			$("#gw_config_msg").html(data);
+            	//erase message after 5 seconds
+	   			setTimeout(function() {
+  					$('#gw_config_msg').html("");
+	     			},2000);
+        });
+    	
+    	$('#raw_value').html(raw);
+        $('#td_edit_raw').hide();
+    	$('#td_raw_submit').hide();
+	});
+
+
+//==================================
+// Setting AES
+//==================================
+    $('#td_edit_aes').hide();
+    $('#td_aes_submit').hide();
+    $("#gw_msg").hide();
+    //$("#div_mode_select").hide();
+    
+    $('#btn_edit_aes').click(function() {	
+    	$('#td_edit_aes').show();
+    	$('#td_aes_submit').show();
+    });
+ 
+    $('#btn_aes_submit').click(function() {	
+    	aes = $( "#aes_group input:checked" ).val();
+    	//alert(aes);
+    	$.get("process.php", {aes: aes}, function(data){	
+			$("#gw_config_msg").html(data);
+            	//erase message after 5 seconds
+	   			setTimeout(function() {
+  					$('#gw_config_msg').html("");
+	     			},2000); 	
+        });
+    	
+		$('#aes_value').html(aes);
+		$('#td_edit_aes').hide();
+		$('#td_aes_submit').hide();	
+    });
+
 
 //==================================
 // Setting downlink
@@ -499,15 +495,43 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
         });
 
-        	$('#downlink_value').html(downlink);
-        	$("#downlink_input").val("");
-       		 $('#td_edit_downlink').hide();
-    		$('#td_downlink_submit').hide();
+		$('#downlink_value').html(downlink);
+		$("#downlink_input").val("");
+		$('#td_edit_downlink').hide();
+		$('#td_downlink_submit').hide();
     });
+
+//==================================
+// Setting status
+//==================================
+    $('#td_edit_status').hide();
+    $('#td_status_submit').hide();
+    $("#gw_msg").hide();
     
+    $('#btn_edit_status').click(function() {	
+    	$('#td_edit_status').show();
+    	$('#td_status_submit').show();
+    });
+ 
+    $('#btn_status_submit').click(function() {	
+    	status = $("#status_input").val();
+    	$.get("process.php", {status: status}, function(data){	
+			$("#gw_config_msg").html(data);
+            	//erase message after 5 seconds
+	   			setTimeout(function() {
+  					$('#gw_config_msg').html("");
+	     			},2000);
+        });
+
+		$('#status_value').html(status);
+		$("#status_input").val("");
+		$('#td_edit_status').hide();
+		$('#td_status_submit').hide();
+    });
+        
 //+++++++++++++++++++++++++++++++++++++
 // DOWNLINK REQUEST
 //+++++++++++++++++++++++++++++++++++++
@@ -536,7 +560,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
         });
         $('#downlink_form')[0].reset();
         
@@ -560,7 +584,7 @@ var maxAddr = 255;
     });
  
     $('#btn_use_sms_submit').click(function() {	
-    	use_sms = $( "input:checked" ).val();
+    	use_sms = $( "#use_sms_group input:checked" ).val();
     	
     	$.get("process.php", {use_sms: use_sms}, function(data){	
 			//$('#alert_sms_msg').html(data);
@@ -569,7 +593,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
         });
     	if(use_sms != '')	
         	$('#use_sms_value').html(use_sms);
@@ -600,7 +624,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
 	}
 	else{
 		$.get("process.php", {sms_pin: sms_pin}, function(data){	
@@ -610,7 +634,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
        		 });
     		
         	$('#sms_pin_value').html(sms_pin);
@@ -653,7 +677,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
 		}
 		else{
 			var contactsJSON = JSON.stringify(contacts);
@@ -664,7 +688,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
 				$('#td_edit_contact_sms').hide();
     			$('#td_contact_sms_submit').hide();
         	});
@@ -695,7 +719,7 @@ var maxAddr = 255;
     });
  
     $('#btn_use_mail_submit').click(function() {	
-    	use_mail = $( "input:checked" ).val();
+    	use_mail = $( "#use_mail_group input:checked" ).val();
     	
     	$.get("process.php", {use_mail: use_mail}, function(data){	
 			//$('#alert_mail_msg').html(data);
@@ -704,7 +728,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
         });
     	
 	if(use_mail != '')		
@@ -736,7 +760,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
 	}
 	else{
 		$.get("process.php", {mail_from: mail_from}, function(data){	
@@ -746,7 +770,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
        		 });
 		
 		$('#mail_from_value').html(mail_from);
@@ -780,7 +804,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
         });
     	
 	if(mail_passwd != '')	
@@ -813,7 +837,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
         });
 	
 	if(mail_server != '')	
@@ -856,7 +880,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
 			$('#td_edit_contact_mail').hide();
     		$('#td_contact_mail_submit').hide();
 		}
@@ -869,7 +893,7 @@ var maxAddr = 255;
             			//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},5000);
+	     			},2000);
 				$('#contact_mail_value').html(contact_mail);
         	});
     		
@@ -894,7 +918,7 @@ var maxAddr = 255;
 	    //erase message after 5 seconds
 	    setTimeout(function() {
   		$('#gw_config_msg').html("");
-	    },5000);
+	    },2000);
         });
     });
 
@@ -921,7 +945,7 @@ var maxAddr = 255;
 	    		setTimeout(function() {
   					$('#gw_update_msg').html("");
   					window.location.reload();  					
-	     		},5000);
+	     		},2000);
 	 		});
 		}
 		else{ 
@@ -947,7 +971,7 @@ var maxAddr = 255;
 	   		 	setTimeout(function() {
   					$('#gw_update_msg').html("");
   					window.location.reload();  					
-	    		},5000);
+	    		},2000);
         	});
 		}
 		else{ 
@@ -969,7 +993,7 @@ var maxAddr = 255;
 	    setTimeout(function() {
   		$('#gw_update_msg').html("");
   		window.location.reload();  		
-	    },5000);
+	    },2000);
         });
     });
       
@@ -999,7 +1023,7 @@ var maxAddr = 255;
 	    //erase message after 5 seconds
 	    setTimeout(function() {
   		$('#gw_update_msg').html("");
-	    },5000);
+	    },2000);
         });
         $('#gw_update_form')[0].reset();    
         
@@ -1019,7 +1043,7 @@ var maxAddr = 255;
 	    setTimeout(function() {
   		$('#gw_update_msg').html("");
   		window.location.reload();  		
-	    },5000);
+	    },2000);
         });
     });
 
@@ -1097,7 +1121,7 @@ var maxAddr = 255;
           		 //erase message after 5 seconds
 			setTimeout(function() {
   				$('#header_msg').html("");
-			},5000);
+			},2000);
         	});
    	 });
  
@@ -1127,7 +1151,7 @@ var maxAddr = 255;
            //erase message after 5 seconds
 	   //		setTimeout(function() {
   	   //			$('#header_msg').html("");
-	   //		},5000);
+	   //		},2000);
         });
     });
 
@@ -1158,7 +1182,7 @@ var maxAddr = 255;
 	    setTimeout(function() {
   		$('#system_msg').html("");
   		window.location.reload();
-	     },5000);
+	     },2000);
         });
         $('#hostapd_form')[0].reset();
     });
@@ -1188,7 +1212,7 @@ var maxAddr = 255;
             //erase message after 5 seconds
 	    setTimeout(function() {
   		$('#system_msg').html("");
-	     },5000);
+	     },2000);
         });
         $('#wificlient_form')[0].reset();
         
@@ -1204,7 +1228,7 @@ var maxAddr = 255;
 	    //erase message after 5 seconds
 	    setTimeout(function() {
   		$('#system_msg').html("");
-	    },5000);
+	    },2000);
         });
     });
 
@@ -1218,7 +1242,7 @@ var maxAddr = 255;
 	    //erase message after 5 seconds
 	    setTimeout(function() {
   		$('#system_msg').html("");
-	    },5000);
+	    },2000);
         });
     });
 
@@ -1335,7 +1359,7 @@ var maxAddr = 255;
             //erase message after 5 seconds
 	    setTimeout(function() {
   		$('#system_msg').html("");
-	     },5000);
+	     },2000);
         });
         $('#profile_form')[0].reset();
         
@@ -1363,7 +1387,7 @@ var maxAddr = 255;
     });
  
     $('#btn_thingspeak_status_submit').click(function() {	
-    	thingspeak_status = $( "input:checked" ).val();
+    	thingspeak_status = $( "#thingspeak_status_group input:checked" ).val();
     	
     	$.get("process.php", {thingspeak_status: thingspeak_status}, function(data){	
 			//$('#thingspeak_status_msg').html(data);
@@ -1372,16 +1396,10 @@ var maxAddr = 255;
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
         });
-    	/*
-    	if($thingspeak_status == "true")
-    		$('#thingspeak_status_value').html("Enable");
-    	else
-    		$('#thingspeak_status_value').html("Disable");
-    	*/
-	if(thingspeak_status != '')
-        	$('#thingspeak_status_value').html(thingspeak_status);
+
+        $('#thingspeak_status_value').html(thingspeak_status);
         $('#td_edit_thingspeak_status').hide();
     	$('#td_thingspeak_status_submit').hide();
     });
@@ -1408,7 +1426,7 @@ var maxAddr = 255;
 	    		//erase message after 5 seconds
 	    		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
         });
     	if(write_key != '')
         	$('#write_key_value').html(write_key);
@@ -1454,7 +1472,7 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -1488,7 +1506,7 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 	    //erase message after 5 seconds
 	    setTimeout(function() {
   		$('#cloud_msg').html("");
-	    },5000);
+	    },2000);
         });
         $('#thingspeak_form')[0].reset();
         
@@ -1512,7 +1530,7 @@ $('#btn_thingspeak_source_list_submit').click(function(){
     });
  
     $('#btn_waziup_status_submit').click(function() {	
-    	waziup_status = $( "input:checked" ).val();
+    	waziup_status = $( "#waziup_status_group input:checked" ).val();
     	
     	$.get("process.php", {waziup_status: waziup_status}, function(data){	
 			//$('#waziup_status_msg').html(data);
@@ -1521,16 +1539,10 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 	   		 //erase message after 5 seconds
 	    		setTimeout(function() {
   				$('#cloud_msg').html("");
-	    		},5000);
+	    		},2000);
         });
-        /*
-    	if($waziup_status == "true")
-    		$('#waziup_status_value').html("Enable");
-    	else
-    		$('#waziup_status_value').html("Disable");
-    	*/
-	if(waziup_status !='')
-        	$('#waziup_status_value').html(waziup_status);
+
+        $('#waziup_status_value').html(waziup_status);
         $('#td_edit_waziup_status').hide();
     	$('#td_waziup_status_submit').hide();
     });
@@ -1557,14 +1569,15 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 	   		 //erase message after 5 seconds
 	    		setTimeout(function() {
   				$('#cloud_msg').html("");
-	    		},5000);
+	    		},2000);
         });
     	
-	if(project !='')	
+		if(project !='') {	
         	$('#project_value').html(project);
-        $('#project_input').val("");
-        $('#td_edit_project').hide();
-    	$('#td_project_submit').hide();
+        	$('#project_input').val("");
+        	$('#td_edit_project').hide();
+    		$('#td_project_submit').hide();
+    	}
     });
 
 //==================================
@@ -1589,14 +1602,15 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 	   		 //erase message after 5 seconds
 	    		setTimeout(function() {
   				$('#cloud_msg').html("");
-	    		},5000);
+	    		},2000);
         });
     	
-	if(org !='')	
+		if(org !='') {	
         	$('#organization_value').html(org);
-        $('#organization_input').val("");
-        $('#td_edit_organization').hide();
-    	$('#td_organization_submit').hide();
+        	$('#organization_input').val("");
+        	$('#td_edit_organization').hide();
+    		$('#td_organization_submit').hide()
+    	}
     });
     
 //==================================
@@ -1622,10 +1636,11 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 	    		setTimeout(function() {
   				$('#cloud_msg').html("");
   				window.location.reload();
-	    		},5000);
+	    		},2000);
         });
-    	
-	if(serv !='')		
+    
+    	// service_tree can be empty	
+		if(serv !='') 		
         	$('#service_tree_value').html(serv);
         $('#service_tree_input').val("");
         $('#td_edit_service_tree').hide();
@@ -1662,15 +1677,16 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 	    		setTimeout(function() {
   				$('#cloud_msg').html("");
   				window.location.reload();
-	    		},5000);
+	    		},2000);
         });
     	
-	if(username !='')		
-        	$('#username_value').html(username);
+		if(username == '')
+			username = "guest"		
+        
+        $('#username_value').html(username);    
         $('#username_input').val("");
         $('#td_edit_username').hide();
     	$('#td_username_submit').hide();
-    	
     }
     
     });
@@ -1705,11 +1721,12 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 	    		setTimeout(function() {
   				$('#cloud_msg').html("");
   				window.location.reload();
-	    		},5000);
+	    		},2000);
         });
     	
-	if(password !='')		
+		if(password !='')		
         	$('#password_value').html("***********");
+        	
         $('#password_input').val("");
         $('#td_edit_password').hide();
     	$('#td_password_submit').hide();
@@ -1754,7 +1771,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -1776,18 +1793,17 @@ $('#btn_waziup_source_list_submit').click(function(){
     });
  
     $('#btn_visibility_submit').click(function() {	
-    	visibility = $( "input:checked" ).val();
+    	visibility = $( "#waziup_visibility_group input:checked" ).val();
     	
     	$.get("process.php", {visibility:visibility}, function(data){	
 			$('#cloud_msg').html(data);
 	   		 //erase message after 5 seconds
 	    		setTimeout(function() {
   				$('#cloud_msg').html("");
-	    		},5000);
+	    		},2000);
         });
 
-	if(visibility !='')
-        	$('#visibility_value').html(visibility);
+        $('#visibility_value').html(visibility);
         $('#td_edit_visibility').hide();
     	$('#td_visibility_submit').hide();
     });
@@ -1809,21 +1825,19 @@ $('#btn_waziup_source_list_submit').click(function(){
 	});
 	
 	$('#btn_cloudNoInternet_status_submit').click(function(){
-	    	var cloud_status = $( "#div_cloudNoInternet_status_options input:checked" ).val();
+	    	var cloud_status = $( "#cloudNoInternet_status_group input:checked" ).val();
 	    	var cloud_name = "cloudnointernet_conf";
 	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
 				$('#cloud_msg').html(data);
 		    		//erase message after 5 seconds
 		   		 setTimeout(function() {
 	  				$('#cloud_msg').html("");
-		   		 },5000);
+		   		 },2000);
 		});
 	   	
-		if(cloud_status != ''){
-			$('#cloudNoInternet_status_value').html(cloud_status);
-			$('#td_edit_cloudNoInternet_status').hide();
-	    		$('#td_cloudNoInternet_status_submit').hide();
-		}	
+		$('#cloudNoInternet_status_value').html(cloud_status);
+		$('#td_edit_cloudNoInternet_status').hide();
+	    $('#td_cloudNoInternet_status_submit').hide();
 	});
 
 //+++++++++++++++++++++++++++++++++++++
@@ -1843,21 +1857,19 @@ $('#btn_waziup_source_list_submit').click(function(){
 	});
 	
 	$('#btn_cloudGpsFile_status_submit').click(function(){
-	    	var cloud_status = $( "#div_cloudGpsFile_status_options input:checked" ).val();
+	    	var cloud_status = $( "#cloudGpsFile_status_group input:checked" ).val();
 	    	var cloud_name = "cloudgpsfile_conf";
 	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
 				$('#cloud_msg').html(data);
 		    		//erase message after 5 seconds
 		   		 setTimeout(function() {
 	  				$('#cloud_msg').html("");
-		   		 },5000);
+		   		 },2000);
 		});
 	    	
-		if(cloud_status != '' ){
-			$('#cloudGpsFile_status_value').html(cloud_status);
-			$('#td_edit_cloudGpsFile_status').hide();
-	    		$('#td_cloudGpsFile_status_submit').hide();
-		}	
+		$('#cloudGpsFile_status_value').html(cloud_status);
+		$('#td_edit_cloudGpsFile_status').hide();
+	    $('#td_cloudGpsFile_status_submit').hide();
 	});
 	
 //==================================
@@ -1881,7 +1893,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -1911,7 +1923,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -1940,7 +1952,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -1984,7 +1996,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -2020,7 +2032,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -2042,7 +2054,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	});
 	
  	$('#btn_cloudGpsFile_sms_submit').click(function(){
-		var cloud_key_value = $('#div_cloudGpsFile_sms input:checked').val();
+		var cloud_key_value = $('#cloudGpsFile_sms_group input:checked').val();
 		var cloud_key_name = "gpsfile_key";
 		var cloud_key = "sms";
 		
@@ -2051,7 +2063,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -2086,7 +2098,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -2133,7 +2145,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -2160,14 +2172,14 @@ $('#btn_waziup_source_list_submit').click(function(){
 	});
 	
 	$('#btn_cloudMQTT_status_submit').click(function(){
-	    	var cloud_status = $( "#div_cloudMQTT_status_options input:checked" ).val();
+	    	var cloud_status = $( "#cloudMQTT_status_group input:checked" ).val();
 	    	var cloud_name = "cloudmqtt_conf";
 	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
 				$('#cloud_msg').html(data);
 		    		//erase message after 5 seconds
 		   		 setTimeout(function() {
 	  				$('#cloud_msg').html("");
-		   		 },5000);
+		   		 },2000);
 		});
 	    	
 		if(cloud_status != ''){
@@ -2198,7 +2210,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -2230,7 +2242,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -2261,7 +2273,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -2292,7 +2304,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -2338,7 +2350,7 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 	    		//erase message after 5 seconds
 	   		 setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },5000);
+	   		 },2000);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -2367,22 +2379,19 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 	});
 	
 	$('#btn_cloudNodeRed_status_submit').click(function(){
-	    	var cloud_status = $( "#div_cloudNodeRed_status_options input:checked" ).val();
+	    	var cloud_status = $( "#cloudNodeRed_status_group input:checked" ).val();
 	    	var cloud_name = "cloudnodered_conf";
 	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
 				$('#cloud_msg').html(data);
 		    		//erase message after 5 seconds
 		   		 setTimeout(function() {
 	  				$('#cloud_msg').html("");
-		   		 },5000);
+		   		 },2000);
 		});
 	    	
-		if(cloud_status != ''){
-			$('#cloudNodeRed_status_value').html(cloud_status);
-			$('#td_edit_cloudNodeRed_status').hide();
-	    		$('#td_cloudNodeRed_status_submit').hide();
-		}
-	
+		$('#cloudNodeRed_status_value').html(cloud_status);
+		$('#td_edit_cloudNodeRed_status').hide();
+	    $('#td_cloudNodeRed_status_submit').hide();
 	});
 	
 });	

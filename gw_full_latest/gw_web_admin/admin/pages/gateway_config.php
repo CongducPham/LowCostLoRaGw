@@ -148,10 +148,12 @@ require 'header.php';
     												
     												if ($current_paboost=='')
 													{
-    													echo "Disabled";    
+    													echo "Disabled";
+    													$current_paboost=false;    
 													}
 													else {
-   					 									echo "Enabled";   
+   					 									echo "Enabled";
+   					 									$current_paboost=true;   
 													}
     											?>    										
     										</td>
@@ -160,12 +162,13 @@ require 'header.php';
    										    	<div id="div_paboost_options" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
+                                           			<fieldset id="paboost_group" >
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="paboost_true" value="Enabled" checked>Enabled
+                                                    		<input type="radio" name="paboost_group" id="paboost_true" value="Enabled" <?php if($current_paboost) echo "checked"?> >Enabled
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="paboost_false" value="Disabled" checked>Disabled
+                                                    		<input type="radio" name="paboost_group" id="paboost_false" value="Disabled" <?php if(!$current_paboost) echo "checked"?> >Disabled
                                                 		</label>
                                             		</div>
                                         		</div>
@@ -233,56 +236,7 @@ require 'header.php';
     										</td>
 											<td align="right">not editable </td>
    										   </tr>   										   
-   										   <tr>
-    									    <td>AES</td>
-    										<!-- <td id="aes_value"><?php echo $gw_conf['aes']; ?></td> -->
-    										<td id="aes_value">
-    											<?php
-    												if($gw_conf['aes'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-    											?>
-    										</td>
-    										<td align="right"><button id="btn_edit_aes" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
-   										   	<td id="td_edit_aes">
-   										    	<div id="div_aes_options" class="form-group">
-                                            		<label></label>
-                                           			<div class="radio">
-                                                		<label>
-                                                    		<input type="radio" name="optionsRadios" id="aes_true" value="true" checked>True
-                                                		</label>
-                                                		</br>
-                                                		<label>
-                                                    		<input type="radio" name="optionsRadios" id="aes_false" value="false" checked>False
-                                                		</label>
-                                            		</div>
-                                        		</div>
-                                        	</td> 
-   										    <td id="td_aes_submit" align="right">
-   										    		<button id="btn_aes_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
-   										    </td>
-   										   </tr>
-   										   <tr>
-    									    <td>downlink</td>
-    										<td id="downlink_value">
-    											<?php echo $gw_conf['downlink'];?>
-    										</td>
-    										<td align="right"><button id="btn_edit_downlink" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
-   										   	<td id="td_edit_downlink">
-   										    	<div id="div_update_downlink" class="form-group">
-                                            		<label>Downlink timer</label>
-                                					<input id="downlink_input" class="form-control" placeholder="downlink timer in seconds" name="downlink" type="number" value="" autofocus>
-                                        			<p><font color="red">Enter 00 for 0. Specifying a value different from 0 triggers the downlink checking process at both post-processing and lora_gateway level. Run Gateway Update/Basic config to recompile lora_gateway with downlink support.</font></p>
-                                        		</div>
-                                        	</td> 
-   										    <td id="td_downlink_submit" align="right">
-   										    		<button id="btn_downlink_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
-   										    </td>
-   										   </tr>  	
+	
    										   <!-- ajout de l'adresse ip et de l'adresse mac -->
    										   <tr>
    										   <td>IP address</td>
@@ -460,39 +414,6 @@ require 'header.php';
    										   			<button align="right" id="btn_submit_position" class="btn btn-primary">Submit<span class="fa fa-arrow-right"></span></button>
    										   		</td>
    										   </tr>
-   										   <tr>
-   										   		<td>raw format</td>
-   										   		<td id="raw_value">
-   										   		<?php 
-    												if($gw_conf['raw'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-   										   		?>
-   										   		</td>
-   										   		<td align="right" ><button id="btn_edit_raw" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
-   										   		<td id="td_edit_raw">
-   										   			<div id="div_edit_raw" class="form-group">
-   										   				<div class="radio">
-   										   				<fieldset id="raw_group" >	
-   										   				<label>
-   										   					<input type="radio" name="raw_group" id="raw_true" value="true" >True
-   										   				</label>
-   										   				</br>
-   										   				<label>
-   										   					<input type="radio" name="raw_group" id="raw_false" value="false" checked>False
-   										   				</label>
-   										   				</fieldset>
-   										   				</div>
-   										   			</div>
-   										   		</td>
-   										   		<td id="td_raw_submit" align="right">
-   										   			<button id="btn_raw_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
-   										   		</td>
-   										   </tr>							   
     										   <tr>
    										   		<td>wappkey</td>
    										   		<td id="wappkey_value">
@@ -512,11 +433,11 @@ require 'header.php';
    										   				<div class="radio">
    										   				<fieldset id="wappkey_group" >	
    										   				<label>
-   										   					<input type="radio" name="wappkey_group" id="wappkey_true" value="true" >True
+   										   					<input type="radio" name="wappkey_group" id="wappkey_true" value="true" <?php if($gw_conf['wappkey']) echo "checked"?> >True
    										   				</label>
    										   				</br>
    										   				<label>
-   										   					<input type="radio" name="wappkey_group" id="wappkey_false" value="false" checked >False
+   										   					<input type="radio" name="wappkey_group" id="wappkey_false" value="false" <?php if(!$gw_conf['wappkey']) echo "checked"?> >False
    										   				</label>
    										   				</fieldset>
    										   				</div>
@@ -525,7 +446,111 @@ require 'header.php';
    										   		<td id="td_wappkey_submit" align="right">
    										   			<button id="btn_wappkey_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										   		</td>
-   										   </tr>  										   
+   										   </tr>     										   
+   										   <tr>
+   										   		<td>raw format</td>
+   										   		<td id="raw_value">
+   										   		<?php 
+    												if($gw_conf['raw'])
+													{
+    													echo "true";    
+													}
+													else {
+   					 									echo "false";   
+													}
+   										   		?>
+   										   		</td>
+   										   		<td align="right" ><button id="btn_edit_raw" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   		<td id="td_edit_raw">
+   										   			<div id="div_edit_raw" class="form-group">
+   										   				<div class="radio">
+   										   				<fieldset id="raw_group" >	
+   										   				<label>
+   										   					<input type="radio" name="raw_group" id="raw_true" value="true" <?php if($gw_conf['raw']) echo "checked"?> >True
+   										   				</label>
+   										   				</br>
+   										   				<label>
+   										   					<input type="radio" name="raw_group" id="raw_false" value="false" <?php if(!$gw_conf['raw']) echo "checked"?> >False
+   										   				</label>
+   										   				</fieldset>
+   										   				</div>
+   										   			</div>
+   										   		</td>
+   										   		<td id="td_raw_submit" align="right">
+   										   			<button id="btn_raw_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										   		</td>
+   										   </tr>
+   										   <tr>
+    									    <td>AES</td>
+    										<!-- <td id="aes_value"><?php echo $gw_conf['aes']; ?></td> -->
+    										<td id="aes_value">
+    											<?php
+    												if($gw_conf['aes'])
+													{
+    													echo "true";    
+													}
+													else {
+   					 									echo "false";   
+													}
+    											?>
+    										</td>
+    										<td align="right"><button id="btn_edit_aes" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_aes">
+   										    	<div id="div_edit_aes" class="form-group">
+                                            		<label></label>
+                                           			<div class="radio">
+                                           			<fieldset id="aes_group" >
+                                                		<label>
+                                                    		<input type="radio" name="aes_group" id="aes_true" value="true" <?php if($gw_conf['aes']) echo "checked"?> >True
+                                                		</label>
+                                                		</br>
+                                                		<label>
+                                                    		<input type="radio" name="aes_group" id="aes_false" value="false" <?php if(!$gw_conf['aes']) echo "checked"?> >False
+                                                		</label>
+                                                		</fieldset>
+                                            		</div>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_aes_submit" align="right">
+   										    		<button id="btn_aes_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>
+   										   
+   										   <tr>
+    									    <td>downlink</td>
+    										<td id="downlink_value">
+    											<?php echo $gw_conf['downlink'];?>
+    										</td>
+    										<td align="right"><button id="btn_edit_downlink" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_downlink">
+   										    	<div id="div_update_downlink" class="form-group">
+                                            		<label>Downlink timer</label>
+                                					<input id="downlink_input" class="form-control" placeholder="downlink timer in seconds" name="downlink" type="number" value="" autofocus>
+                                        			<p><font color="red">Enter 00 for 0. Specifying a value different from 0 triggers the downlink checking process at both post-processing and lora_gateway level. Run Gateway Update/Basic config to recompile lora_gateway with downlink support.</font></p>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_downlink_submit" align="right">
+   										    		<button id="btn_downlink_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr> 
+
+    									    <td>status</td>
+    										<td id="status_value">
+    											<?php echo $gw_conf['status'];?>
+    										</td>
+    										<td align="right"><button id="btn_edit_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_status">
+   										    	<div id="div_update_status" class="form-group">
+                                            		<label>Status timer</label>
+                                					<input id="status_input" class="form-control" placeholder="status timer in seconds" name="status" type="number" value="" autofocus>
+                                        			<p><font color="red">Enter 00 for 0. Specifying a value different from 0 will periodically trigger the post-processing_status script. Note that gateway status report on TTN will need a status value different from 0.</font></p>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_status_submit" align="right">
+   										    		<button id="btn_status_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr> 
+   										      										       										   							   										   
 										 </tbody>
     								    </table>
     								    <p>For LoRaWAN, if the gateway ID is 0000B827EBEFC4A6, then use B827EB<b>FFFF</b>EFC4A6 for the gateway EUI on LoRaWAN network server platform such as TheThingsNetwork (TTN) for instance.</p>
@@ -566,13 +591,15 @@ require 'header.php';
    										    	<div id="div_use_mail_options" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
+                                           			<fieldset id="use_mail_group" >
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="use_mail_true" value="true" checked>True
+                                                    		<input type="radio" name="use_mail_group" id="use_mail_true" value="true" <?php if($alert_conf['use_mail']) echo "checked"?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="use_mail_false" value="false" >False
+                                                    		<input type="radio" name="use_mail_group" id="use_mail_false" value="false" <?php if(!$alert_conf['use_mail']) echo "checked"?> >False
                                                 		</label>
+                                                		</fieldset>
                                             		</div>
                                         		</div>
                                         	</td> 
@@ -682,13 +709,15 @@ require 'header.php';
    										    	<div id="div_use_sms_options" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
+                                           			<fieldset id="use_sms_group" >
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="use_sms_true" value="true" >True
+                                                    		<input type="radio" name="use_sms_group" id="use_sms_true" value="true" <?php if($alert_conf['use_sms']) echo "checked"?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="optionsRadios" id="use_sms_false" value="false" checked>False
+                                                    		<input type="radio" name="use_sms_group" id="use_sms_false" value="false" <?php if(!$alert_conf['use_sms']) echo "checked"?> >False
                                                 		</label>
+                                                		</fieldset>
                                             		</div>
                                         		</div>
                                         	</td> 

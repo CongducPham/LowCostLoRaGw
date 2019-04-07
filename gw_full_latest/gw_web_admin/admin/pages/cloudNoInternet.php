@@ -17,13 +17,15 @@
 					<div id="div_cloudNoInternet_status_options" class="form-group">
 						
 						<div class="radio">
+						<fieldset id="cloudNoInternet_status_group" >
 							<label>
-								<input type="radio" name="optionsRadios" id="cloudNoInternet_true" value="true" checked>True
+								<input type="radio" name="cloudNoInternet_status_group" id="cloudNoInternet_true" value="true" checked>True
 							</label>
 							</br>
 							<label>
-								<input type="radio" name="optionsRadios" id="cloudNoInternet_false" value="false" >False
+								<input type="radio" name="cloudNoInternet_status_group" id="cloudNoInternet_false" value="false" >False
 							</label>
+							</fieldset>
 						</div>
 					</div>
 				</td> 
