@@ -111,12 +111,13 @@ Main features of gateway
 Connect a radio module to the Raspberry
 =======================================
 
-You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). 
+You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). It is advised to also connect reset pin.
 
 ```
       RPI            Radio module
    GND pin 25----------GND   (ground in)
    3V3 pin 17----------3.3V  (3.3V in)
+ GPIO4 pin  7----------RST   (Reset) 
 CS/CE0 pin 24----------NSS   (CS chip select in)
    SCK pin 23----------SCK   (SPI clock in)
   MOSI pin 19----------MOSI  (SPI Data in)

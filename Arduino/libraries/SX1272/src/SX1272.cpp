@@ -265,9 +265,9 @@ uint8_t SX1272::ON()
 #ifdef SX1272_WRST
     // added by C. Pham
     pinMode(SX1272_RST,OUTPUT);
-    digitalWrite(SX1272_RST,HIGH);
-    delay(100);
     digitalWrite(SX1272_RST,LOW);
+    delay(100);
+    digitalWrite(SX1272_RST,HIGH);
     delay(100);
 #endif
     

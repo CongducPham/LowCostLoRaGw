@@ -51,12 +51,15 @@
 #define W_REQUESTED_ACK
 //#define W_NET_KEY
 //#define W_INITIALIZATION
-#define SX1272_RST  7
+
+// will be translated into GPIO4 by arduPI
+#define SX1272_RST  6
 
 #define SX1272Chip  0
 #define SX1276Chip  1
 // end
 
+// will be translated into GPIO8 (CE0) by arduPI
 #define SX1272_SS 10
 
 #define SX1272_debug_mode 0
@@ -752,7 +755,7 @@ public:
   	\param uint8_t ret : number of retries.
 	\return '0' on success, '1' otherwise
 	 */
-	uint8_t setRetries(uint8_t ret);
+	//uint8_t setRetries(uint8_t ret);
 
 	//! It gets the maximum current supply by the module.
 	/*!
@@ -889,7 +892,7 @@ public:
 	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	*/
-	uint8_t setPacket(uint8_t dest, char *payload);
+	//uint8_t setPacket(uint8_t dest, char *payload);
 
 	//! It writes a packet in FIFO in order to send it.
 	/*!
@@ -1068,7 +1071,7 @@ public:
   	\param char *payload : packet payload.
 	\return '0' on success, '1' otherwise
 	 */
-	uint8_t setPayload(char *payload);
+	//uint8_t setPayload(char *payload);
 
 	//! It sets the payload of the packet that is going to be sent.
   	/*!

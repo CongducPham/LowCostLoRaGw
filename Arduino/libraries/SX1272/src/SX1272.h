@@ -75,7 +75,7 @@
 
 #define SX1272_debug_mode 0
 // added by C. Pham
-//#define SX1272_led_send_receive
+#define SX1272_led_send_receive
 
 #ifdef SX1272_led_send_receive
 #define SX1272_led_send 2
