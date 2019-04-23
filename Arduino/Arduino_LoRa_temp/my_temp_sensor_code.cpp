@@ -2,7 +2,9 @@
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE NOMEMCLATURE, HERE TC WOULD MEAN TEMPERATURE IN CELCIUS FOR INSTANCE
-// USE A MAXIMUM OF 3 CHARACTERS 
+// USE A MAXIMUM OF 3 CHARACTERS
+// 
+// The node will be sending for instance \!TC/23.5 
 
 char nomenclature_str[4]="TC";
 //////////////////////////////////////////////////////////////////

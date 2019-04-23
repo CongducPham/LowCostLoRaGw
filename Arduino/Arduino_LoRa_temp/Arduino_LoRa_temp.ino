@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: March 26th, 2019 by C. Pham
+ * last update: April 23rd, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -61,13 +61,15 @@
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //Use LoRaWAN AES-like encryption
-#define WITH_AES
+//#define WITH_AES
 //Use our Lightweight Stream Cipher (LSC) algorithm
 //#define WITH_LSC
 //If you want to upload on TTN without LoRaWAN you have to provide the 4 bytes DevAddr and uncomment #define EXTDEVADDR
 //#define EXTDEVADDR
 //Use native LoRaWAN packet format to send to LoRaWAN gateway
-#define LORAWAN
+//#define LORAWAN
+//when sending to a LoRaWAN gateway but with no native LoRaWAN format, just to set the correct sync word
+//#define TO_LORAWAN_GW
 //#define WITH_ACK
 //this will enable a receive window after every transmission
 //#define WITH_RCVW
@@ -95,10 +97,8 @@
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////
-// please uncomment only 1 choice
-#define BAND868
-//#define BAND900
-//#define BAND433
+// please edit band_config.h to define the frequency band
+#include "band_config.h"
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,27 +126,7 @@ int SF=12;
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 30;
-///////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// COMMENT THIS LINE IF YOU WANT TO DYNAMICALLY SET THE NODE'S ADDR 
-// OR SOME OTHER PARAMETERS BY REMOTE RADIO COMMANDS (WITH_RCVW)
-// LEAVE THIS LINE UNCOMMENTED IF YOU WANT TO USE THE DEFAULT VALUE
-// AND CONFIGURE YOUR DEVICE BY CHANGING MANUALLY THESE VALUES IN 
-// THE SKETCH.
-//
-// ONCE YOU HAVE FLASHED A BOARD WITHOUT FORCE_DEFAULT_VALUE, YOU 
-// WILL BE ABLE TO DYNAMICALLY CONFIGURE IT AND SAVE THIS CONFIGU-
-// RATION INTO EEPROM. ON RESET, THE BOARD WILL USE THE SAVED CON-
-// FIGURATION.
-
-// IF YOU WANT TO REINITIALIZE A BOARD, YOU HAVE TO FIRST FLASH IT 
-// WITH FORCE_DEFAULT_VALUE, WAIT FOR ABOUT 10s SO THAT IT CAN BOOT
-// AND FLASH IT AGAIN WITHOUT FORCE_DEFAULT_VALUE. THE BOARD WILL 
-// THEN USE THE DEFAULT CONFIGURATION UNTIL NEXT CONFIGURATION.
-
-#define FORCE_DEFAULT_VALUE
+unsigned int idlePeriodInMin = 10;
 ///////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
@@ -160,12 +140,7 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 ///////////////////////////////////////////////////////////////////
 // ENCRYPTION CONFIGURATION AND KEYS FOR LORAWAN
 #ifdef WITH_AES
-#include "AES-128_V10.h"
-#include "Encrypt_V31.h"
-#define AES_SHOWB64
-#ifdef AES_SHOWB64
-#include <Base64.h> 
-#endif
+#include "local_lorawan.h"
 
 ///////////////////////////////////////////////////////////////////
 //For TTN, use specify ABP mode on the TTN device setting
@@ -217,29 +192,12 @@ unsigned char DevAddr[4] = { 0x26, 0x01, 0x17, 0x21 };
 unsigned char DevAddr[4] = { 0x00, 0x00, 0x00, node_addr };
 ///////////////////////////////////////////////////////////////////
 #endif
-
-///////////////////////////////////////////////////////////////////
-// DO NOT CHANGE HERE
-uint16_t Frame_Counter_Up = 0x0000;
-// we use the same convention than for LoRaWAN as we will use the same AES convention
-// See LoRaWAN specifications
-unsigned char Direction = 0x00;
-///////////////////////////////////////////////////////////////////
 #endif
 
 ///////////////////////////////////////////////////////////////////
 // ENCRYPTION CONFIGURATION AND KEYS FOR LSC ENCRYPTION METHOD
 #ifdef WITH_LSC
-#include "LSC_Encrypt.h"
-#define LSC_SHOWB64
-#ifdef LSC_SHOWB64
-#include <Base64.h> 
-#endif
-///////////////////////////////////////////////////////////////////
-// DO NOT CHANGE HERE
-#define MICv2
-#define MIC 4
-///////////////////////////////////////////////////////////////////
+#include "local_lsc.h"
 
 ///////////////////////////////////////////////////////////////////
 //Enter here your LSC encryption key
@@ -251,6 +209,26 @@ uint8_t LSC_Nonce[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 
 ///////////////////////////////////////////////////////////////////
 // IF YOU SEND A LONG STRING, INCREASE THE SIZE OF MESSAGE
 uint8_t message[80];
+///////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// COMMENT THIS LINE IF YOU WANT TO DYNAMICALLY SET THE NODE'S ADDR 
+// OR SOME OTHER PARAMETERS BY REMOTE RADIO COMMANDS (WITH_RCVW)
+// LEAVE THIS LINE UNCOMMENTED IF YOU WANT TO USE THE DEFAULT VALUE
+// AND CONFIGURE YOUR DEVICE BY CHANGING MANUALLY THESE VALUES IN 
+// THE SKETCH.
+//
+// ONCE YOU HAVE FLASHED A BOARD WITHOUT FORCE_DEFAULT_VALUE, YOU 
+// WILL BE ABLE TO DYNAMICALLY CONFIGURE IT AND SAVE THIS CONFIGU-
+// RATION INTO EEPROM. ON RESET, THE BOARD WILL USE THE SAVED CON-
+// FIGURATION.
+
+// IF YOU WANT TO REINITIALIZE A BOARD, YOU HAVE TO FIRST FLASH IT 
+// WITH FORCE_DEFAULT_VALUE, WAIT FOR ABOUT 10s SO THAT IT CAN BOOT
+// AND FLASH IT AGAIN WITHOUT FORCE_DEFAULT_VALUE. THE BOARD WILL 
+// THEN USE THE DEFAULT CONFIGURATION UNTIL NEXT CONFIGURATION.
+
+#define FORCE_DEFAULT_VALUE
 ///////////////////////////////////////////////////////////////////
 
 /*****************************
@@ -343,7 +321,7 @@ unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 unsigned long nextTransmissionTime=0L;
 
 #ifdef LORAWAN
-//we first set to use BW12SF12
+//we first set to use BW125SF12
 int loraMode=1;
 #else
 int loraMode=LORAMODE;
@@ -369,6 +347,8 @@ sx1272config my_sx1272config;
 // will wait for 5s before opening the rcv window
 #define DELAY_BEFORE_RCVW 5000
 
+//this function is provided to parse the downlink command which is assumed to be in the format /@A6#
+//
 long getCmdValue(int &i, char* strBuff=NULL) {
   
     char seqStr[7]="******";
@@ -588,50 +568,34 @@ void setup()
 #endif  
 
 #ifdef LORAWAN
-  //we can also change the SF value for LoRaWAN
-  e = sx1272.setSF(SF);
-  PRINT_CSTSTR("%s","Set SF to ");
-  PRINT_VALUE("%d", SF);    
-  PRINT_CSTSTR("%s",": state ");
-  PRINT_VALUE("%d", e);
-  PRINTLN;  
-  
-  // Select frequency channel
-#ifdef BAND868
-  //868.1MHz
-  e = sx1272.setChannel(CH_18_868);
-  PRINT_CSTSTR("%s","Set frequency to 868.1MHz: state ");
-#elif defined BAND900
-  //hardcoded with the first LoRaWAN frequency
-  float loraChannel=923.2*1000000.0*RH_LORA_FCONVERT;
-  e = sx1272.setChannel(loraChannel);
-  PRINT_CSTSTR("%s","Set frequency to 923.2MHz: state ");
-#elif defined BAND433
-  //hardcoded with the first LoRaWAN frequency
-  float loraChannel=433.175*1000000.0*RH_LORA_FCONVERT;
-  e = sx1272.setChannel(loraChannel);
-  PRINT_CSTSTR("%s","Set frequency to 433.175MHz: state ");
-#endif 
+  local_lorawan_init(SF);
 #else
-  e = sx1272.setChannel(DEFAULT_CHANNEL);
-  PRINT_CSTSTR("%s","Setting Channel: state ");  
-#endif  
 
+#ifdef MY_FREQUENCY
+  e = sx1272.setChannel(MY_FREQUENCY*1000000.0*RH_LORA_FCONVERT);
+  PRINT_CSTSTR("%s","Setting customized frequency: ");
+  PRINT_VALUE("%f", MY_FREQUENCY);
+  PRINTLN;
+#else
+  e = sx1272.setChannel(DEFAULT_CHANNEL);  
+#endif  
+  PRINT_CSTSTR("%s","Setting frequency: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
+  
+#endif
+
+#ifdef TO_LORAWAN_GW
+  e = sx1272.setSyncWord(0x34);
+  PRINT_CSTSTR("%s","Set sync word to 0x34: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
+#endif
   
   // Select amplifier line; PABOOST or RFO
 #ifdef PABOOST
   sx1272._needPABOOST=true;
-  // previous way for setting output power
-  // powerLevel='x';
-#else
-  // previous way for setting output power
-  // powerLevel='M';  
 #endif
-
-  // previous way for setting output power
-  // e = sx1272.setPower(powerLevel);  
 
   e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
 
@@ -646,13 +610,6 @@ void setup()
   PRINT_CSTSTR("%s","Setting node addr: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
-
-#ifdef LORAWAN
-  e = sx1272.setSyncWord(0x34);
-  PRINT_CSTSTR("%s","Set sync word to 0x34: state ");
-  PRINT_VALUE("%d", e);
-  PRINTLN;
-#endif  
 
 #ifdef WITH_LSC
   //need to initialize the LSC encoder
@@ -783,122 +740,11 @@ void loop(void)
 //use AES (LoRaWAN-like) encrypting
 ///////////////////////////////////
 #ifdef WITH_AES
-      //
-      PRINT_STR("%s",(char*)(message+app_key_offset));
-      PRINTLN;
-      PRINT_CSTSTR("%s","plain payload hex\n");
-      for (int i=0; i<pl;i++) {
-        if (message[i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", message[i]);
-        PRINT_CSTSTR("%s"," ");
-      }
-      PRINTLN; 
-
-      PRINT_CSTSTR("%s","Encrypting\n");     
-      PRINT_CSTSTR("%s","encrypted payload\n");
-      Encrypt_Payload((unsigned char*)message, pl, Frame_Counter_Up, Direction);
-      //Print encrypted message
-      for (int i = 0; i < pl; i++)      
-      {
-        if (message[i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", message[i]);         
-        PRINT_CSTSTR("%s"," ");
-      }
-      PRINTLN;   
-
-      // with encryption, we use for the payload a LoRaWAN packet format to reuse available LoRaWAN encryption libraries
-      //
-      unsigned char LORAWAN_Data[80];
-      unsigned char LORAWAN_Package_Length;
-      unsigned char MIC[4];
-      //Unconfirmed data up
-      unsigned char Mac_Header = 0x40;
-      // no ADR, not an ACK and no options
-      unsigned char Frame_Control = 0x00;
-      // with application data so Frame_Port = 1..223
-      unsigned char Frame_Port = 0x01; 
-
-      //Build the Radio Package, LoRaWAN format
-      //See LoRaWAN specification
-      LORAWAN_Data[0] = Mac_Header;
-    
-      LORAWAN_Data[1] = DevAddr[3];
-      LORAWAN_Data[2] = DevAddr[2];
-      LORAWAN_Data[3] = DevAddr[1];
-      LORAWAN_Data[4] = DevAddr[0];
-    
-      LORAWAN_Data[5] = Frame_Control;
-    
-      LORAWAN_Data[6] = (Frame_Counter_Up & 0x00FF);
-      LORAWAN_Data[7] = ((Frame_Counter_Up >> 8) & 0x00FF);
-    
-      LORAWAN_Data[8] = Frame_Port;
-    
-      //Set Current package length
-      LORAWAN_Package_Length = 9;
-      
-      //Load Data
-      for(int i = 0; i < r_size+app_key_offset; i++)
-      {
-        // see that we don't take the appkey, just the encrypted data that starts at message[app_key_offset]
-        LORAWAN_Data[LORAWAN_Package_Length + i] = message[i];
-      }
-    
-      //Add data Lenth to package length
-      LORAWAN_Package_Length = LORAWAN_Package_Length + r_size + app_key_offset;
-    
-      PRINT_CSTSTR("%s","calculate MIC with NwkSKey\n");
-      //Calculate MIC
-      Calculate_MIC(LORAWAN_Data, MIC, LORAWAN_Package_Length, Frame_Counter_Up, Direction);
-    
-      //Load MIC in package
-      for (int i=0; i < 4; i++)
-      {
-        LORAWAN_Data[i + LORAWAN_Package_Length] = MIC[i];
-      }
-    
-      //Add MIC length to package length
-      LORAWAN_Package_Length = LORAWAN_Package_Length + 4;
-    
-      PRINT_CSTSTR("%s","transmitted LoRaWAN-like packet:\n");
-      PRINT_CSTSTR("%s","MHDR[1] | DevAddr[4] | FCtrl[1] | FCnt[2] | FPort[1] | EncryptedPayload | MIC[4]\n");
-      //Print transmitted data
-      for (int i = 0; i < LORAWAN_Package_Length; i++)
-      {
-        if (LORAWAN_Data[i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", LORAWAN_Data[i]);         
-        PRINT_CSTSTR("%s"," ");
-      }
-      PRINTLN;      
-
-      // copy back to message
-      memcpy(message,LORAWAN_Data,LORAWAN_Package_Length);
-      pl = LORAWAN_Package_Length;
-
-#ifdef AES_SHOWB64
-        //need to take into account the ending \0 for string in C
-        int b64_encodedLen = base64_enc_len(pl)+1;
-        char b64_encoded[b64_encodedLen];
-               
-        base64_encode(b64_encoded, (char*)message, pl);
-        PRINT_CSTSTR("%s","[base64 LoRaWAN HEADER+CIPHER+MIC]:");
-        PRINT_STR("%s", b64_encoded);
-        PRINTLN;
-#endif      
-
 #ifdef LORAWAN
-      PRINT_CSTSTR("%s","end-device uses native LoRaWAN packet format\n");
-      // indicate to SX1272 lib that raw mode at transmission is required to avoid our own packet header
-      sx1272._rawFormat=true;
+      pl=local_aes_lorawan_create_pkt(message, pl, app_key_offset, true);
 #else
-      PRINT_CSTSTR("%s","end-device uses encapsulated LoRaWAN packet format only for encryption\n");
+      pl=local_aes_lorawan_create_pkt(message, pl, app_key_offset, false);
 #endif
-      // in any case, we increment Frame_Counter_Up
-      // even if the transmission will not succeed
-      Frame_Counter_Up++;
 #endif
 
 /********************************** 
@@ -912,107 +758,9 @@ void loop(void)
 //use our Lightweight Stream Cipher (LSC) encrypting
 ////////////////////////////////////////////////////
 #ifdef WITH_LSC
-      //
-      PRINT_STR("%s",(char*)(message+app_key_offset));
-      PRINTLN;
-      PRINT_CSTSTR("%s","[PLAIN HEX]:\n");
-      for (int i=0; i<pl;i++) {
-        if (message[i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", message[i]);
-        PRINT_CSTSTR("%s"," ");
-      }
-      PRINTLN; 
-
-      //longer message may need a longer buffer
-      unsigned char cipher[80];
-
-      PRINT_CSTSTR("%s","Encrypting\n");
-      LSC_encrypt(message, cipher+OFFSET_PAYLOADLENGTH, pl, sx1272._packetNumber, LSC_ENCRYPT);
-      
-      //Print encrypted message     
-      PRINT_CSTSTR("%s","[CIPHER]:\n");
-      for (int i = 0; i < pl; i++)      
-      {
-        if (cipher[OFFSET_PAYLOADLENGTH+i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", cipher[OFFSET_PAYLOADLENGTH+i]);         
-        PRINT_CSTSTR("%s"," ");
-      }
-      PRINTLN;   
-
-      //compute MIC. We decide to use the packet header
-      //
-      cipher[0]=DEFAULT_DEST_ADDR;    //dst
-      cipher[1]=p_type; //PTYPE
-      cipher[2]=node_addr;    //src
-      cipher[3]=sx1272._packetNumber;    // current seq
-
-      PRINT_CSTSTR("%s","[HEADER+CIPHER]:\n");
-      for (int i = 0; i < pl+OFFSET_PAYLOADLENGTH; i++) {
-        if (cipher[i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", cipher[i]);
-        if (i==OFFSET_PAYLOADLENGTH-1)
-          PRINT_CSTSTR("%s","|");
-        else        
-          PRINT_CSTSTR("%s"," ");      
-      }
-      PRINTLN;
-
-      // compute the MIC on [HEADER+CIPHER]
-      // using a random number = sx1272._packetNumber+1
-      LSC_setMIC(cipher, message, pl+OFFSET_PAYLOADLENGTH, sx1272._packetNumber+1);
-
-      PRINT_CSTSTR("%s","[encrypted HEADER+CIPHER]:\n");
-      for (int i = 0; i < pl+OFFSET_PAYLOADLENGTH; i++) {
-        if (message[i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", message[i]);
-        PRINT_CSTSTR("%s"," ");      
-      }
-      PRINTLN;
-      
-      PRINT_CSTSTR("%s","[MIC]:\n");
-      for (int i = 0; i < 4; i++) {
-        if (cipher[pl+OFFSET_PAYLOADLENGTH+i]<16)
-          PRINT_CSTSTR("%s","0");        
-        PRINT_HEX("%X", cipher[pl+OFFSET_PAYLOADLENGTH+i]);
-        PRINT_CSTSTR("%s"," ");      
-      }
-      PRINTLN;
-    
-      PRINT_CSTSTR("%s","transmitted packet:\n");
-      PRINT_CSTSTR("%s","CIPHER | MIC[4]\n");
-      //Print transmitted data
-      for(int i = 0; i < pl+MIC; i++)
-      {
-        if (cipher[OFFSET_PAYLOADLENGTH+i]<16)
-          PRINT_CSTSTR("%s","0");
-        PRINT_HEX("%X", cipher[OFFSET_PAYLOADLENGTH+i]);
-        if (i==pl-1)
-          PRINT_CSTSTR("%s","|");
-        else                  
-          PRINT_CSTSTR("%s"," ");
-      }
-      PRINTLN;      
-
-      // copy back to message
-      memcpy(message,cipher+OFFSET_PAYLOADLENGTH,pl+MIC);
-      pl = pl+MIC;
-
-#ifdef LSC_SHOWB64
-        //need to take into account the ending \0 for string in C
-        int b64_encodedLen = base64_enc_len(pl)+1;
-        char b64_encoded[b64_encodedLen];
-               
-        base64_encode(b64_encoded, (char*)message, pl);
-        PRINT_CSTSTR("%s","[base64 CIPHER+MIC]:");
-        PRINT_STR("%s", b64_encoded);
-        PRINTLN;
-#endif   
+      pl=local_lsc_create_pkt(message, pl, app_key_offset, p_type, node_addr);
 #endif
-
+      
       sx1272.CarrierSense();
 
       startSend=millis();
@@ -1083,7 +831,9 @@ void loop(void)
       PRINT_CSTSTR("%s","Wait for incoming packet\n");
       // wait for incoming packets
       e = sx1272.receivePacketTimeout(10000);
-      
+
+      // we have received a downlink message
+      //
       if (!e) {
          int i=0;
          int cmdValue;
@@ -1234,11 +984,12 @@ void loop(void)
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT
 #else
-      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
+      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 
 #if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
       // warning, setTimer accepts value from 1ms to 65535ms max
-      timer.setTimer(LOW_POWER_PERIOD*1000 + random(1,5)*1000);// milliseconds
+      // milliseconds
+      timer.setTimer(LOW_POWER_PERIOD*1000);
 
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
