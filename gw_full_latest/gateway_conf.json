@@ -18,8 +18,6 @@
 		"log_post_processing" : true,
 		"log_weekly" : false,
 		"auto_update" : false,
-		"dht22" : 0,
-		"dht22_mongo": false,
 		"downlink" : 0,	
 		"status" : 600,
 		"aux_radio" : 0
@@ -28,6 +26,8 @@
 		"dynamic_gps" : false,
 		"gps_port" : "/dev/ttyACM0",
 		"copy_post_processing_log" : false,
+		"dht22" : false,
+		"dht22_mongo": false,		
 		"ttn_status" : true
 	},	
 	"alert_conf" : {

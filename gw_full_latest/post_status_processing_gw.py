@@ -171,6 +171,73 @@ def get_gps():
 	else:
 		print 'post status get GPS: no GPS coordinates'	
 
+
+def get_dht22():
+
+	try:
+		_dht22_mongo = gw_json_array["status_conf"]["dht22_mongo"]
+	except KeyError:
+		_dht22_mongo = False
+
+	if (_dht22_mongo):
+		global add_document	
+		from MongoDB import add_document
+	
+	print "post status get DHT22: get gateway temperature and humidity level"
+	#read values from dht22 in the gateway box
+	sys.path.insert(0, os.path.expanduser('./sensors_in_raspi/dht22'))
+	from read_dht22 import get_dht22_values
+	
+	_humidity, _temperature = get_dht22_values()
+	
+	_date_save_dht22 = datetime.datetime.now()
+
+	print "post status get DHT22: Gateway TC : "+_temperature+" C | HU : "+_humidity+" % at "+str(_date_save_dht22)
+	
+	#save values from the gateway box's DHT22 sensor, if _mongodb is true
+	if(_dht22_mongo):
+		#saving data in a JSON var
+		str_json_data = "{\"th\":"+_temperature+", \"hu\":"+_humidity+"}"
+	
+		#creating document to add
+		doc = {
+			"type" : "DATA_GW_DHT22",
+			"gateway_eui" : _gwid, 
+			"node_eui" : "gw",
+			"snr" : "", 
+			"rssi" : "", 
+			"cr" : "", 
+			"datarate" : "", 
+			"time" : _date_save_dht22,
+			"data" : json.dumps(json.loads(str_json_data))
+		}
+	
+		#adding the document
+		add_document(doc)
+
+def copy_log():
+
+	#------------------------------------------------------------
+	#copy post-processing.log into /var/www/html/admin/log folder
+	#------------------------------------------------------------
+	#note that this feature is somehow obsoleted or not necessary by an option in the web admin interface to copy post-processing.log file on demand
+	#TODO: move this block into post_processing_status block
+
+	print "post status copy log: extract last 500 lines of post-processing.log into /var/www/html/admin/log/post-processing-500L.log"
+	cmd="sudo tail -n 500 log/post-processing.log > /var/www/html/admin/log/post-processing-500L.log"
+	
+	try:
+		os.system(cmd)
+	except:
+		print "post status copy log: Error when extracting lines from post-processing_"+_gwid+".log"
+		
+	cmd="sudo chown -R pi:www-data /var/www/html/admin/log"
+	
+	try:
+		os.system(cmd)
+	except:
+		print "post status copy log: Error when setting file ownership to pi:www-data"
+		
 #------------------------------------------------------------
 #add whatever you want in the main function 
 #------------------------------------------------------------
@@ -188,11 +255,13 @@ def main(stats_str):
 	ackr=arr[3]
 	dwnb=arr[4]
 	txnb=arr[5]
-	
+
+	#------------------------------------------------------------	
 	#------------------------------------------------------------
 	#HERE ADD what ever you want
 	#------------------------------------------------------------
-
+	#------------------------------------------------------------
+	
 	#------------------------------------------------------------
 	#update GPS coordinates if a GPS is connected to the RPI
 	#------------------------------------------------------------
@@ -205,6 +274,30 @@ def main(stats_str):
 		print 'post status: dynamic GPS is requested'
 		get_gps()		
 
+	#------------------------------------------------------------
+	#get dht22 temperature
+	#------------------------------------------------------------
+	try:
+		get_dht22 = gw_json_array["status_conf"]["dht22"]
+	except KeyError:
+		get_dht22 = False
+		
+	if get_dht22:
+		print 'post status: DHT22 temperature/humidity is requested'
+		get_dht22()		
+
+	#------------------------------------------------------------
+	#copy last 500 lines of log
+	#------------------------------------------------------------
+	try:
+		copy_log = gw_json_array["status_conf"]["copy_post_processing_log"]
+	except KeyError:
+		copy_log = False
+		
+	if copy_log:
+		print 'post status: copy log file is requested'
+		copy_log()		
+				
 	#------------------------------------------------------------		
 	#print current GPS
 	#------------------------------------------------------------
@@ -245,6 +338,8 @@ def main(stats_str):
 			print "post status: error when executing %s" % cmd_arg
 
 	#------------------------------------------------------------	
+	#------------------------------------------------------------
+		
 	print 'post status: exiting'
 	sys.stdout.flush()
 	

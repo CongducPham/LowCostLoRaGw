@@ -52,7 +52,7 @@
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
 #define WITH_EEPROM
-#define WITH_APPKEY
+//#define WITH_APPKEY
 //if you are low on program memory, comment STRING_LIB to save about 2K
 #define STRING_LIB
 #define LOW_POWER
@@ -92,7 +92,7 @@
 //
 // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-//#define PABOOST
+#define PABOOST
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////
@@ -171,9 +171,9 @@ const uint32_t DEFAULT_CHANNEL=CH_04_868;
 const uint32_t DEFAULT_CHANNEL=CH_10_868;
 #endif
 #elif defined BAND900
-//const uint32_t DEFAULT_CHANNEL=CH_05_900;
-// For HongKong, Japan, Malaysia, Singapore, Thailand, Vietnam: 920.36MHz     
-const uint32_t DEFAULT_CHANNEL=CH_08_900;
+const uint32_t DEFAULT_CHANNEL=CH_05_900;
+//For HongKong, Japan, Malaysia, Singapore, Thailand, Vietnam: 920.36MHz     
+//const uint32_t DEFAULT_CHANNEL=CH_08_900;
 #elif defined BAND433
 const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif

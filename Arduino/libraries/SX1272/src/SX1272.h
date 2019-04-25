@@ -55,7 +55,7 @@
 
 //it is not mandatory to wire this pin
 //we take pin 4 as it is available on many boards
-//#define SX1272_WRST
+#define SX1272_WRST
 #define SX1272_RST  4
 
 #if defined ARDUINO_AVR_FEATHER32U4 || defined ARDUINO_SAMD_FEATHER_M0

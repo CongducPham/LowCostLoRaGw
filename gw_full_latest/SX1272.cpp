@@ -1818,6 +1818,20 @@ uint8_t	SX1272::setSF(uint8_t spr)
             break;
         }
 
+        // added by C. Pham
+        if (spr!=SF_11 && spr!=SF_12) {
+			if (_board==SX1272Chip) {
+				config1 = (readRegister(REG_MODEM_CONFIG1));	// Save config1 to modify only the LowDataRateOptimize
+				config1 = config1 & 0B11111110; //clears bits 0
+				writeRegister(REG_MODEM_CONFIG1,config1);
+			}
+			else {
+				byte config3=readRegister(REG_MODEM_CONFIG3);
+				config3 = config3 & 0B11110111;
+				writeRegister(REG_MODEM_CONFIG3,config3);
+			}        
+        }
+        
         // Check if it is neccesary to set special settings for SF=6
         if( spr == SF_6 )
         {
@@ -2139,7 +2153,7 @@ int8_t	SX1272::setBW(uint16_t band)
     if (_board==SX1272Chip) {
         switch(band)
         {
-        case BW_125:  config1 = config1 & 0B00111111;	// clears bits 7 & 6 from REG_MODEM_CONFIG1
+        case BW_125:  config1 = config1 & 0B00111110;	// clears bits 7 & 6 and 0 (no LowDataRateOptimize) from REG_MODEM_CONFIG1
             getSF();
             if( _spreadingFactor == 11 )
             { // LowDataRateOptimize (Mandatory with BW_125 if SF_11)
@@ -2150,10 +2164,10 @@ int8_t	SX1272::setBW(uint16_t band)
                 config1 = config1 | 0B00000001;
             }
             break;
-        case BW_250:  config1 = config1 & 0B01111111;	// clears bit 7 from REG_MODEM_CONFIG1
+        case BW_250:  config1 = config1 & 0B01111110;	// clears bit 7 and 0 (no LowDataRateOptimize) from REG_MODEM_CONFIG1
             config1 = config1 | 0B01000000;	// sets bit 6 from REG_MODEM_CONFIG1
             break;
-        case BW_500:  config1 = config1 & 0B10111111;	//clears bit 6 from REG_MODEM_CONFIG1
+        case BW_500:  config1 = config1 & 0B10111110;	//clears bit 6 and 0 (no LowDataRateOptimize) from REG_MODEM_CONFIG1
             config1 = config1 | 0B10000000;	//sets bit 7 from REG_MODEM_CONFIG1
             break;
         }
@@ -2183,6 +2197,12 @@ int8_t	SX1272::setBW(uint16_t band)
             config1 = config1 | 0B10010000;
             break;
         }
+
+        if (band!=BW_125) {
+			byte config3=readRegister(REG_MODEM_CONFIG3);
+			config3 = config3 & 0B11110111; // clears bit 3 (no LowDataRateOptimize)
+			writeRegister(REG_MODEM_CONFIG3,config3);        
+        }        
     }
     // end
 

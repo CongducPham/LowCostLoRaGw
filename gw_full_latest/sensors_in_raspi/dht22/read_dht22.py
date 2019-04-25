@@ -1,9 +1,3 @@
-"""
-Remember to start the daemon with the command
-'sudo pigpiod' before running this script. It
-needs to be restarted every time your pi
-is restarted.
-"""
 import os
 import pigpio
 import DHT22

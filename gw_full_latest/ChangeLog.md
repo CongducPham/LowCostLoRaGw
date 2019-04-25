@@ -1,6 +1,11 @@
 Change logs
 ===========
 
+April 25th, 2019
+----------------
+- move DHT22 and copy log file task from `post_processing_gw.py` into `post_status_processing_gw.py`
+	- `gateway_conf.json:"gateway_conf"` has no more "dht22" nor "dht22_mongo" fields. These are moved to `gateway_conf.json:"status_conf"` section
+
 March 26rd, 2019
 ----------------
 - add support of TheThingsNetwork (TTN): `CloudTTN.py`, `key_TTN.py` and `scripts/ttn/ttn_stats.py` are added
@@ -25,7 +30,8 @@ March 23rd, 2019
 - set mode to 11 in `gateway_conf.json` to configure for LoRaWAN reception on single channel
 - when mode is set to 11, specific bw, cr and sf in `gateway_conf.json` can be taken into account, so make sure they are set correctly. LoRaWAN mostly uses BW125. You can change SF
 - set "raw" to true in `gateway_conf.json` 
-- set "aes" to true if you want local AES decryption
+- if you want to push to TTN or other LoRaWAN network server, then set "aes" to false
+- if you REALLY know what you are doing, you can set "aes" to true if you want local AES decryption
 	- but then, indicate both NwkSKey and AppSKey in `loraWAN_config.py`
 - BW=125MHz, CR=4/5, SF=12. 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433 by default
 - you can specify another customized frequency if you want. That should match the one of the end-device of course

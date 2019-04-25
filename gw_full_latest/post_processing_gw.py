@@ -46,6 +46,7 @@ try:
 except ImportError:
 	print "no timezone support, time will be expressed only in local time"
 	dateutil_tz=False
+
 import getopt
 import os
 import os.path
@@ -229,111 +230,6 @@ if _wappkey:
 	except ImportError:
 		print "no key_AppKey.py file"
 		_wappkey = 0
-		
-#------------------------------------------------------------
-#initialize gateway DHT22 sensor
-#------------------------------------------------------------
-try:
-	_gw_dht22 = json_array["gateway_conf"]["dht22"]
-except KeyError:
-	_gw_dht22 = 0
-
-if _gw_dht22 < 0:
-	_gw_dht22 = 0
-		
-_date_save_dht22 = None
-
-try:
-	_dht22_mongo = json_array["gateway_conf"]["dht22_mongo"]
-except KeyError:
-	_dht22_mongo = False
-
-if (_dht22_mongo):
-	global add_document	
-	from MongoDB import add_document
-	
-if (_gw_dht22):
-	print "Use DHT22 to get gateway temperature and humidity level"
-	#read values from dht22 in the gateway box
-	sys.path.insert(0, os.path.expanduser('./sensors_in_raspi/dht22'))
-	from read_dht22 import get_dht22_values
-	
-	_temperature = 0
-	_humidity = 0
-
-# retrieve dht22 values
-def save_dht22_values():
-	global _temperature, _humidity, _date_save_dht22
-	_humidity, _temperature = get_dht22_values()
-	
-	_date_save_dht22 = datetime.datetime.now()
-
-	print "Gateway TC : "+_temperature+" C | HU : "+_humidity+" % at "+str(_date_save_dht22)
-	
-	#save values from the gateway box's DHT22 sensor, if _mongodb is true
-	if(_dht22_mongo):
-		#saving data in a JSON var
-		str_json_data = "{\"th\":"+_temperature+", \"hu\":"+_humidity+"}"
-	
-		#creating document to add
-		doc = {
-			"type" : "DATA_GW_DHT22",
-			"gateway_eui" : _gwid, 
-			"node_eui" : "gw",
-			"snr" : "", 
-			"rssi" : "", 
-			"cr" : "", 
-			"datarate" : "", 
-			"time" : _date_save_dht22,
-			"data" : json.dumps(json.loads(str_json_data))
-		}
-	
-		#adding the document
-		add_document(doc)
-	
-def dht22_target():
-	while True:
-		print "Getting gateway temperature"
-		save_dht22_values()
-		sys.stdout.flush()	
-		global _gw_dht22
-		time.sleep(_gw_dht22)
-
-
-#------------------------------------------------------------
-#copy post-processing.log into /var/www/html/admin/log folder
-#------------------------------------------------------------
-
-#you can enable periodic copy of post-processing.log file by setting to True
-#but you need to install the web admin interface in order to have the /var/www/html/admin/log/ folder
-#note that this feature is obsoleted by an option in the web admin interface to copy post-processing.log file on demand
-_gw_copy_post_processing=False
-
-#TODO: integrate copy post_processing feature into periodic status/tasks?
-def copy_post_processing():
-	print "extract last 500 lines of post-processing.log into /var/www/html/admin/log/post-processing-500L.log"
-	cmd="sudo tail -n 500 log/post-processing.log > /var/www/html/admin/log/post-processing-500L.log"
-	
-	try:
-		os.system(cmd)
-	except:
-		print "Error when extracting lines from post-processing_"+_gwid+".log"
-		
-	cmd="sudo chown -R pi:www-data /var/www/html/admin/log"
-	
-	try:
-		os.system(cmd)
-	except:
-		print "Error when setting file ownership to pi:www-data"
-	
-
-def copy_post_processing_target():
-	while True:
-		copy_post_processing()
-		sys.stdout.flush()
-		#change here if you want to change the time between 2 extraction
-		#here it is 30mins	
-		time.sleep(1800)
 	
 #------------------------------------------------------------
 #for downlink features
@@ -751,14 +647,15 @@ print _cloud_for_lorawan_encrypted_data
 #start various threads
 #------------------------------------------------------------
 
-#gateway dht22
-if (_gw_dht22):
-	print "Starting thread to measure gateway temperature"
+#status feature
+if (_gw_status):
+	print "Starting thread to perform periodic gw status/tasks"
 	sys.stdout.flush()
-	t_dht22 = threading.Thread(target=dht22_target)
-	t_dht22.daemon = True
-	t_dht22.start()
-
+	t_status = threading.Thread(target=status_target)
+	t_status.daemon = True
+	t_status.start()
+	time.sleep(1)	
+	
 #downlink feature
 if (_gw_downlink):
 
@@ -802,15 +699,6 @@ if (_gw_downlink):
 	t_downlink.daemon = True
 	t_downlink.start()
 	time.sleep(1)
-
-#status feature
-if (_gw_status):
-	print "Starting thread to perform periodic gw status/tasks"
-	sys.stdout.flush()
-	t_status = threading.Thread(target=status_target)
-	t_status.daemon = True
-	t_status.start()
-	time.sleep(1)	
 	
 #fast statistics tasks
 if (_gw_statistics):
@@ -820,17 +708,6 @@ if (_gw_statistics):
 	t_status.daemon = True
 	t_status.start()
 	time.sleep(1)	
-	
-#copy post_processing feature
-#TODO: integrate copy post_processing feature into periodic status/tasks?
-	
-if (_gw_copy_post_processing):
-	print "Starting thread to copy post_processing.log"
-	sys.stdout.flush()
-	t_status = threading.Thread(target=copy_post_processing_target)
-	t_status.daemon = True
-	t_status.start()
-	time.sleep(1)
 
 print ''	
 print "Current working directory: "+os.getcwd()
@@ -1003,6 +880,7 @@ while True:
 				#adding time zone info to tdata to get time zone information when uploading to clouds
 				localdt = datetime.datetime.now(dateutil.tz.tzlocal())
 				i=localdt.isoformat().find("+")
+				#get only the timezone data and put it back to the original timestamp from low-level gateway
 				tdata = tdata+localdt.isoformat()[i:]
 				print "new rcv timestamp (^t): %s" % tdata
 			else:
@@ -1151,6 +1029,7 @@ while True:
 				
 				#probably our modified Libelium header where the destination (i.e. 1) is the gateway
 				#dissect our modified Libelium format
+				#TODO: check also for broadcast address, i.e. 0?
 				if ord(ch)==1:			
 					dst=ord(ch)
 					ptype=ord(getSingleChar())

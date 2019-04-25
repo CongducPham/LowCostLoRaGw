@@ -5,7 +5,5 @@ cd PIGPIO
 make -j4
 sudo make install
 
+Then, read_dht22.py will start the deamon (sudo pigpiod) if necessary.
 
-Then each time your Raspberry PI starts, you have to launch the following command to start the deamon before retrieving data from the DHT22 :
-
-sudo pigpiod
