@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: April 23rd, 2019 by C. Pham
+ * last update: April 28th, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -68,11 +68,13 @@
 //#define EXTDEVADDR
 //Use native LoRaWAN packet format to send to LoRaWAN gateway
 //#define LORAWAN
-//when sending to a LoRaWAN gateway but with no native LoRaWAN format, just to set the correct sync word
-//#define TO_LORAWAN_GW
+//when sending to a LoRaWAN gateway but with no native LoRaWAN format, just to set the correct sync word, DO NOT use if LORAWAN is uncommented
+//#define USE_LORAWAN_SW
 //#define WITH_ACK
 //this will enable a receive window after every transmission
 //#define WITH_RCVW
+//force 20dBm, use with caution, test ony
+//#define USE_20DBM
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -272,6 +274,11 @@ uint8_t message[80];
 // char powerLevel='H';
 #elif defined FCC_US_REGULATION
 #define MAX_DBM 14
+#endif
+
+#ifdef USE_20DBM
+#undef MAX_DBM
+#define MAX_DBM 20
 #endif
 
 #ifdef BAND868
@@ -553,24 +560,16 @@ void setup()
   }
 #endif
   
+#ifdef LORAWAN
+  local_lorawan_init(SF);
+#else
+
   // Set transmission mode and print the result
   e = sx1272.setMode(loraMode);
   PRINT_CSTSTR("%s","Setting Mode: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
-
-  // enable carrier sense
-  sx1272._enableCarrierSense=true;  
-#ifdef LOW_POWER
-  // TODO: with low power, when setting the radio module in sleep mode
-  // there seem to be some issue with RSSI reading
-  sx1272._RSSIonSend=false;
-#endif  
-
-#ifdef LORAWAN
-  local_lorawan_init(SF);
-#else
-
+  
 #ifdef MY_FREQUENCY
   e = sx1272.setChannel(MY_FREQUENCY*1000000.0*RH_LORA_FCONVERT);
   PRINT_CSTSTR("%s","Setting customized frequency: ");
@@ -585,7 +584,15 @@ void setup()
   
 #endif
 
-#ifdef TO_LORAWAN_GW
+  // enable carrier sense
+  sx1272._enableCarrierSense=true;  
+#ifdef LOW_POWER
+  // TODO: with low power, when setting the radio module in sleep mode
+  // there seem to be some issue with RSSI reading
+  sx1272._RSSIonSend=false;
+#endif  
+
+#ifdef USE_LORAWAN_SW
   e = sx1272.setSyncWord(0x34);
   PRINT_CSTSTR("%s","Set sync word to 0x34: state ");
   PRINT_VALUE("%d", e);
@@ -994,7 +1001,7 @@ void loop(void)
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
           
-      for (int i=0; i<nCycle; i++) {  
+      for (uint8_t i=0; i<nCycle; i++) {  
 
 #if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
           // ATmega328P, ATmega168, ATmega32U4

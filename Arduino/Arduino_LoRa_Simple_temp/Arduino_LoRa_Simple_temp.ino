@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: March 26th, 2019 by C. Pham
+ * last update: April 29th, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -615,15 +615,15 @@ void loop(void)
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT
 #else
-      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD; //+ random(2,4);
+      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 
 #if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
       // warning, setTimer accepts value from 1ms to 65535ms max
-      timer.setTimer(LOW_POWER_PERIOD*1000 + random(1,5)*1000);// milliseconds
+      timer.setTimer(LOW_POWER_PERIOD*1000);
 
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif          
-      for (int i=0; i<nCycle; i++) {  
+      for (uint8_t i=0; i<nCycle; i++) {  
 
 #if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__ 
           // ATmega328P, ATmega168, ATmega32U4

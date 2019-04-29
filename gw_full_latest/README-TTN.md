@@ -66,7 +66,7 @@ The regular gateway id normally contains the 6 bytes of the eth0 MAC address, i.
 		]
 	```	
 
-	- if `["radio_conf"]["mode"]` is 11 then `scripts/ttn/ttn_stats.py` will be called periodically by the `post_status_processing_gw.py` status loop (which is called by `post-processing_gw.py`) to report the gateway status on T- if `["radio_conf"]["mode"]` is 11 then `scripts/ttn/ttn_stats.py` will be called periodically by the `post_status_processing_gw.py` status loop (which is called by `post-processing_gw.py`) to report the gateway status on TTN
+	- if `["radio_conf"]["mode"]` is 11 AND `["status_conf"]["ttn_status"]` is true then `scripts/ttn/ttn_stats.py` will be called periodically by the `post_status_processing_gw.py` status loop (which is called by `post-processing_gw.py`) to report the gateway status on TTN. You can always leave `["status_conf"]["ttn_status"]` to true and status will be reported to TTN only when you are using LoRaWAN mode, i.e. `["radio_conf"]["mode"]` is 11.
 
 
 In both cases, encapsulated encrypted and native LoRaWAN, once everything is set up, go to your TTN console and search for your device. Go to the `Data` tab to see your packets arriving on TTN 

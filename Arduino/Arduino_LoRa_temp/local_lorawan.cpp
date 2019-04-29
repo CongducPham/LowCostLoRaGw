@@ -32,6 +32,11 @@ unsigned char Direction = 0x00;
 int local_lorawan_init(uint8_t SF) {
 
   int e;
+
+  e = sx1272.setBW(BW_125);
+  PRINT_CSTSTR("%s","Set BW to 125kHz: state"); 
+  PRINT_VALUE("%d", e);
+  PRINTLN; 
   
   //we can also change the SF value for LoRaWAN
   e = sx1272.setSF(SF);

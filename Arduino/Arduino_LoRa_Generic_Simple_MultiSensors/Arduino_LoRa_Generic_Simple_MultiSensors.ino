@@ -21,7 +21,7 @@
  * first version of generic sensor
  * nicolas.bertuol@etud.univ-pau.fr
  * 
- * last update: Jan 15th, 2019 by C. Pham
+ * last update: April 29th, 2019 by C. Pham
  */
 
 // IMPORTANT
@@ -112,7 +112,8 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
 #define WITH_EEPROM
 #define WITH_APPKEY
-#define FLOAT_TEMP
+//if you are low on program memory, comment STRING_LIB to save about 2K
+#define STRING_LIB
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //#define WITH_ACK
@@ -134,7 +135,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE LORA MODE, NODE ADDRESS 
 #define LORAMODE  1
-uint8_t node_addr=6;
+uint8_t node_addr=3;
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -284,6 +285,8 @@ long getCmdValue(int &i, char* strBuff=NULL) {
 // array containing sensors pointers
 Sensor* sensor_ptrs[number_of_sensors];
 
+#ifndef STRING_LIB
+
 char *ftoa(char *a, double f, int precision)
 {
  long p[] = {0,10,100,1000,10000,100000,1000000,10000000,100000000};
@@ -297,6 +300,8 @@ char *ftoa(char *a, double f, int precision)
  itoa(desimal, a, 10);
  return ret;
 }
+
+#endif
 
 /*****************************
  _____      _               
@@ -325,14 +330,14 @@ void setup()
 //////////////////////////////////////////////////////////////////
 // ADD YOUR SENSORS HERE   
 // Sensor(nomenclature, is_analog, is_connected, is_low_power, pin_read, pin_power, pin_trigger=-1)
-  sensor_ptrs[0] = new LM35("LM35", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 9 /*no pin trigger*/);
-  sensor_ptrs[1] = new TMP36("TMP36", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 8 /*no pin trigger*/);  
-  sensor_ptrs[2] = new DHT22_Temperature("TC1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
-  sensor_ptrs[3] = new DHT22_Humidity("HU1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
+  sensor_ptrs[0] = new LM35((char*)"LM35", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A0, (uint8_t) 9 /*no pin trigger*/);
+  sensor_ptrs[1] = new TMP36((char*)"TMP36", IS_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A1, (uint8_t) 8 /*no pin trigger*/);  
+  sensor_ptrs[2] = new DHT22_Temperature((char*)"TC1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
+  sensor_ptrs[3] = new DHT22_Humidity((char*)"HU1", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7 /*no pin trigger*/);
   //for SHT, pin_trigger will be the clock pin
-  sensor_ptrs[4] = new SHT_Temperature("TC2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
-  sensor_ptrs[5] = new SHT_Humidity("HU2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
-  sensor_ptrs[6] = new DS18B20("DS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 4 /*no pin trigger*/);
+  sensor_ptrs[4] = new SHT_Temperature((char*)"TC2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
+  sensor_ptrs[5] = new SHT_Humidity((char*)"HU2", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 2, (uint8_t) 6, (uint8_t) 5);
+  sensor_ptrs[6] = new DS18B20((char*)"DS", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, (uint8_t) 3, (uint8_t) 4 /*no pin trigger*/);
   
   //sensor_ptrs[3] = new rawAnalog("SH", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A2, (uint8_t) 7);  
   //sensor_ptrs[4] = new LeafWetness("lw", IS_ANALOG, IS_NOT_CONNECTED, low_power_status, (uint8_t) A3, (uint8_t) 6);
@@ -559,7 +564,7 @@ void loop(void)
       uint8_t r_size;
     
       char final_str[80] = "\\!";
-      char aux[6] = "";
+      
 
       //this is how we can wake up some sensors in advance in case they need a longer warmup time
       //digitalWrite(sensor_ptrs[4]->get_pin_power(),HIGH);
@@ -569,20 +574,26 @@ void loop(void)
       for (int i=0; i<number_of_sensors; i++) {
 
           if (sensor_ptrs[i]->get_is_connected() || sensor_ptrs[i]->has_fake_data()) {
-            
-              ftoa(aux, sensor_ptrs[i]->get_value(), 2);
-          
+
+#ifdef STRING_LIB
               if (i==0) {
-                  //sprintf(final_str, "%s%s/%s", final_str, nomenclatures_array[i], aux);
-                  sprintf(final_str, "%s%s/%s", final_str, sensor_ptrs[i]->get_nomenclature(), aux);
-                  
+                  sprintf(final_str, "%s%s/%s", final_str, sensor_ptrs[i]->get_nomenclature(), String(sensor_ptrs[i]->get_value()).c_str());
               } 
               else {
-                  sprintf(final_str, "%s/%s/%s", final_str, sensor_ptrs[i]->get_nomenclature(), aux);
+                  sprintf(final_str, "%s/%s/%s", final_str, sensor_ptrs[i]->get_nomenclature(), String(sensor_ptrs[i]->get_value()).c_str());
               }
+#else
+              char float_str[10];            
+              ftoa(float_str, sensor_ptrs[i]->get_value(), 2);
+          
+              if (i==0) {
+                  sprintf(final_str, "%s%s/%s", final_str, sensor_ptrs[i]->get_nomenclature(), float_str);
+              } 
+              else {
+                  sprintf(final_str, "%s/%s/%s", final_str, sensor_ptrs[i]->get_nomenclature(), float_str);
+              }
+#endif              
           }
-          //else
-          //  strcpy(aux,"");
       }
       
       r_size=sprintf((char*)message+app_key_offset, final_str);
@@ -815,15 +826,15 @@ void loop(void)
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT
 #else      
-      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(2,4);
+      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 
 #if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
       // warning, setTimer accepts value from 1ms to 65535ms max
-      timer.setTimer(LOW_POWER_PERIOD*1000 + random(1,5)*1000);// milliseconds
+      timer.setTimer(LOW_POWER_PERIOD*1000);// milliseconds
 
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif          
-      for (int i=0; i<nCycle; i++) {  
+      for (uint8_t i=0; i<nCycle; i++) {  
 
 #if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
           // ATmega328P, ATmega168, ATmega32U4

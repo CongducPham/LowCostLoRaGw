@@ -47,11 +47,11 @@
 #define SERIAL_MONITOR
 //#define WITH_APPKEY
 //if you are low on program memory, comment STRING_LIB to save about 2K
-//#define STRING_LIB
+#define STRING_LIB
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 //#define WITH_AES
-#define OLED
+//#define OLED
 ///////////////////////////////////////////////////////////////////
 
 // IMPORTANT
@@ -308,8 +308,8 @@ void setup()
 //////////////////////////////////////////////////////////////////
 // ADD YOUR SENSORS HERE   
 // Sensor(nomenclature, is_analog, is_connected, is_low_power, pin_read, pin_power, pin_trigger=-1)   
-  sensor_ptrs[0] = new DHT22_Temperature("TC", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, A0, 9);
-  sensor_ptrs[1] = new DHT22_Humidity("HU", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, A0, 9);
+  sensor_ptrs[0] = new DHT22_Temperature((char*)"TC", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, A0, 9);
+  sensor_ptrs[1] = new DHT22_Humidity((char*)"HU", IS_NOT_ANALOG, IS_CONNECTED, low_power_status, A0, 9);
 //////////////////////////////////////////////////////////////////  
     
   delay(3000);
@@ -675,9 +675,9 @@ void loop(void)
       FLUSHOUTPUT
       delay(50);
       
-      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD + random(1,2);
+      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
           
-      for (int i=0; i<nCycle; i++) {  
+      for (uint8_t i=0; i<nCycle; i++) {  
 
 #if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
           // ATmega328P, ATmega168, ATmega32U4

@@ -40,9 +40,9 @@ void SHT_Humidity::update_data()
 
     float t;
     float h;
-    int ret;
-    long mTime;
-    long endTime;
+    int8_t ret=0;
+    unsigned long mTime;
+    unsigned long endTime;
 
     mTime=millis();
     endTime=mTime+1000;

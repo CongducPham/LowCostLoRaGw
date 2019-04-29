@@ -19,7 +19,7 @@ double sensor_getValue();
 #if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined IOTMCU_LORA_RADIO_NODE
 #define PIN_POWER 2
 #else
-#define PIN_POWER 2
+#define PIN_POWER 9
 #endif
 ///////////////////////////////////////////////////////////////////
 
