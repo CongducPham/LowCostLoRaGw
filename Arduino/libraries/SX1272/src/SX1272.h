@@ -56,7 +56,7 @@
 //it is not mandatory to wire this pin
 //we take pin 4 as it is available on many boards
 #define SX1272_WRST
-#define SX1272_RST  4
+#define SX1272_RST  8
 
 #if defined ARDUINO_AVR_FEATHER32U4 || defined ARDUINO_SAMD_FEATHER_M0
 // on the Adafruit Feather, the RFM95W is embeded and CS pin is normally on pin 8

@@ -53,6 +53,7 @@
 #define LSC_STATIC_KEY_16
 
 #define LSC_MICv2
+#define LSC_MIC	4
 
 #define LSC_ENCRYPT 1
 #define LSC_DECRYPT 0

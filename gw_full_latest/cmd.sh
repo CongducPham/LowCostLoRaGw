@@ -114,7 +114,7 @@ echo "V- download and install a file                                       +"
 echo "W- run a command                                                     +"
 echo "-----------------------------------------------------------* kill *--+"
 echo "K- kill all gateway related processes                                +"
-echo "k- kill rfcomm-server process                                        +"
+#echo "k- kill rfcomm-server process                                        +"
 echo "R- reboot gateway                                                    +"
 echo "S- shutdown gateway                                                  +"
 echo "---------------------------------------------------------------------+"
@@ -149,7 +149,7 @@ if [ "$choice" = "3" ]
 	then
 		echo "Check for lora_gateway process"
 		echo "##############################"
-		ps aux | grep -e start_gw -e lora_gateway -e post_processing -e log_gw
+		ps aux | grep -e start_gw -e lora_gateway -e post_processing -e log_gw -e util_pkt_logger
 		echo "##############################"
 		echo "The gateway is running if you see the lora_gateway process"
 
@@ -443,7 +443,7 @@ fi
 if [ "$choice" = "K" ] 
         then
 		echo "Killing all gateway related processes"
-		sudo kill $(ps aux | grep -e start_gw -e lora_gateway -e post_processing -e log_gw | awk '{print $2}')
+		sudo kill $(ps aux | grep -e start_gw -e lora_gateway -e post_processing -e log_gw -e util_pkt_logger | awk '{print $2}')
 fi
 
 if [ "$choice" = "k" ] 

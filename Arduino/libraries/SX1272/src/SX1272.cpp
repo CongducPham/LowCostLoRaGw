@@ -30,6 +30,8 @@
 #include <SPI.h>
 
 /*  CHANGE LOGS by C. Pham
+ *	April 26th, 2019
+ *		- rewrote setSF() and setBW() to better handle LowDataRateOptimize
  *	August 28th, 2018
  *		- add a small delay in the availableData() loop that decreases the CPU load of a gateway program to 4~5% instead of nearly 100%
  *		- suggested by rertini (https://github.com/CongducPham/LowCostLoRaGw/issues/211)
@@ -1790,7 +1792,8 @@ uint8_t	SX1272::setSF(uint8_t spr)
     int8_t state = 2;
     byte config1=0;
     byte config2=0;
-
+    byte config3=0;
+    
 #if (SX1272_debug_mode > 1)
     Serial.println();
     Serial.println(F("Starting 'setSF'"));
@@ -1806,203 +1809,191 @@ uint8_t	SX1272::setSF(uint8_t spr)
 #endif
         state = setLORA();				// Setting LoRa mode
     }
-    else
-    { // LoRa mode
-        writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);	// LoRa standby mode
-        config2 = (readRegister(REG_MODEM_CONFIG2));	// Save config2 to modify SF value (bits 7-4)
-        switch(spr)
-        {
-        case SF_6: 	config2 = config2 & B01101111;	// clears bits 7 & 4 from REG_MODEM_CONFIG2
-            config2 = config2 | B01100000;	// sets bits 6 & 5 from REG_MODEM_CONFIG2
-            setHeaderOFF();		// Mandatory headerOFF with SF = 6
-            break;
-        case SF_7: 	config2 = config2 & B01111111;	// clears bits 7 from REG_MODEM_CONFIG2
-            config2 = config2 | B01110000;	// sets bits 6, 5 & 4
-            break;
-        case SF_8: 	config2 = config2 & B10001111;	// clears bits 6, 5 & 4 from REG_MODEM_CONFIG2
-            config2 = config2 | B10000000;	// sets bit 7 from REG_MODEM_CONFIG2
-            break;
-        case SF_9: 	config2 = config2 & B10011111;	// clears bits 6, 5 & 4 from REG_MODEM_CONFIG2
-            config2 = config2 | B10010000;	// sets bits 7 & 4 from REG_MODEM_CONFIG2
-            break;
-        case SF_10:	config2 = config2 & B10101111;	// clears bits 6 & 4 from REG_MODEM_CONFIG2
-            config2 = config2 | B10100000;	// sets bits 7 & 5 from REG_MODEM_CONFIG2
-            break;
-        case SF_11:	config2 = config2 & B10111111;	// clears bit 6 from REG_MODEM_CONFIG2
-            config2 = config2 | B10110000;	// sets bits 7, 5 & 4 from REG_MODEM_CONFIG2
-            getBW();
 
-            // modified by C. Pham
-            if( _bandwidth == BW_125)
-            { // LowDataRateOptimize (Mandatory with SF_11 if BW_125)
-                if (_board==SX1272Chip) {
-                    config1 = (readRegister(REG_MODEM_CONFIG1));	// Save config1 to modify only the LowDataRateOptimize
-                    config1 = config1 | B00000001;
-                    writeRegister(REG_MODEM_CONFIG1,config1);
-                }
-                else {
-                    byte config3=readRegister(REG_MODEM_CONFIG3);
-                    config3 = config3 | B00001000;
-                    writeRegister(REG_MODEM_CONFIG3,config3);
-                }
-            }
-            break;
-        case SF_12: config2 = config2 & B11001111;	// clears bits 5 & 4 from REG_MODEM_CONFIG2
-            config2 = config2 | B11000000;	// sets bits 7 & 6 from REG_MODEM_CONFIG2
-            if( _bandwidth == BW_125)
-            { // LowDataRateOptimize (Mandatory with SF_12 if BW_125)
-                // modified by C. Pham
-                if (_board==SX1272Chip) {
-                    config1 = (readRegister(REG_MODEM_CONFIG1));	// Save config1 to modify only the LowDataRateOptimize
-                    config1 = config1 | B00000001;
-                    writeRegister(REG_MODEM_CONFIG1,config1);
-                }
-                else {
-                    byte config3=readRegister(REG_MODEM_CONFIG3);
-                    config3 = config3 | B00001000;
-                    writeRegister(REG_MODEM_CONFIG3,config3);
-                }
-            }
-            break;
-        }
-        
-        // added by C. Pham
-        if (spr!=SF_11 && spr!=SF_12) {
-			if (_board==SX1272Chip) {
-				config1 = (readRegister(REG_MODEM_CONFIG1));	// Save config1 to modify only the LowDataRateOptimize
-				config1 = config1 & B11111110; //clears bits 0
-				writeRegister(REG_MODEM_CONFIG1,config1);
-			}
-			else {
-				byte config3=readRegister(REG_MODEM_CONFIG3);
-				config3 = config3 & B11110111;
-				writeRegister(REG_MODEM_CONFIG3,config3);
-			}        
-        }
+	// modified by C. Pham
+	writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);	// LoRa standby mode
+	config1 = (readRegister(REG_MODEM_CONFIG1));	// Save config1 to modify only the LowDataRateOptimize
+	config2 = (readRegister(REG_MODEM_CONFIG2));	// Save config2 to modify SF value (bits 7-4)
+	
+	getBW();
+	
+	boolean isLowDROp=false;
+	
+	//Mandatory with SF_11/12 and BW_125 as symbol duration > 16ms) 
+	if ( (spr==SF_11 || spr==SF_12) && _bandwidth == BW_125 )
+		isLowDROp=true;
+	
+	//Mandatory with SF_12 and BW_250 as symbol duration > 16ms)	
+	if ( spr==SF_12 && _bandwidth == BW_250 )
+		isLowDROp=true;
 		
-        // Check if it is neccesary to set special settings for SF=6
-        if( spr == SF_6 )
-        {
-            // Mandatory headerOFF with SF = 6 (Implicit mode)
-            setHeaderOFF();
+	switch(spr)
+	{
+	case SF_6: 	config2 = config2 & B01101111;	// clears bits 7 & 4 from REG_MODEM_CONFIG2
+		config2 = config2 | B01100000;	// sets bits 6 & 5 from REG_MODEM_CONFIG2
+		break;
+	case SF_7: 	config2 = config2 & B01111111;	// clears bits 7 from REG_MODEM_CONFIG2
+		config2 = config2 | B01110000;	// sets bits 6, 5 & 4
+		break;
+	case SF_8: 	config2 = config2 & B10001111;	// clears bits 6, 5 & 4 from REG_MODEM_CONFIG2
+		config2 = config2 | B10000000;	// sets bit 7 from REG_MODEM_CONFIG2
+		break;
+	case SF_9: 	config2 = config2 & B10011111;	// clears bits 6, 5 & 4 from REG_MODEM_CONFIG2
+		config2 = config2 | B10010000;	// sets bits 7 & 4 from REG_MODEM_CONFIG2
+		break;
+	case SF_10:	config2 = config2 & B10101111;	// clears bits 6 & 4 from REG_MODEM_CONFIG2
+		config2 = config2 | B10100000;	// sets bits 7 & 5 from REG_MODEM_CONFIG2
+		break;
+	case SF_11:	config2 = config2 & B10111111;	// clears bit 6 from REG_MODEM_CONFIG2
+		config2 = config2 | B10110000;	// sets bits 7, 5 & 4 from REG_MODEM_CONFIG2
+		break;
+	case SF_12: config2 = config2 & B11001111;	// clears bits 5 & 4 from REG_MODEM_CONFIG2
+		config2 = config2 | B11000000;	// sets bits 7 & 6 from REG_MODEM_CONFIG2
+		break;
+	}
+	
+	// added by C. Pham
+	if (isLowDROp)
+	{ // LowDataRateOptimize 
+		if (_board==SX1272Chip)
+			config1 = config1 | B00000001;
+		else {
+			config3=readRegister(REG_MODEM_CONFIG3);
+			config3 = config3 | B00001000;
+		}
+	}
+	else
+	{ // No LowDataRateOptimize  
+		if (_board==SX1272Chip) {
+			config1 = config1 & B11111110;
+		}
+		else {
+			config3=readRegister(REG_MODEM_CONFIG3);
+			config3 = config3 & B11110111;
+		}        
+	}
 
-            // Set the bit field DetectionOptimize of
-            // register RegLoRaDetectOptimize to value "0b101".
-            writeRegister(REG_DETECT_OPTIMIZE, 0x05);
+	// added by C. Pham
+	if (_board==SX1272Chip) {
+		// set the AgcAutoOn in bit 2 of REG_MODEM_CONFIG2
+		// modified by C. Pham
+		config2 = config2 | B00000100;
+		
+		// Update config1 now for SX1272Chip
+		writeRegister(REG_MODEM_CONFIG1, config1);		
+	}
+	else {
+		// set the AgcAutoOn in bit 2 of REG_MODEM_CONFIG3
+		config3=config3 | B00000100;
+		
+		// and update config3 now for SX1276Chip
+		writeRegister(REG_MODEM_CONFIG3, config3);
+	}
 
-            // Write 0x0C in the register RegDetectionThreshold.
-            writeRegister(REG_DETECTION_THRESHOLD, 0x0C);
-        }
-        else
-        {
-            // added by C. Pham
-            setHeaderON();
+	// here we write the new SF
+	writeRegister(REG_MODEM_CONFIG2, config2);		// Update config2
 
-            // LoRa detection Optimize: 0x03 --> SF7 to SF12
-            writeRegister(REG_DETECT_OPTIMIZE, 0x03);
+	// Check if it is neccesary to set special settings for SF=6
+	if( spr == SF_6 )
+	{
+		// Mandatory headerOFF with SF = 6 (Implicit mode)
+		setHeaderOFF();
 
-            // LoRa detection threshold: 0x0A --> SF7 to SF12
-            writeRegister(REG_DETECTION_THRESHOLD, 0x0A);
-        }
+		// Set the bit field DetectionOptimize of
+		// register RegLoRaDetectOptimize to value "0b101".
+		writeRegister(REG_DETECT_OPTIMIZE, 0x05);
 
-        // added by C. Pham
-        if (_board==SX1272Chip) {
-            // comment by C. Pham
-            // bit 9:8 of SymbTimeout are then 11
-            // single_chan_pkt_fwd uses 00 and then 00001000
-            // why?
-            // sets bit 2-0 (AgcAutoOn and SymbTimout) for any SF value
-            //config2 = config2 | B00000111;
-            // modified by C. Pham
-            config2 = config2 | B00000100;
-            writeRegister(REG_MODEM_CONFIG1, config1);		// Update config1
-        }
-        else {
-            // set the AgcAutoOn in bit 2 of REG_MODEM_CONFIG3
-            uint8_t config3 = (readRegister(REG_MODEM_CONFIG3));
-            config3=config3 | B00000100;
-            writeRegister(REG_MODEM_CONFIG3, config3);
-        }
+		// Write 0x0C in the register RegDetectionThreshold.
+		writeRegister(REG_DETECTION_THRESHOLD, 0x0C);
+	}
+	else
+	{
+		// added by C. Pham
+		setHeaderON();
 
-        // here we write the new SF
-        writeRegister(REG_MODEM_CONFIG2, config2);		// Update config2
+		// LoRa detection Optimize: 0x03 --> SF7 to SF12
+		writeRegister(REG_DETECT_OPTIMIZE, 0x03);
 
-        delay(100);
+		// LoRa detection threshold: 0x0A --> SF7 to SF12
+		writeRegister(REG_DETECTION_THRESHOLD, 0x0A);
+	}
+	
+	/*
+	delay(100);
 
-        // added by C. Pham
-        byte configAgc;
-        uint8_t theLDRBit;
+	// added by C. Pham
+	byte configAgc;
+	uint8_t theLDRBit;
 
-        if (_board==SX1272Chip) {
-            config1 = (readRegister(REG_MODEM_CONFIG1));	// Save config1 to check update
-            config2 = (readRegister(REG_MODEM_CONFIG2));	// Save config2 to check update
-            // comment by C. Pham
-            // (config2 >> 4) ---> take out bits 7-4 from REG_MODEM_CONFIG2 (=_spreadingFactor)
-            // bitRead(config1, 0) ---> take out bits 1 from config1 (=LowDataRateOptimize)
-            // config2 is only for the AgcAutoOn
-            configAgc=config2;
-            theLDRBit=0;
-        }
-        else {
-            config1 = (readRegister(REG_MODEM_CONFIG3));	// Save config1 to check update
-            config2 = (readRegister(REG_MODEM_CONFIG2));
-            // LowDataRateOptimize is in REG_MODEM_CONFIG3
-            // AgcAutoOn is in REG_MODEM_CONFIG3
-            configAgc=config1;
-            theLDRBit=3;
-        }
+	if (_board==SX1272Chip) {
+		config1 = (readRegister(REG_MODEM_CONFIG1));	// Save config1 to check update
+		config2 = (readRegister(REG_MODEM_CONFIG2));	// Save config2 to check update
+		// comment by C. Pham
+		// (config2 >> 4) ---> take out bits 7-4 from REG_MODEM_CONFIG2 (=_spreadingFactor)
+		// bitRead(config1, 0) ---> take out bits 1 from config1 (=LowDataRateOptimize)
+		// config2 is only for the AgcAutoOn
+		configAgc=config2;
+		theLDRBit=0;
+	}
+	else {
+		config1 = (readRegister(REG_MODEM_CONFIG3));	// Save config1 to check update
+		config2 = (readRegister(REG_MODEM_CONFIG2));
+		// LowDataRateOptimize is in REG_MODEM_CONFIG3
+		// AgcAutoOn is in REG_MODEM_CONFIG3
+		configAgc=config1;
+		theLDRBit=3;
+	}
 
-
-        switch(spr)
-        {
-        case SF_6:	if(		((config2 >> 4) == spr)
-                            && 	(bitRead(configAgc, 2) == 1)
-                            && 	(_header == HEADER_OFF))
-            {
-                state = 0;
-            }
-            break;
-        case SF_7:	if(		((config2 >> 4) == 0x07)
-                            && (bitRead(configAgc, 2) == 1))
-            {
-                state = 0;
-            }
-            break;
-        case SF_8:	if(		((config2 >> 4) == 0x08)
-                            && (bitRead(configAgc, 2) == 1))
-            {
-                state = 0;
-            }
-            break;
-        case SF_9:	if(		((config2 >> 4) == 0x09)
-                            && (bitRead(configAgc, 2) == 1))
-            {
-                state = 0;
-            }
-            break;
-        case SF_10:	if(		((config2 >> 4) == 0x0A)
-                            && (bitRead(configAgc, 2) == 1))
-            {
-                state = 0;
-            }
-            break;
-        case SF_11:	if(		((config2 >> 4) == 0x0B)
-                            && (bitRead(configAgc, 2) == 1)
-                            && (bitRead(config1, theLDRBit) == 1))
-            {
-                state = 0;
-            }
-            break;
-        case SF_12:	if(		((config2 >> 4) == 0x0C)
-                            && (bitRead(configAgc, 2) == 1)
-                            && (bitRead(config1, theLDRBit) == 1))
-            {
-                state = 0;
-            }
-            break;
-        default:	state = 1;
-        }
-    }
+	switch(spr)
+	{
+	case SF_6:	if(		((config2 >> 4) == spr)
+						&& 	(bitRead(configAgc, 2) == 1)
+						&& 	(_header == HEADER_OFF))
+		{
+			state = 0;
+		}
+		break;
+	case SF_7:	if(		((config2 >> 4) == 0x07)
+						&& (bitRead(configAgc, 2) == 1))
+		{
+			state = 0;
+		}
+		break;
+	case SF_8:	if(		((config2 >> 4) == 0x08)
+						&& (bitRead(configAgc, 2) == 1))
+		{
+			state = 0;
+		}
+		break;
+	case SF_9:	if(		((config2 >> 4) == 0x09)
+						&& (bitRead(configAgc, 2) == 1))
+		{
+			state = 0;
+		}
+		break;
+	case SF_10:	if(		((config2 >> 4) == 0x0A)
+						&& (bitRead(configAgc, 2) == 1))
+		{
+			state = 0;
+		}
+		break;
+	case SF_11:	if(		((config2 >> 4) == 0x0B)
+						&& (bitRead(configAgc, 2) == 1)
+						&& (bitRead(config1, theLDRBit) == 1))
+		{
+			state = 0;
+		}
+		break;
+	case SF_12:	if(		((config2 >> 4) == 0x0C)
+						&& (bitRead(configAgc, 2) == 1)
+						&& (bitRead(config1, theLDRBit) == 1))
+		{
+			state = 0;
+		}
+		break;
+	default:	state = 1;
+	}
+	*/
 
     writeRegister(REG_OP_MODE, st0);	// Getting back to previous status
     delay(100);
@@ -2191,26 +2182,28 @@ int8_t	SX1272::setBW(uint16_t band)
 #endif
         state = setLORA();
     }
+    
     writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);	// LoRa standby mode
     config1 = (readRegister(REG_MODEM_CONFIG1));	// Save config1 to modify only the BW
+    
+    getSF();
 
     // added by C. Pham for SX1276
     if (_board==SX1272Chip) {
         switch(band)
         {
         case BW_125:  config1 = config1 & B00111110;	// clears bits 7 & 6 and 0 (no LowDataRateOptimize) from REG_MODEM_CONFIG1
-            getSF();
-            if( _spreadingFactor == 11 )
-            { // LowDataRateOptimize (Mandatory with BW_125 if SF_11)
-                config1 = config1 | B00000001;
-            }
-            if( _spreadingFactor == 12 )
-            { // LowDataRateOptimize (Mandatory with BW_125 if SF_12)
+            if( _spreadingFactor == 11 || _spreadingFactor == 12 )
+            { // LowDataRateOptimize (Mandatory with BW_125 if SF_11/12)
                 config1 = config1 | B00000001;
             }
             break;
         case BW_250:  config1 = config1 & B01111110;	// clears bit 7 and 0 (no LowDataRateOptimize) from REG_MODEM_CONFIG1
             config1 = config1 | B01000000;	// sets bit 6 from REG_MODEM_CONFIG1
+            if( _spreadingFactor == 12 )
+            { // LowDataRateOptimize (Mandatory with BW_250 if SF_12)
+                config1 = config1 | B00000001;
+            }            
             break;
         case BW_500:  config1 = config1 & B10111110;	//clears bit 6 and 0 (no LowDataRateOptimize) from REG_MODEM_CONFIG1
             config1 = config1 | B10000000;	//sets bit 7 from REG_MODEM_CONFIG1
@@ -2220,34 +2213,34 @@ int8_t	SX1272::setBW(uint16_t band)
     else {
         // SX1276
         config1 = config1 & B00001111;	// clears bits 7 - 4 from REG_MODEM_CONFIG1
+        byte config3=readRegister(REG_MODEM_CONFIG3);
+        config3 = config3 & B11110111; // clears bit 3 (no LowDataRateOptimize)
+        
         switch(band)
         {
         case BW_125:
             // 0111
             config1 = config1 | B01110000;
-            getSF();
             if( _spreadingFactor == 11 || _spreadingFactor == 12)
             { // LowDataRateOptimize (Mandatory with BW_125 if SF_11 or SF_12)
-                byte config3=readRegister(REG_MODEM_CONFIG3);
                 config3 = config3 | B00001000;
-                writeRegister(REG_MODEM_CONFIG3,config3);
             }
             break;
         case BW_250:
             // 1000
             config1 = config1 | B10000000;
+            if( _spreadingFactor == 12 )
+            { // LowDataRateOptimize (Mandatory with BW_250 if SF_12)
+                config3 = config3 | B00001000;
+            }            
             break;
         case BW_500:
             // 1001
             config1 = config1 | B10010000;
             break;
         }
-        
-        if (band!=BW_125) {
-			byte config3=readRegister(REG_MODEM_CONFIG3);
-			config3 = config3 & B11110111; // clears bit 3 (no LowDataRateOptimize)
-			writeRegister(REG_MODEM_CONFIG3,config3);        
-        }
+
+		writeRegister(REG_MODEM_CONFIG3,config3);           
     }
     // end
 
@@ -2255,6 +2248,7 @@ int8_t	SX1272::setBW(uint16_t band)
 
     delay(100);
 
+	// now we check
     config1 = (readRegister(REG_MODEM_CONFIG1));
 
     // added by C. Pham
@@ -2265,18 +2259,7 @@ int8_t	SX1272::setBW(uint16_t band)
         case BW_125: if( (config1 >> 6) == SX1272_BW_125 )
             {
                 state = 0;
-                if( _spreadingFactor == 11 )
-                {
-                    if( bitRead(config1, 0) == 1 )
-                    { // LowDataRateOptimize
-                        state = 0;
-                    }
-                    else
-                    {
-                        state = 1;
-                    }
-                }
-                if( _spreadingFactor == 12 )
+                if( _spreadingFactor == 11 || _spreadingFactor == 12 )
                 {
                     if( bitRead(config1, 0) == 1 )
                     { // LowDataRateOptimize
@@ -2292,6 +2275,17 @@ int8_t	SX1272::setBW(uint16_t band)
         case BW_250: if( (config1 >> 6) == SX1272_BW_250 )
             {
                 state = 0;
+                if( _spreadingFactor == 12 )
+                {
+                    if( bitRead(config1, 0) == 1 )
+                    { // LowDataRateOptimize
+                        state = 0;
+                    }
+                    else
+                    {
+                        state = 1;
+                    }
+                }                
             }
             break;
         case BW_500: if( (config1 >> 6) == SX1272_BW_500 )
@@ -2303,26 +2297,16 @@ int8_t	SX1272::setBW(uint16_t band)
     }
     else {
         // (config1 >> 4) ---> take out bits 7-4 from REG_MODEM_CONFIG1 (=_bandwidth)
+        
+        byte config3 = (readRegister(REG_MODEM_CONFIG3));
+        
         switch(band)
         {
         case BW_125: if( (config1 >> 4) == BW_125 )
             {
                 state = 0;
 
-                byte config3 = (readRegister(REG_MODEM_CONFIG3));
-
-                if( _spreadingFactor == 11 )
-                {
-                    if( bitRead(config3, 3) == 1 )
-                    { // LowDataRateOptimize
-                        state = 0;
-                    }
-                    else
-                    {
-                        state = 1;
-                    }
-                }
-                if( _spreadingFactor == 12 )
+                if( _spreadingFactor == 11 || _spreadingFactor == 12 )
                 {
                     if( bitRead(config3, 3) == 1 )
                     { // LowDataRateOptimize
@@ -2338,6 +2322,18 @@ int8_t	SX1272::setBW(uint16_t band)
         case BW_250: if( (config1 >> 4) == BW_250 )
             {
                 state = 0;
+
+                if( _spreadingFactor == 12 )
+                {
+                    if( bitRead(config3, 3) == 1 )
+                    { // LowDataRateOptimize
+                        state = 0;
+                    }
+                    else
+                    {
+                        state = 1;
+                    }
+                }                
             }
             break;
         case BW_500: if( (config1 >> 4) == BW_500 )
@@ -2347,7 +2343,7 @@ int8_t	SX1272::setBW(uint16_t band)
             break;
         }
     }
-
+    
     if(state==0)
     {
         _bandwidth = band;
@@ -7600,6 +7596,8 @@ long SX1272::removeToA(uint16_t toa) {
     return _remainingToA;
 }
 
+// experimentatl
+//
 int8_t SX1272::setFreqHopOn() {
     
     double bw=0.0;
@@ -7611,6 +7609,8 @@ int8_t SX1272::setFreqHopOn() {
     return 0;        
 }
 
+// this function does not exist for the gateway version
+//
 void SX1272::setCSPin(uint8_t cs) {
 	//need to call this function before the ON() function
 	_SX1272_SS=cs;

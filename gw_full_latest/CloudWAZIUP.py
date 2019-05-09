@@ -164,7 +164,8 @@ def get_token():
 
 			print 'CloudWAZIUP: returned msg from server is ',
 			print response.status_code	
-						
+			print response.reason		
+							
 			if response.status_code == 200:
 				print 'CloudWAZIUP: got token'
 				current_token=response.text
@@ -205,7 +206,8 @@ def create_new_measurement(entity, nomenclature):
 	
 		print 'CloudWAZIUP: returned msg from server is ',
 		print response.status_code	
-			
+		print response.reason
+					
 		if response.status_code==200:
 			print 'CloudWAZIUP: measurement creation success'
 			return True			
@@ -234,7 +236,7 @@ def does_measurement_exist(entity, nomenclature):
 	WAZIUP_url=WAZIUP_url+'/'+entity		
 	WAZIUP_url=WAZIUP_url+'/measurements/'+nomenclature
 
-	print 'CloudWAZIUP: check if measurement exits'
+	print 'CloudWAZIUP: check if measurement exists'
 	print "CloudWAZIUP: will issue requests with"
 	print 'url: '+WAZIUP_url
 	#print 'headers: '+json.dumps(WAZIUP_headers)
@@ -243,7 +245,8 @@ def does_measurement_exist(entity, nomenclature):
 		response = requests.get(WAZIUP_url, headers=WAZIUP_headers, data='', timeout=30)
 
 		print 'CloudWAZIUP: returned msg from server is ',
-		print response.status_code	
+		print response.status_code
+		print response.reason	
 					
 		if response.status_code==404:
 			print 'CloudWAZIUP: measurement does not exist'
@@ -276,7 +279,7 @@ def does_entity_exist(entity):
 	WAZIUP_url=key_WAZIUP.waziup_server+'/sensors'
 	WAZIUP_url=WAZIUP_url+'/'+entity
 	
-	print 'CloudWAZIUP: check if entity exits'
+	print 'CloudWAZIUP: check if entity exists'
 	print "CloudWAZIUP: will issue requests with"
 	print 'url: '+WAZIUP_url
 	#print 'headers: '+json.dumps(WAZIUP_headers)
@@ -286,6 +289,7 @@ def does_entity_exist(entity):
 
 		print 'CloudWAZIUP: returned msg from server is ',
 		print response.status_code	
+		print response.reason	
 						
 		if response.status_code==404:
 			print 'CloudWAZIUP: entity does not exist'
@@ -336,7 +340,8 @@ def create_new_entity(data, entity, nomenclatures, tdata):
 
 		print 'CloudWAZIUP: returned msg from server is ',
 		print response.status_code	
-						
+		print response.reason
+								
 		if response.ok:
 			print 'CloudWAZIUP: entity creation success'
 			print "CloudWAZIUP: create measurements for new entity"
@@ -415,7 +420,8 @@ def send_data(data, entity, nomenclatures, tdata):
 
 			print 'CloudWAZIUP: returned msg from server is ',
 			print response.status_code
-
+			print response.reason
+			
 			if response.ok:
 				print 'CloudWAZIUP: upload success'
 				i += 1
