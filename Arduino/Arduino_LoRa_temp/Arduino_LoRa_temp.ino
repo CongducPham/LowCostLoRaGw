@@ -149,28 +149,16 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 
 ///////////////////////////////////////////////////////////////////
 //ENTER HERE your App Session Key from the TTN device info (same order, i.e. msb)
-//unsigned char AppSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+unsigned char AppSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 ///////////////////////////////////////////////////////////////////
-
-//Danang
-//unsigned char AppSkey[16] = { 0x54, 0xAC, 0x7B, 0x9E, 0xC6, 0x65, 0xD5, 0xCF, 0x0F, 0x1C, 0xD7, 0x92, 0x40, 0x11, 0x07, 0x2A };
-
-//Pau
-unsigned char AppSkey[16] = { 0x05, 0x40, 0xAC, 0x07, 0xB0, 0x9E, 0x0C, 0x60, 0x65, 0x0D, 0x50, 0xCF, 0x00, 0xF0, 0x1C, 0x0D };
 
 //this is the default as LoRaWAN example
 //unsigned char AppSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
 
 ///////////////////////////////////////////////////////////////////
 //ENTER HERE your Network Session Key from the TTN device info (same order, i.e. msb)
-//unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 ///////////////////////////////////////////////////////////////////
-
-//Danang
-//unsigned char NwkSkey[16] = { 0x11, 0xFF, 0x06, 0xBA, 0xAE, 0x0F, 0xA6, 0x6B, 0xA5, 0x8F, 0x1F, 0xE0, 0x52, 0xDD, 0x8A, 0x21 };
-
-//Pau
-unsigned char NwkSkey[16] = { 0x01, 0x10, 0xFF, 0x00, 0x60, 0xBA, 0x0A, 0xE0, 0x0F, 0x0A, 0x60, 0x6B, 0x0A, 0x50, 0x8F, 0x01 };
 
 //this is the default as LoRaWAN example
 //unsigned char NwkSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
@@ -180,14 +168,9 @@ unsigned char NwkSkey[16] = { 0x01, 0x10, 0xFF, 0x00, 0x60, 0xBA, 0x0A, 0xE0, 0x
 #if defined LORAWAN || defined EXTDEVADDR
 ///////////////////////////////////////////////////////////////////
 //ENTER HERE your Device Address from the TTN device info (same order, i.e. msb). Example for 0x12345678
-//unsigned char DevAddr[4] = { 0x12, 0x34, 0x56, 0x78 };
+unsigned char DevAddr[4] = { 0x12, 0x34, 0x56, 0x78 };
 ///////////////////////////////////////////////////////////////////
 
-//Danang
-//unsigned char DevAddr[4] = { 0x26, 0x04, 0x1F, 0x24 };
-
-//Pau
-unsigned char DevAddr[4] = { 0x26, 0x01, 0x17, 0x21 };
 #else
 ///////////////////////////////////////////////////////////////////
 // DO NOT CHANGE HERE
@@ -768,7 +751,7 @@ void loop(void)
       pl=local_lsc_create_pkt(message, pl, app_key_offset, p_type, node_addr);
 #endif
       
-      sx1272.CarrierSense();
+      //sx1272.CarrierSense();
 
       startSend=millis();
       
@@ -943,6 +926,30 @@ void loop(void)
 #endif
 
                       break;  
+
+                  // Toggle a LED to illustrate an actuation example
+                  // command syntax is /@L2# for instance
+                  case 'L': 
+
+                      i++;
+                      cmdValue=getCmdValue(i);
+                      
+                      PRINT_CSTSTR("%s","Toggle LED on pin ");
+                      PRINT_VALUE("%d", cmdValue);
+                      PRINTLN;
+
+                      // warning, there is no check on the pin number
+                      // /@L2# for instance will toggle LED connected to digital pin number 2
+                      pinMode(cmdValue, OUTPUT);
+                      digitalWrite(cmdValue, HIGH);
+                      delay(500);
+                      digitalWrite(cmdValue, LOW);
+                      delay(500);
+                      digitalWrite(cmdValue, HIGH);
+                      delay(500);
+                      digitalWrite(cmdValue, LOW);
+                      
+                      break;
                             
                   /////////////////////////////////////////////////////////////////////////////////////////////////////////////
                   // add here new commands
