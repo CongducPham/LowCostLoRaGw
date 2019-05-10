@@ -34,9 +34,9 @@
 // This should be defined elsewhere
 void lmic_aes_encrypt(u1_t *data, u1_t *key);
 
-// global area for passing parameters (aux, key) and for storing round keys
+// global area for passing parameters (aux, key)
 u4_t AESAUX[16/sizeof(u4_t)];
-u4_t AESKEY[11*16/sizeof(u4_t)];
+u4_t AESKEY[16/sizeof(u4_t)];
 
 // Shift the given buffer left one bit
 static void shift_left(xref2u1_t buf, u1_t len) {

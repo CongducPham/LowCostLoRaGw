@@ -60,6 +60,9 @@ void hal_enableIRQs (void);
  */
 void hal_sleep (void);
 
+//added by C. Pham
+void hal_sleep_lowpower (u1_t sleepval);
+
 /*
  * return 32-bit system time in ticks.
  */

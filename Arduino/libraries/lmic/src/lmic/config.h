@@ -30,7 +30,7 @@
 // Enable this to allow using printf() to print to the given serial port
 // (or any other Print object). This can be easy for debugging. The
 // current implementation only works on AVR, though.
-#define LMIC_PRINTF_TO Serial
+//#define LMIC_PRINTF_TO Serial
 
 // Any runtime assertion failures are printed to this serial port (or
 // any other Print object). If this is unset, any failures just silently
@@ -79,5 +79,8 @@
 // byte-oriented ones, making it use a lot less flash space (but it is
 // also about twice as slow as the original).
 #define USE_IDEETRON_AES
+
+//added by C. Pham
+#define LMIC_LOWPOWER
 
 #endif // _lmic_config_h_

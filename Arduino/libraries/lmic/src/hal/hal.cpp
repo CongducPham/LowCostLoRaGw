@@ -14,6 +14,12 @@
 #include "hal.h"
 #include <stdio.h>
 
+//added by C. Pham
+#if defined(LMIC_LOWPOWER)
+// we chose to store in seconds so that the wrapped around time is well greater than the device lifetime
+u4_t os_cumulated_sleep_time_in_seconds=0L;
+#endif
+
 // -----------------------------------------------------------------------------
 // I/O
 
@@ -133,7 +139,17 @@ u4_t hal_ticks () {
 
     // Scaled down timestamp. The top US_PER_OSTICK_EXPONENT bits are 0,
     // the others will be the lower bits of our return value.
+    
+    // added by C. Pham
+#if defined(LMIC_LOWPOWER)
+	// normally, os_cumulated_sleep_time_in_seconds*1000000 will be much greater that micros()
+	// because the device should be sleeping most of the time therefore 
+	// os_cumulated_sleep_time_in_seconds*1000000 can rollover very quickly
+	// but this should be equivalent to the natural micros() rollover	
+	uint32_t scaled = (micros()+os_cumulated_sleep_time_in_seconds*1000000) >> US_PER_OSTICK_EXPONENT;
+#else    
     uint32_t scaled = micros() >> US_PER_OSTICK_EXPONENT;
+#endif    
     // Most significant byte of scaled
     uint8_t msb = scaled >> 24;
     // Mask pointing to the overlapping bit in msb and overflow.
@@ -200,6 +216,13 @@ void hal_enableIRQs () {
         hal_io_check();
     }
 }
+
+// added by C. Pham
+#if defined(LMIC_LOWPOWER)
+void hal_sleep_lowpower (u1_t sleepval) {
+    os_cumulated_sleep_time_in_seconds += sleepval;
+}
+#endif
 
 void hal_sleep () {
     // Not implemented

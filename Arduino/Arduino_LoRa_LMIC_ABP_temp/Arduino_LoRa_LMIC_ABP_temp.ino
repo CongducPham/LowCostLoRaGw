@@ -52,8 +52,12 @@
 #define WITH_EEPROM
 //if you are low on program memory, comment STRING_LIB to save about 2K
 #define STRING_LIB
+//if you uncomment LOW_POWER then
+//you MUST uncomment #define LMIC_LOWPOWER in your libraries/lmic/src/lmic/config.h file
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
+
+#define SHOW_LMIC_LOWPOWER_TIMING
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -70,7 +74,7 @@
 ///////////////////////////////////////////////////////////////////
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
-unsigned int TX_INTERVAL = 1*60;
+unsigned int TX_INTERVAL = 5*60;
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -125,14 +129,59 @@ void os_getDevKey (u1_t* buf) { }
 
 static osjob_t sendjob;
 
-// Pin mapping
+#ifdef SHOW_LMIC_LOWPOWER_TIMING
+extern uint32_t os_cumulated_sleep_time_in_seconds;
+#endif
 
+// Pin mapping
+/*
 const lmic_pinmap lmic_pins = {
     .nss = 10,
     .rxtx = LMIC_UNUSED_PIN,
     .rst = 4,
     .dio = {7, 8, 9},
 };
+*/
+
+/* Fabien Ferrero UCA breakout
+ *  
+ Arduino Mini       LoRa RFM95W 
+ Mini Pro           Module
+ D8          <----> RST
+ MISO  (D12) <----> MISO
+ MOSI  (D11) <----> MOSI
+ SCK   (D13) <----> CLK
+ SS    (D10) <----> SEL (Chip Select)
+ D2          <----> DIO0
+ D7          <----> DIO1
+ D9          <----> DIO2
+ 3.3V        <----> Vcc
+
+*/
+
+// Pin mapping
+
+const lmic_pinmap lmic_pins = {
+  .nss = 10,
+  .rxtx = LMIC_UNUSED_PIN,
+  .rst = LMIC_UNUSED_PIN,
+  .dio = {2, 7, 9},
+};
+
+/*
+ *  LORA Radio Node
+ 
+
+// Pin mapping
+ 
+const lmic_pinmap lmic_pins = {
+  .nss = 10,
+  .rxtx = LMIC_UNUSED_PIN,
+  .rst = 9,
+  .dio = {2, 3, 4},
+};
+
+*/
 
 /*****************************
  _____           _      
@@ -248,8 +297,13 @@ char *ftoa(char *a, double f, int precision)
 }
 #endif
 
+ostime_t t_queued, t_complete;
+
 void onEvent (ev_t ev) {
-    Serial.print(os_getTime());
+
+    t_complete = os_getTime();
+              
+    Serial.print(t_complete);
     Serial.print(": ");
     switch(ev) {
         case EV_SCAN_TIMEOUT:
@@ -279,8 +333,15 @@ void onEvent (ev_t ev) {
         case EV_REJOIN_FAILED:
             Serial.println(F("EV_REJOIN_FAILED"));
             break;
-        case EV_TXCOMPLETE:
+        case EV_TXCOMPLETE:           
+            
             Serial.println(F("EV_TXCOMPLETE (includes waiting for RX windows)"));
+
+            Serial.print(F("diff in ticks: "));
+            Serial.println(t_complete-t_queued);
+            Serial.print(F("diff in seconds: "));
+            Serial.println(osticks2ms(t_complete-t_queued)/1000);
+    
             if (LMIC.txrxFlags & TXRX_ACK)
               Serial.println(F("Received ack"));
             if (LMIC.dataLen) {
@@ -294,6 +355,29 @@ void onEvent (ev_t ev) {
               Serial.print(LMIC.frame[LMIC.dataBeg + i], HEX);
               }
             }
+
+#ifdef WITH_EEPROM
+            // save packet number for next packet in case of reboot
+            my_sx1272config.seq=LMIC.seqnoUp;
+            EEPROM.put(0, my_sx1272config);
+#endif
+
+#ifdef SHOW_LMIC_LOWPOWER_TIMING
+            uint32_t now_micros=micros();
+            ostime_t now = os_getTime();
+            
+            Serial.print(F("now micros: "));
+            Serial.println(now_micros);
+
+            Serial.print(F("cumulated sleep: "));
+            Serial.println(os_cumulated_sleep_time_in_seconds);
+
+            Serial.print(F("now ticks: "));
+            Serial.println(us2osticks(now_micros) + sec2osticks(os_cumulated_sleep_time_in_seconds)); 
+            
+            Serial.print(F("now ticks from os_getTime(): "));
+            Serial.println(now);           
+#endif
 
 #if defined LOW_POWER && not defined _VARIANT_ARDUINO_DUE_X_
             PRINT_CSTSTR("%s","Switch to power saving mode\n");
@@ -330,19 +414,15 @@ void onEvent (ev_t ev) {
             
             for (uint8_t i=0; i<nCycle; i++) {  
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
+#if defined ARDUINO_AVR_MEGA2560 || defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
                 // ATmega328P, ATmega168, ATmega32U4
                 LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+
+                //you MUST uncomment #define LMIC_LOWPOWER in your libraries/lmic/src/lmic/config.h file
+                hal_sleep_lowpower(8);
                 
                 //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
                 //              SPI_OFF, USART0_OFF, TWI_OFF);
-#elif defined ARDUINO_AVR_MEGA2560
-                // ATmega2560
-                LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
-                
-                //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
-                //      TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
-                //      USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
 #elif defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
                 // Teensy31/32 & TeensyLC
 #ifdef LOW_POWER_HIBERNATE
@@ -359,6 +439,7 @@ void onEvent (ev_t ev) {
                 delay(10);                        
             }
 
+            PRINTLN;
             do_send(&sendjob);
 #endif  
       
@@ -453,7 +534,12 @@ void do_send(osjob_t* j){
     } else {
         // Prepare upstream data transmission at the next possible time.
         LMIC_setTxData2(1, message, r_size, 0);
-        Serial.println(F("Packet queued"));
+
+        t_queued = os_getTime();
+        Serial.print(t_queued);
+        Serial.print(": ");
+        
+        Serial.println(F("Packet queued"));      
     }
     // Next TX is scheduled after TX_COMPLETE event.
 }
@@ -558,8 +644,8 @@ void setup() {
     
         // set sequence number for SX1272 library
         // TODO use fcount
-        PRINT_CSTSTR("%s","Using packet sequence number of ");
-        PRINT_VALUE("%d", 0);
+        PRINT_CSTSTR("%s","Using seqnoUp of ");
+        PRINT_VALUE("%d", my_sx1272config.seq);
         PRINTLN;
 
 #ifdef FORCE_DEFAULT_VALUE
@@ -667,8 +753,13 @@ void setup() {
     }
     
     // Set data rate and transmit power for uplink (note: txpow seems to be ignored by the library)
-    LMIC_setDrTxpow(DR_SF9,14);
+    LMIC_setDrTxpow(DR_SF12,14);
 
+#ifdef WITH_EEPROM
+    // Initialize 
+    LMIC.seqnoUp = my_sx1272config.seq;
+#endif
+    
     // Start job
     do_send(&sendjob);
 }
