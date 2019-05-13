@@ -412,7 +412,7 @@ For more information on how to perform downlink transmission from the gateway, p
 LoRaWAN example and support
 ---------------------------
 
-`Arduino_LoRa_LMIC_ABP_BASIC` is the basic LoRaWAN ABP (Activation By Personalization) example from Thomas Telkamp and Matthijs Kooijman using the LMIC port for Arduino. It sends "Hello from LMIC" using DR_SF12 (i.e. BW125SF12). In order to use `Arduino_LoRa_LMIC_ABP_BASIC`, you need to create a device for instance on TTN to get the device short address (32 bits) and, if you want, both NwkSKey and AppSKey. These information have to be filled in the example code. A nice tutorial can be found on [https://medium.com/kkbankol-events/tutorial-build-a-open-source-smart-city-based-on-lora-7ca76b9a098](https://medium.com/kkbankol-events/tutorial-build-a-open-source-smart-city-based-on-lora-7ca76b9a098). Don't forget to connect pin 7,8,9 to DIO0, DIO1 and DIO2 of the radio module. You can use the `Arduino_LoRa_LMIC_ABP_BASIC` example to send data either to a regular LoRaWAN gateway (which of course works) and more interestingly to our low-cost single channel LoRa gateway that has to be configured as follows:
+`Arduino_LoRa_LMIC_ABP_BASIC` is the basic LoRaWAN ABP (Activation By Personalization) example from Thomas Telkamp and Matthijs Kooijman using the LMIC port for Arduino. It sends "Hello from LMIC" using DR_SF12 (i.e. BW125SF12). In order to use `Arduino_LoRa_LMIC_ABP_BASIC`, you need to create a device for instance on TTN to get the device short address (32 bits) and, if you want, both NwkSKey and AppSKey. These information have to be filled in the example code. A nice tutorial can be found on [https://medium.com/kkbankol-events/tutorial-build-a-open-source-smart-city-based-on-lora-7ca76b9a098](https://medium.com/kkbankol-events/tutorial-build-a-open-source-smart-city-based-on-lora-7ca76b9a098). Don't forget to change the DIO0, DIO1, RST and DIO2 setting according to your wiring. If you are using our [ProMini PCB](https://github.com/CongducPham/LowCostLoRaGw#pcbs) then the settings is respectively D2, D3, D4 and D5 when you solder together the corresponding solder pads. Normally you only need DIO0, DIO1 and RST. You can use the `Arduino_LoRa_LMIC_ABP_BASIC` example to send data either to a regular LoRaWAN gateway (which of course works) and more interestingly to our low-cost single channel LoRa gateway that has to be configured as follows:
 
 	- set mode to 11 in `gateway_conf.json` to configure for LoRaWAN reception on single channel (868.1MHz)
 	- set "raw" to true in `gateway_conf.json` 
@@ -427,7 +427,7 @@ If you know what you are doing, you can enable local AES decryption by:
 		- but then, indicate both NwkSKey and AppSKey in `loraWAN_config.py`
 		- these keys can be found on your TTN account if you are using TTN LoRaWAN		
 		
-`Arduino_LoRa_temp` also shows a limited LoRaWAN support using our library. You need to enable LoRaWAN features with the following define statements:
+`Arduino_LoRa_temp` also shows a limited LoRaWAN support using our library (not LMIC, therefore DIO connection are not needed). You need to enable LoRaWAN features with the following define statements:
 
 	#define AES
 	#define LORAWAN
