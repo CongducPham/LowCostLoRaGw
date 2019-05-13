@@ -80,7 +80,9 @@
 // also about twice as slow as the original).
 #define USE_IDEETRON_AES
 
+//////////////////
 //added by C. Pham
 #define LMIC_LOWPOWER
+//////////////////
 
 #endif // _lmic_config_h_

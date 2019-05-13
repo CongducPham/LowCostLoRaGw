@@ -14,9 +14,13 @@
 #include "hal.h"
 #include <stdio.h>
 
+//////////////////
 //added by C. Pham
 #if defined(LMIC_LOWPOWER)
-// we chose to store in seconds so that the wrapped around time is well greater than the device lifetime
+// this is an extension of the lmic port to handle low-power mode on AVR microcontrollers
+// where both millis() and micros() are not updated. The idea is to store the amount to sleep
+// time in order to add it to the value returned by hal_ticks(). We chose to store in seconds
+// so that the wrapped around time is well greater than the device lifetime.
 u4_t os_cumulated_sleep_time_in_seconds=0L;
 #endif
 
@@ -140,12 +144,23 @@ u4_t hal_ticks () {
     // Scaled down timestamp. The top US_PER_OSTICK_EXPONENT bits are 0,
     // the others will be the lower bits of our return value.
     
+    ///////////////////
     // added by C. Pham
 #if defined(LMIC_LOWPOWER)
 	// normally, os_cumulated_sleep_time_in_seconds*1000000 will be much greater that micros()
 	// because the device should be sleeping most of the time therefore 
-	// os_cumulated_sleep_time_in_seconds*1000000 can rollover very quickly
-	// but this should be equivalent to the natural micros() rollover	
+	// os_cumulated_sleep_time_in_seconds*1000000 can rollover very quickly (every 4295s).
+	// Assuming that the device wakes-up from low-power mode every 10min then the micro() timer
+	// will be increased by a small amount every 10min, e.g. 5000000 (5s) depending on how long
+	// it takes to get measures from the physical sensors. With these assumption, micros() will
+	// rollover every 6 days approximatively.
+	//
+	// Here, os_cumulated_sleep_time_in_seconds*1000000 computed on uint32_t type already takes 
+	// into account the rollover when translated into microsec. By adding to micros(), again in
+	// uint32_t type, the final rollover is also taken into account.
+	//
+	// As lmic mainly uses hal_ticks() as the time reference in order to schedule future events,
+	// we expect the rollover to be gracefully handled.
 	uint32_t scaled = (micros()+os_cumulated_sleep_time_in_seconds*1000000) >> US_PER_OSTICK_EXPONENT;
 #else    
     uint32_t scaled = micros() >> US_PER_OSTICK_EXPONENT;
