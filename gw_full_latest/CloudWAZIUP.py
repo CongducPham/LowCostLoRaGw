@@ -473,6 +473,11 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	SNR=arr[5]
 	RSSI=arr[6]
 	
+	#remove microsecond for WAZIUP cloud
+	#from 2019-05-14T14:53:10.241191+02:00 to 2019-05-14T14:53:10Z
+	dt = parser.parse(tdata)
+	tdata = dt.replace(microsecond=0,tzinfo=None).isoformat()+"Z"	
+	
 	#compute the MD5 digest (hash) from the clear gw id provided by post_processing_gw.py
 	global gw_id_md5
 	gw_id_md5=md5.new(gwid).hexdigest()
