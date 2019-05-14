@@ -37,13 +37,13 @@ The PCB for the Arduino ProMini (3.3v, 8MHz version) can be used for prototyping
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/ProMiniLoRaBreakout.png)
 
-All the PCBs have footprint for an SMA connector or uFl. Both Nano and ProMini PCBs have replicated rows for all the pins. They also have extra VCC and GND rails. The ProMini PCB has 4 solder pads that can be soldered together if you want to connect RFM95's DIO0 to D2, DIO1 to D3, RST to D4 and DIO2 to D5. Our communication library does not need it but we left this possibility open (for LMIC stack for instance). We also indicate clearly which pin of the RFM95 you need to solder on the PCB (for instance `MOSI>`). As you can see on the picture, you can directly solder the Arduino board on the PCB, or, as we did, use intermediate headers so that the Arduino board can be easily plugged and removed.
+All the PCBs have footprint for an SMA connector or uFl. Both Nano and ProMini PCBs have replicated rows for all the pins. They also have extra VCC and GND rails. They also have 4 solder pads that can be soldered together if you want to connect RFM95's DIO0 to D2, DIO1 to D3, RST to D4 and DIO2 to D5. Our communication library does not need it but we left this possibility open (for LMIC stack for instance). We also indicate clearly which pin of the RFM95 you need to solder on the PCB (for instance `MOSI>`). As you can see on the picture, you can directly solder the Arduino board on the PCB, or, as we did, use intermediate headers so that the Arduino board can be easily plugged and removed.
 
-You can download all the Gerber zipped archive and view them on an [online Gerber viewer](http://www.gerber-viewer.com/).
+You can download all the Gerber zipped archive and view them on an [online Gerber viewer](https://www.pcbgogo.com/GerberViewer.html).
 
 - RFM95 breakout zipped Gerber archive, 2 layer board of 29x37mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/RFM95Breakout_2018-10-24.zip)
-- Arduino Nano breakout zipped Gerber archive, 2 layer board of 30x81mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/NanoLoRaBreakout_2018-10-24.zip)
-- Arduino ProMini breakout zipped Gerber archive, 2 layer board of 30x77mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/ProMiniLoRaBreakout_2019-05-13.zip)
+- Arduino Nano v2 breakout zipped Gerber archive, 2 layer board of 30x81mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/NanoLoRaBreakout_2019-05-14.zip)
+- Arduino ProMini v2 breakout zipped Gerber archive, 2 layer board of 30x77mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/ProMiniLoRaBreakout_2019-05-13.zip)
 
 You can easily make them produced on many online PCB manufacturers. Usually, you just need to provide the zip archive and both size and number of layers are detected. You can dramatically decrease the price by using "panelize" option. As you can see on the pictures, we use 3x2 for the RFM95 breakout and 3x1 for both the Nano and ProMini breakout. For instance, we ordered them from [JLCPCB](https://jlcpcb.com/) and the cost of 10 panels (i.e. 60 RFM breakout or 30 Nano/ProMini breakout) is about $2!
 
