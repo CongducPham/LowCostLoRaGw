@@ -166,7 +166,7 @@ def get_token():
 			print response.status_code	
 			print response.reason		
 							
-			if response.status_code == 200:
+			if 200 <= response.status_code < 300:
 				print 'CloudWAZIUP: got token'
 				current_token=response.text
 				WAZIUP_headers = {'accept':'application/json','content-type':'application/json','Authorization':'Bearer '+current_token}
@@ -174,6 +174,7 @@ def get_token():
 			else:	
 			#if response.status_code == 404:
 				print 'CloudWAZIUP: authorization failed'
+				print response.text
 				
 		except requests.exceptions.RequestException as e:
 			print e
@@ -208,11 +209,12 @@ def create_new_measurement(entity, nomenclature):
 		print response.status_code	
 		print response.reason
 					
-		if response.status_code==200:
+		if 200 <= response.status_code < 300:
 			print 'CloudWAZIUP: measurement creation success'
 			return True			
 		else:
 			print 'CloudWAZIUP: error in creating measurement'
+			print response.text
 			return False
 					
 	except requests.exceptions.RequestException as e:
@@ -251,11 +253,12 @@ def does_measurement_exist(entity, nomenclature):
 		if response.status_code==404:
 			print 'CloudWAZIUP: measurement does not exist'
 			return False
-		elif response.status_code==200:
+		elif 200 <= response.status_code < 300:
 			print 'CloudWAZIUP: measurement exists'
 			return True				
 		else:
 			print 'CloudWAZIUP: error in checking measurement'
+			print response.text
 			return False
 			
 	except requests.exceptions.RequestException as e:
@@ -294,11 +297,12 @@ def does_entity_exist(entity):
 		if response.status_code==404:
 			print 'CloudWAZIUP: entity does not exist'
 			return False
-		elif response.status_code==200:
+		elif 200 <= response.status_code < 300:
 			print 'CloudWAZIUP: entity exists'
 			return True
 		else:
 			print 'CloudWAZIUP: error in checking entity'
+			print response.text
 			return False							
 
 	except requests.exceptions.RequestException as e:
@@ -342,7 +346,7 @@ def create_new_entity(data, entity, nomenclatures, tdata):
 		print response.status_code	
 		print response.reason
 								
-		if response.ok:
+		if 200 <= response.status_code < 300:
 			print 'CloudWAZIUP: entity creation success'
 			print "CloudWAZIUP: create measurements for new entity"
 		
@@ -354,6 +358,7 @@ def create_new_entity(data, entity, nomenclatures, tdata):
 				i += 1			
 		else:
 			print 'CloudWAZIUP: error in creating entity'
+			print response.text
 			return False
 				
 	except requests.exceptions.RequestException as e:
@@ -422,11 +427,12 @@ def send_data(data, entity, nomenclatures, tdata):
 			print response.status_code
 			print response.reason
 			
-			if response.ok:
+			if 200 <= response.status_code < 300:
 				print 'CloudWAZIUP: upload success'
 				i += 1
 			else:
 				print 'CloudWAZIUP: bad request'
+				print response.text
 				i += 1
 				
 		except requests.exceptions.RequestException as e:
