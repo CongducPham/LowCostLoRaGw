@@ -236,7 +236,7 @@ if _wappkey:
 #------------------------------------------------------------
 		
 try:
-	_fast_stats = gw_json_array["status_conf"]["fast_stats"]
+	_fast_stats = json_array["status_conf"]["fast_stats"]
 except KeyError:
 	_fast_stats = 0	
 	
