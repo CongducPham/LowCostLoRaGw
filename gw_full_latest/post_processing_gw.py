@@ -1,5 +1,5 @@
 #------------------------------------------------------------
-# Copyright 2017 Congduc Pham, University of Pau, France.
+# Copyright 2017-19 Congduc Pham, University of Pau, France.
 # 
 # Congduc.Pham@univ-pau.fr 
 #
@@ -230,6 +230,15 @@ if _wappkey:
 	except ImportError:
 		print "no key_AppKey.py file"
 		_wappkey = 0
+		
+#------------------------------------------------------------
+#fast stats?
+#------------------------------------------------------------
+		
+try:
+	_fast_stats = gw_json_array["status_conf"]["fast_stats"]
+except KeyError:
+	_fast_stats = 0	
 	
 #------------------------------------------------------------
 #for downlink features
@@ -361,12 +370,9 @@ def status_target():
 		global _gw_status
 		time.sleep(_gw_status)
 
-#----------------------------------------------------------------
-#for doing fast statistics or display, periodicity is fixed to 5s
-#----------------------------------------------------------------
-
-#set to True if we connect a small OLED screen
-_gw_statistics=False
+#-------------------------------------------------------------------------------------------
+#for doing fast statistics or display, periodicity is fixed by ["status_conf"]["fast_stats"]
+#-------------------------------------------------------------------------------------------
 
 def statistics_target():
 	while True:
@@ -701,7 +707,7 @@ if (_gw_downlink):
 	time.sleep(1)
 	
 #fast statistics tasks
-if (_gw_statistics):
+if (_fast_stats):
 	print "Starting thread to perform fast statistics tasks"
 	sys.stdout.flush()
 	t_status = threading.Thread(target=statistics_target)

@@ -1,6 +1,13 @@
 Change logs
 ===========
 
+May 15th, 2019
+--------------
+- fast statistics is controlled by `gateway_conf.json:"status_conf":"fast_stats: 5"`
+	- 0 will disable
+	- a value greater than 0, expressed in seconds, will trigger periodic fast statistics tasks
+	- for fast statistic details refer to change logs of December 12th, 2018
+
 April 25th, 2019
 ----------------
 - move DHT22 and copy log file task from `post_processing_gw.py` into `post_status_processing_gw.py`
