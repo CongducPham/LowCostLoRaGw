@@ -230,15 +230,6 @@ if _wappkey:
 	except ImportError:
 		print "no key_AppKey.py file"
 		_wappkey = 0
-		
-#------------------------------------------------------------
-#fast stats?
-#------------------------------------------------------------
-		
-try:
-	_fast_stats = json_array["status_conf"]["fast_stats"]
-except KeyError:
-	_fast_stats = 0	
 	
 #------------------------------------------------------------
 #for downlink features
@@ -373,7 +364,15 @@ def status_target():
 #-------------------------------------------------------------------------------------------
 #for doing fast statistics or display, periodicity is fixed by ["status_conf"]["fast_stats"]
 #-------------------------------------------------------------------------------------------
-
+		
+try:
+	_fast_stats = json_array["status_conf"]["fast_stats"]
+except KeyError:
+	_fast_stats = 0	
+	
+if _fast_stats < 0:
+	_fast_stats = 0	
+	
 def statistics_target():
 	while True:
 		#avoid any print output here to not overload log file		
@@ -382,8 +381,8 @@ def statistics_target():
 			os.system(cmd_arg)
 		except:
 			print "Error when executing sensors_in_raspi/stats.py"
-							
-		time.sleep(5)
+		global _fast_stats					
+		time.sleep(_fast_stats)
 		
 #------------------------------------------------------------
 #check Internet connectivity
