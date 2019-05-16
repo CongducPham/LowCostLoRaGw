@@ -1010,7 +1010,7 @@ var defaultMsgDisplayTimer = 1500;
         event.preventDefault();
 
         msg = '<p><center><font color="green">File download and installation in progress, wait for finish notification.</font></center></p>';
-        $('#gw_download_file_msg').html(msg);        
+        $('#gw_update_msg').html(msg);        
         
         /* Serialize the submitted form control values to be sent to the web server with the request */
         var formValues = $(this).serialize();
@@ -1019,7 +1019,7 @@ var defaultMsgDisplayTimer = 1500;
         $.post("process.php", formValues, function(data){
             // Display the returned data in browser
             //$("#gw_update_form_msg").html(data);
-	    $('#gw_download_file_msg').html(data);
+	    $('#gw_update_msg').html(data);
 	    //erase message after 5 seconds
 	    setTimeout(function() {
   		$('#gw_update_msg').html("");

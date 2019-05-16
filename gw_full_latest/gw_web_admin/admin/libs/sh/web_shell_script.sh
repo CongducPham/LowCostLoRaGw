@@ -250,7 +250,6 @@ fi
 if [ "$1" = "download_gw_file" ]
 then
 	cd /home/pi/lora_gateway
-	wget --backups=1 $2
 	
 	fname=`basename $2`
 	
@@ -260,6 +259,16 @@ then
 		then
 			sudo rm -rf *
 		fi
+		;;
+	*)
+        # it's not
+        ;;
+	esac	
+	
+	wget --backups=1 $2
+	
+	case "$fname" in
+	*.zip)
         unzip -o $fname;;
 	*)
         # it's not
