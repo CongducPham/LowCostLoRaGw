@@ -9,8 +9,8 @@
 	},
 	"gateway_conf" : {
 		"gateway_ID" : "000000XXXXXXDEF0",
-		"ref_latitude" : "43.314106",
-		"ref_longitude" : "-0.363887",
+		"ref_latitude" : "undef",
+		"ref_longitude" : "undef",
 		"wappkey" : false,
 		"raw" : false,
 		"aes" : false,
@@ -27,7 +27,8 @@
 		"gps_port" : "/dev/ttyACM0",
 		"copy_post_processing_log" : false,
 		"dht22" : false,
-		"dht22_mongo": false,		
+		"dht22_mongo": false,
+		"fast_stats": 15,		
 		"ttn_status" : true
 	},	
 	"alert_conf" : {
