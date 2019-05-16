@@ -247,7 +247,7 @@ then
 fi
 
 
-if [ "$1" = "update_gw_file" ]
+if [ "$1" = "download_gw_file" ]
 then
 	cd /home/pi/lora_gateway
 	wget --backups=1 $2
@@ -255,7 +255,11 @@ then
 	fname=`basename $2`
 	
 	case "$fname" in
-	*.zip) 
+	*.zip)
+		if [ "$3" = "erase" ] 
+		then
+			sudo rm -rf *
+		fi
         unzip -o $fname;;
 	*)
         # it's not

@@ -55,7 +55,9 @@ if [ -d lora_gateway ]
 		cp --preserve -r * /home/pi/lora_gateway
 		cd ../lora_gateway
 		echo "reinstalling your configuration and key files"
-		cp config_backup/* .	
+		cp config_backup/* .
+		#if we update from a github repo we remove VERSION.txt in /home/pi/lora_gateway
+		rm VERSION.txt	
 	else
 		echo "new installation"
 		echo "simply renaming gw_full_latest in lora_gateway"

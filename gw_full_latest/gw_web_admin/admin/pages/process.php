@@ -523,7 +523,13 @@ if (isset($_POST['file_name_url'])){
     		echo '<p><center><font color="red">Please enter a valid URL</font></center></p>';
 		}
 		else{
-			$output = gw_update_file($filename_url);
+		
+			if(isset($_POST['gw_download_file_form_erase_checkbox']) && $_POST['gw_download_file_form_erase_checkbox'] == 'Yes') {
+				$output = gw_download_file($filename_url,"erase");
+			}
+			else {
+				$output = gw_download_file($filename_url,"no_erase");
+			}
 	
 			if($output == 0){
 				echo '<p><center><font color="green">File has been downloaded and installed</font></center></p>';

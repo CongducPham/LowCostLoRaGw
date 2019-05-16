@@ -7,6 +7,10 @@ May 15th, 2019
 	- 0 will disable
 	- a value greater than 0, expressed in seconds, will trigger periodic fast statistics tasks
 	- for fast statistic details refer to change logs of December 12th, 2018
+- when using the web admin interface to download a .zip file, it is possible to erase the current install first
+	- this feature is added to allow installing a specific gateway version from a .zip archive in `/home/pi/lora_gateway`
+	- when building the archive, include a file named `VERSION.txt` which content will be displayed as the current installed version
+	- when performing a new install or a full update from the official github, then `/home/pi/lora_gateway/VERSION.txt` will be deleted	
 
 April 25th, 2019
 ----------------

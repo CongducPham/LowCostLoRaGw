@@ -92,7 +92,12 @@ require 'header.php';
 										
 										<?php
 											$current_install_date=exec('stat --format=%y /home/pi/lora_gateway/post_processing_gw.py');
-											$installed_version=exec('cat /home/pi/VERSION.txt');
+											if (is_file('/home/pi/lora_gateway/VERSION.txt')) {
+												$installed_version=exec('cat /home/pi/lora_gateway/VERSION.txt');
+											}
+											else {	
+												$installed_version=exec('cat /home/pi/VERSION.txt');
+											}
 											$git_version=exec('cat /home/pi/git-VERSION.txt');
 
 											echo "Git version: $git_version. Installed version: $installed_version. Date of current distribution is $current_install_date";    
@@ -125,7 +130,12 @@ require 'header.php';
 										</br>
 										<?php
 											$current_install_date=exec('stat --format=%y /home/pi/lora_gateway/post_processing_gw.py');
-											$installed_version=exec('cat /home/pi/VERSION.txt');
+											if (is_file('/home/pi/lora_gateway/VERSION.txt')) {
+												$installed_version=exec('cat /home/pi/lora_gateway/VERSION.txt');
+											}
+											else {	
+												$installed_version=exec('cat /home/pi/VERSION.txt');
+											}
 											$git_version=exec('cat /home/pi/git-VERSION.txt');
 
 											echo "Git version: $git_version. Installed version: $installed_version. Date of current distribution is $current_install_date";   
@@ -167,24 +177,28 @@ require 'header.php';
                                    </br>
                                     <div class="col-md-8 col-md-offset-1"> 
                     						<div class="panel-body">
-                        						<form id="gw_update_form" role="form">
+                        						<form id="gw_download_file_form" role="form">
                             						<fieldset>
                                 						<div class="form-group">
                                 							<label>URL of the file</label>
                                 							<input class="form-control" placeholder="" name="file_name_url" type="text" value="" autofocus>	
                                 						</div>
                                                         <p>Enter a URL link to a file or .zip archive. A .zip archive will be decompressed and its content will overwrite existing files. All files will be downloaded to <tt>/home/pi/lora_gateway</tt>.
-                                                        <p>e.g. a Dropbox link like <tt>https://www.dropbox.com/s/usc9w3i6urbquvw/gateway_conf.json</tt></p>                                					
+                                                        <p>e.g. a Dropbox link like <tt>https://www.dropbox.com/s/usc9w3i6urbquvw/gateway_conf.json</tt></p>
+                                                        
+                                                    	<p>Erase all content of <tt>/home/pi/lora_gateway</tt>. <strong>Use with extreme caution</strong>
+														<input type="checkbox" name="gw_download_file_form_erase_checkbox" value="Yes" /> </p>
+	                                    					
                                 						<center>
                                 							<button  type="submit" class="btn btn-primary">Install</button>
-                                							<button  id="btn_gw_update_form_reset" type="reset" class="btn btn-primary">Clear</button>
+                                							<button  id="btn_gw_download_file_form_reset" type="reset" class="btn btn-primary">Clear</button>
                                 						</center> 
                             						</fieldset>
                         						</form>
                     						</div>
             						</div>	
             						</br>
-            						<div id="gw_update_form_msg"></div>	
+            						<div id="gw_download_file_form_msg"></div>	
                                 </div> 
                                 <!-- tab-pane -->
 

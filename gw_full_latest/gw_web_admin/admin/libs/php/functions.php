@@ -38,8 +38,8 @@ function gw_basic_conf(){
 	return shell_exec("sudo ".LORA_GATEWAY."/scripts/basic_config_gw.sh");
 }
 
-function gw_update_file($filename_url){
-	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh update_gw_file ".$filename_url);
+function gw_download_file($filename_url, $erase){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh download_gw_file ".$filename_url." ".$erase);
 }
 
 function update_web_admin_interface(){
