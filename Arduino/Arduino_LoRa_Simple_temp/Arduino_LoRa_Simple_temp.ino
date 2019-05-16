@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: April 29th, 2019 by C. Pham
+ * last update: May 16th, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -59,6 +59,10 @@
 #define LOW_POWER_HIBERNATE
 //#define WITH_ACK
 //#define LOW_POWER_TEST
+//uncomment to use a customized frequency
+//#define MY_FREQUENCY 868.1
+//when sending to a LoRaWAN gateway (util_pkt_logger) but with no native LoRaWAN format, just to set the correct sync word
+//#define USE_LORAWAN_SW
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -386,6 +390,18 @@ void setup()
   PRINT_CSTSTR("%s","Setting Mode: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
+    
+#ifdef MY_FREQUENCY
+  e = sx1272.setChannel(MY_FREQUENCY*1000000.0*RH_LORA_FCONVERT);
+  PRINT_CSTSTR("%s","Setting customized frequency: ");
+  PRINT_VALUE("%f", MY_FREQUENCY);
+  PRINTLN;
+#else
+  e = sx1272.setChannel(DEFAULT_CHANNEL);  
+#endif  
+  PRINT_CSTSTR("%s","Setting Channel: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
 
   // enable carrier sense
   sx1272._enableCarrierSense=true;
@@ -394,25 +410,18 @@ void setup()
   // there seem to be some issue with RSSI reading
   sx1272._RSSIonSend=false;
 #endif   
-    
-  // Select frequency channel
-  e = sx1272.setChannel(DEFAULT_CHANNEL);
-  PRINT_CSTSTR("%s","Setting Channel: state ");
+
+#ifdef USE_LORAWAN_SW
+  e = sx1272.setSyncWord(0x34);
+  PRINT_CSTSTR("%s","Set sync word to 0x34: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
-  
-  // Select amplifier line; PABOOST or RFO
-#ifdef PABOOST
-  sx1272._needPABOOST=true;
-  // previous way for setting output power
-  // powerLevel='x';
-#else
-  // previous way for setting output power
-  // powerLevel='M';  
 #endif
 
-  // previous way for setting output power
-  // e = sx1272.setPower(powerLevel); 
+  // Select amplifier line; PABOOST or RFO
+#ifdef PABOOST
+  sx1272._needPABOOST=true; 
+#endif
 
   e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
   PRINT_CSTSTR("%s","Setting Power: state ");
@@ -615,29 +624,22 @@ void loop(void)
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT
 #else
-      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 
 #if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
       // warning, setTimer accepts value from 1ms to 65535ms max
+      // milliseconds      
+      // by default, LOW_POWER_PERIOD is 60s for those microcontrollers      
       timer.setTimer(LOW_POWER_PERIOD*1000);
+#endif
 
       nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
-#endif          
+                
       for (uint8_t i=0; i<nCycle; i++) {  
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__ 
-          // ATmega328P, ATmega168, ATmega32U4
+#if defined ARDUINO_AVR_MEGA2560 || defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__ 
+          // ATmega2560, ATmega328P, ATmega168, ATmega32U4
           LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
           
-          //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
-          //              SPI_OFF, USART0_OFF, TWI_OFF);
-#elif defined ARDUINO_AVR_MEGA2560
-          // ATmega2560
-          LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
-          
-          //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
-          //      TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
-          //      USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
 #elif defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
           // Teensy31/32 & TeensyLC
 #ifdef LOW_POWER_HIBERNATE
@@ -658,16 +660,14 @@ void loop(void)
           FLUSHOUTPUT
           delay(10);                        
       }
-      
-      delay(50);
 #endif      
       
 #else
       PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;
       PRINT_CSTSTR("%s","Will send next value at\n");
-      // use a random part also to avoid collision
-      nextTransmissionTime=millis()+(unsigned long)idlePeriodInMin*60*1000+(unsigned long)random(15,60)*1000;
+      // can use a random part also to avoid collision
+      nextTransmissionTime=millis()+(unsigned long)idlePeriodInMin*60*1000; //+(unsigned long)random(15,60)*1000;
       PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;
   }

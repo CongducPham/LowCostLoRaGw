@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: April 28th, 2019 by C. Pham
+ * last update: May 16th, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -637,7 +637,10 @@ void loop(void)
 #ifndef LOW_POWER
   // 600000+random(15,60)*1000
   if (millis() > nextTransmissionTime) {
-#endif
+#else
+      //time for next wake up
+      nextTransmissionTime=millis()+(unsigned long)idlePeriodInMin*60*1000;
+#endif      
 
 #ifdef LOW_POWER
       digitalWrite(PIN_POWER,HIGH);
@@ -980,7 +983,11 @@ void loop(void)
         PRINT_CSTSTR("%s","Could not switch LoRa module in sleep mode\n");
         
       FLUSHOUTPUT
-      delay(50);
+      delay(10);
+
+      //how much do we still have to wait, in millisec?
+      unsigned long now_millis=millis();
+      unsigned long waiting_t = nextTransmissionTime-now_millis;
       
 #ifdef __SAMD21G18A__
       // For Arduino M0 or Zero we use the built-in RTC
@@ -998,16 +1005,70 @@ void loop(void)
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT
 #else
-      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 
 #if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
       // warning, setTimer accepts value from 1ms to 65535ms max
       // milliseconds
+      // by default, LOW_POWER_PERIOD is 60s for those microcontrollers
       timer.setTimer(LOW_POWER_PERIOD*1000);
-
-      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
-          
+
+      //nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
+      
+      while (waiting_t>0) {  
+
+#if defined ARDUINO_AVR_MEGA2560 || defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__    
+          // each wake-up introduces an overhead of about 158ms
+          if (waiting_t > 8158) {
+            LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); 
+            waiting_t = waiting_t - 8158;
+            //PRINT_CSTSTR("%s","8");             
+          }
+          else if (waiting_t > 4158) {
+            LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); 
+            waiting_t = waiting_t - 4158;
+            //PRINT_CSTSTR("%s","4");
+          }
+          else if (waiting_t > 2158) {
+            LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF); 
+            waiting_t = waiting_t - 2158;
+            //PRINT_CSTSTR("%s","2");
+          }
+          else if (waiting_t > 1158) {
+            LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF); 
+            waiting_t = waiting_t - 1158;
+            //PRINT_CSTSTR("%s","1");
+          }      
+          else {
+            delay(waiting_t); 
+            //PRINT_CSTSTR("%s","D[");
+            //PRINT_VALUE("%d", waiting_t);
+            //PRINT_CSTSTR("%s","]");
+            waiting_t = 0;
+          }
+#elif defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
+          // Teensy31/32 & TeensyLC
+          if (waiting_t < LOW_POWER_PERIOD*1000) {
+            timer.setTimer(waiting_t);
+            waiting_t = 0;
+          }
+          else
+            waiting_t = waiting_t - LOW_POWER_PERIOD*1000;
+                        
+#ifdef LOW_POWER_HIBERNATE
+          Snooze.hibernate(sleep_config);
+#else            
+          Snooze.deepSleep(sleep_config);
+#endif
+
+#else
+          // use the delay function
+          delay(waiting_t);
+          waiting_t = 0;
+#endif                                            
+       }
+
+      /*
       for (uint8_t i=0; i<nCycle; i++) {  
 
 #if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
@@ -1038,16 +1099,15 @@ void loop(void)
           FLUSHOUTPUT
           delay(10);                        
       }
-      
-      delay(50);
+      */
 #endif  
       
 #else
       PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;
       PRINT_CSTSTR("%s","Will send next value at\n");
-      // use a random part also to avoid collision
-      nextTransmissionTime=millis()+(unsigned long)idlePeriodInMin*60*1000+(unsigned long)random(15,60)*1000;
+      // can use a random part also to avoid collision
+      nextTransmissionTime=millis()+(unsigned long)idlePeriodInMin*60*1000; //+(unsigned long)random(15,60)*1000;
       PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;
   }
