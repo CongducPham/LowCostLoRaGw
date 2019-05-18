@@ -102,7 +102,7 @@ Main features of gateway
 - periodic status report to monitor whether the post-processing stage of the gateway is up or not
 - support for an embedded DHT22 temperature/humidity sensor to monitor the condition inside the gateway case
 - there is a NoSQL MongoDB support and received data can be saved in the local database if this feature is activated. See [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md#support-of-mongodb-as-a-cloud-declaration) for more information on the local MongoDB structure.
-- the gateway acts as the WiFi access-point. The SSID is WAZIUP_PI_GW_XXXXXXXXXX where XXXXXXXXXX is the last 5 hex bytes of gateway ID: WAZIUP_PI_GW_27EB27F90F for instance. It has IP address 192.168.200.1 and will lease IP addresses in the range of 192.168.200.100 and 192.168.200.120. 
+- the gateway acts as the WiFi access-point. The SSID is WAZIUP_PI_GW_XXXXXXXXXX where XXXXXXXXXX is the last 6 hex bytes of gateway ID: WAZIUP_PI_GW_B827EB27F90F for instance. It has IP address 192.168.200.1 and will lease IP addresses in the range of 192.168.200.100 and 192.168.200.120. 
 - there is an Apache web server with basic PHP forms to visualize graphically the received data of the MongoDB with any web browser. Just connect to http://192.168.200.1 with a web browser (could be from a smartphone) to get the graphic visualization of the data stored in the gateway's MongoDB database.
 - there is the support of Bluetooth connection. A simple Android App running on Android smartphone displays the data stored in the gateway's MongoDB database.
 - by default, incoming data are uploaded to our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794)
@@ -288,20 +288,20 @@ Here, again, you can do all these steps on your laptop and then use `scp` to cop
 Configuring your gateway after update
 -------------------------------------
 
-After gateway update with option (ii), (iii) or (iv), you need to configure your new gateway with `basic_config_gw.sh`, that mainly assigns the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will be the last 5 bytes of the Rapberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you. There is an additional script called `test_gwid.sh` in the script folder to test whether the gateway id can be easily determined. In the `scripts` folder, simply run `test_gwid.sh`:
+After gateway update with option (ii), (iii) or (iv), you need to configure your new gateway with `basic_config_gw.sh`, that mainly assigns the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will be the last 6 bytes of the Rapberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you. There is an additional script called `test_gwid.sh` in the script folder to test whether the gateway id can be easily determined. In the `scripts` folder, simply run `test_gwid.sh`:
 
 	> cd /home/pi/lora_gateway/scripts
 	> ./test_gwid.sh
-	Detecting gw id as 00000027EBBEDA21
+	Detecting gw id as 0000B827EBBEDA21
 	
-If you don't see something similar to 00000027EBBEDA21 (8 bytes in hex format) then you have to explicitly provide the **last 5 bytes**	of the gw id to `basic_config_gw.sh`. Otherwise, in the `scripts` folder, simply run `basic_config_gw.sh` to automatically configure your gateway. 
+If you don't see something similar to 0000B827EBBEDA21 (8 bytes in hex format) then you have to explicitly provide the **last 6 bytes**	of the gw id to `basic_config_gw.sh`. Otherwise, in the `scripts` folder, simply run `basic_config_gw.sh` to automatically configure your gateway. 
 
 	> cd /home/pi/lora_gateway/scripts
 	> ./basic_config_gw.sh
 	
 or
 
-	> ./basic_config_gw.sh 27EBBEDA21
+	> ./basic_config_gw.sh B827EBBEDA21
 
 If you need more advanced configuration, then run `config_gw.sh` as described [here](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest#configure-your-gateway-with-basic_config_gwsh-or-config_gwsh). However, `basic_config_gw.sh` should be sufficient for most of the cases. The script also compile the low-level gateway program corresponding to you Raspberry model. After configuration, reboot your Raspberry. 
 

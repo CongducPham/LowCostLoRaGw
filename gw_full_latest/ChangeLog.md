@@ -84,15 +84,17 @@ November 21st, 2018
 - scripts/start_gw.sh
 	* run `piShutdown.py` script at startup (use the RPI2 long header by default)
 		- to shutdown the gateway properly by connecting GPIO26 (pin 37) to ground which can be pin 39 that is next to pin 37
-			+-> | 37 || 38 |
-			+-> | 39 || 40 |
-				+----++----+
-				   ^	 ^
-				   +-----+ reboot
-				   
 		- to reboot the gateway by connecting GPIO21 (pin 40) to ground which can be pin 39 that is next to pin 40
 		- if you have other usage for GPIO26 or GPIO21, edit `scripts/piShutdown.py` to use other pins for shutdown/reboot
-	
+
+```		
+shutdown		+-> | 37 || 38 |
+				+-> | 39 || 40 |
+					+----++----+
+				   	  ^	     ^
+				   	  +-----+ reboot
+```	
+
 November 13th, 2018
 -------------------
 - scripts/start_gw.sh

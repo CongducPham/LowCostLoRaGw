@@ -17,8 +17,10 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 				
 				echo "copy util_pkt_logger_formatter.py in /home/pi/lora_gateway"
 				cp util_pkt_logger_formatter.py /home/pi/lora_gateway
-				echo "copy start_upl_post_processing_gw.sh in /home/pi/lora_gateway"
-				cp start_upl_post_processing_gw.sh /home/pi/lora_gateway
+				echo "copy start_upl_pprocessing_gw.sh in /home/pi/lora_gateway"
+				cp start_upl_pprocessing_gw.sh /home/pi/lora_gateway
+				echo "copy test_upl_pprocessing_gw.sh in /home/pi/lora_gateway"
+				cp test_upl_pprocessing_gw.sh /home/pi/lora_gateway				
 				echo "renaming original util_pkt_logger.c into util_pkt_logger_original.c"
 				sudo mv /opt/ttn-gateway/lora_gateway/util_pkt_logger/src/util_pkt_logger.c /opt/ttn-gateway/lora_gateway/util_pkt_logger/src/util_pkt_logger_original.c 
 				echo "copy util_pkt_logger.c in /opt/ttn-gateway/lora_gateway/util_pkt_logger/src"
@@ -40,15 +42,15 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 				# we always remove so that there will be no duplicate lines
 				echo "Removing /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local if any"
 				sudo sed -i '\/home\/pi\/lora_gateway\/scripts\/start_gw.sh/d' /etc/rc.local
-				echo "Removing /home/pi/lora_gateway/start_upl_post_processing_gw.sh in /etc/rc.local if any"
-				sudo sed -i '\/home\/pi\/lora_gateway\/start_upl_post_processing_gw.sh/d' /etc/rc.local
+				echo "Removing /home/pi/lora_gateway/start_upl_pprocessing_gw.sh in /etc/rc.local if any"
+				sudo sed -i '\/home\/pi\/lora_gateway\/start_upl_pprocessing_gw.sh/d' /etc/rc.local
 
 				if [ "$input" = "y" ] || [ "$input" = "Y" ]
 					then
 						echo "Add /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local, but without starting the gateway"
 						sudo sed -i 's/^exit 0/\/home\/pi\/lora_gateway\/scripts\/start_gw.sh false\nexit 0/g' /etc/rc.local
-						echo "Add /home/pi/lora_gateway/start_upl_post_processing_gw in /etc/rc.local"
-						sudo sed -i 's/^exit 0/\/home\/pi\/lora_gateway\/start_upl_post_processing_gw.sh\nexit 0/g' /etc/rc.local
+						echo "Add /home/pi/lora_gateway/start_upl_pprocessing_gw in /etc/rc.local"
+						sudo sed -i 's/^exit 0/\/home\/pi\/lora_gateway\/start_upl_pprocessing_gw.sh 60 > \/home\/pi\/lora_gateway\/start_upl.log\nexit 0/g' /etc/rc.local
 				fi
 				
 				echo				

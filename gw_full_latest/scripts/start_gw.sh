@@ -96,7 +96,7 @@ then
 		sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 		sudo sed -i 's/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
 
-		if [ -f 3GDongle/use_3GDongle_internet_on_boot.txt ]
+		if [ -f 3GDongle/use_3GDongle_internet_on_boot.txt ] || [ -f 3GDongle/loranga/use_loranga_internet_on_boot.txt ]
 		then
 				sudo iptables -t nat -A POSTROUTING -o ppp0 -j MASQUERADE
 				sudo iptables -A FORWARD -i ppp0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
@@ -113,7 +113,13 @@ fi
 ### Version management and auto update
 ############################################
 
-installed_version=`cat /home/pi/VERSION.txt`
+if [ -f /home/pi/lora_gateway/VERSION.txt ]
+then
+	installed_version=`cat /home/pi/VERSION.txt`
+else
+	installed_version=`cat /home/pi/lora-gateway/VERSION.txt`
+fi
+	
 echo "Current installed version is $installed_version"
 
 #get git version of distribution
@@ -135,14 +141,20 @@ then
 	then
 		echo "Auto update is on, trying to update to latest version from github"
 		
-		if [ "$installed_version" != "$git_version" ]
+		if [ -f /home/pi/lora_gateway/VERSION.txt ]
 		then
-			echo "Launching update script to install latest version from github"
-			echo "Equivalent to full update with the web admin interface"
-			/home/pi/lora_gateway/scripts/update_gw.sh
-			sleep 5
+			echo "Previous installation from .zip archive detected"
+			echo "Aborting auto-update from github"
 		else
-			echo "Installed version is up-to-date"
+			if [ "$installed_version" != "$git_version" ]
+			then
+				echo "Launching update script to install latest version from github"
+				echo "Equivalent to full update with the web admin interface"
+				/home/pi/lora_gateway/scripts/update_gw.sh
+				sleep 5
+			else
+				echo "Installed version is up-to-date"
+			fi
 		fi
 	else
 		echo "Auto update is off."

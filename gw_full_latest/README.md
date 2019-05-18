@@ -32,44 +32,6 @@ There are additional dedicated README files
 - manual installation procedure
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-manual-install.md)	
 
-WiFi instructions on RPI1B+ and RPI2
-------------------------------------
-
-RPI1 and RPI2 do not come with a built-in WiFi interface therefore a WiFi USB dongle is required. Depending on the dongle, you have to check whether you need a specific driver or not. For instance, many dongles such as those from TP-Link use the Realtek chip. To know on which chip your dongle is based, type:
-	
-	> lsusb
-	
-If your dongle cannot set up an access-point, then you probably need to install a new version of hostapd. The provided Jessie image works out-of-the-box with an RPI3 and already has a custom version of hostapd for the TP-Link TL-WN725 dongle. If you have an RPI2 and this dongle you can easily enable the WiFi access point feature with the following steps after connecting to your Raspberry with ssh (by using Ethernet with DHCP server for instance):
-
-	> cd /usr/sbin
-	> sudo rm hostapd
-	> sudo ln -s hostapd.tplink725.realtek hostapd
-
-Then edit `/etc/hostapd/hostapd.conf`. If you don't have the `/etc/hostapd/hostapd.conf` file then you may need to run:
-
-	> zcat /usr/share/doc/hostapd/examples/hostapd.conf.gz | sudo tee -a /etc/hostapd/hostapd.conf
-	
-Then
-
-	> cd /etc/hostapd
-	> sudo nano hostapd.conf
-
-	ctrl_interface_group=0
-	beacon_int=100
-	interface=wlan0
-	### uncomment the "driver=rtl871xdrv" line if using a Realtek chip
-	### For instance TP-Link TL-WN725 dongles need the driver line
-	#driver=rtl871xdrv
-	ssid=WAZIUP_PI_GW_27EB27F90F
-	wpa_passphrase=loragateway
-	...
-
-uncomment 
-
-	#driver=rtl871xdrv
-	
-save the file and see below to configure your new gateway.
-
 Connect to your new gateway
 ---------------------------
 
@@ -118,95 +80,6 @@ To stop the gateway, use option `K` to kill all the gateway processes that are r
 **IMPORTANT NOTICE**: Do not launch a new gateway instance with an existing one as there will be conflict on the SPI bus. When you need to perform some tests and start the gateway manually, use `K` to kill all processes first.
 
 Use `Q` to quit the text command interface.
-
-Make your gateway a WiFi client
-------------------------------
-
-In the default gateway configuration (i.e. from the SD card image) the gateway acts as a WiFi access point and Internet connectivity is provided through the wire Ethernet interface. In case you want to make the gateway a WiFi client so that it connects to the Internet through an existing WiFi network you have to do the following steps. Note that this solution works even if you are logged (`ssh`) on the gateway using the gateway's access point WiFi network.
-
-1. run in the `lora_gateway/scripts` folder the `prepare_wifi_client.sh` script
-2. run the following command:
-	```
-	wpa_passphrase "my_ssid" "my_password" | sudo tee -a /etc/wpa_supplicant/wpa_supplicant.conf > /dev/null
-	```
-	where `my_ssid` and `my_password` should be replaced by your WiFi SSID and password
-	
-3. reboot the gateway:
-	```
-	sudo shutdown -r now
-	```
-	
-At reboot, your gateway is not acting as a WiFi access point anymore and should be connected to your WiFi network. One issue is to know the IP address assigned to your gateway by the WiFi access point. If your WiFi access point can show the list of leased IP address then you can easily determined your gateway IP address. 
-
-Otherwise, one solution is to take a smartphone or a computer that is connected to the WiFi network in order to know the IP network address of the WiFi network advertised by your access point (e.g. 192.168.1.0). Then you can use a network tool such as `Angry IP scanner` available on most platforms (including Android smartphone) to ping and discover all devices on that WiFi network. Once you obtained the IP address of the gateway on that WiFi network, for instance 192.168.1.25, you can then use `ssh` to log into the gateway and use the gateway's web interface to manage your gateway as usual.
-
-Once logged on your gateway through a computer on the same WiFi network, you can use:
-
-	> iwgetid
-	wlan0	ESSID:"my_ssid"
-	
-or 
-
-	> iwconfig
-	lo		no wireless extensions.
-	
-	wlan0	IEEE 802.11  ESSID:"my_ssid"  
-			Mode:Managed  Frequency:2.437 GHz  Access Point: 2E:F0:A2:90:30:55
-			Bit Rate=24 Mb/s   Tx-Power=31 dBm   
-			Retry short limit:7   RTS thr:off   Fragment thr:off
-			Power Management:on
-			Link Quality=40/70  Signal level=-70 dBm  
-			Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
-			Tx excessive retries:0  Invalid misc:0   Missed beacon:0
-	
-	eth0	no wireless extensions.	  
-	
-to verify that the gateway is connected on the WiFi network. You can also try Internet connectivity by pinging a computer on the Internet.
-
-If you are using the text command interface (`cmd.sh`, see end of this document), use option `g` to run `prepare_wifi_client.sh` and option `h` to interactively enter the SSID and password. Then use option `R` to reboot your gateway.
-
-When you want to switch back the gateway into access point mode, then run in the `lora_gateway/scripts` folder the `start_access_point.sh` script (or option `i` of the text command interface).	
-
-**The web admin interface** can also be used to put the gateway into WiFi client mode and to specify a WiFi network and password (equivalent to option `g` and `h`, and do not forget to reboot). In addition, `raspap-webgui` from https://github.com/billz/raspap-webgui has been integrated and can be accessed at http://`gw_ip_address`/raspap-webgui. **Once** the gateway is configured as a WiFi client with the web admin interface, `raspap-webgui` is useful to dynamically discover and configure additional WiFi networks. **However**, note that it is risky to specify several WiFi networks because it becomes very difficult to know on which WiFi network the gateway is connected to.
-
-**The SD card image has `raspap-webgui` already installed**. If you want to install it manually, here are some instructions, mainly taken and adapted from https://github.com/billz/raspap-webgui. We suppose that you have our latest gateway software and all required packages, only additional packages will be described. The installation instructions are adapted to preserve our gateway settings.
-
-Start off by installing `lighttpd`
-
-	> sudo apt-get install lighttpd
-	
-After that, enable PHP for lighttpd and restart it for the settings to take effect
-
-	> sudo lighttpd-enable-mod fastcgi-php
-	> sudo service lighttpd restart	
-
-Regarding the `www-data ALL=(ALL)` line for the `/etc/sudoers` file, we already updated our web admin interface installation script to include all of them. So no need to do this step here.
-
-Then, git clone the files to `/var/www/html`. Note: for older versions of Raspbian (before Jessie, May 2016) use `/var/www` instead.
-
-	> cd /var/www/html 
-	> sudo git clone https://github.com/billz/raspap-webgui
-	
-Set the files ownership to `pi:www-data` user:group
-
-	> sudo chown -R pi:www-data /var/www/html/raspap-webgui
-	
-Move the RaspAP configuration file to the correct location
-
-	> sudo mkdir /etc/raspap
-	> sudo mv /var/www/html/raspap-webgui/raspap.php /etc/raspap/
-	> sudo chown -R www-data:www-data /etc/raspap
-
-Move the HostAPD logging scripts to the correct location
-
-	> sudo mkdir /etc/raspap/hostapd
-	> sudo mv /var/www/html/raspap-webgui/installers/*log.sh /etc/raspap/hostapd 
-
-Reboot and it should be up and running!
-
-	> sudo reboot
-
-The default username is 'admin' and the default password is 'secret'. RaspAp webgui can then be accessed at http://`gw_ip_address`/raspap-webgui. There is also a link from our web admin interface to RaspAp in the `System` menu.
 
 Compiling the low-level gateway program
 ---------------------------------------	 	
@@ -263,7 +136,7 @@ You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutor
 Gateway configuration file
 --------------------------
 
-When using the full gateway with post-processing stage, a `gateway_conf.json` file defines the gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address: `"gateway_ID" : "00000027EBBEDA21"`. Both `basic_config_gw.sh` and `config_gw.sh` script can do it for you, see below. Starting from November 3rd, 2017, the gateway ID is re-created from the MAC address every time the Raspberry reboots. This is done in order to automatically have a valid gateway id when installing a new gateway with the provided SD card image.
+When using the full gateway with post-processing stage, a `gateway_conf.json` file defines the gateway configuration with several sections for radio configuration, local gateway option such as gateway ID, etc. One important field is the gateway ID which is composed of 8 bytes in hexadecimal notation. We use the last 6 bytes of the eth0 interface MAC address: `"gateway_ID" : "0000B827EBBEDA21"`. Both `basic_config_gw.sh` and `config_gw.sh` script can do it for you, see below. Starting from November 3rd, 2017, the gateway ID is re-created from the MAC address every time the Raspberry reboots. This is done in order to automatically have a valid gateway id when installing a new gateway with the provided SD card image.
 
 In `gateway_conf.json`, you can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. 
 
@@ -272,7 +145,7 @@ Cloud support is separated into different external script files (mainly Python b
 Configure your gateway with `basic_config_gw.sh` or `config_gw.sh`
 --------------------------------------------------------------
 
-`basic_config_gw.sh` should be sufficient for most of the cases. The configuration script mainly assign the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will use the last 5 bytes of the Raspberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you.  
+`basic_config_gw.sh` should be sufficient for most of the cases. The configuration script mainly assign the gateway id so that it is uniquely identified (the gateway's WiFi access point SSID is based on that gateway id for instance). The gateway id will use the last 6 bytes of the Raspberry eth0 MAC address (or wlan0 on an RPI0W without Ethernet adapter) and the configuration script will extract this information for you.  
 
     > ifconfig
     eth0  Link encap:Ethernet  HWaddr b8:27:eb:be:da:21  
@@ -284,27 +157,27 @@ Configure your gateway with `basic_config_gw.sh` or `config_gw.sh`
           collisions:0 txqueuelen:1000 
           RX bytes:6565141 (6.2 MiB)  TX bytes:1452497 (1.3 MiB)
           
-In the example, we have `HWaddr b8:27:eb:be:da:21` then the gateway id will be `00000027EBBEDA21`. There is an additional script called `test_gwid.sh` in the script folder to test whether the gateway id can be easily determined. In the `scripts` folder, simply run `test_gwid.sh`:
+In the example, we have `HWaddr b8:27:eb:be:da:21` then the gateway id will be `0000B827EBBEDA21`. There is an additional script called `test_gwid.sh` in the script folder to test whether the gateway id can be easily determined. In the `scripts` folder, simply run `test_gwid.sh`:
 
 	> cd /home/pi/lora_gateway/scripts
 	> ./test_gwid.sh
-	Detecting gw id as 00000027EBBEDA21
+	Detecting gw id as 0000B827EBBEDA21
 	
-If you don't see something similar to 00000027EBBEDA21 (8 bytes in hex format) then you have to explicitly provide the **last 5 bytes** of the gw id to `basic_config_gw.sh`. Otherwise, in the `scripts` folder, simply run `basic_config_gw.sh` to automatically configure your gateway. 
+If you don't see something similar to 0000B827EBBEDA21 (8 bytes in hex format) then you have to explicitly provide the **last 6 bytes** of the gw id to `basic_config_gw.sh`. Otherwise, in the `scripts` folder, simply run `basic_config_gw.sh` to automatically configure your gateway. 
 
 	> cd /home/pi/lora_gateway/scripts
 	> ./basic_config_gw.sh
 	
 or
 
-	> ./basic_config_gw.sh 27EBBEDA21
+	> ./basic_config_gw.sh B827EBBEDA21
 	
 `basic_config_gw.sh` takes care of:
 
 - determining the gateway id
 - compiling the `lora_gateway` program, the Raspberry board version will be checked automatically
-- creating a `gateway_id.txt` file containing the gateway id (e.g. "00000027EBBEDA21")
-- setting in `gateway_cong.json` the gateway id: "gateway_ID" : "00000027EBBEDA21"
+- creating a `gateway_id.txt` file containing the gateway id (e.g. "0000B827EBBEDA21")
+- setting in `gateway_cong.json` the gateway id: "gateway_ID" : "0000B827EBBEDA21"
 - creating the `/home/pi/Dropbox/LoRa-test` folder for log files (if it does not exist) 
 - creating a `log` symbolic link in the `lora_gateway` folder pointing to `/home/pi/Dropbox/LoRa-test` folder
 - configuring `/etc/hostapd/hostapd.conf` for WiFi access point 
@@ -320,7 +193,7 @@ If you need more advanced configuration, then run `config_gw.sh`. for advanced W
 **Even if you installed from the zipped SD card image `basic_config_gw.sh` or `config_gw.sh` is still needed to personalize your gateway to:**
 
 - compile the `lora_gateway` program for your the Raspberry board version
-- configure `/etc/hostapd/hostapd.conf` to advertise a WiFi SSID corresponding to last 5 hex-byte of your `eth0` interface (e.g. WAZIUP_PI_GW_27EBBEDA21) 
+- configure `/etc/hostapd/hostapd.conf` to advertise a WiFi SSID corresponding to last 6 hex-byte of your `eth0` interface (e.g. WAZIUP_PI_GW_B827EBBEDA21) 
 
 `gateway_conf.json` options
 ---------------------------
@@ -337,20 +210,29 @@ A typical `gateway_conf.json` is shown below:
 			"freq" : -1
 		},
 		"gateway_conf" : {
-			"gateway_ID" : "00000027EB27F90F",
+			"gateway_ID" : "0000B827EB27F90F",
 			"ref_latitude" : "my_lat",
 			"ref_longitude" : "my_long",
 			"wappkey" : false,
 			"raw" : false,
 			"aes" : false,
+			"lsc" : false,			
 			"log_post_processing" : true,
-			"log_weekly" : false,				
-			"dht22" : 0,
-			"dht22_mongo": false,
+			"log_weekly" : false,
+			"auto_update" : false,				
 			"downlink" : 0,
 			"status" : 600,
 			"aux_radio" : 0
 		},
+		"status_conf" : {
+			"dynamic_gps" : false,
+			"gps_port" : "/dev/ttyACM0",
+			"copy_post_processing_log" : false,
+			"dht22" : false,
+			"dht22_mongo": false,
+			"fast_stats": 15,
+			"ttn_status" : true
+		},			
 		"alert_conf" : {
 			"use_mail" : false,
 			"contact_mail" : joejoejoe@gmail.com,jackjackjack@hotmail.com",
@@ -364,13 +246,13 @@ A typical `gateway_conf.json` is shown below:
 		}	
 	}
 	
-["radio_conf"] defines the LoRa radio parameters. This section is read by `start_gw.py` to launch the `lora_gateway` program with the appropriate parameters. You can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. To specify an ad-hoc frequency, use ["freq" : 433.3] for instance. If you want to use "ch", you have to modify `lora_gateway.cpp` to select the correct frequency band and then only you can use ["ch" : 10]. If BAND900 is selected in lora_gateway.cpp then the channel used will be CH_10_900 which is 924.68MHz (defined in `SX1272.h`).
+["radio_conf"] defines the LoRa radio parameters. This section is read by `start_gw.py` to launch the `lora_gateway` program with the appropriate parameters. You can either specify the LoRa mode or the (bw,cr,sf) combination. If mode is defined, then the (bw,cr,sf) combination will be discarded. To use the (bw,cr,sf) combination, you have to set mode to -1. To specify an ad-hoc frequency, use ["freq" : 433.3] for instance. If you want to use "ch", you have to modify `lora_gateway.cpp` to select the correct frequency band and then only you can use ["ch" : 10]. If BAND900 is selected in `lora_gateway.cpp` then the channel used will be CH_10_900 which is 924.68MHz (defined in `SX1272.h`).
 
-["gateway_conf"]["gateway_ID""] is composed of 8 bytes in hexadecimal notation. We use the last 5 bytes of the eth0 interface MAC address.
+["gateway_conf"]["gateway_ID""] is composed of 8 bytes in hexadecimal notation. We use the last 6 bytes of the eth0 interface MAC address with `0000` padding in front.
 
 ["gateway_conf"]["ref_latitude"] you can put the gateway latitude here. 
 
-["gateway_conf"]["ref_longitude"] you can put the gateway longitude here. For instance, `CloudGpsFile.py` uses the gateway GPS coordinates to calculate the distance of remote GPS device to the gateway. It is also possible to periodically push the gateway GPS coordinates on a cloud platform (similar to what is is done in LoRaWAN network server). For that purpose, `post_processing_gw.py` periodically calls `post_status_processing_gw.py` where customized peridodic tasks can be added.
+["gateway_conf"]["ref_longitude"] you can put the gateway longitude here. For instance, `CloudGpsFile.py` uses the gateway GPS coordinates to calculate the distance of remote GPS device to the gateway. It is also possible to periodically push the gateway GPS coordinates on a cloud platform (similar to what is is done in LoRaWAN network server). For that purpose, `post_processing_gw.py` periodically calls `post_status_processing_gw.py` where customized peridodic tasks can be added, see ["status_conf"]["dynamic_gps"].
 
 ["gateway_conf"]["wappkey"] when set to true will enable app key enforcement in `post_processing_gw.py`. Add in `key_AppKey.py` the list of appkey that you want to enable.
 
@@ -381,13 +263,6 @@ A typical `gateway_conf.json` is shown below:
 ["gateway_conf"]["log_post_processing"] when set to true will make `start_gw.py` to additionally launch `log_gw.py` script to log all the `post_processing_gw.py`'s outputs.
 
 ["gateway_conf"]["log_weekly"] when set to true will make `log_gw.py` to create a new log file every week, instead of every month.
-
-["gateway_conf"]["dht22"] indicates the time interval (in second) for `post_processing_gw.py` to trigger a temperature/humidity measure from the DHT22 sensor every N seconds (that you must connect and install, see step H). `post_processing_gw.py` will typically display the following information, that will be logged in the log file.
-
-	2017-03-31T23:42:52.703430> Getting gateway temperature
-	2017-03-31T23:42:52.703722> Gateway TC : 26.40 C | HU : 24.90 % at 2017-03-31 23:42:52.703074
-
-["gateway_conf"]["dht22_mongo"] when set to true will further store the temperature/humidity measure in the local MongDB. Then, these measures will be visible on the gateway's web page. You can check with this feature the condition inside the gateway's case in outdoor deployment.
 
 ["gateway_conf"]["downlink"] indicates the time interval (in second) for `post_processing_gw.py` to check for a `downlink-post.txt`. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md).
 
@@ -401,6 +276,23 @@ A typical `gateway_conf.json` is shown below:
 We plan in the future to send appropriate message to a LoRaWAN network server (such as TTN) in the same way the `single_chan_pkt_fwd` program from Thomas Telkamp works (and like most LoRaWAN gateways). 
 
 ["gateway_conf"]["aux_radio"] indicates the time interval (in second) for `post_processing_gw.py` to check for a `aux_radio_post.txt` file with data received from other radio interfaces, e.g. IEEE802.15.4, etc. This feature is not currently distributed as it is still in the early stage of development.
+
+["status_conf"]["dynamic_gps"] indicates whether you have a USB GPS module connected to update in real-time your gateway GPS position.
+
+["status_conf"]["gps_port"] indicates the port for your USB GPS. It is most of the time `/dev/ttyACM0`.
+
+["status_conf"]["copy_post_processing_log"] indicates whether you want to periodically extract the last 500 lines of the log file to be available on the web admin interface. This option is somehow obsolete as the web admin interface has a button to perform on-demand copy of this log file.
+
+["status_conf"]["dht22"] indicates the time interval (in second) for `post_processing_gw.py` to trigger a temperature/humidity measure from the DHT22 sensor every N seconds (that you must connect and install, see step H). `post_processing_gw.py` will typically display the following information, that will be logged in the log file.
+
+	2017-03-31T23:42:52.703430> Getting gateway temperature
+	2017-03-31T23:42:52.703722> Gateway TC : 26.40 C | HU : 24.90 % at 2017-03-31 23:42:52.703074
+
+["status_conf"]["dht22_mongo"] when set to true will further store the temperature/humidity measure in the local MongDB. Then, these measures will be visible on the gateway's web page. You can check with this feature the condition inside the gateway's case in outdoor deployment.
+
+["status_conf"]["fast_stats"] indicates the time interval (in second) for `post_processing_gw.py` to trigger a fast statistic task (`post_processing_gw.py` calls `python sensors_in_raspi/stats.py`). Currently, it is mainly used to update the display on a small OLED screen.
+
+["status_conf"]["ttn_status"] indicates whether the gateway should report its status to TheThingNetwork platform. Actually, you can leave it as `true` and the report will only be active when the gateway is running in LoRaWAN mode (see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-TTN.md)).
 
 ["alert_conf"]["use_mail"] when set to true indicates that `post_processing_gw.py` will sent an alerting mail on specific events. There are currently 2 events: when `post_processing_gw.py` is started (which usually means that the gateway has booted and is up) and when the radio module has been reset by the low-level lora_gateway program because of some receive errors.
 
@@ -509,6 +401,134 @@ You can start manually the gateway for test purposes with option `0`.
 You can then use option `5` to see the logs in real time. To test the simple low-level gateway, use option `1` (after killing all gateway's processes with option `K`. You can `ssh` at any time and use option `5` to see the latest packets that have been received. 	
 
 You can easily add new useful commands to the `cmd.sh` shell script.
+
+WiFi instructions on RPI1B+ and RPI2
+------------------------------------
+
+RPI1 and RPI2 do not come with a built-in WiFi interface therefore a WiFi USB dongle is required. Depending on the dongle, you have to check whether you need a specific driver or not. For instance, many dongles such as those from TP-Link use the Realtek chip. To know on which chip your dongle is based, type:
+	
+	> lsusb
+	
+If your dongle cannot set up an access-point, then you probably need to install a new version of hostapd. The provided Jessie image works out-of-the-box with an RPI3 and already has a custom version of hostapd for the TP-Link TL-WN725 dongle. If you have an RPI2 and this dongle you can easily enable the WiFi access point feature with the following steps after connecting to your Raspberry with ssh (by using Ethernet with DHCP server for instance):
+
+	> cd /usr/sbin
+	> sudo rm hostapd
+	> sudo ln -s hostapd.tplink725.realtek hostapd
+
+Then edit `/etc/hostapd/hostapd.conf`. If you don't have the `/etc/hostapd/hostapd.conf` file then you may need to run:
+
+	> zcat /usr/share/doc/hostapd/examples/hostapd.conf.gz | sudo tee -a /etc/hostapd/hostapd.conf
+	
+Then
+
+	> cd /etc/hostapd
+	> sudo nano hostapd.conf
+
+	ctrl_interface_group=0
+	beacon_int=100
+	interface=wlan0
+	### uncomment the "driver=rtl871xdrv" line if using a Realtek chip
+	### For instance TP-Link TL-WN725 dongles need the driver line
+	#driver=rtl871xdrv
+	ssid=WAZIUP_PI_GW_27EB27F90F
+	wpa_passphrase=loragateway
+	...
+
+uncomment 
+
+	#driver=rtl871xdrv
+	
+save the file and see below to configure your new gateway.
+
+Make your gateway a WiFi client
+------------------------------
+
+In the default gateway configuration (i.e. from the SD card image) the gateway acts as a WiFi access point and Internet connectivity is provided through the wire Ethernet interface. In case you want to make the gateway a WiFi client so that it connects to the Internet through an existing WiFi network you have to do the following steps. Note that this solution works even if you are logged (`ssh`) on the gateway using the gateway's access point WiFi network.
+
+1. run in the `lora_gateway/scripts` folder the `prepare_wifi_client.sh` script
+2. run the following command:
+	```
+	wpa_passphrase "my_ssid" "my_password" | sudo tee -a /etc/wpa_supplicant/wpa_supplicant.conf > /dev/null
+	```
+	where `my_ssid` and `my_password` should be replaced by your WiFi SSID and password
+	
+3. reboot the gateway:
+	```
+	sudo shutdown -r now
+	```
+	
+At reboot, your gateway is not acting as a WiFi access point anymore and should be connected to your WiFi network. One issue is to know the IP address assigned to your gateway by the WiFi access point. If your WiFi access point can show the list of leased IP address then you can easily determined your gateway IP address. 
+
+Otherwise, one solution is to take a smartphone or a computer that is connected to the WiFi network in order to know the IP network address of the WiFi network advertised by your access point (e.g. 192.168.1.0). Then you can use a network tool such as `Angry IP scanner` available on most platforms (including Android smartphone) to ping and discover all devices on that WiFi network. Once you obtained the IP address of the gateway on that WiFi network, for instance 192.168.1.25, you can then use `ssh` to log into the gateway and use the gateway's web interface to manage your gateway as usual.
+
+Once logged on your gateway through a computer on the same WiFi network, you can use:
+
+	> iwgetid
+	wlan0	ESSID:"my_ssid"
+	
+or 
+
+	> iwconfig
+	lo		no wireless extensions.
+	
+	wlan0	IEEE 802.11  ESSID:"my_ssid"  
+			Mode:Managed  Frequency:2.437 GHz  Access Point: 2E:F0:A2:90:30:55
+			Bit Rate=24 Mb/s   Tx-Power=31 dBm   
+			Retry short limit:7   RTS thr:off   Fragment thr:off
+			Power Management:on
+			Link Quality=40/70  Signal level=-70 dBm  
+			Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+			Tx excessive retries:0  Invalid misc:0   Missed beacon:0
+	
+	eth0	no wireless extensions.	  
+	
+to verify that the gateway is connected on the WiFi network. You can also try Internet connectivity by pinging a computer on the Internet.
+
+If you are using the text command interface (`cmd.sh`, see end of this document), use option `g` to run `prepare_wifi_client.sh` and option `h` to interactively enter the SSID and password. Then use option `R` to reboot your gateway.
+
+When you want to switch back the gateway into access point mode, then run in the `lora_gateway/scripts` folder the `start_access_point.sh` script (or option `i` of the text command interface).	
+
+**The web admin interface** can also be used to put the gateway into WiFi client mode and to specify a WiFi network and password (equivalent to option `g` and `h`, and do not forget to reboot). In addition, `raspap-webgui` from https://github.com/billz/raspap-webgui has been integrated and can be accessed at http://`gw_ip_address`/raspap-webgui. **Once** the gateway is configured as a WiFi client with the web admin interface, `raspap-webgui` is useful to dynamically discover and configure additional WiFi networks. **However**, note that it is risky to specify several WiFi networks because it becomes very difficult to know on which WiFi network the gateway is connected to.
+
+**The SD card image has `raspap-webgui` already installed**. If you want to install it manually, here are some instructions, mainly taken and adapted from https://github.com/billz/raspap-webgui. We suppose that you have our latest gateway software and all required packages, only additional packages will be described. The installation instructions are adapted to preserve our gateway settings.
+
+Start off by installing `lighttpd`
+
+	> sudo apt-get install lighttpd
+	
+After that, enable PHP for lighttpd and restart it for the settings to take effect
+
+	> sudo lighttpd-enable-mod fastcgi-php
+	> sudo service lighttpd restart	
+
+Regarding the `www-data ALL=(ALL)` line for the `/etc/sudoers` file, we already updated our web admin interface installation script to include all of them. So no need to do this step here.
+
+Then, git clone the files to `/var/www/html`. Note: for older versions of Raspbian (before Jessie, May 2016) use `/var/www` instead.
+
+	> cd /var/www/html 
+	> sudo git clone https://github.com/billz/raspap-webgui
+	
+Set the files ownership to `pi:www-data` user:group
+
+	> sudo chown -R pi:www-data /var/www/html/raspap-webgui
+	
+Move the RaspAP configuration file to the correct location
+
+	> sudo mkdir /etc/raspap
+	> sudo mv /var/www/html/raspap-webgui/raspap.php /etc/raspap/
+	> sudo chown -R www-data:www-data /etc/raspap
+
+Move the HostAPD logging scripts to the correct location
+
+	> sudo mkdir /etc/raspap/hostapd
+	> sudo mv /var/www/html/raspap-webgui/installers/*log.sh /etc/raspap/hostapd 
+
+Reboot and it should be up and running!
+
+	> sudo reboot
+
+The default username is 'admin' and the default password is 'secret'. RaspAp webgui can then be accessed at http://`gw_ip_address`/raspap-webgui. There is also a link from our web admin interface to RaspAp in the `System` menu.
+
 	
 Enjoy!
 C. Pham	
