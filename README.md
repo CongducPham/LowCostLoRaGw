@@ -64,6 +64,7 @@ Also consult the following web page: http://cpham.perso.univ-pau.fr/LORA/RPIgate
 
 Go to [https://github.com/CongducPham/tutorials](https://github.com/CongducPham/tutorials) for all tutorials and particularly look for:
 
+- [Low-cost-LoRa-GW-outdoor](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-outdoor.pdf)
 - [Low-cost-LoRa-GW leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-leaflet.pdf)
 - [Low-cost-LoRa-device leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-device-leaflet.pdf)
 - [Low-cost-LoRa-IoT-step-by-step tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-step-by-step.pdf) 
@@ -128,7 +129,9 @@ You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutor
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/connect-radio-rpi.png)
 
-**Or you can of course use our RFM95 breakout PCB that can be directly connected to the RPI GPIO header**.
+**Or you can of course use our RFM95 breakout PCB that can be directly connected to the RPI GPIO header**. Look also at our [Low-cost-LoRa-GW-outdoor](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-outdoor.pdf) tutorial to build an outdoor gateway.
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/outdoor-gw.png)
 
 Installing the latest gateway version 
 =====================================
