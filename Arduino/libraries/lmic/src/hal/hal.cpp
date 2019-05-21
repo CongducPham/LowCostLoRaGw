@@ -237,6 +237,8 @@ void hal_enableIRQs () {
 void hal_sleep_lowpower (u1_t sleepval) {
     os_cumulated_sleep_time_in_seconds += sleepval;
 }
+#else
+void hal_sleep_lowpower (u1_t sleepval) { }
 #endif
 
 void hal_sleep () {
