@@ -60,13 +60,74 @@ static osjob_t sendjob;
 // cycle limitations).
 const unsigned TX_INTERVAL = 30;
 
+/*
+ *  C. Pham's ProMini PCB
+
+ 
 // Pin mapping
+ 
+const lmic_pinmap lmic_pins = {
+  .nss = 10,
+  .rxtx = LMIC_UNUSED_PIN,
+  .rst = 4,
+  .dio = {2, 3, LMIC_UNUSED_PIN},
+};
+*/
+
+/* Fabien Ferrero UCA breakout
+ *  
+ */
+ 
+// Pin mapping 
+
+const lmic_pinmap lmic_pins = {
+  .nss = 10,
+  .rxtx = LMIC_UNUSED_PIN,
+  .rst = 8,
+  .dio = {2, 7, 9},
+};
+
+/*
+ *  C. Hallard's ch2i Mini-Lora  
+
+ 
+// Pin mapping
+ 
+const lmic_pinmap lmic_pins = {
+  .nss = 10,
+  .rxtx = LMIC_UNUSED_PIN,
+  .rst = A0,
+  .dio = {2, 7, 8},
+};
+*/
+
+/*
+ *  LORA Radio Node
+
+ 
+// Pin mapping
+ 
+const lmic_pinmap lmic_pins = {
+  .nss = 10,
+  .rxtx = LMIC_UNUSED_PIN,
+  .rst = 9,
+  .dio = {2, 3, 4},
+};
+*/
+
+/*
+ *  LORA Nexus by Ideetron
+
+ 
+// Pin mapping
+
 const lmic_pinmap lmic_pins = {
     .nss = 10,
     .rxtx = LMIC_UNUSED_PIN,
-    .rst = 4,
-    .dio = {7, 8, 9},
+    .rst = LMIC_UNUSED_PIN, // hardwired to AtMega RESET
+    .dio = {4, 5, 7},
 };
+*/
 
 void onEvent (ev_t ev) {
     Serial.print(os_getTime());
@@ -191,14 +252,14 @@ void setup() {
 
     //added by C. Pham
     //uncomment to only have the first frequency when sending to our low-cost gateway
-    //Disable all channels, except for the 0 
+    //Disable all channels, except for the 0 (868.1 in EU band)
     //FOR TESTING ONLY!
     
-    //for (int i=1; i<9; i++) { // For EU; for US use i<71
-    //  if(i != 0) {
-    //    LMIC_disableChannel(i);
-    //  }
-    //}
+    for (int i=1; i<9; i++) { // For EU; for US use i<71
+      if(i != 0) {
+        LMIC_disableChannel(i);
+      }
+    }
     
     // Set data rate and transmit power for uplink (note: txpow seems to be ignored by the library)
     LMIC_setDrTxpow(DR_SF12,14);
