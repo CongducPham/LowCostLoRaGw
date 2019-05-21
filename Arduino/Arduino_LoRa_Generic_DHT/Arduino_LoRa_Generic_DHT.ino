@@ -2,7 +2,7 @@
  *  DHT sensor 
  *  extended version with AES
  *  
- *  Copyright (C) 2018 Congduc Pham, University of Pau, France
+ *  Copyright (C) 2016-2019 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Feb 17th, 2018 by C. Pham
+ * last update: May 21th, 2019 by C. Pham
  */
 #include <SPI.h> 
 // Include the SX1272
@@ -50,6 +50,10 @@
 #define STRING_LIB
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
+//uncomment to use a customized frequency. TTN plan includes 868.1/868.3/868.5/867.1/867.3/867.5/867.7/867.9 for LoRa
+//#define MY_FREQUENCY 868.1
+//when sending to a LoRaWAN gateway (e.g. running util_pkt_logger) but with no native LoRaWAN format, just to set the correct sync word
+//#define USE_LORAWAN_SW
 //#define WITH_AES
 //#define OLED
 ///////////////////////////////////////////////////////////////////
@@ -360,9 +364,6 @@ void setup()
     my_sx1272config.flag1=0x12;
     my_sx1272config.flag2=0x35;
     my_sx1272config.seq=sx1272._packetNumber;
-    //my_sx1272config.addr=node_addr;
-    //my_sx1272config.idle_period=idlePeriodInMin;
-    //my_sx1272config.overwrite=0;
   }
 #endif
   
@@ -372,6 +373,18 @@ void setup()
   PRINT_VALUE("%d", e);
   PRINTLN;
 
+#ifdef MY_FREQUENCY
+  e = sx1272.setChannel(MY_FREQUENCY*1000000.0*RH_LORA_FCONVERT);
+  PRINT_CSTSTR("%s","Setting customized frequency: ");
+  PRINT_VALUE("%f", MY_FREQUENCY);
+  PRINTLN;
+#else
+  e = sx1272.setChannel(DEFAULT_CHANNEL);  
+#endif  
+  PRINT_CSTSTR("%s","Setting Channel: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
+  
   // enable carrier sense
   sx1272._enableCarrierSense=true;  
 #ifdef LOW_POWER
@@ -380,24 +393,17 @@ void setup()
   sx1272._RSSIonSend=false;
 #endif  
 
-  // Select frequency channel
-  e = sx1272.setChannel(DEFAULT_CHANNEL);
-  PRINT_CSTSTR("%s","Channel: state ");
+#ifdef USE_LORAWAN_SW
+  e = sx1272.setSyncWord(0x34);
+  PRINT_CSTSTR("%s","Set sync word to 0x34: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
-  
+#endif
+
   // Select amplifier line; PABOOST or RFO
 #ifdef PABOOST
   sx1272._needPABOOST=true;
-  // previous way for setting output power
-  // powerLevel='x';
-#else
-  // previous way for setting output power
-  // powerLevel='M';  
-#endif
-
-  // previous way for setting output power
-  // e = sx1272.setPower(powerLevel);  
+#endif 
 
   e = sx1272.setPowerDBM((uint8_t)MAX_DBM);
   
@@ -679,8 +685,8 @@ void loop(void)
           
       for (uint8_t i=0; i<nCycle; i++) {  
 
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
-          // ATmega328P, ATmega168, ATmega32U4
+#if defined ARDUINO_AVR_MEGA2560 || defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
+          // ATmega2560, ATmega328P, ATmega168, ATmega32U4
           LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
           
           //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
@@ -691,16 +697,14 @@ void loop(void)
 #endif                        
           PRINT_CSTSTR("%s",".");
           FLUSHOUTPUT
-          delay(10);                        
+          delay(1);                        
       }
-      
-      delay(50); 
 #else
       PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;
       PRINT_CSTSTR("%s","Will send next value at\n");
-      // use a random part also to avoid collision
-      nextTransmissionTime=millis()+(unsigned long)idlePeriodInMin*60*1000+(unsigned long)random(8,16)*1000;
+      // can use a random part also to avoid collision
+      nextTransmissionTime=millis()+(unsigned long)idlePeriodInMin*60*1000; //+(unsigned long)random(8,16)*1000;
       PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;
   }

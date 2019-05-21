@@ -5,7 +5,8 @@ echo "-------------------------------------------------------"
 echo "You MUST have installed the RAK831 related software from"
 echo "https://github.com/RAKWireless/RAK2245-RAK831-LoRaGateway-RPi-Raspbian-OS"
 echo "cd /home/pi; git clone https://github.com/RAKWireless/RAK2245-RAK831-LoRaGateway-RPi-Raspbian-OS.git RAK831"
-echo "If you encounter error with apt-get install dialog, then edit RAK831's install.sh and comment this line"
+echo "cd RAK831/lora; sudo ./install"
+echo "If you encounter error with apt-get install dialog, then edit RAK831's install.sh and comment the corresponding line"
 echo "Continue (y/n)"
 read input
 
@@ -48,9 +49,9 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 				if [ "$input" = "y" ] || [ "$input" = "Y" ]
 					then
 						echo "Add /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local, but without starting the gateway"
-						sudo sed -i 's/^exit 0/\/home\/pi\/lora_gateway\/scripts\/start_gw.sh false\nexit 0/g' /etc/rc.local
+						sudo sed -i 's/^exit 0/\/home\/pi\/lora_gateway\/scripts\/start_gw.sh startup_only\nexit 0/g' /etc/rc.local
 						echo "Add /home/pi/lora_gateway/start_upl_pprocessing_gw in /etc/rc.local"
-						sudo sed -i 's/^exit 0/\/home\/pi\/lora_gateway\/start_upl_pprocessing_gw.sh 60 > \/home\/pi\/lora_gateway\/start_upl.log\nexit 0/g' /etc/rc.local
+						sudo sed -i 's/^exit 0/\/home\/pi\/lora_gateway\/start_upl_pprocessing_gw.sh wait 2> \/home\/pi\/lora_gateway\/start_upl.log\nexit 0/g' /etc/rc.local
 				fi
 				
 				echo				
@@ -72,7 +73,8 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 				echo "/opt/ttn_gateway/lora_gateway/util_pkt_logger folder does not exist"
 				echo "Please, install the RAK831 related software first"
 				echo "cd /home/pi; git clone https://github.com/RAKWireless/RAK2245-RAK831-LoRaGateway-RPi-Raspbian-OS.git RAK831"
-				echo "If you encounter error with apt-get install dialog, then edit RAK831's install.sh and comment this line"
+				echo "cd RAK831/lora; sudo ./install"
+				echo "If you encounter error with apt-get install dialog, then edit RAK831's install.sh and comment the corresponding line"
 				exit 1
 		fi		
 	else

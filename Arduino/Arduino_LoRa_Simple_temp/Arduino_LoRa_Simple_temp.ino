@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: May 16th, 2019 by C. Pham
+ * last update: May 21th, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -59,9 +59,9 @@
 #define LOW_POWER_HIBERNATE
 //#define WITH_ACK
 //#define LOW_POWER_TEST
-//uncomment to use a customized frequency
+//uncomment to use a customized frequency. TTN plan includes 868.1/868.3/868.5/867.1/867.3/867.5/867.7/867.9 for LoRa
 //#define MY_FREQUENCY 868.1
-//when sending to a LoRaWAN gateway (util_pkt_logger) but with no native LoRaWAN format, just to set the correct sync word
+//when sending to a LoRaWAN gateway (e.g. running util_pkt_logger) but with no native LoRaWAN format, just to set the correct sync word
 //#define USE_LORAWAN_SW
 ///////////////////////////////////////////////////////////////////
 
@@ -658,7 +658,7 @@ void loop(void)
 #endif                        
           PRINT_CSTSTR("%s",".");
           FLUSHOUTPUT
-          delay(10);                        
+          delay(1);                        
       }
 #endif      
       

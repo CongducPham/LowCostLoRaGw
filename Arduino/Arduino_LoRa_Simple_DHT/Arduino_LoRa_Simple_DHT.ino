@@ -1,7 +1,7 @@
 /*
  *  Fully operational DHT sensor on analog A0 to test the LoRa gateway
  *
- *  Copyright (C) 2016-2018 Congduc Pham, University of Pau, France
+ *  Copyright (C) 2016-2019 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: May 16th, 2019 by C. Pham
+ * last update: May 21th, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -60,6 +60,10 @@
 #define LOW_POWER_HIBERNATE
 //#define WITH_ACK
 //#define LOW_POWER_TEST
+//uncomment to use a customized frequency. TTN plan includes 868.1/868.3/868.5/867.1/867.3/867.5/867.7/867.9 for LoRa
+//#define MY_FREQUENCY 868.1
+//when sending to a LoRaWAN gateway (util_pkt_logger) but with no native LoRaWAN format, just to set the correct sync word
+//#define USE_LORAWAN_SW
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -388,8 +392,14 @@ void setup()
   PRINT_VALUE("%d", e);
   PRINTLN;  
     
-  // Select frequency channel
-  e = sx1272.setChannel(DEFAULT_CHANNEL);
+#ifdef MY_FREQUENCY
+  e = sx1272.setChannel(MY_FREQUENCY*1000000.0*RH_LORA_FCONVERT);
+  PRINT_CSTSTR("%s","Setting customized frequency: ");
+  PRINT_VALUE("%f", MY_FREQUENCY);
+  PRINTLN;
+#else
+  e = sx1272.setChannel(DEFAULT_CHANNEL);  
+#endif  
   PRINT_CSTSTR("%s","Setting Channel: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
@@ -401,6 +411,13 @@ void setup()
   // there seem to be some issue with RSSI reading
   sx1272._RSSIonSend=false;
 #endif 
+
+#ifdef USE_LORAWAN_SW
+  e = sx1272.setSyncWord(0x34);
+  PRINT_CSTSTR("%s","Set sync word to 0x34: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;
+#endif
 
   // Select amplifier line; PABOOST or RFO
 #ifdef PABOOST

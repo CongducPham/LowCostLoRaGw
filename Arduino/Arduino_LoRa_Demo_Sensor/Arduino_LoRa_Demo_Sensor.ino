@@ -186,11 +186,6 @@ void setup()
   // Select amplifier line; PABOOST or RFO
 #ifdef PABOOST
   sx1272._needPABOOST=true;
-  // previous way for setting output power
-  // powerLevel='x';
-#else
-  // previous way for setting output power
-  // powerLevel='M';  
 #endif
 
   e = sx1272.setPowerDBM((uint8_t)MAX_DBM);

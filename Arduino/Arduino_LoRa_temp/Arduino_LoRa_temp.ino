@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: May 16th, 2019 by C. Pham
+ * last update: May 21th, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -60,15 +60,18 @@
 #define STRING_LIB
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
+#define SHOW_LOW_POWER_CYCLE
 //Use LoRaWAN AES-like encryption
-//#define WITH_AES
+#define WITH_AES
 //Use our Lightweight Stream Cipher (LSC) algorithm
 //#define WITH_LSC
 //If you want to upload on TTN without LoRaWAN you have to provide the 4 bytes DevAddr and uncomment #define EXTDEVADDR
 //#define EXTDEVADDR
 //Use native LoRaWAN packet format to send to LoRaWAN gateway
-//#define LORAWAN
-//when sending to a LoRaWAN gateway but with no native LoRaWAN format, just to set the correct sync word, DO NOT use if LORAWAN is uncommented
+#define LORAWAN
+//uncomment to use a customized frequency. TTN plan includes 868.1/868.3/868.5/867.1/867.3/867.5/867.7/867.9 for LoRa
+//#define MY_FREQUENCY 868.1
+//when sending to a LoRaWAN gateway (e.g. running util_pkt_logger) but with no native LoRaWAN format, just to set the correct sync word. DO NOT use if LORAWAN is uncommented
 //#define USE_LORAWAN_SW
 //#define WITH_ACK
 //this will enable a receive window after every transmission
@@ -149,16 +152,28 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 
 ///////////////////////////////////////////////////////////////////
 //ENTER HERE your App Session Key from the TTN device info (same order, i.e. msb)
-unsigned char AppSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+//unsigned char AppSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 ///////////////////////////////////////////////////////////////////
+
+//Danang
+//unsigned char AppSkey[16] = { 0x54, 0xAC, 0x7B, 0x9E, 0xC6, 0x65, 0xD5, 0xCF, 0x0F, 0x1C, 0xD7, 0x92, 0x40, 0x11, 0x07, 0x2A };
+
+//Pau
+unsigned char AppSkey[16] = { 0x05, 0x40, 0xAC, 0x07, 0xB0, 0x9E, 0x0C, 0x60, 0x65, 0x0D, 0x50, 0xCF, 0x00, 0xF0, 0x1C, 0x0D };
 
 //this is the default as LoRaWAN example
 //unsigned char AppSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
 
 ///////////////////////////////////////////////////////////////////
 //ENTER HERE your Network Session Key from the TTN device info (same order, i.e. msb)
-unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+//unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 ///////////////////////////////////////////////////////////////////
+
+//Danang
+//unsigned char NwkSkey[16] = { 0x11, 0xFF, 0x06, 0xBA, 0xAE, 0x0F, 0xA6, 0x6B, 0xA5, 0x8F, 0x1F, 0xE0, 0x52, 0xDD, 0x8A, 0x21 };
+
+//Pau
+unsigned char NwkSkey[16] = { 0x01, 0x10, 0xFF, 0x00, 0x60, 0xBA, 0x0A, 0xE0, 0x0F, 0x0A, 0x60, 0x6B, 0x0A, 0x50, 0x8F, 0x01 };
 
 //this is the default as LoRaWAN example
 //unsigned char NwkSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
@@ -168,9 +183,14 @@ unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x
 #if defined LORAWAN || defined EXTDEVADDR
 ///////////////////////////////////////////////////////////////////
 //ENTER HERE your Device Address from the TTN device info (same order, i.e. msb). Example for 0x12345678
-unsigned char DevAddr[4] = { 0x12, 0x34, 0x56, 0x78 };
+//unsigned char DevAddr[4] = { 0x12, 0x34, 0x56, 0x78 };
 ///////////////////////////////////////////////////////////////////
 
+//Danang
+//unsigned char DevAddr[4] = { 0x26, 0x04, 0x1F, 0x24 };
+
+//Pau
+unsigned char DevAddr[4] = { 0x26, 0x01, 0x17, 0x21 };
 #else
 ///////////////////////////////////////////////////////////////////
 // DO NOT CHANGE HERE
@@ -1018,34 +1038,51 @@ void loop(void)
       while (waiting_t>0) {  
 
 #if defined ARDUINO_AVR_MEGA2560 || defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__    
+          // ATmega2560, ATmega328P, ATmega168, ATmega32U4
           // each wake-up introduces an overhead of about 158ms
           if (waiting_t > 8158) {
             LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); 
             waiting_t = waiting_t - 8158;
-            //PRINT_CSTSTR("%s","8");             
+#ifdef SHOW_LOW_POWER_CYCLE                  
+                  PRINT_CSTSTR("%s","8");
+#endif              
           }
           else if (waiting_t > 4158) {
             LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); 
             waiting_t = waiting_t - 4158;
-            //PRINT_CSTSTR("%s","4");
+#ifdef SHOW_LOW_POWER_CYCLE                  
+                  PRINT_CSTSTR("%s","4");
+#endif 
           }
           else if (waiting_t > 2158) {
             LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF); 
             waiting_t = waiting_t - 2158;
-            //PRINT_CSTSTR("%s","2");
+#ifdef SHOW_LOW_POWER_CYCLE                  
+                  PRINT_CSTSTR("%s","2");
+#endif 
           }
           else if (waiting_t > 1158) {
             LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF); 
             waiting_t = waiting_t - 1158;
-            //PRINT_CSTSTR("%s","1");
+#ifdef SHOW_LOW_POWER_CYCLE                  
+                  PRINT_CSTSTR("%s","1");
+#endif 
           }      
           else {
             delay(waiting_t); 
-            //PRINT_CSTSTR("%s","D[");
-            //PRINT_VALUE("%d", waiting_t);
-            //PRINT_CSTSTR("%s","]");
+#ifdef SHOW_LOW_POWER_CYCLE                   
+                  PRINT_CSTSTR("%s","D[");
+                  PRINT_VALUE("%d", waiting_t);
+                  PRINT_CSTSTR("%s","]");
+#endif
             waiting_t = 0;
           }
+
+#ifdef SHOW_LOW_POWER_CYCLE
+          FLUSHOUTPUT
+          delay(1);
+#endif
+          
 #elif defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
           // Teensy31/32 & TeensyLC
           if (waiting_t < LOW_POWER_PERIOD*1000) {
