@@ -19,7 +19,7 @@ then
 	# the script will turn on the modem and launch pppd
 	# it will keep re-launching wvdial is case wvdial crashes
 	sudo ./wvdial_wrapper.sh Dongle &
-	sleep 10
+	sleep 15
 	cd ..
 ###
 ### Start Internet access with Loranga board
@@ -30,7 +30,7 @@ then
 	cd 3GDongle/loranga
 	# the script will turn on the modem and launch pppd
 	./start-internet.sh &
-	sleep 10
+	sleep 15
 	cd ../../
 elif [ -f 3GDongle/loranga/use_loranga_SMS_on_boot.txt ]
 then
@@ -115,49 +115,51 @@ fi
 
 if [ -f /home/pi/lora_gateway/VERSION.txt ]
 then
-	installed_version=`cat /home/pi/VERSION.txt`
-else
 	installed_version=`cat /home/pi/lora-gateway/VERSION.txt`
-fi
+else
+	installed_version=`cat /home/pi/VERSION.txt`
+fi	
 	
 echo "Current installed version is $installed_version"
 
-#get git version of distribution
-echo "svn trying to get version info from github"
-svn info https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_full_latest | grep "Revision:" | cut -d ' ' --field=2 > /home/pi/git-VERSION-tmp.txt
+if ping -q -c 1 -W 1 8.8.8.8 >/dev/null; then
+	#get git version of distribution
+	echo "svn trying to get version info from github"
+	svn info https://github.com/CongducPham/LowCostLoRaGw/trunk/gw_full_latest | grep "Revision:" | cut -d ' ' --field=2 > /home/pi/git-VERSION-tmp.txt
 
-#in case we don't have internet connectivity, the file size is 0
-git_version_size=`stat -c %b /home/pi/git-VERSION-tmp.txt`
+	#just in case
+	git_version_size=`stat -c %b /home/pi/git-VERSION-tmp.txt`
 		
-if [ "$git_version_size" != "0" ]
-then
-	mv /home/pi/git-VERSION-tmp.txt /home/pi/git-VERSION.txt
-	git_version=`cat /home/pi/git-VERSION.txt`
-	echo "github version is $git_version"
-	
-	auto_update=`jq ".gateway_conf.auto_update" gateway_conf.json`
-
-	if [ "$auto_update" = "true" ]
+	if [ "$git_version_size" != "0" ]
 	then
-		echo "Auto update is on, trying to update to latest version from github"
-		
-		if [ -f /home/pi/lora_gateway/VERSION.txt ]
+		mv /home/pi/git-VERSION-tmp.txt /home/pi/git-VERSION.txt
+		git_version=`cat /home/pi/git-VERSION.txt`
+		echo "github version is $git_version"
+	
+		auto_update=`jq ".gateway_conf.auto_update" gateway_conf.json`
+
+		if [ "$auto_update" = "true" ]
 		then
-			echo "Previous installation from .zip archive detected"
-			echo "Aborting auto-update from github"
-		else
-			if [ "$installed_version" != "$git_version" ]
+			echo "Auto update is on, trying to update to latest version from github"
+		
+			if [ -f /home/pi/lora_gateway/VERSION.txt ]
 			then
-				echo "Launching update script to install latest version from github"
-				echo "Equivalent to full update with the web admin interface"
-				/home/pi/lora_gateway/scripts/update_gw.sh
-				sleep 5
+				echo "Previous installation from .zip archive detected"
+				echo "Aborting auto-update from github"
 			else
-				echo "Installed version is up-to-date"
+				if [ "$installed_version" != "$git_version" ]
+				then
+					echo "Launching update script to install latest version from github"
+					echo "Equivalent to full update with the web admin interface"
+					/home/pi/lora_gateway/scripts/update_gw.sh
+					sleep 5
+				else
+					echo "Installed version is up-to-date"
+				fi
 			fi
+		else
+			echo "Auto update is off."
 		fi
-	else
-		echo "Auto update is off."
 	fi
 else
 	echo "N/A" > /home/pi/git-VERSION.txt
@@ -179,7 +181,7 @@ fi
 
 ############################################
 
-#leave some time for mongo to start, otherwise there will be a problem
+#leave some time for mongo to start, otherwise there might be a problem
 sleep 10
 
 #repair if needed the mongodb database connection

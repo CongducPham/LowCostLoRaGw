@@ -1,6 +1,18 @@
 Change logs
 ===========
 
+May 22nd, 2019
+--------------
+- add support of RPI-based LoRaWAN gateway (SX1301+packet forwarder) such as RAK831
+	- benefit from the open, versatile, multi-cloud features with a multi-channel LoRaWAN gateway
+	- you need to install the Semtech's `lora_gateway` and `packet_forwarder` packages
+	- for RAK831: see https://github.com/RAKWireless/RAK2245-RAK831-LoRaGateway-RPi-Raspbian-OS
+	- then run `scripts/rak831_util_pkt_logger/install.sh`
+		- `cd /home/pi/lora_gateway/scripts`
+		- `sudo ./install.sh`
+	- a slightly modified version of `util_pkt_logger` is used to inject LoRa packets into the post-processing stage
+	- more detail in the dedicated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak831_util_pkt_logger/README.md)	
+
 May 15th, 2019
 --------------
 - fast statistics is controlled by `gateway_conf.json:"status_conf":"fast_stats: 5"`
