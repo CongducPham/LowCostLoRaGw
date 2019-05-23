@@ -3,7 +3,14 @@
 cd /home/pi/lora_gateway
 
 #run script for the shutdown button
-python /home/pi/lora_gateway/scripts/piShutdown.py &
+if grep start_upl /etc/rc.local>/dev/null: ; then
+	#because of pin conflict with the RAK831/2245 shield the piShutdown script to shutdown the RPI is disabled
+	#besides the pins are not really accessible on these shields
+	echo "disabling piShutdown"
+else
+	echo "enabling piShutdown"
+	python /home/pi/lora_gateway/scripts/piShutdown.py &
+fi
 
 #create the gw id so that a newly installed gateway is always configured with a correct id
 /home/pi/lora_gateway/scripts/create_gwid.sh

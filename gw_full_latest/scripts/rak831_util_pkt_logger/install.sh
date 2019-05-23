@@ -1,12 +1,12 @@
 #!/bin/bash
 
-echo "Installing util_pkt_logger_formatter for RAK831 gateway"
-echo "-------------------------------------------------------"
-echo "You MUST have installed the RAK831 related software from"
+echo "Installing util_pkt_logger_formatter for RAK831/RAK2245 gateway"
+echo "---------------------------------------------------------------"
+echo "You MUST have installed the RAK831/2245 related software from"
 echo "https://github.com/RAKWireless/RAK2245-RAK831-LoRaGateway-RPi-Raspbian-OS"
 echo "cd /home/pi; git clone https://github.com/RAKWireless/RAK2245-RAK831-LoRaGateway-RPi-Raspbian-OS.git RAK831"
-echo "cd RAK831/lora; sudo ./install"
-echo "If you encounter error with apt-get install dialog, then edit RAK831's install.sh and comment the corresponding line"
+echo "cd RAK831/lora; sudo ./install.sh"
+echo "If you encounter error with apt-get install dialog, then edit RAK's install.sh and comment the corresponding line"
 echo "Continue (y/n)"
 read input
 
@@ -19,9 +19,7 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 				echo "copy util_pkt_logger_formatter.py in /home/pi/lora_gateway"
 				cp util_pkt_logger_formatter.py /home/pi/lora_gateway
 				echo "copy start_upl_pprocessing_gw.sh in /home/pi/lora_gateway"
-				cp start_upl_pprocessing_gw.sh /home/pi/lora_gateway
-				echo "copy test_upl_pprocessing_gw.sh in /home/pi/lora_gateway"
-				cp test_upl_pprocessing_gw.sh /home/pi/lora_gateway				
+				cp start_upl_pprocessing_gw.sh /home/pi/lora_gateway			
 				echo "renaming original util_pkt_logger.c into util_pkt_logger_original.c"
 				sudo mv /opt/ttn-gateway/lora_gateway/util_pkt_logger/src/util_pkt_logger.c /opt/ttn-gateway/lora_gateway/util_pkt_logger/src/util_pkt_logger_original.c 
 				echo "copy util_pkt_logger.c in /opt/ttn-gateway/lora_gateway/util_pkt_logger/src"
@@ -34,6 +32,39 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 				echo "Disabling original ttn-gateway service"
 				sudo systemctl disable ttn-gateway.service
 
+				echo				
+				echo "*************************************"
+				echo "*** configure gateway for TTN Y/N ***"
+				echo "*************************************"
+				read input
+
+				if [ "$input" = "y" ] || [ "$input" = "Y" ]
+					then
+						tmp=$(mktemp)
+						
+						#change LoRa mode to 11 in gateway_conf.json
+						echo "Setting mode to 11 for LoRaWAN"
+						jq '.radio_conf.mode = 11' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+						
+						#change ttn_status to true
+						echo "Enabling TTN status report"
+ 						jq '.status_conf.ttn_status = true' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json						
+						
+						#change raw to true
+						echo "Setting raw mode to accept LoRaWAN packet"
+ 						jq '.gateway_conf.raw = true' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+
+						#change aes to false
+						echo "Disabling local AES to push encrypted data to TTN"
+ 						jq '.gateway_conf.aes = false' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+				 						
+						#get gateway id
+						/home/pi/lora_gateway/scripts/create_gwid.sh
+						gatewayid=`cat /home/pi/lora_gateway/gateway_id.txt`
+						gatewayttnid="${gatewayid:4:6}FFFF${gatewayid:10}"
+						echo "Register gateway on TTN console ID $gatewayttnid using legacy packet_forwarder option"				
+				fi
+				
 				echo				
 				echo "*******************************"
 				echo "*** run gateway at boot Y/N ***"
@@ -71,10 +102,10 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 				
 			else
 				echo "/opt/ttn_gateway/lora_gateway/util_pkt_logger folder does not exist"
-				echo "Please, install the RAK831 related software first"
+				echo "Please, install the RAK831/2245 related software first"
 				echo "cd /home/pi; git clone https://github.com/RAKWireless/RAK2245-RAK831-LoRaGateway-RPi-Raspbian-OS.git RAK831"
-				echo "cd RAK831/lora; sudo ./install"
-				echo "If you encounter error with apt-get install dialog, then edit RAK831's install.sh and comment the corresponding line"
+				echo "cd RAK831/lora; sudo ./install.sh"
+				echo "If you encounter error with apt-get install dialog, then edit RAK's install.sh and comment the corresponding line"
 				exit 1
 		fi		
 	else

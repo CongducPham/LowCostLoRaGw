@@ -4,8 +4,9 @@ if [ $# -eq 0 ]
 then 
         sleep 1
 else
-        #wait until the RPI starts
-        sleep 100       
+        #wait until the RPI has completed startup
+        #we observed that it is not very reliable to start the radio concentrator right away
+        sleep 60       
 fi
 
 cd /home/pi/lora_gateway
@@ -15,10 +16,12 @@ cp /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/*.json .
 /home/pi/lora_gateway/scripts/create_gwid.sh
 
 SERVICE="util_pkt_logger"
-MAX_RETRY=8
-MIN_RUN_TIME=120
-PID_CHECK_PERIOD=20
+
+MAX_RETRY=10
 BACKOFF_RETRY_TIME=15
+MAX_SLEEP_TIME=60
+PID_CHECK_PERIOD=30	
+MIN_RUN_TIME=120
 
 retry=1
 run_time=0
@@ -68,6 +71,11 @@ do
         kill $(ps aux | grep -e post_processing -e log_gw -e util_pkt_logger | awk '{print $2}') >&2
         
         sleep_time=$[$BACKOFF_RETRY_TIME * $retry]
+        
+        if [ $sleep_time -gt $MAX_SLEEP_TIME ]; then
+        	sleep_time=$$MAX_SLEEP_TIME
+        fi
+        	
         echo "retry=$retry. Will retry in $sleep_time seconds" >&2
         sleep $sleep_time
         
