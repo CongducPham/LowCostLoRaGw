@@ -22,6 +22,8 @@ Here, it simply becomes:
 
 	> sudo /opt/ttn_gateway/lora_gateway/util_pkt_logger/util_pktlogger | python ./util_pkt_logger_formatter.py | python ./post_processing_gw.py 	
 
+Here is a picture of a RAK831 gateway mounted in an outdoor case running our framework to push data to TTN but also to other clouds such as WAZIUP cloud, ThingSpeak and MQTT channels.
+
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/rak831-outdoor.jpg)
 
 Installation and test
@@ -136,7 +138,7 @@ Once the concentrator has started, take your favorite Arduino LoRaWAN device usi
 	2019-05-22T17:09:59.779509> CloudTTN: Received packet: {"rxpk": [{"stat": 1, "chan": 0, "datr": "SF12BW125", "tmst": 1558537799, "codr": "4/5", "lsnr": 10, "freq": 868.1, "data": "QCQfBCaAAAABJD5j3dEjAVB+a0O+pzs=", "size": 10, "modu": "LORA", "rfch": 0, "time": "2019-05-22T15:09:59.625+02:00", "rssi": -27}]}
 	2019-05-22T17:09:59.781018> --> LoRaWAN encrypted cloud end
 	
-Once everything seems to work, run again the installation script and answer `Y` to `run gateway at boot Y/N`. You can then choose to reboot or do it later yourself. To start an operation gateway, it is better to reboot and let the system starting from a clean boot. **Note** that when `start_upl_pprocessing_gw.sh` is started at boot time, it will wait for 60s before trying to start the radio concentrator. So wait at least 1min before checking whether your gateway is visible on the TTN console. Here is a picture of a RAK831 gateway mounted in an outdoor case running our framework to push data to TTN but also to other clouds such as WAZIUP cloud, ThingSpeak and MQTT channels.
+Once everything seems to work, run again the installation script and answer `Y` to `run gateway at boot Y/N`. You can then choose to reboot or do it later yourself. To start an operation gateway, it is better to reboot and let the system starting from a clean boot. **Note** that when `start_upl_pprocessing_gw.sh` is started at boot time, it will wait for 60s before trying to start the radio concentrator. So wait at least 1min before checking whether your gateway is visible on the TTN console. 
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/ttn-example.png)
 
