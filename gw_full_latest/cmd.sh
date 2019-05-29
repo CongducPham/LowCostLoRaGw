@@ -443,7 +443,7 @@ fi
 if [ "$choice" = "K" ] 
         then
 		echo "Killing all gateway related processes"
-		sudo kill $(ps aux | grep -e start_gw -e start_upl -e lora_gateway -e post_processing -e log_gw -e util_pkt_logger | awk '{print $2}')
+		sudo kill $(ps aux | grep -e start_gw -e start_upl -e start_lpf -e lora_gateway -e post_processing -e log_gw -e util_pkt_logger -e lora_pkt_fwd | awk '{print $2}')
 fi
 
 if [ "$choice" = "k" ] 

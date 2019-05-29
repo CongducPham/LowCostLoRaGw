@@ -32,7 +32,7 @@
 #
 #^p0,0,0,0,20,-10,-109
 #^r125,5,12,868300
-#^t2019-04-08T14:09:33.445Z
+#^t2019-04-08T14:09:33.445
 #FFFE then payload (011009B02A2A2A2A2A2A2A2A202A2A2A2A2A2A2A)
 
 import sys
@@ -113,7 +113,7 @@ while 1:
 				
 				#print ls[payload]
 				
-				#convert the hex string into bytes array
+				#convert the hex string into bytes array				
 				lsbytes=bytearray.fromhex(ls[payload])
 
 				#print prefix
