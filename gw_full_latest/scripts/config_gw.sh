@@ -321,16 +321,21 @@ echo "*** run gateway at boot Y/N ***"
 echo "*******************************"
 read ouinon
 
-# we always remove so that there will be no duplicate lines
-echo "Removing /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local if any"
-sudo sed -i '\/home\/pi\/lora_gateway\/scripts\/start_gw.sh/d' /etc/rc.local
-echo "Done"
+if grep start_upl /etc/rc.local>/dev/null || grep start_lpf /etc/rc.local>/dev/null: ; then
+	echo "util_pkt_logger or lora_pkt_fwd is currently used as low-level gateway"
+	echo "preserving this setting"
+else
+	# we always remove so that there will be no duplicate lines
+	echo "Removing /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local if any"
+	sudo sed -i '\/home\/pi\/lora_gateway\/scripts\/start_gw.sh/d' /etc/rc.local
+	echo "Done"
 
-if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
-	then
-		echo "Add /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local"
-		sudo sed -i 's/^exit 0/\/home\/pi\/lora_gateway\/scripts\/start_gw.sh\nexit 0/g' /etc/rc.local
-		echo "Done"
+	if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
+		then
+			echo "Add /home/pi/lora_gateway/scripts/start_gw.sh in /etc/rc.local"
+			sudo sed -i 's/^exit 0/\/home\/pi\/lora_gateway\/scripts\/start_gw.sh\nexit 0/g' /etc/rc.local
+			echo "Done"
+	fi
 fi
 
 		
