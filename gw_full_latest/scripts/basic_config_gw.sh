@@ -78,7 +78,7 @@ else
 	echo "Gateway WiFi wpa_passphrase is loragateway"		
 fi
 
-if grep start_upl /etc/rc.local>/dev/null || grep start_lpf /etc/rc.local>/dev/null: ; then
+if grep start_upl /etc/rc.local || grep start_lpf /etc/rc.local ; then
 	echo "util_pkt_logger or lora_pkt_fwd is currently used as low-level gateway"
 	echo "preserving this setting"
 else
