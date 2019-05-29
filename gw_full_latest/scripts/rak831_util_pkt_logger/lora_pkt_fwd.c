@@ -1468,15 +1468,20 @@ void thread_up(void) {
     /* data buffers */
     uint8_t buff_up[TX_BUFF_SIZE]; /* buffer to compose the upstream packet */
     int buff_index;
+    
+#ifndef DISABLE_UPLINK_UDP    
     uint8_t buff_ack[32]; /* buffer to receive acknowledges */
+#endif
 
     /* protocol variables */
     uint8_t token_h; /* random token for acknowledgement matching */
     uint8_t token_l; /* random token for acknowledgement matching */
 
+#ifndef DISABLE_UPLINK_UDP
     /* ping measurement variables */
     struct timespec send_time;
     struct timespec recv_time;
+#endif
 
     /* GPS synchronization variables */
     struct timespec pkt_utc_time;
