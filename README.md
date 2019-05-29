@@ -8,7 +8,7 @@ Quick start
 -----------
 
 - **The current SD card image has everything you need!** [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
-- **NEW** Support of multi-channel RPI SX1301 LoRaWAN gateway: benefit from the open, versatile, multi-cloud Low-cost LoRa IoT framework with the flexibility and scalability of a multi-channel LoRaWAN gateway
+- **NEW** Support of multi-channel RPI SX1301 LoRaWAN gateway: benefit from the open, versatile, multi-cloud Low-cost LoRa IoT framework with the flexibility and scalability of a multi-channel LoRaWAN gateway, see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak831_util_pkt_logger/README.md)
 - We have a new online [Arduino-Sensor-LoRa tutorial](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/tuto/index.html) and here is the direct link to the [LoRa part](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/tuto/sensors/lora_sensor/Arduino_lora_demo.html)
 - Read the [Low-cost-LoRa-device leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-device-leaflet.pdf)
 - Read the [Low-cost-LoRa-GW leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-leaflet.pdf)
