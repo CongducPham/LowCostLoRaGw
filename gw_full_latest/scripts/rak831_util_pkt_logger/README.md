@@ -244,6 +244,9 @@ you will typically see these processes:
 
 where `start_upl_pprocessing_gw.sh` is the main script that launches all the other processes as described.
 
+Important notice
+----------------
 
-
+`piShutdown.py` script uses pin 37 and 40 to respectively shutdown and reboot the RPI if these pins are connected to ground (see ChangeLog.md, Nov. 21st, 2018). On the RAK831, pin 40 is used. If you run the image on an RPI with the RAK831 already plugged, your RPI will constantly reboot. Either remove the RAK831 board from the RPI in order to configure your RPI with the aforementioned instructions, or create a file named `rak831.txt` on the `/boot` partition of the SD card (you can create such file from a Windows/MacOS/Linux computer). Once configured, the `piShutdown.py` script is disabled when running with RAK831 or RAK2245 concentrator boards.
+ 
 Enjoy! C. Pham
