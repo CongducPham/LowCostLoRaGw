@@ -3,7 +3,7 @@
 cd /home/pi/lora_gateway
 
 #run script for the shutdown button
-if grep start_upl /etc/rc.local>/dev/null || grep start_lpf /etc/rc.local>/dev/null: ; then
+if [ -f /boot/rak831.txt ] || grep start_upl /etc/rc.local>/dev/null || grep start_lpf /etc/rc.local>/dev/null: ; then
 	#because of pin conflict with the RAK831/2245 shield the piShutdown script to shutdown the RPI is disabled
 	#besides the pins are not really accessible on these shields
 	echo "disabling piShutdown"
