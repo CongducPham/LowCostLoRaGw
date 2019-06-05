@@ -20,6 +20,7 @@
 #-------------------------------------------------------------------------------
 #
 # May 27th, 2019. First draft
+# Last update: June 5th, 2019 
 # Congduc.Pham@univ-pau.fr
 
 #this script will translate the output from lora_pkt_fwd into the format of post_processing_gw.py
@@ -37,6 +38,7 @@
 import sys
 import binascii
 import json
+import os
 
 #------------------------------------------------------------
 #low-level data prefix
@@ -75,6 +77,7 @@ while 1:
 
 			sys.stdout.flush()
 			
+			#here we parse the rxpk json line
 			if ls[0]=='JSON up' and "rxpk" in ls[1]:
 
 				l_json=json.loads(l[9:])
@@ -114,4 +117,34 @@ while 1:
 					sys.stdout.write(lsbytes)
 					sys.stdout.write('\n')
 					sys.stdout.flush()
-	
+
+			#here we parse the stat json line to get the GPS position given by lora_pkt_fwd
+			#we use the GPS coordinates and replace them in our gateway_conf.json file			
+			if ls[0]=='JSON up' and "stat" in ls[1]:
+				
+				l_json=json.loads(l[9:])
+				
+				lati=float(l_json['stat']['lati'])
+				long=float(l_json['stat']['long'])
+				
+				gps_pos='lora_pkt_fwd_formatter: GPS(%.5f,%.5f)' % (lati,long)
+				#print gps_pos
+		
+				cmd="""sed -i -- 's/"ref_latitude.*,/"ref_latitude" : """+'"'+str(lati)+'"'+""",/g' /home/pi/lora_gateway/gateway_conf.json"""
+
+				try:
+					#print 'lora_pkt_fwd_formatter: replacing GPS latitude in gateway_conf.json'
+					os.system(cmd)
+				except:
+					#print 'lora_pkt_fwd_formatter: Error when replacing GPS latitude in gateway_conf.json'
+					a=1
+					
+				cmd="""sed -i -- 's/"ref_longitude.*,/"ref_longitude" : """+'"'+str(long)+'"'+""",/g' /home/pi/lora_gateway/gateway_conf.json"""
+
+				try:
+					#print 'lora_pkt_fwd_formatter: replacing GPS longitude in gateway_conf.json'
+					os.system(cmd)
+				except:
+					#print 'lora_pkt_fwd_formatter: Error when replacing GPS longitude in gateway_conf.json'			
+					a=1
+

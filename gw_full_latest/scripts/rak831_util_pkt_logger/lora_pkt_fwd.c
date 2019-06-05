@@ -16,9 +16,8 @@ Maintainer: Michael Coracin
 */
 
 /* added by C. Pham */
+/* by commenting the following line, you should get the original behavior of lora_pkt_fwd */
 #define DISABLE_UPLINK_UDP
-/* you can choose to keep the uplink statistic by commenting the following line */
-#define DISABLE_UPLINK_STAT
 
 /* -------------------------------------------------------------------------- */
 /* --- DEPENDANCIES --------------------------------------------------------- */
@@ -1406,11 +1405,8 @@ int main(void)
             snprintf(status_report, STATUS_SIZE, "\"stat\":{\"time\":\"%s\",\"lati\":%.5f,\"long\":%.5f,\"alti\":%i,\"rxnb\":%u,\"rxok\":%u,\"rxfw\":%u,\"ackr\":%.1f,\"dwnb\":%u,\"txnb\":%u}", stat_timestamp, cp_gps_coord.lat, cp_gps_coord.lon, cp_gps_coord.alt, cp_nb_rx_rcv, cp_nb_rx_ok, cp_up_pkt_fwd, 100.0 * up_ack_ratio, cp_dw_dgram_rcv, cp_nb_tx_ok);
         } else {
             snprintf(status_report, STATUS_SIZE, "\"stat\":{\"time\":\"%s\",\"rxnb\":%u,\"rxok\":%u,\"rxfw\":%u,\"ackr\":%.1f,\"dwnb\":%u,\"txnb\":%u}", stat_timestamp, cp_nb_rx_rcv, cp_nb_rx_ok, cp_up_pkt_fwd, 100.0 * up_ack_ratio, cp_dw_dgram_rcv, cp_nb_tx_ok);
-        }
-        /* modified by C. Pham */
-#ifndef DISABLE_UPLINK_STAT        
-        report_ready = true;
-#endif        
+        }      
+        report_ready = true;       
         pthread_mutex_unlock(&mx_stat_rep);
     }
 
