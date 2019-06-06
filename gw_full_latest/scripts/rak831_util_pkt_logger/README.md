@@ -141,11 +141,30 @@ you will typically see these processes:
 
 where `start_lpf_pprocessing_gw.sh` is the main script that launches all the other processes as described.
 
+How it works: `lora_pkt_fwd_formatter.py` python script will intercept lines such as:
+
+```
+JSON up: {"rxpk":[{"tmst":29641444,"time":"2019-05-27T12:42:40.117758Z","tmms":1242996179117,"chan":0,"rfch":1,"freq":868.100000,"stat":1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","lsnr":10.0,"rssi":-61,"size":23,"data":"QCQfBCaAAAABJD5j3dEiB1B9aI//04Y="}]}
+```
+
+and will translate them into the format accepted by our post-processing stage.
 
 Downlink messages
 -----------------
 
-As only UDP uplink is disabled in the modified version of `lora_pkt_fwd` , all the other features, and especially the downlink features, are preserved.
+As only UDP uplink is disabled in the modified version of `lora_pkt_fwd` , all the other features, and especially the downlink features and GPS position, are preserved.
+
+GPS position
+------------
+
+`lora_pkt_fwd_formatter.py` python script will also intercept lines such as:
+
+```
+JSON up: {"stat":{"time":"2019-05-27 12:42:44 GMT","lati":43.31416,"long":-0.36415,"alti":191,"rxnb":1,"rxok":1,"rxfw":1,"ackr":0.0,"dwnb":0,"txnb":0}}
+```
+
+to update the GPS coordinates in `/home/pi/lora_gateway/gateway_conf.json`.
+
 
 Running the simpler `util_pkt_logger` in no Internet scenarios
 ==============================================================
@@ -243,6 +262,14 @@ you will typically see these processes:
 	root      1913  0.0  0.6   9256  5928 pts/0    S    10:56   0:00 python log_gw.py
 
 where `start_upl_pprocessing_gw.sh` is the main script that launches all the other processes as described.
+
+How it works: `util_pkt_logger_formatter.py` python script will intercept lines such as:
+
+```
+"B827EBFFFEDA09D7","","2019-04-08 14:09:33.445Z",  17482172, 868300000,1, 1,"CRC_OK",20,"LORA",125000,"SF12"  ,"4/5",-109,-10.8,"0110090A-2A2A2A2A-2A2A2A2A-2A2A2A2A-2A2A2A2A"
+```
+
+and will translate them into the format accepted by our post-processing stage.
 
 Important notice
 ----------------

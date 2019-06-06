@@ -46,8 +46,8 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 						echo "Setting mode to 11 for LoRaWAN"
 						jq '.radio_conf.mode = 11' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
 						
-						#change ttn_status to true
-						echo "Enabling TTN status report"
+						#force ttn_status to true
+						echo "Enabling post_status_processing_gw TTN status report"
  						jq '.status_conf.ttn_status = true' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json						
 						
 						#change raw to true

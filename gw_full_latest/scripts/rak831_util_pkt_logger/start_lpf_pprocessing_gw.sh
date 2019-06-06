@@ -15,6 +15,12 @@ cp /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/*.json .
 #create the gw id so that a newly installed gateway is always configured with a correct id
 /home/pi/lora_gateway/scripts/create_gwid.sh
 
+gatewayid=`cat /home/pi/lora_gateway/gateway_id.txt`
+gatewayttnid="${gatewayid:4:6}FFFF${gatewayid:10}"
+
+echo "Replacing gw id in /home/pi/lora_gateway/local_conf.json"
+sed -i -- 's/gateway_ID".*".*"/gateway_ID": "'"$gatewayttnid"'"/g' /home/pi/lora_gateway/local_conf.json
+
 SERVICE="lora_pkt_fwd"
 
 MAX_RETRY=10

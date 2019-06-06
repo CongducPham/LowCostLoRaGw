@@ -115,6 +115,8 @@ ackr=0 #Percentage of upstream datagrams that were acknowledged
 dwnb=0 #Number of downlink datagrams received (unsigned integer)
 txnb=0 #Number of packets emitted (unsigned integer)
 
+t_rxnb=0 #this one will not be reset
+
 dst=0
 ptype=0
 ptypestr="N/A"
@@ -356,6 +358,15 @@ def status_target():
 		try:
 			cmd_arg='python post_status_processing_gw.py'+" \""+stats_str+"\""+" 2> /dev/null" 
 			os.system(cmd_arg)
+			
+			#reset statistics for next period
+			rxnb=0 #Number of radio packets received (unsigned integer)
+			rxok=0 #Number of radio packets received with a valid PHY CRC
+			rxfw=0 #Number of radio packets forwarded (unsigned integer)
+			ackr=0 #Percentage of upstream datagrams that were acknowledged
+			dwnb=0 #Number of downlink datagrams received (unsigned integer)
+			txnb=0 #Number of packets emitted (unsigned integer)		
+				
 		except:
 			print "Error when executing post_status_processing_gw.py"			
 		global _gw_status
@@ -808,9 +819,10 @@ while True:
 			print info_str
 
 			rxnb=rxnb+1
+			t_rxnb=t_rxnb+1
 			rxok=rxnb
 			
-			short_info_1="src=%d seq=%d #pk=%d" % (src,seq,rxnb)
+			short_info_1="src=%d seq=%d #pk=%d" % (src,seq,t_rxnb)
 			short_info_2="SNR=%d RSSI=%d" % (SNR,RSSI)
 			
 			#here we check for pending downlink message that need to be sent back to the end-device

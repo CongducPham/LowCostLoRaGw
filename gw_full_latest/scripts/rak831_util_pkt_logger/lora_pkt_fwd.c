@@ -16,8 +16,10 @@ Maintainer: Michael Coracin
 */
 
 /* added by C. Pham */
-/* by commenting the following line, you should get the original behavior of lora_pkt_fwd */
-#define DISABLE_UPLINK_UDP
+/* by commenting DISABLE_DATA_UPLINK_UDP, you should get the original behavior of lora_pkt_fwd */
+#define DISABLE_DATA_UPLINK_UDP
+/* you can still allow stat packet to be sent to network server */
+/* #define ALLOW_STAT_UPLINK_UDP */
 
 /* -------------------------------------------------------------------------- */
 /* --- DEPENDANCIES --------------------------------------------------------- */
@@ -1465,7 +1467,7 @@ void thread_up(void) {
     uint8_t buff_up[TX_BUFF_SIZE]; /* buffer to compose the upstream packet */
     int buff_index;
     
-#ifndef DISABLE_UPLINK_UDP    
+#if !defined(DISABLE_DATA_UPLINK_UDP) || defined(ALLOW_STAT_UPLINK_UDP)    
     uint8_t buff_ack[32]; /* buffer to receive acknowledges */
 #endif
 
@@ -1473,7 +1475,7 @@ void thread_up(void) {
     uint8_t token_h; /* random token for acknowledgement matching */
     uint8_t token_l; /* random token for acknowledgement matching */
 
-#ifndef DISABLE_UPLINK_UDP
+#if !defined(DISABLE_DATA_UPLINK_UDP) || defined(ALLOW_STAT_UPLINK_UDP) 
     /* ping measurement variables */
     struct timespec send_time;
     struct timespec recv_time;
@@ -1866,10 +1868,47 @@ void thread_up(void) {
         printf("\nJSON up: %s\n", (char *)(buff_up + 12)); /* DEBUG: display JSON payload */
 
 		/* modified by C. Pham */
-#ifdef DISABLE_UPLINK_UDP
+#ifdef DISABLE_DATA_UPLINK_UDP
 		/* added by C. Pham */
 		/* we need to output as soon as possible to pass data to the formatter */		
 		fflush(stdout);
+
+#ifdef ALLOW_STAT_UPLINK_UDP
+
+		if (!strncmp((char *)(buff_up + 14),"stat",4)) {
+			/* send datagram to server */
+			send(sock_up, (void *)buff_up, buff_index, 0);
+			clock_gettime(CLOCK_MONOTONIC, &send_time);
+			pthread_mutex_lock(&mx_meas_up);
+			meas_up_dgram_sent += 1;
+			meas_up_network_byte += buff_index;
+
+			/* wait for acknowledge (in 2 times, to catch extra packets) */
+			for (i=0; i<2; ++i) {
+				j = recv(sock_up, (void *)buff_ack, sizeof buff_ack, 0);
+				clock_gettime(CLOCK_MONOTONIC, &recv_time);
+				if (j == -1) {
+					if (errno == EAGAIN) { /* timeout */
+						continue;
+					} else { /* server connection error */
+						break;
+					}
+				} else if ((j < 4) || (buff_ack[0] != PROTOCOL_VERSION) || (buff_ack[3] != PKT_PUSH_ACK)) {
+					//MSG("WARNING: [up] ignored invalid non-ACL packet\n");
+					continue;
+				} else if ((buff_ack[1] != token_h) || (buff_ack[2] != token_l)) {
+					//MSG("WARNING: [up] ignored out-of sync ACK packet\n");
+					continue;
+				} else {
+					MSG("INFO: [up] PUSH_ACK received in %i ms\n", (int)(1000 * difftimespec(recv_time, send_time)));
+					meas_up_ack_rcv += 1;
+					break;
+				}
+			}
+			pthread_mutex_unlock(&mx_meas_up);
+        }
+#endif
+        
 #else
         /* send datagram to server */
         send(sock_up, (void *)buff_up, buff_index, 0);
@@ -1901,7 +1940,7 @@ void thread_up(void) {
             }
         }
         pthread_mutex_unlock(&mx_meas_up);
-#endif 
+#endif        
     }
     MSG("\nINFO: End of upstream thread\n");
 }

@@ -75,76 +75,95 @@ while 1:
 			if ls[0]=='ERROR':
 				print l				
 
+			if ls[0]=='JSON down':
+				print l
+
 			sys.stdout.flush()
 			
 			#here we parse the rxpk json line
 			if ls[0]=='JSON up' and "rxpk" in ls[1]:
-
-				l_json=json.loads(l[9:])
+				
+				try:
+					l_json=json.loads(l[9:])
 										
-				#print "LORA PACKET ->> ",
-				#print l_json
+					#print "LORA PACKET ->> ",
+					#print l_json
 				
-				rxpk_array=l_json['rxpk']
+					rxpk_array=l_json['rxpk']
 				
-				for rxpk in rxpk_array: 
+					for rxpk in rxpk_array: 
 			
-					print "^p%d,%d,%d,%d,%d,%d,%d" % (0,0,0,seq,int(rxpk['size']),int(float(rxpk['lsnr'])),int(rxpk['rssi']))
+						print "^p%d,%d,%d,%d,%d,%d,%d" % (0,0,0,seq,int(rxpk['size']),int(float(rxpk['lsnr'])),int(rxpk['rssi']))
 				
-					seq=seq+1
+						seq=seq+1
 			
-					bw=rxpk['datr'].split('W')[1]
-					cr=rxpk['codr'].split('/')[1]
-					sf=rxpk['datr'].split('B')[0].split('F')[1]
+						bw=rxpk['datr'].split('W')[1]
+						cr=rxpk['codr'].split('/')[1]
+						sf=rxpk['datr'].split('B')[0].split('F')[1]
 					
-					print "^r%d,%d,%d,%d" % (int(bw), int(cr), int(sf), int(rxpk['freq']*1000))
+						print "^r%d,%d,%d,%d" % (int(bw), int(cr), int(sf), int(rxpk['freq']*1000))
 	
-					print "^t%s" % rxpk['time'].replace('Z','')
+						print "^t%s" % rxpk['time'].replace('Z','')
 				
-					#print ls[payload]
+						#print ls[payload]
 					
-					#convert the hex string into bytes array
-					lsbytes=bytearray.fromhex(binascii.b2a_hex(binascii.a2b_base64(rxpk['data'])))
+						#convert the hex string into bytes array
+						lsbytes=bytearray.fromhex(binascii.b2a_hex(binascii.a2b_base64(rxpk['data'])))
 
-					#print prefix
-					sys.stdout.write(LL_PREFIX_1)
-					sys.stdout.write(LL_PREFIX_LORA)
+						#print prefix
+						sys.stdout.write(LL_PREFIX_1)
+						sys.stdout.write(LL_PREFIX_LORA)
 				
-					#print each character
-					#for i in range(0, len(lsbytes)):
-					#	sys.stdout.write(lsbytes[i])
+						#print each character
+						#for i in range(0, len(lsbytes)):
+						#	sys.stdout.write(lsbytes[i])
 				
-					sys.stdout.write(lsbytes)
-					sys.stdout.write('\n')
-					sys.stdout.flush()
+						sys.stdout.write(lsbytes)
+						sys.stdout.write('\n')
+						sys.stdout.flush()
 
+				except ValueError:
+					pass
+					
 			#here we parse the stat json line to get the GPS position given by lora_pkt_fwd
 			#we use the GPS coordinates and replace them in our gateway_conf.json file			
 			if ls[0]=='JSON up' and "stat" in ls[1]:
 				
-				l_json=json.loads(l[9:])
-				
-				lati=float(l_json['stat']['lati'])
-				long=float(l_json['stat']['long'])
-				
-				gps_pos='lora_pkt_fwd_formatter: GPS(%.5f,%.5f)' % (lati,long)
-				#print gps_pos
-		
-				cmd="""sed -i -- 's/"ref_latitude.*,/"ref_latitude" : """+'"'+str(lati)+'"'+""",/g' /home/pi/lora_gateway/gateway_conf.json"""
-
 				try:
-					#print 'lora_pkt_fwd_formatter: replacing GPS latitude in gateway_conf.json'
-					os.system(cmd)
-				except:
-					#print 'lora_pkt_fwd_formatter: Error when replacing GPS latitude in gateway_conf.json'
-					a=1
+					l_json=json.loads(l[9:])
+				
+					try:
+						lati=float(l_json['stat']['lati'])
+					except KeyError:
+						lati='undef'
 					
-				cmd="""sed -i -- 's/"ref_longitude.*,/"ref_longitude" : """+'"'+str(long)+'"'+""",/g' /home/pi/lora_gateway/gateway_conf.json"""
+					try:		
+						long=float(l_json['stat']['long'])
+					except KeyError:
+						long='undef'
+				
+					if lati!='undef' and long!='undef':
+									
+						gps_pos='lora_pkt_fwd_formatter: GPS(%.5f,%.5f)' % (lati,long)
+						#print gps_pos
+		
+						cmd="""sed -i -- 's/"ref_latitude.*,/"ref_latitude" : """+'"'+str(lati)+'"'+""",/g' /home/pi/lora_gateway/gateway_conf.json"""
 
-				try:
-					#print 'lora_pkt_fwd_formatter: replacing GPS longitude in gateway_conf.json'
-					os.system(cmd)
-				except:
-					#print 'lora_pkt_fwd_formatter: Error when replacing GPS longitude in gateway_conf.json'			
-					a=1
+						try:
+							#print 'lora_pkt_fwd_formatter: replacing GPS latitude in gateway_conf.json'
+							os.system(cmd)
+						except:
+							#print 'lora_pkt_fwd_formatter: Error when replacing GPS latitude in gateway_conf.json'
+							pass
+					
+						cmd="""sed -i -- 's/"ref_longitude.*,/"ref_longitude" : """+'"'+str(long)+'"'+""",/g' /home/pi/lora_gateway/gateway_conf.json"""
 
+						try:
+							#print 'lora_pkt_fwd_formatter: replacing GPS longitude in gateway_conf.json'
+							os.system(cmd)
+						except:
+							#print 'lora_pkt_fwd_formatter: Error when replacing GPS longitude in gateway_conf.json'			
+							pass
+							
+				except ValueError:
+					pass
