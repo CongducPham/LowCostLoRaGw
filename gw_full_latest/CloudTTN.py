@@ -88,14 +88,17 @@ class TTN:
 
     def start(self):
 
-        self._log('CloudTTN: gw id: {}', self.id)
+		self._log('CloudTTN: gw id: {}', self.id)
 
         # get the server IP and create an UDP socket
-        self.server_ip = socket.getaddrinfo(self.server, self.port)[0][-1]
-        self._log('CloudTTN: Opening UDP socket to {} ({}) port {}...', self.server, self.server_ip[0], self.server_ip[1])
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.sock.setblocking(False)
+		try:
+			self.server_ip = socket.getaddrinfo(self.server, self.port)[0][-1]	
+			self._log('CloudTTN: Opening UDP socket to {} ({}) port {}...', self.server, self.server_ip[0], self.server_ip[1])
+			self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+			self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+			self.sock.setblocking(False)
+		except Exception as ex:
+			self._log('CloudTTN: Failed to connect to server: {}', ex)
 
     def _sf_bw_to_dr(self, sf, bw):
         dr = 'SF' + str(sf)

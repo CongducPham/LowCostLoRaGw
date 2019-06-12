@@ -149,7 +149,7 @@ if [ "$choice" = "3" ]
 	then
 		echo "Check for lora_gateway process"
 		echo "##############################"
-		ps aux | grep -e start_gw -e lora_gateway -e post_processing -e log_gw -e util_pkt_logger
+		ps aux | grep -e start_gw -e lora_gateway -e post_processing -e log_gw -e util_pkt_logger -e lora_pkt_fwd
 		echo "##############################"
 		echo "The gateway is running if you see the lora_gateway process"
 

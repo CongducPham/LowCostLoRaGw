@@ -345,6 +345,13 @@ def status_target():
 			print 'post status: will check for downlink requests every %d seconds' % _gw_downlink
 		print 'post status: executing periodic tasks'
 		sys.stdout.flush()
+
+		global rxnb
+		global rxok
+		global rxfw
+		global ackr
+		global dwnb
+		global txnb
 		
 		#build the stat string: 
 		stats_str=""

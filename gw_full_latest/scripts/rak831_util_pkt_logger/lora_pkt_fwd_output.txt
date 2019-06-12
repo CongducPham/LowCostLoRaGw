@@ -65,7 +65,7 @@ WARNING: [gps] GPS out of sync, keeping previous time reference
 
 INFO: Received pkt from mote: 26041F24 (fcnt=0)
 
-JSON up: {"rxpk":[{"tmst":29641444,"time":"2019-05-27T12:42:40.117758Z","tmms":1242996179117,"chan":0,"rfch":1,"freq":868.100000,"stat":1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","lsnr":10.0,"rssi":-61,"size":23,"data":"QCQfBCaAAAABJD5j3dEiB1B9aI//04Y="}]}
+JSON up: {"rxpk":[{"tmst":29641444,"time":"2019-05-27T12:42:40.117758Z","tmms":1242996179117,"chan":0,"rfch":1,"freq":868.100000,"stat":1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","lsnr":10.0,"rssi":-61,"size":23,"data":"QCQfBCaAAAABJD5j3dEiB1B9aI//04Y="},{"tmst":29641444,"time":"2019-05-27T12:42:40.117758Z","tmms":1242996179117,"chan":0,"rfch":2,"freq":868.300000,"stat":1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","lsnr":10.0,"rssi":-61,"size":23,"data":"QCQfBCaAAAABJD5j3dEiB1B9aI//04Y="}]}
 
 ##### 2019-05-27 12:42:44 GMT #####
 ### [UPSTREAM] ###
