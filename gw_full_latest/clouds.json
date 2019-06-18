@@ -29,14 +29,14 @@
 			"always_enabled":false
 		},	
 		{
-			"name":"WAZIUP Orion cloud new API",
-			"script":"python CloudWAZIUP.py",
+			"name":"WAZIUPv2",
+			"script":"python CloudWAZIUPv2.py",
 			"type":"iotcloud",
 			"enabled":false
 		},	        	        							
 		{	
-			"name":"WAZIUP Orion cloud old API",
-			"script":"python CloudOrion.py",
+			"name":"WAZIUPv1",
+			"script":"python CloudWAZIUP.py",
 			"type":"iotcloud",			
 			"enabled":false
 		},		
@@ -119,7 +119,7 @@
 			"name":"TheThingsNetwork cloud",
 			"script":"python CloudTTN.py",
 			"type":"TTN",			
-			"enabled":false			
+			"enabled":true		
 		},	
 		{	
 			"name":"NodeRed flow",
