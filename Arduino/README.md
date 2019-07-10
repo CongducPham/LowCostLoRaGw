@@ -210,7 +210,7 @@ Here is a reminder of the pre-defined radio frequency channels in the library:
 | 18 | 868.1* |  - |   -    |  - |   -    |
 |  - |   -    |  - |   -    |  - |   -    |
 
-If you select `ETSI_EUROPE_REGULATION` then available channels are channels `CH_10_868` to `CH_18_868` and the default channel will be `CH_10_868`. If you select `SENEGAL_REGULATION` then available channels are channels `CH_04_868` to `CH_09_868` and the default channel will be `CH_04_868`. There are also regulation concerning the maximum transmit power which 14dBm (25mW) for ETSI and 10dBm (10mW) in Senegal as shown below: 
+If you select `ETSI_EUROPE_REGULATION` then available channels are channels `CH_10_868` to `CH_18_868` and the default channel will be `CH_10_868`. If you select `SENEGAL_REGULATION` then available channels are channels `CH_04_868` to `CH_09_868` and the default channel will be `CH_04_868`. There might also be some regulation concerning the maximum transmit power. It is 14dBm (25mW) for ETSI and 10dBm (10mW) in Senegal for instance, as shown below. You can modify these sections according to your needs. 
 
 	#ifdef ETSI_EUROPE_REGULATION
 	#define MAX_DBM 14
@@ -231,6 +231,11 @@ If you select `ETSI_EUROPE_REGULATION` then available channels are channels `CH_
 	#endif
 	
 Although 900MHz band is supported (mostly for the US ISM band) by using `CH_05_900` as default channel, the library does not implement the frequency hopping mechanism nor the limited dwell time (e.g. 400ms per transmission). It is up to the programmer to ensure, by using appropriate LoRa settings and message size, that the 400ms limit is satisfied. Therefore, for the moment, `FCC_US_REGULATION` is not implemented.
+
+Finally, if you need to set up a particular frequency that may be not listed in the default frequency list, just modify the `MY_FREQUENCY` definition as shown below:
+
+	//uncomment to use a customized frequency. TTN plan includes 868.1/868.3/868.5/867.1/867.3/867.5/867.7/867.9 for LoRa
+	#define MY_FREQUENCY 868.1
 
 Adapting frequency for your country
 -----------------------------------
@@ -327,7 +332,7 @@ However, it is **highly** advised to rather change the frequency setting at the 
 PA_BOOST
 --------
 
-Depending on your radio module, you have to indicate whether PA_BOOST should be used or not. Uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276 or if you known from the circuit diagram that output use the PA_BOOST line instead of the RFO line. Many boards uses the RFM95W (Adafruit LoRa Feather boards, Dragino LoRa shield/hat, Loranga board for instance). In this case, they behaves like an RFM95W so they need PA_BOOST.
+Depending on your radio module, you have to indicate whether PA_BOOST should be used or not. Uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276 or if you known from the circuit diagram that output use the PA_BOOST line instead of the RFO line. Many boards uses the RFM95W (Adafruit LoRa Feather boards, Dragino LoRa shield/hat, Loranga board for instance). In this case, they behaves like an RFM95W so they need PA_BOOST. There is a nice discussion with tests comparing popular LoRa modules (including RFM95W and NiceRF) from [RocketScream](https://www.rocketscream.com/blog/2017/08/21/the-sx1276-modules-shootout-hoperfs-rfm95w-vs-nicerfs-lora1276-c1-vs-hpdteks-hpd13/).
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
