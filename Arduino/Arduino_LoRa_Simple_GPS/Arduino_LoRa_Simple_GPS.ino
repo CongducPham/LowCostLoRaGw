@@ -24,6 +24,17 @@
 // Include the SX1272
 #include "SX1272.h"
 
+#define SWSERIAL
+
+#ifdef SWSERIAL
+#include <SoftwareSerial.h> 
+//you can also install and use NeoSWSerial
+//#include <NeoSWSerial.h>
+// connect GPS_TX <> 6 and GPS_RX <> 5
+SoftwareSerial gps_serial(6,5); //rx,tx for Arduino side
+//NeoSWSerial gps_serial(6,5);
+#endif
+
 /********************************************************************
  _____              __ _                       _   _             
 /  __ \            / _(_)                     | | (_)            
@@ -90,6 +101,7 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define WITH_APPKEY
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
+#define SHOW_LOW_POWER_CYCLE
 //uncomment to use a customized frequency. TTN plan includes 868.1/868.3/868.5/867.1/867.3/867.5/867.7/867.9 for LoRa
 //#define MY_FREQUENCY 868.1
 //when sending to a LoRaWAN gateway (e.g. running util_pkt_logger) but with no native LoRaWAN format, just to set the correct sync word
@@ -117,6 +129,10 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
 unsigned int idlePeriodInMin = 20;
+#define IDLE_PERIOD_SECONDS (idlePeriodInMin*60)
+//you can also specify a given period in seconds
+//#define IDLE_PERIOD_SECONDS 30
+
 ///////////////////////////////////////////////////////////////////
 
 #define GPS_FIX_ATTEMPT_TIME_IN_MS 35000
@@ -124,12 +140,14 @@ unsigned int idlePeriodInMin = 20;
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE GPS SERIAL PORT
 
+#ifndef SWSERIAL
 //Arduino Pro Mini, Uno, Nano, Arduino Mini/Nexus, Arduino M0/Zero
 #if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_MINI || defined __SAMD21G18A__
-  #define gps_serial Serial
-  // Arduino Mega, Due, Teensy3.1/3.2,
+#define gps_serial Serial
+// Arduino Mega, Due, Teensy3.1/3.2,
 #elif defined ARDUINO_AVR_MEGA2560 || defined ARDUINO_SAM_DUE || defined __MK20DX256__
-  #define gps_serial Serial3
+#define gps_serial Serial3
+#endif
 #endif
 
 ///////////////////////////////////////////////
@@ -165,8 +183,6 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
  \____/\___/ \__,_|\___|
 *****************************/ 
 
-#include "gps_light.h"
-gps_light gps(gps_serial);
 //////////////////////////////////////////////////////////////////
 
 // we wrapped Serial.println to support the Arduino Zero or M0
@@ -215,18 +231,22 @@ SnoozeBlock sleep_config(timer);
 RTCZero rtc;
 #endif
 #endif
-unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
+unsigned int nCycle = IDLE_PERIOD_SECONDS/LOW_POWER_PERIOD;
 #endif
 
 unsigned long nextTransmissionTime=0L;
 uint8_t message[100];
 
 int loraMode=LORAMODE;
-double latitude = 0.0;
-double longitude = 0.0;
+
+double gps_latitude = 0.0;
+double gps_longitude = 0.0;
 long currentTime; 
 long fixTime = -1.0;
 uint8_t starting = 1;
+char GPSBuffer[250];
+byte GPSIndex=0;
+char lat_direction, lgt_direction;
 
 uint16_t beaconCounter=0;
 
@@ -259,6 +279,130 @@ char *ftoa(char *a, double f, int precision)
  return ret;
 }
 
+/*
+volatile bool detect_new_line = false;
+
+static void handleRxChar( uint8_t c )
+{
+  if (c == '\n') {
+    GPSBuffer[GPSIndex++] = '\0';
+    detect_new_line==true;
+  }
+}
+*/
+    
+void parseNMEA(){
+  char inByte;
+  bool detect_new_line=false;
+  
+  while (!detect_new_line)
+  {
+    if (gps_serial.available()) {
+      inByte = gps_serial.read();
+    
+      //Serial.print(inByte); // Output exactly what we read from the GPS to debug
+    
+      if ((inByte =='$') || (GPSIndex >= 250)){
+        GPSIndex = 0;
+      }
+      
+      if (inByte != '\r' && inByte != '\n'){
+        GPSBuffer[GPSIndex++] = inByte;
+      }
+   
+      if (inByte == '\n'){
+        GPSBuffer[GPSIndex++] = '\0';
+        detect_new_line=true;
+      }
+    }
+    //else
+    //  Serial.println("-");
+  } 
+  Serial.print("---->");
+  Serial.println(GPSBuffer);
+  //Serial.flush();
+}
+
+bool isGGA(){
+  return (GPSBuffer[1] == 'G' && (GPSBuffer[2] == 'P' || GPSBuffer[2] == 'N') && GPSBuffer[3] == 'G' && GPSBuffer[4] == 'G' && GPSBuffer[5] == 'A');
+}
+
+// GPGGA and GNGGA for the Ublox 8 series. Ex:
+// no fix -> $GPGGA,,,,,,0,00,99.99,,,,,,*63
+// fix    -> $GPGGA,171958.00,4903.61140,N,00203.95016,E,1,07,1.26,55.1,M,46.0,M,,*68
+
+void decodeGGA(){
+  int i, j;
+  char latitude[30], longitude[30];
+  byte latIndex=0, lgtIndex=0;
+  
+  for (i=7, j=0; (i<GPSIndex) && (j<9); i++) { // We start at 7 so we ignore the '$GNGGA,'
+    
+    if (GPSBuffer[i] == ','){
+      j++;    // Segment index
+    }
+    else{
+      if (j == 1){   //Latitude
+        latitude[latIndex++]= GPSBuffer[i];
+      }
+
+      else if (j == 2){   //Latitude Direction: N=North, S=South
+        lat_direction = GPSBuffer[i];
+      }
+      
+      else if (j == 3){    //Longitude
+        longitude[lgtIndex++]= GPSBuffer[i];
+      }
+
+      else if (j == 4){   //Longitude Direction: E=East, W=West
+        lgt_direction = GPSBuffer[i];
+      }
+    }
+  }
+  //Serial.print("Lat Direction: "); Serial.println(lat_direction);
+  //Serial.print("Lgt Direction: "); Serial.println(lgt_direction);
+  gps_latitude = degree_location(atof(latitude), lat_direction);
+  gps_longitude = degree_location(atof(longitude), lgt_direction);
+}
+
+bool isValidLocation(){
+  return (gps_latitude != 0.0 && gps_longitude != 0.0 && (lat_direction == 'N' || lat_direction=='S') && (lgt_direction=='E'|| lgt_direction=='W'));
+}
+
+void display_location(){
+  Serial.println("==============");
+  Serial.print("Location: ");
+  Serial.print(gps_latitude, 5);
+  Serial.print(", ");
+  Serial.println(gps_longitude, 5);
+  Serial.println("=============="); 
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//Convert NMEA latitude & longitude to decimal (Degrees)
+//  Notice that for latitude of 0302.78469,
+//              03 ==> degrees. counted as is
+//              02.78469 ==> minutes. divide by 60 before adding to degrees above
+//              Hence, the decimal equivalent is: 03 + (02.78469/60) = 3.046412
+//  For longitude of 10601.6986,
+//              ==> 106+1.6986/60 = 106.02831 degrees
+//  Location is latitude or longitude
+//  In Southern hemisphere latitude should be negative
+//  In Western Hemisphere, longitude degrees should be negative
+//////////////////////////////////////////////////////////////////////////////////
+
+double degree_location(double loc, char loc_direction){
+  double degLoc = 0.0;
+  double degWhole= loc/100; //gives the whole degree part of latitude
+  double degDec = (degWhole - ((int)degWhole)) * 100 / 60; //gives fractional part of location
+  degLoc = (int)degWhole + degDec; //gives complete correct decimal form of location degrees
+  
+  if (loc_direction =='S' || loc_direction =='W') {  
+    degLoc = (-1)*degLoc;
+  }
+  return degLoc;  
+}
+    
 /*****************************
  _____      _               
 /  ___|    | |              
@@ -283,11 +427,9 @@ void setup()
 #endif  
 
 #ifdef GPS_PIN_POWER
-  //to power the temperature sensor
+  //to power the GPS
   pinMode(GPS_PIN_POWER_PIN,OUTPUT);
 #endif
-  
-  gps.begin(9600);
   
   // Print a start message
   PRINT_CSTSTR("%s","Simple LoRa GPS sensor\n");
@@ -427,15 +569,15 @@ void setup()
 
 #ifdef GPS_PIN_POWER
   digitalWrite(GPS_PIN_POWER_PIN,HIGH);
-  PRINT_CSTSTR("%s","Seting HIGH digital GPS power pin: ");       
+  PRINT_CSTSTR("%s","Setting HIGH digital GPS power pin (1): ");       
   PRINT_VALUE("%d", GPS_PIN_POWER_PIN);
   PRINTLN;      
   delay(200);
 #endif  
 
-#ifndef GPS_PIN_POWER
-  gps.gps_init_PSM();
-#endif  
+  //gps_serial.attachInterrupt( handleRxChar );
+  gps_serial.begin(9600);
+   
   delay(500);
 }
 
@@ -460,24 +602,38 @@ void loop(void)
 #ifndef LOW_POWER
   // 600000+random(15,60)*1000
   if (millis() > nextTransmissionTime) {
-#endif       
+#else
+      //time for next wake up
+      nextTransmissionTime=millis()+(unsigned long)IDLE_PERIOD_SECONDS*1000;
+#endif        
 
       if  (!starting) {
 #ifdef GPS_PIN_POWER
           digitalWrite(GPS_PIN_POWER_PIN,HIGH);
-          PRINT_CSTSTR("%s","Seting HIGH digital GPS power pin: ");       
+          PRINT_CSTSTR("%s","Setting HIGH digital GPS power pin (2): ");       
           PRINT_VALUE("%d", GPS_PIN_POWER_PIN);
           PRINTLN;      
           delay(200);
-#else         
-          gps.gps_ON();
 #endif          
       }
-
+          
       currentTime = millis();
-      uint8_t get_fix_sucess = 0, timeout = 0, nb_validGPGGA=3;
+      uint8_t get_fix_success = 0, timeout = 0, nb_validGPGGA=3;
+
+      /*
+      while (!get_fix_success) {
+        parseNMEA();
+        if (isGGA()){
+          decodeGGA();
+          if (isValidLocation()){
+            display_location();
+            get_fix_success = true;
+          }
+        }
+      }
+      */
       
-      while (!timeout && !get_fix_sucess)  {
+      while (!timeout && !get_fix_success)  {
         
         if (millis() - currentTime > GPS_FIX_ATTEMPT_TIME_IN_MS) {
           //one more time if it is a new start
@@ -489,16 +645,14 @@ void loop(void)
             timeout = 1;
         }
         else{
-          gps.parseNMEA();
-          if (gps.isGGA()){
-            gps.decode();
-            if (gps.isValid()){
-              fixTime = millis() - currentTime;
-              latitude = gps.get_latitude();
-              longitude = gps.get_longitude();    
+          parseNMEA();
+          if (isGGA()) {
+            decodeGGA();
+            if (isValidLocation()) {
+              fixTime = millis() - currentTime;  
               nb_validGPGGA--;          
               if (nb_validGPGGA==0)
-                get_fix_sucess = 1;
+                get_fix_success = 1;
             }
           }
         }
@@ -526,7 +680,7 @@ void loop(void)
         PRINT_VALUE("%ld", fixTime);
         PRINTLN;
         
-        String latString = String(latitude, 5);
+        String latString = String(gps_latitude, 5);
         //char latString[10];
         //ftoa(latString,latitude,5);
         
@@ -534,7 +688,7 @@ void loop(void)
         PRINT_STR("%s", latString);
         PRINTLN;
 
-        String lgtString = String(longitude, 5);
+        String lgtString = String(gps_longitude, 5);
         //char lgtString[10];        
         //ftoa(lgtString,longitude,5);
           
@@ -636,13 +790,17 @@ void loop(void)
         PRINT_CSTSTR("%s","Could not switch LoRa module in sleep mode\n");
         
       FLUSHOUTPUT
-      delay(50);
+      delay(10);
+
+      //how much do we still have to wait, in millisec?
+      unsigned long now_millis=millis();
+      unsigned long waiting_t = nextTransmissionTime-now_millis;      
 
 #ifdef __SAMD21G18A__
       // For Arduino M0 or Zero we use the built-in RTC
       rtc.setTime(17, 0, 0);
       rtc.setDate(1, 1, 2000);
-      rtc.setAlarmTime(17, idlePeriodInMin, 0);
+      rtc.setAlarmTime(17, (uint8_t)IDLE_PERIOD_SECONDS/60, (uint8_t)(IDLE_PERIOD_SECONDS-((uint8_t)IDLE_PERIOD_SECONDS/60)*60);
       // for testing with 20s
       //rtc.setAlarmTime(17, 0, 20);
       rtc.enableAlarm(rtc.MATCH_HHMMSS);
@@ -660,23 +818,67 @@ void loop(void)
       // milliseconds      
       // by default, LOW_POWER_PERIOD is 60s for those microcontrollers      
       timer.setTimer(LOW_POWER_PERIOD*1000);
-#endif 
+#endif   
 
-#ifndef GPS_PIN_POWER
-      //we switch GPS OFF here because writing to Serial (with Serial.print) will wake up GPS.
-      gps.gps_OFF(); 
-#endif      
-
-      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
+      //nCycle = IDLE_PERIOD_SECONDS/LOW_POWER_PERIOD;
       
-      for (int i=0; i<nCycle; i++) {  
+      while (waiting_t>0) {  
         
-#if defined ARDUINO_AVR_MEGA2560 || defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__ 
+#if defined ARDUINO_AVR_MEGA2560 || defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__    
           // ATmega2560, ATmega328P, ATmega168, ATmega32U4
-          LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
+          // each wake-up introduces an overhead of about 158ms
+          if (waiting_t > 8158) {
+            LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); 
+            waiting_t = waiting_t - 8158;
+#ifdef SHOW_LOW_POWER_CYCLE                  
+                  PRINT_CSTSTR("%s","8");
+#endif              
+          }
+          else if (waiting_t > 4158) {
+            LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); 
+            waiting_t = waiting_t - 4158;
+#ifdef SHOW_LOW_POWER_CYCLE                  
+                  PRINT_CSTSTR("%s","4");
+#endif 
+          }
+          else if (waiting_t > 2158) {
+            LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF); 
+            waiting_t = waiting_t - 2158;
+#ifdef SHOW_LOW_POWER_CYCLE                  
+                  PRINT_CSTSTR("%s","2");
+#endif 
+          }
+          else if (waiting_t > 1158) {
+            LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF); 
+            waiting_t = waiting_t - 1158;
+#ifdef SHOW_LOW_POWER_CYCLE                  
+                  PRINT_CSTSTR("%s","1");
+#endif 
+          }      
+          else {
+            delay(waiting_t); 
+#ifdef SHOW_LOW_POWER_CYCLE                   
+                  PRINT_CSTSTR("%s","D[");
+                  PRINT_VALUE("%d", waiting_t);
+                  PRINT_CSTSTR("%s","]");
+#endif
+            waiting_t = 0;
+          }
+
+#ifdef SHOW_LOW_POWER_CYCLE
+          FLUSHOUTPUT
+          delay(1);
+#endif
           
 #elif defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
           // Teensy31/32 & TeensyLC
+          if (waiting_t < LOW_POWER_PERIOD*1000) {
+            timer.setTimer(waiting_t);
+            waiting_t = 0;
+          }
+          else
+            waiting_t = waiting_t - LOW_POWER_PERIOD*1000;
+                        
 #ifdef LOW_POWER_HIBERNATE
           Snooze.hibernate(sleep_config);
 #else            
@@ -685,12 +887,10 @@ void loop(void)
 
 #else
           // use the delay function
-          delay(LOW_POWER_PERIOD*1000);
-#endif                        
-          //PRINT_CSTSTR("%s",".");
-          //FLUSHOUTPUT;
-          //delay(1);                        
-      }
+          delay(waiting_t);
+          waiting_t = 0;
+#endif                                            
+       }
 #endif      
       
 #else
@@ -698,7 +898,7 @@ void loop(void)
       PRINTLN;
       PRINT_CSTSTR("%s","Will send next value at\n");
       // can use a random part also to avoid collision
-      nextTransmissionTime=millis()+(unsigned long)idlePeriodInMin*60*1000; //+(unsigned long)random(15,60)*1000;
+      nextTransmissionTime=millis()+(unsigned long)IDLE_PERIOD_SECONDS*1000; //+(unsigned long)random(15,60)*1000;
       PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;
   }
