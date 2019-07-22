@@ -1,6 +1,6 @@
 ####################################################
 #server: CAUTION must exist
-waziup_server="http://api.waziup.io/api/v1"
+waziup_server="https://api.waziup.io/api/v2"
 
 #project name
 project_name="waziup"

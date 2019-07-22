@@ -36,13 +36,7 @@ import md5
 
 # get key definition from external file to ease
 # update of cloud script in the future
-import key_WAZIUPv2 as key_WAZIUP
-
-# ^/api/v1/sensors/(.*)/measurements/(.*)/values$ /api/v2/devices/$1/sensors/$2/value break;
-# ^/api/v1/sensors/(.*)/measurements/(.*)$ /api/v2/devices/$1/sensors/$2 break;
-# ^/api/v1/sensors/(.*)/measurements$      /api/v2/devices/$1/sensors break;
-# ^/api/v1/sensors/(.*)$                   /api/v2/devices/$1 break;
-# ^/api/v1/sensors$ /api/v2/devices break;
+import key_WAZIUP_old as key_WAZIUP
 
 try:
 	key_WAZIUP.source_list
@@ -104,7 +98,7 @@ def test_network_available():
 	while(not connection and iteration < 4) :
 		try:
 			# 3sec timeout in case of server available but overcrowded
-			response=urllib2.urlopen(key_WAZIUP.waziup_server+'/devices', timeout=3)
+			response=urllib2.urlopen(key_WAZIUP.waziup_server+'/sensors', timeout=3)
 			connection = True
 		except urllib2.URLError, e: pass
 		except socket.timeout: pass
@@ -161,8 +155,8 @@ def get_token():
 		print "CloudWAZIUP: get token for "+key_WAZIUP.username
 		print "CloudWAZIUP: will issue requests with"
 		print 'url: '+WAZIUP_url
-		print 'headers: '+json.dumps(WAZIUP_headers)
-		print 'data: '+WAZIUP_data		
+		#print 'headers: '+json.dumps(WAZIUP_headers)
+		#print 'data: '+WAZIUP_data		
 	
 		current_token="notoken"
 	
@@ -176,7 +170,7 @@ def get_token():
 			if 200 <= response.status_code < 300:
 				print 'CloudWAZIUP: got token'
 				current_token=response.text
-				WAZIUP_headers = {'accept':'application/json','content-type':'application/json','Authorization':'Bearer '+current_token.replace('"','')}
+				WAZIUP_headers = {'accept':'application/json','content-type':'application/json','Authorization':'Bearer '+current_token}
 				last_token_time=datetime.datetime.now()
 			else:	
 			#if response.status_code == 404:
@@ -200,13 +194,13 @@ def create_new_measurement(entity, nomenclature):
 	if my_token=="notoken":
 		return False
 		
-	WAZIUP_url=key_WAZIUP.waziup_server+'/devices'+'/'+entity+'/sensors' 
+	WAZIUP_url=key_WAZIUP.waziup_server+'/sensors'+'/'+entity+'/measurements' 
 	WAZIUP_data = '{"id":"'+nomenclature+'"}'
 
 	print 'CloudWAZIUP: create new measurement'
 	print "CloudWAZIUP: will issue requests with"
 	print 'url: '+WAZIUP_url
-	print 'headers: '+json.dumps(WAZIUP_headers)
+	#print 'headers: '+json.dumps(WAZIUP_headers)
 	print 'data: '+WAZIUP_data
 
 	try:
@@ -241,14 +235,14 @@ def does_measurement_exist(entity, nomenclature):
 	if my_token=="notoken":
 		return False
 
-	WAZIUP_url=key_WAZIUP.waziup_server+'/devices'
+	WAZIUP_url=key_WAZIUP.waziup_server+'/sensors'
 	WAZIUP_url=WAZIUP_url+'/'+entity		
-	WAZIUP_url=WAZIUP_url+'/sensors/'+nomenclature
+	WAZIUP_url=WAZIUP_url+'/measurements/'+nomenclature
 
 	print 'CloudWAZIUP: check if measurement exists'
 	print "CloudWAZIUP: will issue requests with"
 	print 'url: '+WAZIUP_url
-	print 'headers: '+json.dumps(WAZIUP_headers)
+	#print 'headers: '+json.dumps(WAZIUP_headers)
 
 	try:
 		response = requests.get(WAZIUP_url, headers=WAZIUP_headers, data='', timeout=30)
@@ -286,13 +280,13 @@ def does_entity_exist(entity):
 		return False
 		
 	#check if entity exist
-	WAZIUP_url=key_WAZIUP.waziup_server+'/devices'
+	WAZIUP_url=key_WAZIUP.waziup_server+'/sensors'
 	WAZIUP_url=WAZIUP_url+'/'+entity
 	
 	print 'CloudWAZIUP: check if entity exists'
 	print "CloudWAZIUP: will issue requests with"
 	print 'url: '+WAZIUP_url
-	print 'headers: '+json.dumps(WAZIUP_headers)
+	#print 'headers: '+json.dumps(WAZIUP_headers)
 	
 	try:
 		response = requests.get(WAZIUP_url, headers=WAZIUP_headers, data='', timeout=30)
@@ -330,7 +324,7 @@ def create_new_entity(data, entity, nomenclatures, tdata):
 	if my_token=="notoken":
 		return False		
 		
-	WAZIUP_url=key_WAZIUP.waziup_server+'/devices' 
+	WAZIUP_url=key_WAZIUP.waziup_server+'/sensors' 
 	WAZIUP_data = '{"id":"'+entity+'","gateway_id":"'+gw_id_md5+'","domain":"'+key_WAZIUP.project_name+'-'+key_WAZIUP.organization_name+key_WAZIUP.service_tree+'"'
 	
 	if key_WAZIUP.visibility=='private':
@@ -343,7 +337,7 @@ def create_new_entity(data, entity, nomenclatures, tdata):
 	print "CloudWAZIUP: create new entity"
 	print "CloudWAZIUP: will issue requests with"
 	print 'url: '+WAZIUP_url
-	print 'headers: '+json.dumps(WAZIUP_headers)
+	#print 'headers: '+json.dumps(WAZIUP_headers)
 	print 'data: '+WAZIUP_data
 	
 	try:
@@ -380,8 +374,6 @@ def create_new_entity(data, entity, nomenclatures, tdata):
 	 	
 		
 # send a data to the server
-# in v2: entity = device_id; nomenclatures = sensor_id
-#
 def send_data(data, entity, nomenclatures, tdata):
 
 	global connection_failure
@@ -413,7 +405,7 @@ def send_data(data, entity, nomenclatures, tdata):
 			if create_new_measurement(entity, nomenclatures[i])==False:
 				return False
 				
-		WAZIUP_url=key_WAZIUP.waziup_server+'/devices/'+entity+'/sensors/'+nomenclatures[i]+'/value'
+		WAZIUP_url=key_WAZIUP.waziup_server+'/sensors/'+entity+'/measurements/'+nomenclatures[i]+'/values'
 		WAZIUP_data = '{"value":'
 
 		isnumber = re.match(num_format,data[i+2])
@@ -426,7 +418,7 @@ def send_data(data, entity, nomenclatures, tdata):
 					
 		print "CloudWAZIUP: will issue requests with"
 		print 'url: '+WAZIUP_url
-		print 'headers: '+json.dumps(WAZIUP_headers)
+		#print 'headers: '+json.dumps(WAZIUP_headers)
 		print 'data: '+WAZIUP_data
 		
 		try:
@@ -485,8 +477,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	#remove microsecond for WAZIUP cloud
 	#from 2019-05-14T14:53:10.241191+02:00 to 2019-05-14T14:53:10Z
 	dt = parser.parse(tdata)
-	#tdata = dt.replace(microsecond=0,tzinfo=None).isoformat()+"Z"	
-	tdata = dt.replace(tzinfo=None).isoformat()+"Z"
+	tdata = dt.replace(microsecond=0,tzinfo=None).isoformat()+"Z"	
 	
 	#compute the MD5 digest (hash) from the clear gw id provided by post_processing_gw.py
 	global gw_id_md5

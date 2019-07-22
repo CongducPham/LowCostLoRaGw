@@ -30,13 +30,13 @@
 		},	
 		{
 			"name":"WAZIUPv2",
-			"script":"python CloudWAZIUPv2.py",
+			"script":"python CloudWAZIUP.py",
 			"type":"iotcloud",
 			"enabled":false
 		},	        	        							
 		{	
 			"name":"WAZIUPv1",
-			"script":"python CloudWAZIUP.py",
+			"script":"python CloudWAZIUP_old.py",
 			"type":"iotcloud",			
 			"enabled":false
 		},		
