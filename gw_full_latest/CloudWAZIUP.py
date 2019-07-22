@@ -23,8 +23,8 @@ import urllib2
 import requests
 #import subprocess
 import time
-#import ssl
-#import socket
+import ssl
+import socket
 import datetime
 from dateutil import parser
 import sys
