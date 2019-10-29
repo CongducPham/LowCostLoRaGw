@@ -26,6 +26,7 @@ import os
 import socket
 import time
 import datetime
+from dateutil import parser
 import calendar
 import sys
 
@@ -142,6 +143,8 @@ class TTN:
 # Testing with pau_lorawan_testing/Pau_testing_device 0x26011721
 #
 # python CloudTTN.py "QCEXASYAAAABhCGE1L87NCDMk0jLa6hYXm0e+g==" "256,64,637605665,0,28,8,-45" "125,5,12,868100" "2019-03-25T18:46:00.528+01:00" "0000B827EBD1B236"
+# or
+# python CloudTTN.py "QCEXASYAAAABhCGE1L87NCDMk0jLa6hYXm0e+g==" "256,64,637605665,0,28,8,-45" "125,5,12,868100" "`date +%FT%T%z`" "0000B827EBD1B236"
 #
 # get the base64 encrypted data from `Arduino_LoRa_temp` sending "Hello from UPPA"
 # 
@@ -169,6 +172,12 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	datalen=arr[4]
 	SNR=arr[5]
 	RSSI=arr[6]
+	
+	#from 2019-05-14T14:53:10.241191+02:00 to 2019-05-14T14:53:10.241191Z
+	dt = parser.parse(tdata)
+	#in case you want to remove microsecond 
+	#tdata = dt.replace(microsecond=0,tzinfo=None).isoformat()+"Z"	
+	tdata = dt.replace(tzinfo=None).isoformat()+"Z"	
 	
 	arr = map(int,rdata.split(','))
 	rbw=arr[0]
