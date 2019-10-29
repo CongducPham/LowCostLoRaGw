@@ -173,7 +173,8 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	SNR=arr[5]
 	RSSI=arr[6]
 	
-	#from 2019-05-14T14:53:10.241191+02:00 to 2019-05-14T14:53:10.241191Z
+	#from 2019-05-14T14:53:10.241191+02:00 (similar to command date +%FT%T.%6N%z)
+	#to 2019-05-14T14:53:10.241191Z (similar to command date +%FT%T.%6NZ)
 	dt = parser.parse(tdata)
 	#in case you want to remove microsecond 
 	#tdata = dt.replace(microsecond=0,tzinfo=None).isoformat()+"Z"	
