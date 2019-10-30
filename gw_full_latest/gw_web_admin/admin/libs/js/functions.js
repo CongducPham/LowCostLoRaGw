@@ -14,6 +14,34 @@ var defaultMsgDisplayTimer = 1500;
 //+++++++++++++++++++++++++++++++++++++
 
 //==================================
+// SX1301 Download global_conf.json file
+//==================================
+
+	$('#download_sx1301_conf_form').submit(function(event){
+        // Stop form from submitting normally
+        event.preventDefault();
+
+        msg = '<p><center><font color="green">File download and installation in progress, wait for finish notification.</font></center></p>';
+        $('#gw_config_msg').html(msg);        
+        
+        /* Serialize the submitted form control values to be sent to the web server with the request */
+        var formValues = $(this).serialize();
+        
+        // Send the form data using post
+        $.post("process.php", formValues, function(data){
+            // Display the returned data in browser
+            //$("#gw_update_form_msg").html(data);
+	    $('#gw_config_msg').html(data);
+	    //erase message after 5 seconds
+	    setTimeout(function() {
+  		$('#gw_config_msg').html("");
+	    },defaultMsgDisplayTimer);
+        });
+        $('#download_sx1301_conf_form')[0].reset();    
+        
+    });
+    
+//==================================
 // Setting Mode
 //==================================
     $('#td_edit_mode').hide();

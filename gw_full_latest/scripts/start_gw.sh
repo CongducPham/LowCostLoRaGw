@@ -88,6 +88,19 @@ then
 	echo "CloudGpsFile is enabled, start GPS nodejs web interface"
 	cd gps
 	node server.js &
+	
+	if [ -f gps.txt ]
+	then
+		ftime=`stat -c %Y gps.txt`
+		ctime=`date +%s`
+		ddiff=$(( (ctime - ftime) / 86400 ))
+		if [ "$ddiff" != "0" ]
+		then	
+			echo "gps.txt file is $ddiff day old"
+			echo "deleting gps.txt and gps.csv files"
+			rm -rf gps.txt gps.csv
+		fi	
+	fi		
 	cd ..
 fi
 ############################################

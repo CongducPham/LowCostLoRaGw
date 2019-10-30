@@ -1,25 +1,27 @@
 Configuring the gateway for image features
 ==========================================
 
-Received encoded images will be saved by post_processing_gw.py in /home/pi/Dropbox/LoRa-test/images. post_processing_gw.py will call the image decoding program (see below) to decode in BMP the encoded image and will move the BMP file into /var/www/html/images/uploads.
+Received encoded images will be saved by post_processing_gw.py in /home/pi/Dropbox/LoRa-test/images. post_processing_gw.py will call the image decoding program (see below) to decode in BMP the encoded image and will move the BMP file into /var/www/html/images/uploads/node_x where x is the address of the device. There will be an /var/www/html/images/bak folder to store images for backups. The current distribution comes with some image samples both the the uploads and bak folder. To move images from the uploads to the bak folder, you can use option M of cmd.sh which has been updated to have image-related features.
 
 You can use the config_image.sh script to create all these folders and set the correct file permissions.
 
 	> cd ucam-images
 	> sudo ./config_images.sh
 	
-A very simple PHP script (index.php) will be copied into /var/www/html/images/ allowing you to visualize with a web browser all received images:
+Simple PHP scripts and libs will be copied into /var/www/html/images/ allowing you to visualize with a web browser all received images:
 
 	http://192.168.200.1/images/index.php	
 	
-assuming that you are connected to the gateway's WiFi network. If you use Ethernet with a DHCP address, use that address.	
+assuming that you are connected to the gateway's WiFi network. If you use Ethernet with a DHCP address, use that address.
+
+You can visualize images in the uploads folder as well as images in the bak folder. The default page shows for all devices the last received image. Then you can select a specific device to visualize all received images from that device.
 
 Standalone image decoding program
 =================================
 
 decode_to_bmp is a standalone image decoding command line tool that decodes in BMP format an image that have been compressed by our image sensor platform (see http://cpham.perso.univ-pau.fr/WSN-MODEL/tool-html/imagesensor.html). It is intended to be used as part of our low-cost LoRa platform: post_processing_gw.py Python script handles image packets sent by the image sensor and will call decode_to_bmp to decode incoming images into BMP format. 
 
-You may need to compile the program on the Raspberry:
+You may need to compile the program on the Raspberry (config_images.sh does the compilation):
 
 	> cd ucam-images
 	> g++ -o decode_to_bmp decode_to_bmp.c

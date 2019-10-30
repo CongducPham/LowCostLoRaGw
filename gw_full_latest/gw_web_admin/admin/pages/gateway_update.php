@@ -186,7 +186,7 @@ require 'header.php';
                                                         <p>Enter a URL link to a file or .zip archive. A .zip archive will be decompressed and its content will overwrite existing files. All files will be downloaded to <tt>/home/pi/lora_gateway</tt>.
                                                         <p>e.g. a Dropbox link like <tt>https://www.dropbox.com/s/usc9w3i6urbquvw/gateway_conf.json</tt></p>
                                                         
-                                                    	<p>Erase all content of <tt>/home/pi/lora_gateway</tt>. <strong>Use with extreme caution</strong>
+                                                    	<p>Erase all content of <tt>/home/pi/lora_gateway</tt>. Usually used with a .zip file to install a specific distribution. <strong>Use with extreme caution</strong>
 														<input type="checkbox" name="gw_download_file_form_erase_checkbox" value="Yes" /> </p>
 	                                    					
                                 						<center>

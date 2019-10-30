@@ -34,6 +34,7 @@ from dateutil import parser
 _gps_jsonfile = "gps/gps.json"
 _active_gps_jsonfile = "gps/active_gps.json"
 _gps_file = "gps/gps.txt"
+_gps_csv = "gps/gps.csv"
 
 # get key definition from external file to ease
 # update of cloud script in the future
@@ -243,10 +244,24 @@ def store_gps_coordinate(src, SNR, RSSI, seq, bc, lat, lgt, fxt, tdata, gwid):
 		pA = (gw_lat, gw_long)
 		pB = (float(lat), float(lgt))
 		distance = haversine(pA, pB)
-	
+
+	#create the .csv file. First line is for the gateway's position
+	if not os.path.isfile(os.path.expanduser(_gps_csv)):
+		f = open(os.path.expanduser(_gps_csv),"a")
+		data = 'name,time,desc,symbol,latitude,longitude'
+		f.write(data+'\n')
+		data = 'GW,,gateway,wedge,'+_gw_lat+','+_gw_long
+		f.write(data+'\n')
+		f.close()
+
+	#add the new position in the csv file
+	f = open(os.path.expanduser(_gps_csv),"a")
+	data = 'gps'+src+','+tdata+',"'+str(bc)+'('+str("%.3f" % distance)+'km)",googlemini,'+lat+','+lgt
+	f.write(data+'\n')	
+	f.close()	
+				
 	#open gps file to store the GPS coordinate and the calculated distance
 	f = open(os.path.expanduser(_gps_file),"a")
-	
 	data = 'src '+src+' seq '+str(seq)+' bc '+str(bc)+' snr '+str(SNR)+' rssi '+str(RSSI)+' time '+tdata+' gw '+gwid+' fxt '+fxt+' lat '+lat+' lgt '+lgt+' distance '+str("%.4f" % distance)
 	f.write(data+'\n')	
 	f.close()
@@ -292,8 +307,8 @@ def store_gps_coordinate(src, SNR, RSSI, seq, bc, lat, lgt, fxt, tdata, gwid):
 # main
 #------------------------------------------------------------
 
-def main(ldata, pdata, rdata, tdata, gwid):
-
+def main(ldata, pdata, rdata, tdata, gwid):	
+		
 	# this is common code to process packet information provided by the main gateway script (i.e. post_processing_gw.py)
 	# these information are provided in case you need them
 	arr = map(int,pdata.split(','))

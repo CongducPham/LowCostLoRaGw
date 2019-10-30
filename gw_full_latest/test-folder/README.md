@@ -36,3 +36,4 @@ Testing a GPS device:
 
 	> python CloudGpsFile.py "BC/9/LAT/43.31402/LGT/-0.36370/FXT/4180" "1,16,6,0,9,8,-45" "125,5,12" "2017-11-20T14:18:54+01:00" "00000027EBBEDA21"	
 
+Change the time in a 20 minutes windows (from current time) to make the device "active".

@@ -69,13 +69,43 @@ require 'header.php';
                             </ul>
 
 							</br>
+                            							
             				<p>&nbsp;&nbsp;&nbsp;&nbsp;After changing gateway parameters, you need to reboot for changes to take effect.</p>
             				
                             <!-- Tab panes -->
                             <div class="tab-content">
                             	<div class="tab-pane fade in active" id="radio_conf-pills">
-                                    </br></br>
-                                    
+
+									<p>
+										<?php 
+											$is_sx1301=exec('egrep "start_[ul]p[lf]_pprocessing_gw.sh" /etc/rc.local');
+									
+											if ($is_sx1301=='')
+											{
+												echo '&nbsp;&nbsp;&nbsp;&nbsp;Radio configuration file is for single channel radio';   
+											}
+											else {
+												echo '&nbsp;&nbsp;&nbsp;&nbsp;Radio configuration file is for SX1301-based multi-channel concentrator [<a href="../log/global_conf.json">global_conf.json</a>][<a href="../log/local_conf.json">local_conf.json</a>]';
+												echo '<div class="col-md-10 col-md-offset-0">';
+													echo '<div class="panel-body">';										
+														echo '<form id="download_sx1301_conf_form" role="form">';
+															echo '<fieldset>';
+																echo '<div class="form-group">';
+																	echo '<label>Enter the URL of a valid <tt>global_conf.json</tt> file if you want to replace the existing one</label>';
+																	echo '<input class="form-control" placeholder="" name="sx1301_conf_file_name_url" type="text" value="" autofocus>';
+																echo '</div>';
+																echo '<p>e.g. from TTN <tt>https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/EU-global_conf.json</tt></p>';
+																echo '<p>e.g. from RAK <tt>https://raw.githubusercontent.com/RAKWireless/rak_common_for_gateway/master/lora/rak2245/global_conf/global_conf.eu_863_870.json</tt></p>';
+																echo '<p><button type="submit" class="btn btn-primary">Download</button></p>';
+															echo '</fieldset>';
+														echo '</form>';
+													echo '</div>';
+												echo '</div>';
+											}
+										?>                            
+									</p>
+                                    </br>
+                                                                
                                     <div id="radio_msg"></div>
                                     
                                     <div class="col-md-10 col-md-offset-0">
@@ -555,7 +585,7 @@ require 'header.php';
    										      										       										   							   										   
 										 </tbody>
     								    </table>
-    								    <p>For LoRaWAN, if the gateway ID is 0000B827EBEFC4A6, then use B827EB<b>FFFF</b>EFC4A6 for the gateway EUI on LoRaWAN network server platform such as TheThingsNetwork (TTN) for instance.</p>
+    								    <p>For LoRaWAN, if the gateway ID is 0000B827EBEFC4A6, then use B827EB<b>FFFF</b>EFC4A6 the register the gateway EUI on LoRaWAN network server platform such as TheThingsNetwork (TTN) for instance.</p>
     								    <p>If LoRaWAN mode is enabled, set raw to true and AES to false to upload the encrypted LoRaWAN packet to the network server.</p>
     							      </div>
     							    </div>

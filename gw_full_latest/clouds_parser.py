@@ -39,7 +39,7 @@ def retrieve_enabled_clouds(cloud_array="clouds"):
 	f = open(os.path.expanduser(cloud_filename),"r")
 	string = f.read()
 	f.close()
-		
+
 	#change it into a python array
 	json_array = json.loads(string)
 	
@@ -54,7 +54,7 @@ def retrieve_enabled_clouds(cloud_array="clouds"):
 
 	if hasCloudSection==1:
 		print "Parsing cloud declarations"
-		
+
 		#filling _enabled_clouds
 		for cloud in clouds:
 			if cloud["enabled"]:
@@ -63,5 +63,5 @@ def retrieve_enabled_clouds(cloud_array="clouds"):
 		
 		print "Parsed all cloud declarations"
 			 	
-	return _enabled_clouds		
+	return _enabled_clouds
 

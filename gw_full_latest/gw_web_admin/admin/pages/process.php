@@ -9,6 +9,34 @@ include_once '../libs/php/functions.php';
 //	RADIO
 //+++++++++++++++++++++++++++++++++++++
 
+/*************************
+ * SX1301 global_conf.json download
+ *************************/
+ 
+if (isset($_POST['sx1301_conf_file_name_url'])){
+	 
+	 if(empty($_POST['sx1301_conf_file_name_url'])){
+	 	echo '<p><center><font color="red">Please fill all fields</font></center></p>';
+	 }
+	 else{
+		$filename_url = htmlspecialchars($_POST['sx1301_conf_file_name_url']);
+		
+		if (filter_var($filename_url, FILTER_VALIDATE_URL) === FALSE) {
+    		echo '<p><center><font color="red">Please enter a valid URL</font></center></p>';
+		}
+		else{
+		
+			$output = sx1301_download_file($filename_url);
+	
+			if($output == 0){
+				echo '<p><center><font color="green">File has been downloaded, renamed in <tt>global_conf.json</tt> and installed</font></center></p>';
+			}
+			else{
+				echo '<p><center><font color="red">Failed to install a <tt>global_conf.json</tt> file</font></center></p>';	
+			}
+		}
+	}
+} 
 
 /*************************
  * Setting mode
@@ -509,7 +537,7 @@ if (isset($_GET['gw_basic_conf']) && $_GET['gw_basic_conf'] == "true"){
 }
 
 /*************************
- * Gateway: file update
+ * Gateway: file download
  *************************/
 if (isset($_POST['file_name_url'])){
 	 
