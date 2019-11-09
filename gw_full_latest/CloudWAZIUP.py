@@ -161,8 +161,8 @@ def get_token():
 		print "CloudWAZIUP: get token for "+key_WAZIUP.username
 		print "CloudWAZIUP: will issue requests with"
 		print 'url: '+WAZIUP_url
-		print 'headers: '+json.dumps(WAZIUP_headers)
-		print 'data: '+WAZIUP_data		
+		#print 'headers: '+json.dumps(WAZIUP_headers)
+		#print 'data: '+WAZIUP_data		
 	
 		current_token="notoken"
 	
@@ -206,8 +206,8 @@ def create_new_measurement(entity, nomenclature):
 	print 'CloudWAZIUP: create new measurement'
 	print "CloudWAZIUP: will issue requests with"
 	print 'url: '+WAZIUP_url
-	print 'headers: '+json.dumps(WAZIUP_headers)
-	print 'data: '+WAZIUP_data
+	#print 'headers: '+json.dumps(WAZIUP_headers)
+	#print 'data: '+WAZIUP_data
 
 	try:
 		response = requests.post(WAZIUP_url, headers=WAZIUP_headers, data=WAZIUP_data, timeout=30)
@@ -248,7 +248,7 @@ def does_measurement_exist(entity, nomenclature):
 	print 'CloudWAZIUP: check if measurement exists'
 	print "CloudWAZIUP: will issue requests with"
 	print 'url: '+WAZIUP_url
-	print 'headers: '+json.dumps(WAZIUP_headers)
+	#print 'headers: '+json.dumps(WAZIUP_headers)
 
 	try:
 		response = requests.get(WAZIUP_url, headers=WAZIUP_headers, data='', timeout=30)
@@ -292,7 +292,7 @@ def does_entity_exist(entity):
 	print 'CloudWAZIUP: check if entity exists'
 	print "CloudWAZIUP: will issue requests with"
 	print 'url: '+WAZIUP_url
-	print 'headers: '+json.dumps(WAZIUP_headers)
+	#print 'headers: '+json.dumps(WAZIUP_headers)
 	
 	try:
 		response = requests.get(WAZIUP_url, headers=WAZIUP_headers, data='', timeout=30)
@@ -343,7 +343,7 @@ def create_new_entity(data, entity, nomenclatures, tdata):
 	print "CloudWAZIUP: create new entity"
 	print "CloudWAZIUP: will issue requests with"
 	print 'url: '+WAZIUP_url
-	print 'headers: '+json.dumps(WAZIUP_headers)
+	#print 'headers: '+json.dumps(WAZIUP_headers)
 	print 'data: '+WAZIUP_data
 	
 	try:

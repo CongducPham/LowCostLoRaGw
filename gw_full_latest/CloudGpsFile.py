@@ -246,6 +246,7 @@ def store_gps_coordinate(src, SNR, RSSI, seq, bc, lat, lgt, fxt, tdata, gwid):
 		distance = haversine(pA, pB)
 
 	#create the .csv file. First line is for the gateway's position
+	#use for instance https://www.gpsvisualizer.com/
 	if not os.path.isfile(os.path.expanduser(_gps_csv)):
 		f = open(os.path.expanduser(_gps_csv),"a")
 		data = 'name,time,desc,symbol,latitude,longitude'
