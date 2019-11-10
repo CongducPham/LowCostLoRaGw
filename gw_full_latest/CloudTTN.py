@@ -30,6 +30,9 @@ from dateutil import parser
 import calendar
 import sys
 
+#don't generate pyc (no compilation of imported module) so change in key_* file can be done dynamically
+sys.dont_write_bytecode = True
+
 import key_TTN
 
 try:

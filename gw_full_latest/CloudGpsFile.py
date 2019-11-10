@@ -30,6 +30,10 @@ import codecs
 #import code
 import datetime
 from dateutil import parser
+import sys
+
+#don't generate pyc (no compilation of imported module) so change in key_* file can be done dynamically
+sys.dont_write_bytecode = True
 
 _gps_jsonfile = "gps/gps.json"
 _active_gps_jsonfile = "gps/active_gps.json"

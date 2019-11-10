@@ -25,6 +25,9 @@ import sys
 import json
 import libSMS
 
+#don't generate pyc (no compilation of imported module) so change in key_* file can be done dynamically
+sys.dont_write_bytecode = True
+
 import key_SMS
 
 global sm, always_enabled, gammurc_file

@@ -3,7 +3,7 @@
 		{	
 			"name":"Local gateway MongoDB",	
 			"notice":"do not remove the MongoDB cloud declaration, just change enabled and max_months_to_store if needed",
-			"script":"python -B CloudMongoDB.py",
+			"script":"python CloudMongoDB.py",
 			"type":"database",
 			"max_months_to_store":2,
 			"enabled":false

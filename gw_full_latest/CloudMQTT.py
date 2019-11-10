@@ -31,6 +31,9 @@ import json
 import re
 import shlex
 
+#don't generate pyc (no compilation of imported module) so change in key_* file can be done dynamically
+sys.dont_write_bytecode = True
+
 # get key definition from external file to ease
 # update of cloud script in the future
 import key_MQTT
