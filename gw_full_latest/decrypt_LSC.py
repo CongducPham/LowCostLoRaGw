@@ -32,7 +32,7 @@ import sys
 import re
 
 #contains the encryption key used by LSC: LSC_Nonce
-import LSC_config
+import key_LSC
 
 np.seterr(over='ignore')
 
@@ -298,7 +298,7 @@ def replchars_to_hex(match):
 #change in the Arduino code as well
 #
 if (LSC_STATIC_KEY):
-	Nonce=np.copy(LSC_config.Nonce) 				  
+	Nonce=np.copy(key_LSC.Nonce) 				  
 else:	
 	#random key, based on seed. Change the seed if you want but change in the Arduino code as well
 	for i in range(0,LSC_SKEY,4):

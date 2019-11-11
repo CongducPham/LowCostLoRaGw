@@ -33,7 +33,7 @@ except ImportError:
 	print "LoRaWAN python lib must be installed"
 
 #contains the 2 encryption keys used by LoRaWAN-like AES: AppSKey and NwkSKey
-import loraWAN_config
+import key_AES as key
 		
 def import_LoRaWAN_lib():
 
@@ -85,13 +85,13 @@ def loraWAN_process_pkt(lorapkt):
 
 		#print "start decryption"
 		
-		appskey=bytearray.fromhex(loraWAN_config.AppSKey)
+		appskey=bytearray.fromhex(key.AppSKey)
 		appskeylist=[]
 
 		for i in range (0,len(appskey)):
 			appskeylist.append(appskey[i])
 
-		nwkskey=bytearray.fromhex(loraWAN_config.NwkSKey)
+		nwkskey=bytearray.fromhex(key.NwkSKey)
 		nwkskeylist=[]
 		for i in range (0,len(nwkskey)):
 			nwkskeylist.append(nwkskey[i])
@@ -113,12 +113,12 @@ def loraWAN_process_pkt(lorapkt):
 		
 def loraWAN_get_MIC(device, lorapktstr):
 
-	appskey=bytearray.fromhex(loraWAN_config.AppSKey)
+	appskey=bytearray.fromhex(key.AppSKey)
 	appskeylist=[]
 	for i in range (0,len(appskey)):
 		appskeylist.append(appskey[i])
 
-	nwkskey=bytearray.fromhex(loraWAN_config.NwkSKey)
+	nwkskey=bytearray.fromhex(key.NwkSKey)
 	nwkskeylist=[]
 	for i in range (0,len(nwkskey)):
 		nwkskeylist.append(nwkskey[i])

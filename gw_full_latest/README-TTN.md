@@ -1,7 +1,7 @@
 TTN and LoRaWAN
 ===============
 
-The low-cost gateway can be configured to push data to TheThingsNetwork platform. Pushing to TTN is realized with the legacy UDP-based protocol between the gateway and the network server as initially defined by Semtech. `CloudTTN.py` is a Python script based on the Pycom NanoGateway Python script to interact with the TTN platform. It is possible to only use encapsulated encrypted mode packet and still be able to push data to TTN as the encapsulated encrypted payload is formatted like a LoRaWAN packet. It is of course also possible to use the native LoRaWAN mode to both push to TTN and advertise the gateway as a single channel LoRaWAN-limited gateway on TTN (meaning that the low-cost gateway can receive and push data from other LoRaWAN devices - sending on the same LoRa setting BW, SF and frequency - that are registered on TTN).
+The low-cost gateway can be configured to push data to TheThingsNetwork platform. Pushing to TTN is realized with the legacy UDP-based protocol between the gateway and the network server as initially defined by Semtech. `CloudTTN.py` is a Python script based on the Pycom NanoGateway Python script to interact with the TTN platform. It is possible to only use encapsulated encrypted mode packet and still be able to push data to TTN as the encapsulated encrypted payload is formatted like a LoRaWAN packet. It is of course also possible to use the native (encrypted) LoRaWAN mode to both push to TTN and advertise the gateway as a single channel LoRaWAN-limited gateway on TTN (meaning that the low-cost gateway can receive and push data from other LoRaWAN devices - sending on the same LoRa setting BW, SF and frequency - that are registered on TTN).
 
 The regular gateway id normally contains the 6 bytes of the eth0 MAC address, i.e. 0000B827EBD1B236. The gateway id for TTN will then be defined as B827EBFFFFD1B236. Then, to configure the TTN support, you need to proceed as follows:
 
@@ -21,10 +21,10 @@ The regular gateway id normally contains the 6 bytes of the eth0 MAC address, i.
 
 - `Arduino_LoRa_LMIC_ABP_BASIC` is an example that uses the Arduino LMIC port and is provided as an example of a full LoRaWAN stack that can communicate with our low-cost gateway as well
 
-- For the gateway to handle native LoRaWAN packet and push it to TTN, proceed as follows:
-	- set `["radio_conf"]["mode"]` to 11 in `gateway_conf.json` to configure for native LoRaWAN reception on single channel
+- For the gateway to handle native (encrypted) LoRaWAN packet and push it to TTN, proceed as follows:
+	- set `["radio_conf"]["mode"]` to 11 in `gateway_conf.json` to configure for native (encrypted) LoRaWAN reception on single channel
 	- set `["gateway_conf"]["raw"]` to true in `gateway_conf.json` 
-	- set `["gateway_conf"]["aes"]` to false as encrypted data will be pushed to TTN
+	- set `["gateway_conf"]["aes_lorawan"]` to false as encrypted data will be pushed to TTN
 	- gateway will be configured with BW=125MHz, CR=4/5, SF=12 by default
 	- the frequency is set by default to 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433 
 	- `python CloudTTN.py` has been be added in the LoRaWAN encrypted cloud section of `clouds.json`. Enable it by setting `"enabled"` to `true`
@@ -35,13 +35,15 @@ The regular gateway id normally contains the 6 bytes of the eth0 MAC address, i.
 				"name":"TheThingsNetwork cloud",
 				"script":"python CloudTTN.py",
 				"type":"TTN",			
-				"enabled":false			
+				"enabled":true			
 			},	
 			...	
 		]
 	```	
 
-- if you want to use the encapsulated encrypted mode, uncomment in `Arduino_LoRa_temp` both `#define WITH_AES` and `#define EXTDEVADDR` to enable encapsulated encrypted mode. Communication between the device and the gateway uses our header where the addressing still use the 1-byte address (the LoRaWAN-like packet is encapsulated in our packet). In the encapsulated mode, the device can only communicate to our gateway, not to a LoRaWAN gateway. However, you have to indicate the 4-byte DevAddr to make the link with the device declared on the TTN console. 
+- if you also want to be able to decrypt and handle LoRaWAN packet locally, then you can set `["gateway_conf"]["aes_lorawan"]` to true and provide in `key_LoRaWAN.py` both the Network Session Key and the App Session Key from the TTN console.
+
+- if you want to use the encapsulated encrypted mode with TTN, uncomment in `Arduino_LoRa_temp` both `#define WITH_AES` and `#define EXTDEVADDR` (and leave `#define LORAWAN` commented) to enable only encapsulated encrypted mode. Communication between the device and the gateway uses our header where the addressing still use the 1-byte address (the LoRaWAN-like packet is encapsulated in our packet). In the encapsulated mode, the device can only communicate to our gateway, not to a LoRaWAN gateway. However, you have to indicate the 4-byte DevAddr to make the link with the device declared on the TTN console. 
 
 ```
 	///////////////////////////////////////////////////////////////////
@@ -55,7 +57,7 @@ The regular gateway id normally contains the 6 bytes of the eth0 MAC address, i.
 
 - For the gateway to handle encapsulated encrypted packet and push it to TTN, proceed as follows:
 	- set `["gateway_conf"]["raw"]` to true in `gateway_conf.json` 
-	- set `["gateway_conf"]["aes"]` to false as encrypted data will be pushed to TTN
+	- set `["gateway_conf"]["aes"]` to false to push the encrypted data on TTN
 	- `python CloudTTN.py` has been be added in the encrypted cloud section of `clouds.json`. Enable it by setting `"enabled"` to `true`
 	```	
 		"encrypted_clouds" : [
@@ -63,7 +65,7 @@ The regular gateway id normally contains the 6 bytes of the eth0 MAC address, i.
 				"name":"TheThingsNetwork cloud",
 				"script":"python CloudTTN.py",
 				"type":"TTN",			
-				"enabled":false			
+				"enabled":true		
 			},	
 			...	
 		]	
@@ -71,8 +73,7 @@ The regular gateway id normally contains the 6 bytes of the eth0 MAC address, i.
 
 - if `["radio_conf"]["mode"]` is 11 **AND** `["status_conf"]["ttn_status"]` is true then `scripts/ttn/ttn_stats.py` will be called periodically by the `post_status_processing_gw.py` status loop (which is called by `post-processing_gw.py`) to report the gateway status on TTN. You can therefore always leave `["status_conf"]["ttn_status"]` to true and status will be reported to TTN only when you are using LoRaWAN mode, i.e. `["radio_conf"]["mode"]` is 11.
 
-
-In both cases, native LoRaWAN and encapsulated encrypted, once everything is set up, go to your TTN console and search for your device. Go to the `Data` tab to see your packets arriving on TTN.
+In both cases, i.e. native (encrypted) LoRaWAN and encapsulated encrypted, once everything is set up, go to your TTN console and search for your device. Go to the `Data` tab to see your packets arriving on TTN.
 
 Enjoy!
 C. Pham 

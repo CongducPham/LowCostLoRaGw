@@ -188,9 +188,20 @@ except KeyError:
 	
 if _rawFormat:
 	print "raw output from low-level gateway. post_processing_gw will handle packet format"	
-	
+
 #------------------------------------------------------------
-#local aes?
+#decrypt aes lorawan locally?
+#------------------------------------------------------------
+try:
+	_local_aes_lorawan = json_array["gateway_conf"]["aes_lorawan"]
+except KeyError:
+	_local_aes_lorawan = 0	
+	
+if _local_aes_lorawan:
+	print "enable local AES LoRaWAN decryption"	
+		
+#------------------------------------------------------------
+#decrypt aes locally?
 #------------------------------------------------------------
 try:
 	_local_aes = json_array["gateway_conf"]["aes"]
@@ -201,7 +212,7 @@ if _local_aes:
 	print "enable local AES decryption"	
 
 #------------------------------------------------------------
-#local lsc?
+#decrypt lsc locally?
 #------------------------------------------------------------
 try:
 	_local_lsc = json_array["gateway_conf"]["lsc"]
@@ -212,9 +223,9 @@ if _local_lsc:
 	print "enable local LSC decryption"	
 
 #------------------------------------------------------------
-#local decrypt?
+#adhoc local decrypt?
 #------------------------------------------------------------	
-_local_decrypt = _local_aes | _local_lsc 	
+_adhoc_local_decrypt = _local_aes | _local_lsc 	
 		
 #------------------------------------------------------------
 #with app key?
@@ -1104,11 +1115,48 @@ while True:
 					pdata="%d,%d,%s,%d,%d,%d,%d" % (256,ord(ch),"0x%0.8X" % src,seq,datalen,SNR,RSSI)
 					print "update ctrl pkt info (^p): "+pdata
 					#internally, we convert in int
-					pdata="%d,%d,%d,%d,%d,%d,%d" % (256,ord(ch),src,seq,datalen,SNR,RSSI)					
+					pdata="%d,%d,%d,%d,%d,%d,%d" % (256,ord(ch),src,seq,datalen,SNR,RSSI)
 					
-					if _local_aes==1:							
+					lorapktstr_b64=base64.b64encode(lorapktstr)
+					print "--> FYI base64 of LoRaWAN frame w/MIC: "+lorapktstr_b64
+					
+					print "--> number of LoRaWAN enabled clouds is %d" % len(_cloud_for_lorawan_encrypted_data)
+					
+					if len(_cloud_for_lorawan_encrypted_data)==0:
+						print "--> not uploading LoRaWAN encrypted data"
+					else:					
+						#loop over all enabled clouds to upload data
+						#once again, it is up to the corresponding cloud script to handle the data format
+						#
+						for cloud_index in range(0,len(_cloud_for_lorawan_encrypted_data)):
+							
+							try:
+								print "--> LoRaWAN encrypted cloud[%d]" % cloud_index
+								cloud_script=_cloud_for_lorawan_encrypted_data[cloud_index]
+								print "uploading with "+cloud_script
+								sys.stdout.flush()
+								cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
+							except UnicodeDecodeError, ude:
+								print ude
+							else:
+								print cmd_arg
+								sys.stdout.flush()
+								try:
+									os.system(cmd_arg)
+								except:
+									print "Error when uploading data to LoRaWAN encrypted cloud"								
+							
+						print "--> LoRaWAN encrypted cloud end"										
+
+					#For LoRaWAN packet, after uploading the encrypted data we also perform local decryption (if enabled)
+					#to allow upload with other clouds
+										
+					if _local_aes_lorawan==1:	
+					
+						print "--> Local AES LoRaWAN decryption enabled"
+						print "--> decrypting in LoRaWAN mode"													
 						
-						from loraWAN import loraWAN_process_pkt
+						from decrypt_LoRaWAN import loraWAN_process_pkt
 						try:
 							plain_payload=loraWAN_process_pkt(lorapkt)
 						except:
@@ -1131,40 +1179,9 @@ while True:
 							#	print plain_payload
 							_linebuf = plain_payload
 							_has_linebuf=1
-							_hasClearData=1							
-							
+							_hasClearData=1									
 					else:
-						print "--> DATA encrypted: local AES not activated"
-						lorapktstr_b64=base64.b64encode(lorapktstr)
-						print "--> FYI base64 of LoRaWAN frame w/MIC: "+lorapktstr_b64
-						
-						print "--> number of enabled clouds is %d" % len(_cloud_for_lorawan_encrypted_data)
-						
-						if len(_cloud_for_lorawan_encrypted_data)==0:
-							print "--> discard encrypted data"
-						else:					
-							#loop over all enabled clouds to upload data
-							#once again, it is up to the corresponding cloud script to handle the data format
-							#
-							for cloud_index in range(0,len(_cloud_for_lorawan_encrypted_data)):
-								
-								try:
-									print "--> LoRaWAN encrypted cloud[%d]" % cloud_index
-									cloud_script=_cloud_for_lorawan_encrypted_data[cloud_index]
-									print "uploading with "+cloud_script
-									sys.stdout.flush()
-									cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
-								except UnicodeDecodeError, ude:
-									print ude
-								else:
-									print cmd_arg
-									sys.stdout.flush()
-									try:
-										os.system(cmd_arg)
-									except:
-										print "Error when uploading data to LoRaWAN encrypted cloud"								
-								
-							print "--> LoRaWAN encrypted cloud end"		
+						print "--> DATA encrypted: local AES LoRaWAN not activated"	
 							
 					continue	
 					
@@ -1177,21 +1194,22 @@ while True:
 				print "--> DATA encrypted: encrypted payload size is %d" % datalen
 				
 				_hasClearData=0
-				lorapktstr=getAllLine()
+				encrypted_pktstr=getAllLine()
 				
 				#if encrypted packet, we will try all enabled decryption algorithms
-				if _local_decrypt==1: 
+				if _adhoc_local_decrypt==1: 
 						
 						if _local_aes==1 and _hasClearData==0:
-								print "--> decrypting in AES-CTR mode (LoRaWAN version)"
+								print "--> Local AES decryption enabled"
+								print "--> decrypting in AES-CTR mode (LoRaWAN like)"
 						
-								lorapkt=[]
-								for i in range (0,len(lorapktstr)):
-									lorapkt.append(ord(lorapktstr[i]))
+								aespkt=[]
+								for i in range (0,len(encrypted_pktstr)):
+									aespkt.append(ord(encrypted_pktstr[i]))
 						
-								from loraWAN import loraWAN_process_pkt
+								from decrypt_AES import loraWAN_process_pkt
 								try:
-									plain_payload=loraWAN_process_pkt(lorapkt)
+									plain_payload=loraWAN_process_pkt(aespkt)
 								except:
 									print "### unexpected decryption error ###"
 									plain_payload="###BADMIC###"					
@@ -1202,15 +1220,16 @@ while True:
 									_hasClearData=1	
 
 						if _local_lsc==1 and _hasClearData==0:
+								print "--> Local LSC decryption enabled"
 								print "--> decrypting in LSC mode"
 						
-								lorapkt=[]
-								for i in range (0,len(lorapktstr)):
-									lorapkt.append(ord(lorapktstr[i]))
+								lscpkt=[]
+								for i in range (0,len(encrypted_pktstr)):
+									lscpkt.append(ord(encrypted_pktstr[i]))
 						
-								from LSC_decrypt import LSC_process_pkt
+								from decrypt_LSC import LSC_process_pkt
 								try:
-									plain_payload=LSC_process_pkt(lorapkt, dst, ptype, src, seq)
+									plain_payload=LSC_process_pkt(lscpkt, dst, ptype, src, seq)
 								except:
 									print "### unexpected decryption error ###"
 									plain_payload="###BADMIC###"
@@ -1238,11 +1257,11 @@ while True:
 							print '--> changed packet type to clear data'					
 											
 				else:
-						print "--> DATA encrypted: local decryption not activated"
-						lorapktstr_b64=base64.b64encode(lorapktstr)
-						print "--> FYI base64 of encrypted frame w/MIC: "+lorapktstr_b64
+						print "--> DATA encrypted: local adhoc decryption not activated"
+						encrypted_pktstr_b64=base64.b64encode(encrypted_pktstr)
+						print "--> FYI base64 of encrypted frame w/MIC: "+encrypted_pktstr_b64
 						
-						print "--> number of enabled clouds is %d" % len(_cloud_for_encrypted_data)
+						print "--> number of encrypted enabled clouds is %d" % len(_cloud_for_encrypted_data)
 						
 						if len(_cloud_for_encrypted_data)==0:
 							print "--> discard encrypted data"
@@ -1260,7 +1279,7 @@ while True:
 									cloud_script=_cloud_for_encrypted_data[cloud_index]
 									print "uploading with "+cloud_script
 									sys.stdout.flush()
-									cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
+									cmd_arg=cloud_script+" \""+encrypted_pktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
 								except UnicodeDecodeError, ude:
 									print ude
 								else:
