@@ -7,7 +7,7 @@ Low-cost LoRa IoT framework developed in the EU H2020 WAZIUP/WAZIHUB projects
 Quick start
 -----------
 
-- **The current SD card image has everything you need!** [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip)
+- **The current SD card image has everything you need!** [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.iso.zip)
 - **NEW** Support of multi-channel RPI SX1301 LoRaWAN gateway: benefit from the open, versatile, multi-cloud Low-cost LoRa IoT framework with the flexibility and scalability of a multi-channel LoRaWAN gateway, see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak831_util_pkt_logger/README.md)
 - We have a new online [Arduino-Sensor-LoRa tutorial](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/tuto/index.html) and here is the direct link to the [LoRa part](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/tuto/sensors/lora_sensor/Arduino_lora_demo.html)
 - Read the [Low-cost-LoRa-device leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-device-leaflet.pdf)
@@ -142,7 +142,7 @@ Installing the latest gateway version
 
 The full, latest distribution of the low-cost gateway is available in the `gw_full_latest` folder of the github repository: https://github.com/CongducPham/LowCostLoRaGw. It contains all the gateway control and post-processing software. 
 
-However, the **simplest and recommended way** to install a new gateway is to use [our zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip) based on the Jessie Raspbian OS and perform a new install of the gateway from this image. In this way you don't need to install the various additional packages that are required (as explained in an additional [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-manual-install.md) describing all manual installation steps if you want to install from scratch). Once you have burnt the SD image on a 8GB (minimum) SD card, insert it in your Raspberry and power it.
+However, the **simplest and recommended way** to install a new gateway is to use [our zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.iso.zip) based on the Jessie Raspbian OS and perform a new install of the gateway from this image. In this way you don't need to install the various additional packages that are required (as explained in an additional [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-manual-install.md) describing all manual installation steps if you want to install from scratch). Once you have burnt the SD image on a 8GB (minimum) SD card, insert it in your Raspberry and power it.
 
 The distribution supports Raspberry 1B+, RPI2, RPI3B/B3+, RPI0 and RPI0W. **For RPI1, RPI0 and RPI0W you need to run `make lora_gateway` as the default version is built for RPI2&RPI3**. There is out-of-the-box WiFi support for RPI3B/3B+ and RPI0W. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles.
 
@@ -150,7 +150,7 @@ The distribution supports Raspberry 1B+, RPI2, RPI3B/B3+, RPI0 and RPI0W. **For 
 Get our SD card image
 ---------------------
 
-Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.dmg.zip). The current image has everything you need including:
+Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.iso.zip). The current image has everything you need including:
 
 - support for RPI3B+ as well (including the WiFi)
 - `remot3.it` tools for remote access
@@ -469,7 +469,7 @@ with Dropbox uploader:
 ANNEX.A: LoRa mode and predefined channels
 ==========================================
 
-Pre-defined LoRa modes (from initial Libelium `SX1272.h`)
+Pre-defined LoRa modes (from initial Libelium `SX1272.h` except mode 11 to indicate LoRaWAN compatibility mode with sync word set to 0x34 instead of 0x12 for all other mode)
 
 | mode | BW | SF |
 |------|----|----|
@@ -483,6 +483,7 @@ Pre-defined LoRa modes (from initial Libelium `SX1272.h`)
 | 8    | 500|  9 |
 | 9    | 500|  8 |
 | 10   | 500|  7 |
+| 11   | 125| 12 |
 
 Pre-defined channels in 868MHz, 915MHz and 433MHz band (most of them from initial Libelium `SX1272.h`, except those marked with `*`). Frequencies in bold are those used by default in each band.
 

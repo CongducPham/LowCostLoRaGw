@@ -13,13 +13,13 @@ The regular gateway id normally contains the 6 bytes of the eth0 MAC address, i.
 	
 - you need to create an application on TTN. Follow tutorials on Internet
 
-- you need to create a device on TTN in ABP mode. Follow tutorials on Internet
+- you need to create a device on TTN in ABP mode. Follow tutorials on Internet, then
 
-- get the DevAddr, the Network Session Key and the App Session Key from the TTN console to fill-in the Arduino example `Arduino_LoRa_temp` to create a device capable of forging encrypted packet.
+	- get the DevAddr, the Network Session Key and the App Session Key from the TTN console to fill-in the Arduino example `Arduino_LoRa_temp` to create a device capable of forging encrypted packet.
 
-- if you want to enable the native LORAWAN mode where the device can communicate to a LoRaWAN gateway (and the low-cost gateway), you have to use native LoRaWAN by uncommenting in `Arduino_LoRa_temp` both `#define WITH_AES` and `#define LORAWAN`. See this [README](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino#lorawan-example-and-support) in the Arduino folder. By default, the device will use SF12BW125 on 868.1MHz.
+	- if you want to enable the native LORAWAN mode where the device can communicate to a LoRaWAN gateway (and the low-cost gateway), you have to use native LoRaWAN by uncommenting in `Arduino_LoRa_temp` both `#define WITH_AES` and `#define LORAWAN`. See this [README](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino#lorawan-example-and-support) in the Arduino folder. By default, the device will use SF12BW125 on 868.1MHz.
 
-- `Arduino_LoRa_LMIC_ABP_BASIC` is an example that uses the Arduino LMIC port and is provided as an example of a full LoRaWAN stack that can communicate with our low-cost gateway as well
+	- `Arduino_LoRa_LMIC_ABP_BASIC` is an example that uses the Arduino LMIC port and is provided as an example of a full LoRaWAN stack that can communicate with our low-cost gateway as well.
 
 - For the gateway to handle native (encrypted) LoRaWAN packet and push it to TTN, proceed as follows:
 	- set `["radio_conf"]["mode"]` to 11 in `gateway_conf.json` to configure for native (encrypted) LoRaWAN reception on single channel
