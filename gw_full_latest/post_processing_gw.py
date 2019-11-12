@@ -190,7 +190,7 @@ if _rawFormat:
 	print "raw output from low-level gateway. post_processing_gw will handle packet format"	
 	
 try:
-	_lora_mode = json_array["conf_conf"]["mode"]
+	_lora_mode = json_array["radio_conf"]["mode"]
 except KeyError:
 	_lora_mode = 1
 
