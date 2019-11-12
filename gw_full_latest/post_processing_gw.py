@@ -18,7 +18,7 @@
 # You should have received a copy of the GNU General Public License
 # along with the program.  If not, see <http://www.gnu.org/licenses/>.
 #
-# v3.9a - image modification and need to incorporate aux_radio features
+# v3.9b - image modification and need to incorporate aux_radio features
 # + copy post-processing feature
 #------------------------------------------------------------
 
@@ -184,11 +184,20 @@ _gwid = json_array["gateway_conf"]["gateway_ID"]
 try:
 	_rawFormat = json_array["gateway_conf"]["raw"]
 except KeyError:
-	_rawFormat = 0
-	
+	_rawFormat = 0	
+		
 if _rawFormat:
 	print "raw output from low-level gateway. post_processing_gw will handle packet format"	
+	
+try:
+	_lora_mode = json_array["conf_conf"]["mode"]
+except KeyError:
+	_lora_mode = 1
 
+if _lora_mode==11 and not _rawFormat:
+	print "force raw output because of LoRaWAN mode"
+	_rawFormat = 1
+		
 #------------------------------------------------------------
 #decrypt aes lorawan locally?
 #------------------------------------------------------------

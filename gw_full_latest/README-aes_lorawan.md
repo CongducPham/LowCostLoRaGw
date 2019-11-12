@@ -22,7 +22,7 @@ This module will add AES encryption as well as limited LoRaWAN support for both 
 
 - `post_processing_gw.py` is able to locally check integrity and decrypt the encrypted payload or/and the LoRaWAN packet if both NwkSKey and AppSKey are also known at the gateway's post-processing level. This behavior can suit small-scale deployment scenario where it is desirable to process data locally or on some other clouds than LoRaWAN clouds. `post_processing_gw.py` uses `decrypt_LoRaWAN.py` and `decrypt_AES.py` scripts for that purpose. Both use NwkSKey and AppSKey defined from `key_LoRaWAN.py` and `key_AES.py` respectively. These local decryption features are controlled by `["gateway_conf"]["aes_lorawan"]` and`["gateway_conf"]["aes"]` options respectively. If `["gateway_conf"]["aes_lorawan"]` is set to true and valid keys are stored in `key_LoRaWAN.py` then the LoRaWAN packet will, **in addition to the upload to LoRaWAN clouds**, be decrypted and the clear data is passed to the enabled normal clouds (non-encrypted).  If `["gateway_conf"]["aes"]` is set to true and valid keys are stored in `key_AES.py` then the encapsulated encrypted packet will be decrypted the clear data is passed to the normal enabled clouds (non-encrypted). For this latter case, if `["gateway_conf"]["aes"]` is set to true then the encrypted data **is not pushed** to enabled encrypted clouds.
 
-- `key_LoRaWAN.py` defines a Python dictionary where you can add your device id (4-byte device address) and the associated NwkSKey and AppSKey. The structure is as follows, just replace/add with your devices and keys:
+- For LoRaWAN devices, `key_LoRaWAN.py` defines a Python dictionary where you can add your device id (4-byte device address) and the associated NwkSKey and AppSKey. The structure is as follows, just replace/add with your devices and keys:
 
 ```
 device_key = {
@@ -1070,7 +1070,7 @@ List of new files
 =================
 
 - `decrypt_LoRaWAN.py`: does the decryption of the LoRaWAN packet with encrypted payload for `post_processing_gw.py`
-- `key_LoRaWAN.py`: stores the NwkSKey and AppSKey for LoRaWAN
+- `key_LoRaWAN.py`: stores a list of device addresses with their NwkSKey and AppSKey for LoRaWAN
 - `decrypt_AES.py`: does the decryption of the encapsulated encrypted packet with encrypted payload for `post_processing_gw.py`
 - `key_AES.py`: stores the NwkSKey and AppSKey for encapsulated encrypted packet
 - `test-loraWAN-1.py`: shows how to decrypt a LoRaWAN packet with encrypted payload
