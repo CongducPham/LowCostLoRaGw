@@ -111,12 +111,20 @@ November 21st, 2018
 		- to reboot the gateway by connecting GPIO21 (pin 40) to ground which can be pin 39 that is next to pin 40
 		- if you have other usage for GPIO26 or GPIO21, edit `scripts/piShutdown.py` to use other pins for shutdown/reboot
 
-```		
-shutdown		+-> | 37 || 38 |
-				+-> | 39 || 40 |
-					+----++----+
-				   	  ^	     ^
-				   	  +-----+ reboot
+```
+          SD card slot side
+          
+                    +----++----+
+                    |  1 ||  2 |
+                    | .. || .. |
+                    | .. || .. |
+shutdown        +-> | 37 || 38 |
+                +-> | 39 || 40 |
+                    +----++----+
+                      ^	    ^
+                      +-----+ reboot
+                      
+            USB and Ethernet port side          
 ```	
 
 November 13th, 2018
