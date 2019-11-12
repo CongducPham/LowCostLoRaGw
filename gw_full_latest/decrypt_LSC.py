@@ -31,6 +31,9 @@ import base64
 import sys
 import re
 
+#don't generate pyc (no compilation of imported module) so change in key_* file can be done dynamically
+sys.dont_write_bytecode = True
+
 #contains the encryption key used by LSC: LSC_Nonce
 import key_LSC
 

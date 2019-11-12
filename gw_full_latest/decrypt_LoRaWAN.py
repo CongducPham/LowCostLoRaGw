@@ -32,7 +32,10 @@ try:
 except ImportError:
 	print "LoRaWAN python lib must be installed"
 
-#contains the 2 encryption keys used by LoRaWAN: AppSKey and NwkSKey
+#don't generate pyc (no compilation of imported module) so change in key_* file can be done dynamically
+sys.dont_write_bytecode = True
+
+#contains the list device's encryption keys used by LoRaWAN: AppSKey and NwkSKey
 import key_LoRaWAN as key
 		
 def import_LoRaWAN_lib():

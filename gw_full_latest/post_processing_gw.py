@@ -725,7 +725,7 @@ if (_gw_downlink):
 		print "post downlink: none existing downlink-post-queued.txt"			
 
 	print "Loading lib to compute downlink MIC"
-	from loraWAN import loraWAN_get_MIC
+	from decrypt_LoRaWAN import loraWAN_get_MIC
 
 	print "Starting thread to check for downlink requests every %d seconds" % _gw_downlink
 	sys.stdout.flush()
