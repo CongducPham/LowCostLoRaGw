@@ -70,6 +70,7 @@ def import_LoRaWAN_lib():
 	return True	
 
 PKT_TYPE_DATA=0x10
+PKT_FLAG_DATA_ENCRYPTED=0x04
 
 #to display non printable characters
 replchars = re.compile(r'[\x00-\x1f]')
@@ -82,16 +83,33 @@ def loraWAN_process_pkt(lorapkt):
 	#print "entering loraWAN_process_pkt"
 
 	if (lorapkt[0] == 0x40) or (lorapkt[0] == 0x80):
-
-		#print "start decryption"
+	
+		src = lorapkt[4]*256*256*256
+		src += lorapkt[3]*256*256
+		src += lorapkt[2]*256
+		src += lorapkt[1]
 		
-		appskey=bytearray.fromhex(key.AppSKey)
+		src_str="%0.8X" % src
+		
+		if src_str in key.device_key:		
+			print "found device 0x%s in device key list" % src_str
+		else:
+			print "did not find device 0x%s in device key list" % src_str
+			print "using AppSKey and NwkSKey from default device"	
+			src_str = 'default'
+
+		AppSKey = key.device_key[src_str]['AppSKey']
+		NwkSKey = key.device_key[src_str]['NwkSKey']
+					
+		#print "start decryption"
+	
+		appskey=bytearray.fromhex(AppSKey)
 		appskeylist=[]
 
 		for i in range (0,len(appskey)):
 			appskeylist.append(appskey[i])
 
-		nwkskey=bytearray.fromhex(key.NwkSKey)
+		nwkskey=bytearray.fromhex(NwkSKey)
 		nwkskeylist=[]
 		for i in range (0,len(nwkskey)):
 			nwkskeylist.append(nwkskey[i])
@@ -108,6 +126,7 @@ def loraWAN_process_pkt(lorapkt):
 			return plain_payload
 		else:
 			return "###BADMIC###"
+				
 	else:
 		return "###BADMIC###"	
 		

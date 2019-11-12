@@ -77,7 +77,7 @@ require 'header.php';
 								</li>
                             </ul>
 							</br>
-            				<p>&nbsp;&nbsp;&nbsp;&nbsp;After changing cloud parameters, you need to reboot for changes to take effect.</p>
+            				<p>&nbsp;&nbsp;&nbsp;&nbsp;When enabling a new cloud, you need to reboot for changes to take effect. It is possible to change a cloud parameter at run-time although it is recommended to reboot.</p>
                             
                             <!-- Tab panes -->
                             <div class="tab-content">

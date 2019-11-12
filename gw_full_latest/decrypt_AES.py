@@ -70,6 +70,7 @@ def import_LoRaWAN_lib():
 	return True	
 
 PKT_TYPE_DATA=0x10
+PKT_FLAG_DATA_ENCRYPTED=0x04
 
 #to display non printable characters
 replchars = re.compile(r'[\x00-\x1f]')

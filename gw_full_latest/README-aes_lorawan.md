@@ -22,6 +22,27 @@ This module will add AES encryption as well as limited LoRaWAN support for both 
 
 - `post_processing_gw.py` is able to locally check integrity and decrypt the encrypted payload or/and the LoRaWAN packet if both NwkSKey and AppSKey are also known at the gateway's post-processing level. This behavior can suit small-scale deployment scenario where it is desirable to process data locally or on some other clouds than LoRaWAN clouds. `post_processing_gw.py` uses `decrypt_LoRaWAN.py` and `decrypt_AES.py` scripts for that purpose. Both use NwkSKey and AppSKey defined from `key_LoRaWAN.py` and `key_AES.py` respectively. These local decryption features are controlled by `["gateway_conf"]["aes_lorawan"]` and`["gateway_conf"]["aes"]` options respectively. If `["gateway_conf"]["aes_lorawan"]` is set to true and valid keys are stored in `key_LoRaWAN.py` then the LoRaWAN packet will, **in addition to the upload to LoRaWAN clouds**, be decrypted and the clear data is passed to the enabled normal clouds (non-encrypted).  If `["gateway_conf"]["aes"]` is set to true and valid keys are stored in `key_AES.py` then the encapsulated encrypted packet will be decrypted the clear data is passed to the normal enabled clouds (non-encrypted). For this latter case, if `["gateway_conf"]["aes"]` is set to true then the encrypted data **is not pushed** to enabled encrypted clouds.
 
+- `key_LoRaWAN.py` defines a Python dictionary where you can add your device id (4-byte device address) and the associated NwkSKey and AppSKey. The structure is as follows, just replace/add with your devices and keys:
+
+```
+device_key = {
+	#do not remove default entry
+	#replace defaukt key by your default key if necessary
+	"default" : {
+		"AppSKey" : '2B7E151628AED2A6ABF7158809CF4F3C',
+		"NwkSKey" : '2B7E151628AED2A6ABF7158809CF4F3C'
+	},
+	"26045F24" : {
+		"AppSKey" : '54AC7B954935D5CF0F1CD7924011072A',
+		"NwkSKey" : '11FF06BAAE0FA341258F1FE052DD8A21'
+	},
+	"26014821" : {
+		"AppSKey" : '0540AC89349E0C60650D50CF00F01C0D',
+		"NwkSKey" : '0110FF0060BA0AE08712606B0A508F01'
+	}		
+}
+```
+
 - at the gateway, the LoRaWAN encryption/decryption and MIC integrity functionalities at the gateway (`post_processing_gw.py`) are provided by the LoRaWAN python library by Jeroen Nijhof. See "How to update your gateway" section.
 
 - at the end-device, the LoRaWAN encryption and packet forging procedure use the AES library and examples provided by Gerben den Hartog at `https://github.com/Ideetron/RFM95W_Nexus/tree/master/LoRaWAN_V31`. `Arduino_LoRa_temp.ino` has been updated with these encryption and simple LoRaWAN capabilities. To enable payload encryption, uncomment `#define WITH_AES`. To further use LoRaWAN packet format to be able to send to a LoRaWAN gateway, uncomment also #define LORAWAN.
