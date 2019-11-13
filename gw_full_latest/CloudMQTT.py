@@ -38,6 +38,8 @@ sys.dont_write_bytecode = True
 # update of cloud script in the future
 import key_MQTT
 
+MQTT_port=''
+
 try:
 	key_MQTT.source_list
 except AttributeError:
@@ -94,9 +96,9 @@ def send_data(data, src, nomenclatures, tdata):
 		#be sure to have run sudo apt-get install mosquitto-clients
 		#the topic will be for instance waziup_UPPA_Sensor2/TC
 		if nomenclatures=='':
-			cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'/'+data[1]+'/'+src+' -m \"'+data[i+2]+'\"'			
+			cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+MQTT_port+' -t '+data[0]+'/'+data[1]+'/'+src+' -m \"'+data[i+2]+'\"'			
 		else:		
-			cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+' -t '+data[0]+'/'+data[1]+'/'+src+'/'+nomenclatures[i]+' -m \"'+data[i+2]+'\"'
+			cmd = 'mosquitto_pub -h '+key_MQTT.MQTT_server+MQTT_port+' -t '+data[0]+'/'+data[1]+'/'+src+'/'+nomenclatures[i]+' -m \"'+data[i+2]+'\"'
 
 		i += 1
 						
@@ -164,9 +166,19 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		src_str=str(src)	
 
 	if (src_str in key_MQTT.source_list) or (len(key_MQTT.source_list)==0):
+	
+		global MQTT_port
+		
+		# check if ':' separator is present that would indicate a custom MQTT port number
+		if key_MQTT.MQTT_server.count(':')>0:
+			server_port=re.split(':',key_MQTT.MQTT_server)
+			key_MQTT.MQTT_server=server_port[0]
+			MQTT_port=' -p '+server_port[1]
+		else:
+			MQTT_port=''			
 
-		#LoRaWAN (so encrypted packet)
-		#or encapsulated encrypted
+		#LoRaWAN (so encrypted packet) -> ptype & 0x40 == 0x40 or ptype & 0x80 == 0x80
+		#or encapsulated encrypted -> ptype & 0x04 == 0x04
 		if ptype & 0x40 == 0x40 or ptype & 0x80 == 0x80 or ptype & 0x04 == 0x04:
 			nomenclatures = ''
 			data=['','']

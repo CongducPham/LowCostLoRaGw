@@ -10,6 +10,7 @@ Nov 11th, 2019
 - v3.9b post-processing_gw.py
 	* now, it is possible to upload a LoRaWAN packet to TTN for instance, and still be able to decrypt locally the packet to inject the clear data for upload to normal clouds (such as ThingSpeak or WAZIUP cloud for instance).
 	* raw mode is forced to true at post-processing level when LoRa mode is set to 11 (LoRaWAN mode)
+- `MQTT_server` field in `key_MQTT.py` can now specify a port number, i.e. `test.mosquitto.org:1234`, and `CloudMQTT.py` can add the `-p` parameter when running the `mosquitto_pub` command.	
 
 Oct 30th, 2019
 --------------

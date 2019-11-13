@@ -185,6 +185,7 @@
 				</tr>
 			 </tbody>
 			</table>
+					<p>If you want to specify a non standard port, indicate it in the MQTT server field, i.e. <tt>test.mosquitto.org:1234</tt>. Default is 1883.</p>
 					<p>The MQTT cloud will build a topic name using the following format: <tt>project_name/organization_name/sensor_name+device_addr/nomenclature</tt>. For instance, sensor 2 hosted by <tt>UPPA</tt> from <tt>waziup</tt> project and sending "<tt>TC/22.5/HU/54</tt>" will publish both <tt>waziup/UPPA/Sensor2/TC</tt> and <tt>waziup/UPPA/Sensor2/HU</tt> topics. You can subscribe to <tt>waziup/UPPA/Sensor2/#</tt> to cover all levels from <tt>waziup/UPPA/Sensor2</tt>.</p>
 		
 		<p><b>Do not use space</b> in any of these parameters, use '_' or '-' instead.</p>
