@@ -46,7 +46,7 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 						echo "Setting mode to 11 for LoRaWAN"
 						jq '.radio_conf.mode = 11' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
 						
-						#change ttn_status to true
+						#force ttn_status to true
 						echo "Enabling TTN status report"
  						jq '.status_conf.ttn_status = true' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json						
 						
@@ -54,9 +54,10 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 						echo "Setting raw mode to accept LoRaWAN packet"
  						jq '.gateway_conf.raw = true' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
 
-						#change aes to false
-						echo "Disabling local AES to push encrypted data to TTN"
- 						jq '.gateway_conf.aes = false' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+						#change aes_lorawan to false
+						echo "Disabling local AES LoRaWAN to push encrypted data to TTN"
+						echo "If you want to locally decrypt LoRaWAN packets, edit key_LoRaWAN.py and provide NwkSKey/AppSKey for devices"
+ 						jq '.gateway_conf.aes_lorawan = false' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
 				 						
 						#get gateway id
 						/home/pi/lora_gateway/scripts/create_gwid.sh

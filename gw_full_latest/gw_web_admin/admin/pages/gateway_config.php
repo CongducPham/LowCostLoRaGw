@@ -326,7 +326,7 @@ require 'header.php';
    										   </tr>	
    										   
    										   <tr>
-   										   	<td>Mac addresss</td>
+   										   	<td>MAC addresss</td>
    										   	<td id="mac_address_value">
    										   		<?php 
 													ob_start(); 
@@ -341,6 +341,7 @@ require 'header.php';
    										   	</td> 
    										   	<td align="right">not editable</td>
    										   </tr>	
+   										   
    										   <tr>
    										   		<td>GPS coordinates</td>
    										   		<td>
@@ -446,6 +447,7 @@ require 'header.php';
    										   			<button align="right" id="btn_submit_position" class="btn btn-primary">Submit<span class="fa fa-arrow-right"></span></button>
    										   		</td>
    										   </tr>
+   										   
     										   <tr>
    										   		<td>wappkey</td>
    										   		<td id="wappkey_value">
@@ -478,7 +480,8 @@ require 'header.php';
    										   		<td id="td_wappkey_submit" align="right">
    										   			<button id="btn_wappkey_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										   		</td>
-   										   </tr>     										   
+   										   </tr>
+   										        										   
    										   <tr>
    										   		<td>raw format</td>
    										   		<td id="raw_value">
@@ -512,9 +515,44 @@ require 'header.php';
    										   			<button id="btn_raw_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										   		</td>
    										   </tr>
+
    										   <tr>
-    									    <td>AES</td>
-    										<!-- <td id="aes_value"><?php echo $gw_conf['aes']; ?></td> -->
+    									    <td>aes_lorawan</td>
+    										<td id="aes_lorawan_value">
+    											<?php
+    												if($gw_conf['aes_lorawan'])
+													{
+    													echo "true";    
+													}
+													else {
+   					 									echo "false";   
+													}
+    											?>
+    										</td>
+    										<td align="right"><button id="btn_edit_aes_lorawan" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_aes_lorawan">
+   										    	<div id="div_edit_aes_lorawan" class="form-group">
+                                            		<label></label>
+                                           			<div class="radio">
+                                           			<fieldset id="aes_lorawan_group" >
+                                                		<label>
+                                                    		<input type="radio" name="aes_lorawan_group" id="aes_lorawan_true" value="true" <?php if($gw_conf['aes_lorawan']) echo "checked"?> >True
+                                                		</label>
+                                                		</br>
+                                                		<label>
+                                                    		<input type="radio" name="aes_lorawan_group" id="aes_lorawan_false" value="false" <?php if(!$gw_conf['aes_lorawan']) echo "checked"?> >False
+                                                		</label>
+                                                		</fieldset>
+                                            		</div>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_aes_lorawan_submit" align="right">
+   										    		<button id="btn_aes_lorawan_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>
+   										      										   
+   										   <tr>
+    									    <td>aes</td>
     										<td id="aes_value">
     											<?php
     												if($gw_conf['aes'])
@@ -547,7 +585,42 @@ require 'header.php';
    										    		<button id="btn_aes_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
    										   </tr>
-   										   
+
+   										   <tr>
+    									    <td>lsc</td>
+    										<td id="lsc_value">
+    											<?php
+    												if($gw_conf['lsc'])
+													{
+    													echo "true";    
+													}
+													else {
+   					 									echo "false";   
+													}
+    											?>
+    										</td>
+    										<td align="right"><button id="btn_edit_lsc" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   	<td id="td_edit_lsc">
+   										    	<div id="div_edit_lsc" class="form-group">
+                                            		<label></label>
+                                           			<div class="radio">
+                                           			<fieldset id="lsc_group" >
+                                                		<label>
+                                                    		<input type="radio" name="lsc_group" id="lsc_true" value="true" <?php if($gw_conf['lsc']) echo "checked"?> >True
+                                                		</label>
+                                                		</br>
+                                                		<label>
+                                                    		<input type="radio" name="aes_group" id="aes_false" value="false" <?php if(!$gw_conf['lsc']) echo "checked"?> >False
+                                                		</label>
+                                                		</fieldset>
+                                            		</div>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_lsc_submit" align="right">
+   										    		<button id="btn_lsc_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>
+   										      										   
    										   <tr>
     									    <td>downlink</td>
     										<td id="downlink_value">

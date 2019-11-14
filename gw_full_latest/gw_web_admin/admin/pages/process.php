@@ -196,7 +196,24 @@ if (isset($_GET["raw"])) {
 }
 
 /*************************
- * Setting AES
+ * Setting aes_lorawan
+ *************************/
+ 
+if (isset($_GET["aes_lorawan"]) && (! empty($_GET["aes_lorawan"]))) {
+    
+    $aes_lorawan = htmlspecialchars($_GET["aes_lorawan"]);
+	$output = update_gw_conf("gateway_conf","aes_lorawan", $aes_lorawan);
+	
+	if($output == 0){
+		echo '<p><center><font color="green">AES LoRaWAN option updated</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to update AES LoRaWAN option</font></center></p>';	
+	}
+}
+
+/*************************
+ * Setting aes
  *************************/
  
 if (isset($_GET["aes"]) && (! empty($_GET["aes"]))) {
@@ -209,6 +226,23 @@ if (isset($_GET["aes"]) && (! empty($_GET["aes"]))) {
 	}
 	else{
 		echo '<p><center><font color="red">Failed to update AES option</font></center></p>';	
+	}
+}
+
+/*************************
+ * Setting lsc
+ *************************/
+ 
+if (isset($_GET["lsc"]) && (! empty($_GET["lsc"]))) {
+    
+    $lsc = htmlspecialchars($_GET["lsc"]);
+	$output = update_gw_conf("gateway_conf","lsc", $lsc);
+	
+	if($output == 0){
+		echo '<p><center><font color="green">LSC option updated</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to update LSC option</font></center></p>';	
 	}
 }
 

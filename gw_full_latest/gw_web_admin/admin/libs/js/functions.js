@@ -470,6 +470,32 @@ var defaultMsgDisplayTimer = 1500;
     	$('#td_raw_submit').hide();
 	});
 
+//==================================
+// Setting AES LoRaWAN
+//==================================
+    $('#td_edit_aes_lorawan').hide();
+    $('#td_aes_lorawan_submit').hide();
+    $("#gw_msg").hide();
+    
+    $('#btn_edit_aes_lorawan').click(function() {	
+    	$('#td_edit_aes_lorawan').show();
+    	$('#td_aes_lorawan_submit').show();
+    });
+ 
+    $('#btn_aes_lorawan_submit').click(function() {	
+    	aes_lorawan = $( "#aes_lorawan_group input:checked" ).val();
+    	$.get("process.php", {aes_lorawan: aes_lorawan}, function(data){	
+			$("#gw_config_msg").html(data);
+            	//erase message after 5 seconds
+	   			setTimeout(function() {
+  					$('#gw_config_msg').html("");
+	     			},defaultMsgDisplayTimer); 	
+        });
+    	
+		$('#aes_lorawan_value').html(aes_lorawan);
+		$('#td_edit_aes_lorawan').hide();
+		$('#td_aes_lorawan_submit').hide();	
+    });
 
 //==================================
 // Setting AES
@@ -477,7 +503,6 @@ var defaultMsgDisplayTimer = 1500;
     $('#td_edit_aes').hide();
     $('#td_aes_submit').hide();
     $("#gw_msg").hide();
-    //$("#div_mode_select").hide();
     
     $('#btn_edit_aes').click(function() {	
     	$('#td_edit_aes').show();
@@ -486,7 +511,6 @@ var defaultMsgDisplayTimer = 1500;
  
     $('#btn_aes_submit').click(function() {	
     	aes = $( "#aes_group input:checked" ).val();
-    	//alert(aes);
     	$.get("process.php", {aes: aes}, function(data){	
 			$("#gw_config_msg").html(data);
             	//erase message after 5 seconds
@@ -500,6 +524,32 @@ var defaultMsgDisplayTimer = 1500;
 		$('#td_aes_submit').hide();	
     });
 
+//==================================
+// Setting AES
+//==================================
+    $('#td_edit_lsc').hide();
+    $('#td_lsc_submit').hide();
+    $("#gw_msg").hide();
+    
+    $('#btn_edit_lsc').click(function() {	
+    	$('#td_edit_lsc').show();
+    	$('#td_lsc_submit').show();
+    });
+ 
+    $('#btn_lsc_submit').click(function() {	
+    	lsc = $( "#lsc_group input:checked" ).val();
+    	$.get("process.php", {lsc: lsc}, function(data){	
+			$("#gw_config_msg").html(data);
+            	//erase message after 5 seconds
+	   			setTimeout(function() {
+  					$('#gw_config_msg').html("");
+	     			},defaultMsgDisplayTimer); 	
+        });
+    	
+		$('#lsc_value').html(lsc);
+		$('#td_edit_lsc').hide();
+		$('#td_lsc_submit').hide();	
+    });
 
 //==================================
 // Setting downlink
