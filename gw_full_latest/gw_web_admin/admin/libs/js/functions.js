@@ -2471,5 +2471,6 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 		$('#td_edit_cloudNodeRed_status').hide();
 	    $('#td_cloudNodeRed_status_submit').hide();
 	});
-	
-});	
+
+//End of main block
+});

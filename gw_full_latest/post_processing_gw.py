@@ -734,7 +734,7 @@ if (_gw_downlink):
 		print "post downlink: none existing downlink-post-queued.txt"			
 
 	print "Loading lib to compute downlink MIC"
-	from decrypt_LoRaWAN import loraWAN_get_MIC
+	from decrypt_AES import loraWAN_get_MIC
 
 	print "Starting thread to check for downlink requests every %d seconds" % _gw_downlink
 	sys.stdout.flush()
@@ -870,6 +870,7 @@ while True:
 					#it is possible to have a broadcast address but since the only device that is listening 
 					#is the one that has sent a packet, there is little interest in doing so
 					#so currently, we use the sending device's address to compute the MIC
+					
 					MIC=loraWAN_get_MIC(src,request_json["data"])
 					#add the 4 byte MIC information into the json line
 					request_json['MIC0']=hex(MIC[0])
@@ -1204,7 +1205,10 @@ while True:
 				
 				_hasClearData=0
 				encrypted_pktstr=getAllLine()
-				
+
+				encrypted_pktstr_b64=base64.b64encode(encrypted_pktstr)
+				print "--> FYI base64 of AES frame w/MIC: "+encrypted_pktstr_b64
+									
 				#if encrypted packet, we will try all enabled decryption algorithms
 				if _adhoc_local_decrypt==1: 
 						

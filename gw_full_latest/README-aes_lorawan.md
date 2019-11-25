@@ -27,7 +27,8 @@ This module will add AES encryption as well as limited LoRaWAN support for both 
 ```
 device_key = {
 	#do not remove default entry
-	#replace defaukt key by your default key if necessary
+	#replace default key by your default key if necessary
+	#use 4-byte hex format, e.g. 26014821
 	"default" : {
 		"AppSKey" : '2B7E151628AED2A6ABF7158809CF4F3C',
 		"NwkSKey" : '2B7E151628AED2A6ABF7158809CF4F3C'
@@ -39,6 +40,28 @@ device_key = {
 	"26014821" : {
 		"AppSKey" : '0540AC89349E0C60650D50CF00F01C0D',
 		"NwkSKey" : '0110FF0060BA0AE08712606B0A508F01'
+	}		
+}
+```
+
+- For AES devices, `key_AES.py` defines a Python dictionary where you can add your device id (4-byte device address) and the associated NwkSKey and AppSKey. The structure is as follows, just replace/add with your devices and keys:
+
+```
+device_key = {
+	#do not remove default entry
+	#replace default key by your default key if necessary
+	#use 4-byte hex format, e.g. 26014821	
+	"default" : {
+		"AppSKey" : '2B7E151628AED2A6ABF7158809CF4F3C',
+		"NwkSKey" : '2B7E151628AED2A6ABF7158809CF4F3C'
+#	},
+#	"00000006" : {
+#		"AppSKey" : '2B7E151628AED2A6ABF7158809CF4F3C',
+#		"NwkSKey" : '2B7E151628AED2A6ABF7158809CF4F3C'
+#	},
+#	"000000FF" : {
+#		"AppSKey" : '0540AC89349E0C60650D50CF00F01C0D',
+#		"NwkSKey" : '0110FF0060BA0AE08712606B0A508F01'
 	}		
 }
 ```
@@ -261,38 +284,7 @@ When a LoRaWAN packet is received, `post_processing_gw.py` will convert the raw 
 	from decrypt_LoRaWAN import loraWAN_process_pkt
 	plain_payload=loraWAN_process_pkt(lorapkt)
 	
-`loraWAN_process_pkt()` is provided by `decrypt_LoRaWAN.py`:
-
-	import LoRaWAN
-	from LoRaWAN.MHDR import MHDR
-	
-	def loraWAN_process_pkt(lorapkt):
-	
-		appskey=bytearray.fromhex(loraWAN_config.AppSKey)
-		appskeylist=[]
-	
-		for i in range (0,len(appskey)):
-			appskeylist.append(appskey[i])
-	
-		nwkskey=bytearray.fromhex(loraWAN_config.NwkSKey)
-		nwkskeylist=[]
-		for i in range (0,len(nwkskey)):
-			nwkskeylist.append(nwkskey[i])
-	
-		lorawan = LoRaWAN.new(nwkskeylist)
-		lorawan.read(lorapkt)
-		lorawan.compute_mic()
-		if lorawan.valid_mic():
-			print "loraWAN: valid MIC"
-			lorawan = LoRaWAN.new(appskeylist)
-			lorawan.read(lorapkt)	
-			plain_payload = ''.join(chr(x) for x in lorawan.get_payload())
-			print "loraWAN: plain payload is "+plain_payload
-			return plain_payload
-		else:
-			return "###BADMIC###"	
-	
-If `post_processing_gw.py` cannot decrypt the payload because encryption keys are not available then you can use a json cloud (such as Firebase) to store the encrypted payload in base64 format. Note that if NwkSkey is not available, then MIC computation can not be performed therefore you are not sure at the gateway level that the encrypted payload comes from the right sensor or not. LoRaWAN gateways have the same issue as NwkSKey is stored in LoRaWAN network server.
+`loraWAN_process_pkt()` is provided by `decrypt_LoRaWAN.py`. If `post_processing_gw.py` cannot decrypt the payload because encryption keys are not available then you can use a json cloud (such as Firebase) to store the encrypted payload in base64 format. Note that if NwkSkey is not available, then MIC computation can not be performed therefore you are not sure at the gateway level that the encrypted payload comes from the right sensor or not. LoRaWAN gateways have the same issue as NwkSKey is stored in LoRaWAN network server.
 
 Example 3: full example with real sensor and the low-cost gateway: encapsulated encrypted format
 ================================================================================================

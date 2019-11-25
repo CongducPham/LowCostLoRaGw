@@ -29,5 +29,7 @@ fi
 
 #launching services dnsmasq and hostapd
 echo "Starting hostapd and dnsmasq services"
+sudo systemctl unmask dnsmasq
+sudo systemctl unmask hostapd
 sudo service dnsmasq start
 sudo service hostapd start

@@ -273,6 +273,7 @@ require 'header.php';
    										   <tr>
    										   <td>IP address</td>
    										   <td id="ip_address_value">
+   										   		<!--
    										   		<?php 
 													ob_start(); 
 													system("ifconfig eth0");
@@ -321,6 +322,14 @@ require 'header.php';
 														echo "eth0: $ip";													
 													} 
 												?>
+												-->
+   										   		<?php 
+													ob_start(); 
+													system("hostname -I | cut -d ' ' -f1");
+													$ip=ob_get_contents(); 
+													ob_clean(); 
+													echo "$ip";
+												?>												
    										   </td>
    										   <td align="right">not editable</td>
    										   </tr>	
@@ -328,6 +337,7 @@ require 'header.php';
    										   <tr>
    										   	<td>MAC addresss</td>
    										   	<td id="mac_address_value">
+   										   		<!--
    										   		<?php 
 													ob_start(); 
 													system("ifconfig eth0"); 
@@ -338,6 +348,14 @@ require 'header.php';
 													$mac=substr($mycom,($pmac+7),17); 
 													echo "eth0: $mac"; 
 												?>
+												-->
+   										   		<?php 
+													ob_start(); 
+													system("ifconfig eth0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'");
+													$mac=ob_get_contents(); 
+													ob_clean(); 
+													echo "eth0: $mac"; 
+												?>												
    										   	</td> 
    										   	<td align="right">not editable</td>
    										   </tr>	

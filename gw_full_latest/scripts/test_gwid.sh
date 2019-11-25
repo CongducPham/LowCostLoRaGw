@@ -5,14 +5,23 @@ then
 	echo "Taking provided address: $1"
 	gwid="$1"
 else	
-
 	#get the eth0 MAC addr
-	gwid=`ifconfig | grep 'eth0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }'`
-
+	gwid=`ifconfig | grep eth0 | grep HWaddr | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }'`
+	
+	if [ "$gwid" = "" ]
+		then
+			gwid=`ifconfig eth0 | grep 'ether' | awk '{print $2}' | sed 's/://g' | awk '{ print toupper($1) }'`
+		fi
+		
 	#get the wlan0 MAC addr
 	if [ "$gwid" = "" ]
 		then
-			gwid=`ifconfig | grep 'wlan0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }'`
+			gwid=`ifconfig | grep 'wlan0' | grep HWaddr | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }'`
+			
+		if [ "$gwid" = "" ]
+			then
+				gwid=`ifconfig wlan0 | grep 'ether' | awk '{print $2}' | sed 's/://g' | awk '{ print toupper($1) }'`
+			fi	
 			
 			#it means that the wlan0 interface works in access point mode or has no IP address assigned
 			#so get the address from the ether field

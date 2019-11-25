@@ -2,7 +2,7 @@
 ." Process this file with
 ." groff -man -Tascii foo.1
 ."
-.TH pigs 1 2012-2015 Linux "pigpio archive"
+.TH pigs 1 2012-2018 Linux "pigpio archive"
 .SH NAME
 pigs - command line socket access to the pigpio daemon.
 
@@ -21,6 +21,10 @@ or
 .B "echo {command}+ >/dev/pigpio"
 
 .SH DESCRIPTION
+
+.ad l
+
+.nh
 
 
 .br
@@ -45,10 +49,10 @@ whereas /dev/pigpio uses the pipe interface.
 .br
 .SS Features
 .br
-o PWM on any of GPIO 0-31
+o hardware timed PWM on any of GPIO 0-31
 
 .br
-o servo pulses on any of GPIO 0-31
+o hardware timed servo pulses on any of GPIO 0-31
 
 .br
 o reading/writing all of the GPIO in a bank as one operation
@@ -91,6 +95,26 @@ echo "{command}+" >/dev/pigpio
 
 .br
 pigs will show the result of the command on screen.
+
+.br
+The pigs process returns an exit status (which can be displayed with
+the command echo $?).
+
+.br
+
+.EX
+PIGS_OK            0
+.br
+PIGS_CONNECT_ERR 255
+.br
+PIGS_OPTION_ERR  254
+.br
+PIGS_SCRIPT_ERR  253
+.br
+.br
+.br
+
+.EE
 
 .br
 The results of /dev/pigpio commands need to be read from /dev/pigout,
@@ -184,6 +208,37 @@ When a command takes a number as a parameter it may be entered as hex
 
 .br
 E.g. 23 is 23 decimal, 0x100 is 256 decimal, 070 is 56 decimal.
+
+.br
+Some commands can return a variable number of data bytes.  By
+default this data is displayed as decimal.  The pigs -a option
+can be used to force the display as ASCII and the pigs -x
+option can be used to force the display as hex.
+
+.br
+E.g. assuming the transmitted serial data is the letters ABCDEONM
+
+.br
+
+.EX
+$ pigs slr 4 100
+.br
+8 65 66 67 68 69 79 78 77
+.br
+
+.br
+$ pigs -a slr 4 100
+.br
+8 ABCDEONM
+.br
+
+.br
+$ pigs -x slr 4 100
+.br
+8 41 42 43 44 45 4f 4e 4d
+.br
+
+.EE
 
 .br
 
@@ -480,6 +535,436 @@ ERROR: no permission to update one or more GPIO
 
 .br
 
+.IP "\fBBSCX bctl bvs\fP - BSC I2C/SPI transfer"
+.IP "" 4
+
+.br
+This command performs a BSC I2C/SPI slave transfer as defined by
+\fBbctl\fP with data \fBbvs\fP.
+
+.br
+This function is not available on the BCM2711 (e.g. as
+used in the Pi4B).
+
+.br
+I can't get SPI to work properly.  I tried with a
+control word of 0x303 and swapped MISO and MOSI.
+
+.br
+The command sets the BSC mode and writes any data \fBbvs\fP
+to the BSC transmit FIFO.  It returns the data count (at least 1
+for the status word), the status word, followed by any data bytes
+read from the BSC receive FIFO.
+
+.br
+Note that the control word sets the BSC mode.  The BSC will stay in
+that mode until a different control word is sent.
+
+.br
+For I2C use a control word of (I2C address << 16) + 0x305.
+
+.br
+E.g. to talk as I2C slave with address 0x13 use 0x130305.
+
+.br
+The BSC peripheral uses GPIO 18 (SDA) and 19 (SCL) in I2C mode
+and GPIO 18 (MOSI), 19 (SCLK), 20 (MISO), and 21 (CE) in SPI mode.  You
+need to swap MISO/MOSI between master and slave.
+
+.br
+When a zero control word is received GPIO 18-21 will be reset
+to INPUT mode.
+
+.br
+The control word consists of the following bits.
+
+.br
+
+.EX
+22 21 20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
+.br
+ a  a  a  a  a  a  a  -  - IT HC TF IR RE TE BK EC ES PL PH I2 SP EN
+.br
+
+.EE
+
+.br
+Bits 0-13 are copied unchanged to the BSC CR register.  See
+pages 163-165 of the Broadcom peripherals document for full
+details.
+
+.br
+
+.EX
+aaaaaaa   defines the I2C slave address (only relevant in I2C mode)
+IT        invert transmit status flags
+HC        enable host control
+TF        enable test FIFO
+IR        invert receive status flags
+RE        enable receive
+TE        enable transmit
+BK        abort operation and clear FIFOs
+EC        send control register as first I2C byte
+ES        send status register as first I2C byte
+PL        set SPI polarity high
+PH        set SPI phase high
+I2        enable I2C mode
+SP        enable SPI mode
+EN        enable BSC peripheral
+
+.EE
+
+.br
+The returned status has the following format
+
+.br
+
+.EX
+20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
+.br
+ S  S  S  S  S  R  R  R  R  R  T  T  T  T  T RB TE RF TF RE TB
+.br
+
+.EE
+
+.br
+Bits 0-15 are copied unchanged from the BSC FR register.  See
+pages 165-166 of the Broadcom peripherals document for full
+details.
+
+.br
+
+.EX
+SSSSS   number of bytes successfully copied to transmit FIFO
+RRRRR   number of bytes in receieve FIFO
+TTTTT   number of bytes in transmit FIFO
+RB      receive busy
+TE      transmit FIFO empty
+RF      receive FIFO full
+TF      transmit FIFO full
+RE      receive FIFO empty
+TB      transmit busy
+
+.EE
+
+.br
+This example assumes that GPIO 2/3 are connected to GPIO 18/19.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs bscx 0x130305 # start BSC as I2C slave 0x13
+.br
+1 18
+.br
+
+.br
+$ i2cdetect -y 1
+.br
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+.br
+00:          -- -- -- -- -- -- -- -- -- -- -- -- --
+.br
+10: -- -- -- 13 -- -- -- -- -- -- -- -- -- -- -- --
+.br
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+.br
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+.br
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+.br
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+.br
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+.br
+70: -- -- -- -- -- -- -- --
+.br
+
+.br
+$ pigs i2co 1 0x13 0 # get handle for device 0x13 on bus 1
+.br
+0
+.br
+
+.br
+$ pigs i2cwd 0 90 87 51 9 23 # write 5 bytes
+.br
+
+.br
+$ pigs bscx 0x130305 # check for data
+.br
+6 18 90 87 51 9 23
+.br
+
+.br
+$ pigs bscx 0x130305 11 13 15 17 # check for data and send 4 bytes
+.br
+1 262338
+.br
+
+.br
+$ pigs i2crd 0 4 # read 4 bytes
+.br
+4 11 13 15 17
+.br
+
+.br
+$ pigs i2cwd 0 90 87 51 9 23 # write 5 bytes
+.br
+$ pigs bscx 0x130305 11 13 15 17 # check for data and send 4 bytes
+.br
+6 262338 90 87 51 9 23
+.br
+
+.br
+$ pigs i2crd 0 4
+.br
+4 11 13 15 17
+.br
+
+.br
+$ pigs bscx 0x130305 22 33 44 55 66
+.br
+1 327938
+.br
+$ pigs i2crd 0 5
+.br
+5 22 33 44 55 66
+.br
+
+.EE
+
+.br
+
+.IP "\fBBSPIC cs\fP - Close bit bang SPI"
+.IP "" 4
+
+.br
+This command stops bit banging SPI on a set of GPIO
+opened with \fBBSPIO\fP.
+
+.br
+The set of GPIO is specifed by \fBcs\fP.
+
+.br
+Upon success nothing is returned.  On error a negative status code
+will be returned.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs bspic 10
+.br
+
+.br
+$ pigs bspic 10
+.br
+-142
+.br
+ERROR: no bit bang SPI in progress on GPIO
+.br
+
+.EE
+
+.br
+
+.IP "\fBBSPIO cs miso mosi sclk b spf\fP - Open bit bang SPI"
+.IP "" 4
+
+.br
+This command starts bit banging SPI on a group of GPIO with slave
+select \fBcs\fP, MISO \fBmiso\fP, MOSI \fBmosi\fP, and clock \fBsclk\fP.
+
+.br
+Data will be transferred at baud \fBb\fP bits per second (which may
+be set in the range 50-250000).
+
+.br
+The flags \fBspf\fP may be used to modify the default behaviour of
+mode 0, active low chip select.
+
+.br
+The flags consists of the least significant 22 bits.
+
+.br
+
+.EX
+21 20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
+.br
+ 0  0  0  0  0  0  R  T  0  0  0  0  0  0  0  0  0  0  0  p  m  m
+.br
+
+.EE
+
+.br
+mm defines the SPI mode.
+
+.br
+
+.EX
+Mode POL PHA
+.br
+ 0    0   0
+.br
+ 1    0   1
+.br
+ 2    1   0
+.br
+ 3    1   1
+.br
+
+.EE
+
+.br
+p is 0 if CS is active low (default) and 1 for active high.
+
+.br
+T is 1 if the least significant bit is transmitted on MOSI first, the
+default (0) shifts the most significant bit out first.
+
+.br
+R is 1 if the least significant bit is received on MISO first, the
+default (0) receives the most significant bit first.
+
+.br
+The other bits in flags should be set to zero.
+
+.br
+Upon success 0 is returned.  On error a negative status code
+will be returned.
+
+.br
+If more than one device is connected to the SPI bus (defined by
+SCLK, MOSI, and MISO) each must have its own CS.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs bspio  9 11 12 13 50000 0
+.br
+
+.br
+$ pigs bspio 10 11 12 13 50000 0
+.br
+
+.br
+$ pigs bspio 29 19 20 21 50000 0 # GPIO 29 not avaialble on this Pi
+.br
+-41
+.br
+ERROR: no permission to update GPIO
+.br
+
+.EE
+
+.br
+
+.IP "\fBBSPIX cs bvs\fP - SPI bit bang transfer"
+.IP "" 4
+
+.br
+This command writes bytes \fBbvs\fP to the bit bang SPI device
+associated with slave select \fBcs\fP.  It returns the same
+number of bytes read from the device.
+
+.br
+Upon success the count of returned bytes followed by the bytes themselves
+is returned.  On error a negative status code will be returned.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs bspio 5 13 19 12 10000 0 # MCP4251 DAC
+.br
+$ pigs bspio 6 13 19 12 20000 3 # MCP3008 ADC
+.br
+
+.br
+$ pigs bspix 5 0 16             # set DAC to 16
+.br
+2 255 255
+.br
+
+.br
+$ pigs bspix 5 12 0             # read back DAC
+.br
+2 254 16
+.br
+
+.br
+$ pigs bspix 6 1 128 0          # read ADC input 0
+.br
+3 0 3 184                       # 952
+.br
+
+.br
+$ pigs bspix 5 0 240            # set DAC to 240
+.br
+2 255 255
+.br
+
+.br
+$ pigs bspix 5 12 0             # read back DAC
+.br
+2 254 240
+.br
+
+.br
+$ pigs bspix 6 1 128 0          # read ADC input 0
+.br
+3 0 0 63                        # 63
+.br
+
+.br
+$ pigs bspix 5 0 128            # set DAC to 128
+.br
+2 255 255
+.br
+
+.br
+$ pigs bspix 5 12 0             # read back DAC
+.br
+2 254 128
+.br
+
+.br
+$ pigs bspix 6 1 128 0          # read ADC input 0
+.br
+3 0 1 255                       # 511
+.br
+
+.br
+$ pigs bspic 5                  # close SPI CS 5
+.br
+$ pigs bspic 6                  # close SPI CS 6
+.br
+
+.br
+$ pigs bspic 5                  # try to close SPI CS 5 again
+.br
+-142
+.br
+ERROR: no bit bang SPI in progress on GPIO
+.br
+
+.EE
+
+.br
+
+.br
+
 .IP "\fBCF1 uvs\fP - Custom function 1"
 .IP "" 4
 
@@ -514,14 +999,115 @@ configuration settings to \fBv\fP.
 
 .br
 
+.IP "\fBEVM h bits\fP - Set events to monitor"
+.IP "" 4
+This command starts event reporting on handle \fBh\fP (returned by
+a prior call to \fBNO\fP).
+
+.br
+Upon success nothing is returned.  On error a negative status code
+will be returned.
+
+.br
+The notification gets reports for each event specified by \fBbits\fP.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs evm 0 -1 # Shorthand for events 0-31.
+.br
+$ pigs evm 0 0xf0 # Get notifications for events 4-7.
+.br
+
+.br
+$ pigs evm 1 0xf
+.br
+-25
+.br
+ERROR: unknown handle
+.br
+
+.EE
+
+.br
+
+.IP "\fBEVT event\fP - Trigger event"
+.IP "" 4
+This command triggers event \fBevent\fP.
+
+.br
+One event, number 31, is predefined.  This event is
+auto generated on BSC slave activity.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs evt 12
+.br
+$ pigs evt 5
+.br
+
+.br
+$ pigs evt 32
+.br
+-143
+.br
+ERROR: bad event id
+.br
+
+.EE
+
+.br
+
+.IP "\fBFC h\fP - Close file handle"
+.IP "" 4
+This command closes a file handle \fBh\fP previously opened with \fBFO\fP.
+
+.br
+Upon success nothing is returned.  On error a negative status code
+will be returned.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs fc 0 # First close okay.
+.br
+
+.br
+$ pigs fc 0 # Second fails.
+.br
+-25
+.br
+ERROR: unknown handle
+.br
+
+.EE
+
+.br
+
 .IP "\fBFG u stdy\fP - Set a glitch filter on a GPIO"
 .IP "" 4
 
 .br
-Level changes on the GPIO are not reported unless the level
+Level changes on the GPIO \fBu\fP are not reported unless the level
 has been stable for at least \fBstdy\fP microseconds.  The
 level is then reported.  Level changes of less than \fBstdy\fP
 microseconds are ignored.
+
+.br
+The filter only affects callbacks (including pipe notifications).
+
+.br
+The \fBR/READ\fP, \fBBR1\fP, and \fBBR2\fP commands are not affected.
 
 .br
 Note, each (stable) edge will be timestamped \fBstdy\fP microseconds
@@ -529,19 +1115,396 @@ after it was first detected.
 
 .br
 
+\fBExample\fP
+.br
+
+.EX
+$ pigs fg 4 250
+.br
+
+.br
+$ pigs fg 4 1000000
+.br
+-125
+.br
+ERROR: bad filter parameter
+.br
+
+.EE
+
+.br
+
+.IP "\fBFL pat num\fP - List files which match pattern"
+.IP "" 4
+This command returns a list of the files matching \fBpat\fP. Up
+to \fBnum\fP bytes may be returned.
+
+.br
+Upon success the count of returned bytes followed by the matching
+files is returned.  On error a negative status code will be returned.
+
+.br
+A newline (0x0a) character separates each file name.
+
+.br
+Only files which have a matching entry in /opt/pigpio/access may
+be listed.
+
+.br
+Suppose /opt/pigpio/access contains
+
+.br
+/sys/bus/w1/devices/28*/w1_slave r
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs -a fl "/sys/bus/w1/devices/28*/w1_slave" 5000
+.br
+90 /sys/bus/w1/devices/28-000005d34cd2/w1_slave
+.br
+/sys/bus/w1/devices/28-001414abbeff/w1_slave
+.br
+
+.br
+$ pigs -a fl "/sys/bus/*" 5000
+.br
+ERROR: no permission to access file
+.br
+-137
+.br
+
+.EE
+
+.br
+
 .IP "\fBFN u stdy actv\fP - Set a noise filter on a GPIO"
 .IP "" 4
 
 .br
-Level changes on the GPIO are ignored until a level which has
+Level changes on the GPIO \fBu\fP are ignored until a level which has
 been stable for \fBstdy\fP microseconds is detected.  Level
 changes on the GPIO are then reported for \fBactv\fP microseconds
 after which the process repeats.
 
 .br
+The filter only affects callbacks (including pipe notifications).
+
+.br
+The \fBR/READ\fP, \fBBR1\fP, and \fBBR2\fP commands are not affected.
+
+.br
 Note, level changes before and after the active period may
 be reported.  Your software must be designed to cope with
 such reports.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs fn 7 250 1000
+.br
+
+.br
+$ pigs fn 7 2500000 1000
+.br
+-125
+.br
+ERROR: bad filter parameter
+.br
+
+.EE
+
+.br
+
+.IP "\fBFO file mode\fP - Open a file in mode"
+.IP "" 4
+This function returns a handle to a file \fBfile\fP opened
+in a specified mode \fBmode\fP.
+
+.br
+Upon success a handle (>=0) is returned.  On error a negative status code
+will be returned.
+
+.br
+File
+
+.br
+A file may only be opened if permission is granted by an entry in
+/opt/pigpio/access.  This is intended to allow remote access to files
+in a more or less controlled manner.
+
+.br
+Each entry in /opt/pigpio/access takes the form of a file path
+which may contain wildcards followed by a single letter permission.
+The permission may be R for read, W for write, U for read/write,
+and N for no access.
+
+.br
+Where more than one entry matches a file the most specific rule
+applies.  If no entry matches a file then access is denied.
+
+.br
+Suppose /opt/pigpio/access contains the following entries
+
+.br
+
+.EX
+/home/* n
+.br
+/home/pi/shared/dir_1/* w
+.br
+/home/pi/shared/dir_2/* r
+.br
+/home/pi/shared/dir_3/* u
+.br
+/home/pi/shared/dir_1/file.txt n
+.br
+
+.EE
+
+.br
+Files may be written in directory dir_1 with the exception
+of file.txt.
+
+.br
+Files may be read in directory dir_2.
+
+.br
+Files may be read and written in directory dir_3.
+
+.br
+If a directory allows read, write, or read/write access then files may
+be created in that directory.
+
+.br
+In an attempt to prevent risky permissions the following paths are
+ignored in /opt/pigpio/access.
+
+.br
+
+.EX
+a path containing ..
+.br
+a path containing only wildcards (*?)
+.br
+a path containing less than two non-wildcard parts
+.br
+
+.EE
+
+.br
+Mode
+
+.br
+The mode may have the following values.
+
+.br
+
+.EX
+        Value   Meaning
+READ      1     open file for reading
+WRITE     2     open file for writing
+RW        3     open file for reading and writing
+
+.EE
+
+.br
+The following values may be or'd into the mode.
+
+.br
+
+.EX
+         Value   Meaning
+APPEND     4     All writes append data to the end of the file
+CREATE     8     The file is created if it doesn't exist
+TRUNC     16     The file is truncated
+
+.EE
+
+.br
+Newly created files are owned by root with permissions owner read and write.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ ls /ram/*.c
+.br
+/ram/command.c      /ram/pigpiod.c  /ram/pigs.c
+.br
+/ram/x_pigpiod_if.c /ram/pig2vcd.c  /ram/pigpiod_if2.c
+.br
+/ram/x_pigpio.c     /ram/x_repeat.c /ram/pigpio.c
+.br
+/ram/pigpiod_if.c   /ram/x_pigpiod_if2.c
+.br
+
+.br
+# assumes /opt/pigpio/access contains the following line
+.br
+# /ram/*.c r
+.br
+
+.br
+$ pigs fo /ram/pigpio.c 1
+.br
+0
+.br
+
+.br
+$ pigs fo /ram/new.c 1
+.br
+-128
+.br
+ERROR: file open failed
+.br
+
+.br
+$ pigs fo /ram/new.c 9
+.br
+1
+.br
+
+.br
+$ ls /ram/*.c -l
+.br
+-rw-r--r-- 1 joan joan  42923 Jul 10 11:22 /ram/command.c
+.br
+-rw------- 1 root root      0 Jul 10 16:54 /ram/new.c
+.br
+-rw-r--r-- 1 joan joan   2971 Jul 10 11:22 /ram/pig2vcd.c
+.br
+-rw------- 1 joan joan 296235 Jul 10 11:22 /ram/pigpio.c
+.br
+-rw-r--r-- 1 joan joan   9266 Jul 10 11:22 /ram/pigpiod.c
+.br
+-rw-r--r-- 1 joan joan  37331 Jul 10 11:22 /ram/pigpiod_if2.c
+.br
+-rw-r--r-- 1 joan joan  33088 Jul 10 11:22 /ram/pigpiod_if.c
+.br
+-rw-r--r-- 1 joan joan   7990 Jul 10 11:22 /ram/pigs.c
+.br
+-rw-r--r-- 1 joan joan  19970 Jul 10 11:22 /ram/x_pigpio.c
+.br
+-rw-r--r-- 1 joan joan  20804 Jul 10 11:22 /ram/x_pigpiod_if2.c
+.br
+-rw-r--r-- 1 joan joan  19844 Jul 10 11:22 /ram/x_pigpiod_if.c
+.br
+-rw-r--r-- 1 joan joan  19907 Jul 10 11:22 /ram/x_repeat.c
+.br
+
+.EE
+
+.br
+
+.IP "\fBFR h num\fP - Read bytes from file handle"
+.IP "" 4
+This command returns up to \fBnum\fP bytes of data read from the
+file associated with handle \fBh\fP.
+
+.br
+Upon success the count of returned bytes followed by the bytes themselves
+is returned.  On error a negative status code will be returned.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs fr 0 10
+.br
+5 48 49 128 144 255
+.br
+
+.br
+$ pigs fr 0 10
+.br
+0
+.br
+
+.EE
+
+.br
+
+.IP "\fBFS h num from\fP - Seek to file handle position"
+.IP "" 4
+This command seeks to a position within the file associated
+with handle \fBh\fP.
+
+.br
+The number of bytes to move is \fBnum\fP.  Positive offsets
+move forward, negative offsets backwards.  The move start
+position is determined by \fBfrom\fP as follows.
+
+.br
+
+.EX
+    From
+0   start
+1   current position
+2   end
+
+.EE
+
+.br
+Upon success the new byte position within the file (>=0) is
+returned.  On error a negative status code will be returned.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs fs 0 200 0 # Seek to start of file plus 200
+.br
+200
+.br
+
+.br
+$ pigs fs 0 0 1 # Return current position
+.br
+200
+.br
+
+.br
+$ pigs fs 0 0 2 # Seek to end of file, return size
+.br
+296235
+.br
+
+.EE
+
+.br
+
+.IP "\fBFW h bvs\fP - Write bytes to file handle"
+.IP "" 4
+This command writes bytes \fBbvs\fP to the file
+associated with handle \fBh\fP.
+
+.br
+Upon success nothing is returned.  On error a negative status code
+will be returned.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs fw 0 23 45 67 89
+.br
+
+.EE
 
 .br
 
@@ -690,7 +1653,7 @@ The GPIO must be one of the following.
 5   clock 1  All models but A and B (reserved for system use)
 6   clock 2  All models but A and B
 20  clock 0  All models but A and B
-21  clock 1  All models but A and B (Rev. 2) (reserved for system use)
+21  clock 1  All models but A and B Rev.2 (reserved for system use)
 
 .EE
 
@@ -742,11 +1705,11 @@ $ pigs hp 19 100 200000 # 20% dutycycle
 .br
 
 .br
-$ pigs hp 19 125000001 100000
+$ pigs hp 19 400000000 100000
 .br
 -96
 .br
-ERROR: hardware PWM frequency not 1-125M
+ERROR: invalid hardware PWM frequency
 .br
 
 .EE
@@ -782,14 +1745,14 @@ The GPIO must be one of the following.
 
 .br
 The actual number of steps beween off and fully on is the
-integral part of 250 million divided by \fBpf\fP.
+integral part of 250M/\fBpf\fP (375M/\fBpf\fP for the BCM2711).
 
 .br
-The actual frequency set is 250 million / steps.
+The actual frequency set is 250M/steps (375M/steps for the BCM2711).
 
 .br
-There will only be a million steps for a \fBpf\fP of 250.
-Lower frequencies will have more steps and higher
+There will only be a million steps for a \fBpf\fP of 250 (375 for
+the BCM2711). Lower frequencies will have more steps and higher
 frequencies will have fewer steps.  \fBpdc\fP is
 automatically scaled to take this into account.
 
@@ -880,6 +1843,23 @@ ERROR: unknown handle
 .IP "" 4
 This command returns a handle to access device \fBid\fP on I2C bus \fBib\fP.
 The device is opened with flags \fBif\fP.
+
+.br
+Physically buses 0 and 1 are available on the Pi.  Higher
+numbered buses will be available if a kernel supported bus
+multiplexor is being used.
+
+.br
+The GPIO used are given in the following table.
+
+.br
+
+.EX
+        SDA   SCL
+I2C 0    0     1
+I2C 1    2     3
+
+.EE
 
 .br
 No flags are currently defined.  The parameter \fBif\fP should be 0.
@@ -1705,6 +2685,96 @@ $ pigs p 4 255 # 100%
 
 .br
 
+.IP "\fBPADG pad\fP - Get pad drive strength"
+.IP "" 4
+
+.br
+This command gets the \fBpad\fP drive strength \fBpadma\fP in mA.
+
+.br
+Returns the pad drive strength if OK.  On error a negative status code
+will be returned.
+
+.br
+
+.EX
+Pad   GPIO
+0     0-27
+1     28-45
+2     46-53
+
+.EE
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs padg 0
+.br
+8
+.br
+$ pigs pads 0 16
+.br
+$ pigs padg 0
+.br
+16
+.br
+pigs padg 3
+.br
+-126
+.br
+ERROR: bad pad number
+.br
+
+.EE
+
+.br
+
+.IP "\fBPADS pad padma\fP - Set pad drive strength"
+.IP "" 4
+
+.br
+This command sets the \fBpad\fP drive strength \fBpadma\fP in mA.
+
+.br
+Upon success nothing is returned.  On error a negative status code
+will be returned.
+
+.br
+
+.EX
+Pad   GPIO
+0     0-27
+1     28-45
+2     46-53
+
+.EE
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs pads 0 16
+.br
+$ pigs padg 0
+.br
+16
+.br
+$ pigs pads 0 17
+.br
+-127
+.br
+ERROR: bad pad drive strength
+.br
+
+.EE
+
+.br
+
 .IP "\fBPARSE t\fP - Validate script"
 .IP "" 4
 
@@ -1803,16 +2873,17 @@ Upon success the new frequency is returned.  On error a negative status code
 will be returned.
 
 .br
-The selectable frequencies depend upon the sample rate with which the
-pigpiod daemon was started.  The sample rate is one of 1, 2, 4, 5, 8,
-or 10 microseconds (default 5).
+If PWM is currently active on the GPIO it will be
+switched off and then back on at the new frequency.
 
 .br
-Each GPIO can be independently set to one of 18 different PWM frequencies.
+Each GPIO can be independently set to one of 18 different PWM
+frequencies.
 
 .br
-If PWM is currently active on the GPIO it will be switched off and then
-back on at the new frequency.
+The selectable frequencies depend upon the sample rate which
+may be 1, 2, 4, 5, 8, or 10 microseconds (default 5).  The
+sample rate is set when the pigpio daemon is started.
 
 .br
 The frequencies for each sample rate are:
@@ -1820,21 +2891,46 @@ The frequencies for each sample rate are:
 .br
 
 .EX
-        #1    #2    #3   #4   #5   #6   #7   #8   #9
- 1us 40000 20000 10000 8000 5000 4000 2500 2000 1600
- 2us 20000 10000  5000 4000 2500 2000 1250 1000  800
- 4us 10000  5000  2500 2000 1250 1000  625  500  400
- 5us  8000  4000  2000 1600 1000  800  500  400  320
- 8us  5000  2500  1250 1000  625  500  313  250  200
-10us  4000  2000  1000  800  500  400  250  200  160
-                                                
-       #10   #11   #12  #13  #14  #15  #16  #17  #18
- 1us  1250  1000   800  500  400  250  200  100   50
- 2us   625   500   400  250  200  125  100   50   25
- 4us   313   250   200  125  100   63   50   25   13
- 5us   250   200   160  100   80   50   40   20   10
- 8us   156   125   100   63   50   31   25   13    6
-10us   125   100    80   50   40   25   20   10    5
+                       Hertz
+.br
+
+.br
+       1: 40000 20000 10000 8000 5000 4000 2500 2000 1600
+.br
+           1250  1000   800  500  400  250  200  100   50
+.br
+
+.br
+       2: 20000 10000  5000 4000 2500 2000 1250 1000  800
+.br
+            625   500   400  250  200  125  100   50   25
+.br
+
+.br
+       4: 10000  5000  2500 2000 1250 1000  625  500  400
+.br
+            313   250   200  125  100   63   50   25   13
+.br
+sample
+.br
+ rate
+.br
+ (us)  5:  8000  4000  2000 1600 1000  800  500  400  320
+.br
+            250   200   160  100   80   50   40   20   10
+.br
+
+.br
+       8:  5000  2500  1250 1000  625  500  313  250  200
+.br
+            156   125   100   63   50   31   25   13    6
+.br
+
+.br
+      10:  4000  2000  1000  800  500  400  250  200  160
+.br
+            125   100    80   50   40   25   20   10    5
+.br
 
 .EE
 
@@ -2116,6 +3212,45 @@ $ pigs procs 1
 -48
 .br
 ERROR: unknown script id
+.br
+
+.EE
+
+.br
+
+.IP "\fBPROCU sid pars\fP - Set script parameters"
+.IP "" 4
+
+.br
+This command sets the parameters of a stored script \fBsid\fP passing
+it up to 10 parameters.
+
+.br
+Upon success nothing is returned.  On error a negative status code
+will be returned.
+
+.br
+See \fBScripts\fP.
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+$ pigs proc tag 0 hp 18 p0 p1 mils 1000 jmp 0
+.br
+0
+.br
+$ pigs procu 0 50 500000
+.br
+$ pigs procr 0
+.br
+$ pigs procu 0 100
+.br
+$ pigs procu 0 200
+.br
+$ pigs procu 0 200 100000
 .br
 
 .EE
@@ -2416,8 +3551,9 @@ Upon success a handle (>=0) is returned.  On error a negative status code
 will be returned.
 
 .br
-The UART is /dev/ttyAMA0.  The consoles are /dev/ttyx.  The USB
-devices are /dev/ttyUSBx.
+The device name must start with /dev/tty or /dev/serial.
+
+.br
 
 .br
 The baud rate must be one of 50, 75, 110, 134, 150,
@@ -2551,6 +3687,81 @@ will be returned.
 $ pigs serwb 0 23
 .br
 $ pigs serwb 0 0xf0
+.br
+
+.EE
+
+.br
+
+.IP "\fBSHELL name str\fP - Execute a shell command"
+.IP "" 4
+
+.br
+This command uses the system call to execute a shell script \fBname\fP
+with the given string \fBstr\fP as its parameter.
+
+.br
+The exit status of the system call is returned if OK, otherwise
+PI_BAD_SHELL_STATUS.
+
+.br
+\fBname\fP must exist in /opt/pigpio/cgi and must be executable.
+
+.br
+The returned exit status is normally 256 times that set
+by the shell script exit function.  If the script can't
+be found 32512 will be returned.
+
+.br
+The following table gives some example returned statuses.
+
+.br
+
+.EX
+Script exit status   Returned system call status
+1                    256
+5                    1280
+10                   2560
+200                  51200
+script not found     32512
+
+.EE
+
+.br
+
+\fBExample\fP
+.br
+
+.EX
+# pass two parameters, hello and world
+.br
+$ pigs shell scr1 hello world
+.br
+256
+.br
+
+.br
+# pass three parameters, hello, string with spaces, and world
+.br
+$ pigs shell scr1 "hello 'string with spaces' world"
+.br
+256
+.br
+
+.br
+# pass one parameter, hello string with spaces world
+.br
+$ pigs shell scr1 "\"hello string with spaces world\""
+.br
+256
+.br
+
+.br
+# non-existent script
+.br
+$ pigs shell scr78 par1
+.br
+32512
 .br
 
 .EE
@@ -2749,10 +3960,26 @@ Speeds between 32kbps and 125Mbps are allowed.  Speeds above 30Mbps
 are unlikely to work.
 
 .br
-An auxiliary SPI device is available on all models but the
-A and B and may be selected by setting the A bit in the
-flags.  The auxiliary device has 3 chip selects and a
-selectable word size in bits.
+The Pi has two SPI peripherals: main and auxiliary.
+
+.br
+The main SPI has two chip selects (channels), the auxiliary has
+three.
+
+.br
+The auxiliary SPI is available on all models but the A and B.
+
+.br
+The GPIO used are given in the following table.
+
+.br
+
+.EX
+           MISO   MOSI   SCLK   CE0   CE1   CE2
+Main SPI      9     10     11     8     7     -
+Aux SPI      19     20     21    18    17    16
+
+.EE
 
 .br
 The flags consists of the least significant 22 bits.
@@ -2771,7 +3998,7 @@ The flags consists of the least significant 22 bits.
 mm defines the SPI mode.
 
 .br
-Warning:  modes 1 and 3 do not appear to work on the auxiliary device.
+Warning:  modes 1 and 3 do not appear to work on the auxiliary SPI.
 
 .br
 
@@ -2796,30 +4023,30 @@ px is 0 if CEx is active low (default) and 1 for active high.
 ux is 0 if the CEx GPIO is reserved for SPI (default) and 1 otherwise.
 
 .br
-A is 0 for the standard SPI device, 1 for the auxiliary SPI.
+A is 0 for the main SPI, 1 for the auxiliary SPI.
 
 .br
-W is 0 if the device is not 3-wire, 1 if the device is 3-wire.  Standard
-SPI device only.
+W is 0 if the device is not 3-wire, 1 if the device is 3-wire.  Main
+SPI only.
 
 .br
 nnnn defines the number of bytes (0-15) to write before switching
 the MOSI line to MISO to read data.  This field is ignored
-if W is not set.  Standard SPI device only.
+if W is not set.  Main SPI only.
 
 .br
 T is 1 if the least significant bit is transmitted on MOSI first, the
 default (0) shifts the most significant bit out first.  Auxiliary SPI
-device only.
+only.
 
 .br
 R is 1 if the least significant bit is received on MISO first, the
 default (0) receives the most significant bit first.  Auxiliary SPI
-device only.
+only.
 
 .br
 bbbbbb defines the word size in bits (0-32).  The default (0)
-sets 8 bits per word.  Auxiliary SPI device only.
+sets 8 bits per word.  Auxiliary SPI only.
 
 .br
 The \fBSPIR\fP, \fBSPIW\fP, and \fBSPIX\fP commands transfer data
@@ -2833,7 +4060,14 @@ For bits 9-16 there will be two bytes per character.
 For bits 17-32 there will be four bytes per character.
 
 .br
-E.g. 32 12-bit words will be transferred in 64 bytes.
+Multi-byte transfers are made in least significant byte first order.
+
+.br
+E.g. to transfer 32 11-bit words 64 bytes need to be sent.
+
+.br
+E.g. to transfer the 14 bit value 0x1ABC send the bytes 0xBC followed
+by 0x1A.
 
 .br
 The other bits in flags should be set to zero.
@@ -3059,11 +4293,10 @@ One watchdog may be registered per GPIO.
 The watchdog may be cancelled by setting timeout to 0.
 
 .br
-If no level change has been detected for the GPIO for timeout milliseconds:-
-
-.br
-any notification for the GPIO has a report written to the fifo with
-the flags set to indicate a watchdog timeout.
+Once a watchdog has been started monitors of the GPIO
+will be triggered every timeout interval after the last
+GPIO activity.  The watchdog expiry will be indicated by
+a special TIMEOUT value.
 
 .br
 
@@ -3514,6 +4747,18 @@ ERROR: attempt to create an empty waveform
 This command deletes the waveform with id \fBwid\fP.
 
 .br
+The wave is flagged for deletion.  The resources used by the wave
+will only be reused when either of the following apply.
+
+.br
+- all waves with higher numbered wave ids have been deleted or have
+been flagged for deletion.
+
+.br
+- a new wave is created which uses exactly the same resources as
+the current wave (see the C source for gpioWaveCreate for details).
+
+.br
 Upon success nothing is returned.  On error a negative status code
 will be returned.
 
@@ -3845,6 +5090,11 @@ the transmission of serial data (I2C/SPI/serial link, waves).
 
 .br
 
+.IP "\fBbctl\fP - BSC control word" 0
+The command expects a BSC control word, see \fBBSCX\fP.
+
+.br
+
 .IP "\fBbit\fP - bit value (0-1)" 0
 The command expects 0 or 1.
 
@@ -3875,8 +5125,13 @@ The command expects a SPI channel.
 
 .br
 
-.IP "\fBcf\fP - hardware clock frequency (4689-250M)" 0
+.IP "\fBcf\fP - hardware clock frequency (4689-250M, 13184-375M for the BCM2711)" 0
 The command expects a frequency.
+
+.br
+
+.IP "\fBcs\fP - GPIO (0-31)" 0
+The GPIO used for the slave select signal when bit banging SPI.
 
 .br
 
@@ -3885,7 +5140,7 @@ The command expects the number of data bits per serial character.
 
 .br
 
-.IP "\fBdev\fP - a tty serial device (/dev/tty*)" 0
+.IP "\fBdev\fP - a tty serial device (/dev/tty* or /dev/serial*)" 0
 The command expects the name of a tty serial device, e.g.
 
 .br
@@ -3897,6 +5152,34 @@ The command expects the name of a tty serial device, e.g.
 .br
 /dev/tty0
 .br
+/dev/serial0
+.br
+
+.EE
+
+.br
+
+.IP "\fBevent\fP - 0-31" 0
+An event is a signal used to inform one or more consumers
+to start an action.
+
+.br
+
+.IP "\fBfile\fP - a file name" 0
+The file name must match an entry in /opt/pigpio/access.
+
+.br
+
+.IP "\fBfrom\fP - 0-2" 0
+Position to seek from \fBFS\fP.
+
+.br
+
+.EX
+    From
+0   start
+1   current position
+2   end
 
 .EE
 
@@ -3948,17 +5231,17 @@ of doing so range from no effect, to a crash, or corrupted data.
 The command expects a handle.
 
 .br
-A handle is a number referencing an object opened by one of \fBI2CO\fP, \fBNO\fP,
-\fBSERO\fP, \fBSPIO\fP.
+A handle is a number referencing an object opened by one of \fBFO\fP,
+\fBI2CO\fP, \fBNO\fP, \fBSERO\fP, \fBSPIO\fP.
 
 .br
 
-.IP "\fBib\fP - I2C bus (0-1)" 0
-The command expects an I2C bus.
+.IP "\fBib\fP - I2C bus (>=0)" 0
+The command expects an I2C bus number.
 
 .br
 
-.IP "\fBid\fP - I2C device (0x08-0x77)" 0
+.IP "\fBid\fP - I2C device (0-0x7F)" 0
 The command expects the address of an I2C device.
 
 .br
@@ -3989,24 +5272,68 @@ The value is returned by the mode get command.
 .br
 
 .EX
-Mode   Input Output ALT0 ALT1 ALT2 ALT3 ALT4 ALT5
-Code       R      W    0    1    2    3    4    5
-Value      0      1    4    5    6    7    3    2
+Mode    Input   Output   ALT0   ALT1   ALT2   ALT3   ALT4   ALT5
+Code      R        W       0      1      2      3      4      5
+Value     0        1       4      5      6      7      3      2
 
 .EE
 
 .br
 
-.IP "\fBnum\fP - number of bytes to read (1-)" 0
-The command expects the number of bytes to read.
+.IP "\fBmiso\fP - GPIO (0-31)" 0
+The GPIO used for the MISO signal when bit banging SPI.
+
+.br
+
+.IP "\fBmode\fP - file open mode" 0
+One of the following values.
+
+.br
+
+.EX
+        Value   Meaning
+READ      1     open file for reading
+WRITE     2     open file for writing
+RW        3     open file for reading and writing
+
+.EE
+
+.br
+The following values can be or'd into the mode.
+
+.br
+
+.EX
+         Value   Meaning
+APPEND   4       All writes append data to the end of the file
+CREATE   8       The file is created if it doesn't exist
+TRUNC    16      The file is truncated
+
+.EE
+
+.br
+
+.IP "\fBmosi\fP - GPIO (0-31)" 0
+The GPIO used for the MOSI signal when bit banging SPI.
+
+.br
+
+.IP "\fBname\fP - the name of a script" 0
+Only alphanumeric characters, '-' and '_' are allowed in the name.
+
+.br
+
+.IP "\fBnum\fP - maximum number of bytes to return (1-)" 0
+The command expects the maximum number of bytes to return.
 
 .br
 For the I2C and SPI commands the requested number of bytes will always
 be returned.
 
 .br
-For the serial commands the smaller of the number of bytes available to be
-read (which may be zero) and \fBnum\fP bytes will be returned.
+For the serial and file commands the smaller of the number of
+bytes available to be read (which may be zero) and \fBnum\fP bytes
+will be returned.
 
 .br
 
@@ -4044,8 +5371,35 @@ There is no mechanism to read the pull up down state.
 
 .br
 
+.IP "\fBpad\fP - 0-2" 0
+A set of GPIO which share common drivers.
+
+.br
+
+.EX
+Pad   GPIO
+0     0-27
+1     28-45
+2     46-53
+
+.EE
+
+.br
+
+.IP "\fBpadma\fP - 1-16" 0
+The mA which may be drawn from each GPIO whilst still guaranteeing the
+high and low levels.
+
+.br
+
 .IP "\fBpars\fP - script parameters" 0
 The command expects 0 to 10 numbers as parameters to be passed to the script.
+
+.br
+
+.IP "\fBpat\fP - a file name pattern" 0
+A file path which may contain wildcards.  To be accessible the path
+must match an entry in /opt/pigpio/access.
 
 .br
 
@@ -4054,7 +5408,7 @@ The command expects a dutycycle.
 
 .br
 
-.IP "\fBpf\fP - hardware PWM frequency (1-125M)" 0
+.IP "\fBpf\fP - hardware PWM frequency (1-125M, 1-187.5M for the BCM2711)" 0
 The command expects a frequency.
 
 .br
@@ -4080,6 +5434,11 @@ when bit banging I2C.
 
 .br
 
+.IP "\fBsclk\fP - user GPIO (0-31)" 0
+The GPIO used for the SCLK signal when bit banging SPI.
+
+.br
+
 .IP "\fBsda\fP - user GPIO (0-31)" 0
 The command expects the number of the GPIO to be used for SDA
 when bit banging I2C.
@@ -4097,7 +5456,7 @@ The command expects a script id as returned by a call to \fBPROC\fP.
 .br
 
 .IP "\fBspf\fP - SPI flags (32 bits)" 0
-See \fBSPIO\fP.
+See \fBSPIO\fP and \fBBSPIO\fP.
 
 .br
 
@@ -4110,8 +5469,13 @@ the active part of a noise filter (\fBFN\fP).
 
 .br
 
-.IP "\fBt\fP - text (a string of text)" 0
-The command expects a text string.
+.IP "\fBstr\fP - a string" 0
+The command expects a string.
+
+.br
+
+.IP "\fBt\fP - a string" 0
+The command expects a string.
 
 .br
 
@@ -4391,11 +5755,36 @@ Each script has
 .br
 .SS Commands
 .br
-All the normal pigs commands may be used within a script.  However
-commands which return more than an integer will be of little use.
+Many pigpio commands may be used within a script.  However
+some commands do not work within the script model as designed and
+are not permitted.
 
 .br
-The following commands are only legal within a script.
+The following commands are not permitted within a script:
+
+.br
+File - FL FO FR FW
+
+.br
+I2C - BI2CZ I2CPK I2CRD I2CRI I2CRK I2CWD I2CWI I2CWK I2CZ
+
+.br
+Misc - BSCX CF1 CF2 SHELL
+
+.br
+Script control - PARSE PROC PROCD PROCP PROCR PROCS PROCU
+
+.br
+Serial - SERO SERR SERW SLR
+
+.br
+SPI - BSPIO BSPIX SPIR SPIW SPIX
+
+.br
+Waves - WVAG WVAS WVCHA WVGO WVGOR
+
+.br
+The following commands are only permitted within a script:
 
 .br
 
@@ -4408,6 +5797,7 @@ CMP x   Compare x with accumulator                    F=A-x
 DCR y   Decrement register                            --*y; F=*y
 DCRA    Decrement accumulator                         --A; F=A
 DIV x   Divide x into accumulator                     A/=x; F=A
+EVTWT   Wait for an event to occur                    A=wait(x); F=A
 HALT    Halt                                          Halt
 INR y   Increment register                            ++*y; F=*y
 INRA    Increment accumulator                         ++A; F=A
@@ -4449,6 +5839,9 @@ y may be a parameter (p0-p9), or a variable (v0-v149).  If p or v isn't
 specified y is assumed to be a variable.
 
 .br
+The EVTWT command parameter is a bit-mask with 1 set for events of interest.
+
+.br
 The WAIT command parameter is a bit-mask with 1 set for GPIO of interest.
 
 .br
@@ -4462,4 +5855,4 @@ the current GPIO levels.
 pigpiod(1), pig2vcd(1), pigpio(3), pigpiod_if(3), pigpiod_if2(3)
 .SH AUTHOR
 
-joan@abyz.co.uk
+joan@abyz.me.uk

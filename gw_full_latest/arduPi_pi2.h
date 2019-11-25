@@ -48,8 +48,11 @@
 #include "bcm2835.h"
 #include <stdarg.h> //Include forva_start, va_arg and va_end strings functions
 
+#ifdef RASPBERRY4
+#define IOBASE   0xFE000000
+#else
 #define IOBASE   0x3f000000
-
+#endif
 
 #define GPIO_BASE2 (IOBASE + 0x200000)
 #define BCM2835_SPI0_BASE2 (IOBASE + 0x204000)

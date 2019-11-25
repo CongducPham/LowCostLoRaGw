@@ -10,69 +10,69 @@
 		},
 		{	
 			"name":"SMS Service",
-			"script":"python -B CloudSMS.py",
+			"script":"python CloudSMS.py",
 			"type":"smsservice",
 			"enabled":false,
 			"always_enabled":false
 		},
 		{
 			"name":"Temporary storage for no Internet connection",
-			"script":"python -B CloudNoInternet.py",
+			"script":"python CloudNoInternet.py",
 			"type":"file",            
 			"enabled":false
         },			
 		{	
 			"name":"WAZIUP SMS Service ",
-			"script":"python -B CloudWAZIUP_SMS.py",
+			"script":"python CloudWAZIUP_SMS.py",
 			"type":"smsservice",
 			"enabled":false,
 			"always_enabled":false
 		},	
 		{
 			"name":"WAZIUPv2",
-			"script":"python -B CloudWAZIUP.py",
+			"script":"python CloudWAZIUP.py",
 			"type":"iotcloud",
 			"enabled":false
 		},	        	        							
 		{	
 			"name":"WAZIUPv1",
-			"script":"python -B CloudWAZIUP_old.py",
+			"script":"python CloudWAZIUP_old.py",
 			"type":"iotcloud",			
 			"enabled":false
 		},		
 		{	
 			"name":"ThingSpeak cloud",
-			"script":"python -B CloudThingSpeak.py",
+			"script":"python CloudThingSpeak.py",
 			"type":"iotcloud",			
 			"enabled":true
 		},
 		{	
 			"name":"NodeRed flow",
-			"script":"python -B CloudNodeRed.py",
+			"script":"python CloudNodeRed.py",
 			"type":"nodered",			
 			"enabled":false
 		},
 		{	
 			"name":"MQTT cloud",
-			"script":"python -B CloudMQTT.py",
+			"script":"python CloudMQTT.py",
 			"type":"MQTT on test.mosquitto.org",			
 			"enabled":false
 		},
 		{	
 			"name":"GPS",
-			"script":"python -B CloudGpsFile.py",
+			"script":"python CloudGpsFile.py",
 			"type":"file",			
 			"enabled":false
 		},									
 		{	
 			"name":"GroveStreams cloud",
-			"script":"python -B CloudGroveStreams.py",
+			"script":"python CloudGroveStreams.py",
 			"type":"iotcloud",			
 			"enabled":false
 		},
 		{	
 			"name":"Firebase cloud",
-			"script":"python -B CloudFireBase.py",
+			"script":"python CloudFireBase.py",
 			"type":"jsoncloud",			
 			"enabled":false
 		},		
@@ -91,25 +91,25 @@
 	"encrypted_clouds" : [
 		{	
 			"name":"TheThingsNetwork cloud",
-			"script":"python -B CloudTTN.py",
+			"script":"python CloudTTN.py",
 			"type":"TTN",			
 			"enabled":false			
 		},	
 		{	
 			"name":"NodeRed flow",
-			"script":"python -B CloudNodeRed.py",
+			"script":"python CloudNodeRed.py",
 			"type":"nodered",			
 			"enabled":false
 		},
 		{	
 			"name":"MQTT cloud",
-			"script":"python -B CloudMQTT.py",
+			"script":"python CloudMQTT.py",
 			"type":"MQTT on test.mosquitto.org",			
 			"enabled":false
 		},		
 		{
 			"name":"Firebase cloud",
-			"script":"python -B CloudFireBaseAES.py",
+			"script":"python CloudFireBaseAES.py",
 			"type":"iotcloud",			
 			"enabled":false			
 		}
@@ -117,25 +117,25 @@
 	"lorawan_encrypted_clouds" : [
 		{	
 			"name":"TheThingsNetwork cloud",
-			"script":"python -B CloudTTN.py",
+			"script":"python CloudTTN.py",
 			"type":"TTN",			
 			"enabled":true			
 		},	
 		{	
 			"name":"NodeRed flow",
-			"script":"python -B CloudNodeRed.py",
+			"script":"python CloudNodeRed.py",
 			"type":"nodered",			
 			"enabled":false
 		},
 		{	
 			"name":"MQTT cloud",
-			"script":"python -B CloudMQTT.py",
+			"script":"python CloudMQTT.py",
 			"type":"MQTT on test.mosquitto.org",			
 			"enabled":false
 		},	
 		{
 			"name":"Firebase cloud",
-			"script":"python -B CloudFireBaseLWAES.py",
+			"script":"python CloudFireBaseLWAES.py",
 			"type":"iotcloud",			
 			"enabled":false			
 		}

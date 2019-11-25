@@ -2,7 +2,7 @@
 ." Process this file with
 ." groff -man -Tascii pigpio.3
 ."
-.TH pigpio 3 2012-2015 Linux "pigpio archive"
+.TH pigpio 3 2012-2018 Linux "pigpio archive"
 .SH NAME
 pigpio - A C library to manipulate the Pi's GPIO.
 
@@ -17,6 +17,10 @@ sudo ./prog
 .SH DESCRIPTION
 
 
+.ad l
+
+.nh
+
 .br
 
 .br
@@ -29,12 +33,12 @@ pigpio is a C library for the Raspberry which allows control of the GPIO.
 .br
 
 .br
-o PWM on any of GPIO 0-31
+o hardware timed PWM on any of GPIO 0-31
 
 .br
 
 .br
-o servo pulses on any of GPIO 0-31
+o hardware timed servo pulses on any of GPIO 0-31
 
 .br
 
@@ -112,7 +116,8 @@ This use was inspired by Richard Hirst's servoblaster kernel module.
 .br
 
 .br
-https://github.com/richardghirst/PiBits/tree/master/ServoBlaster
+See \fBhttps://github.com/richardghirst/PiBits/tree/master/ServoBlaster\fP
+
 .br
 
 .br
@@ -312,18 +317,23 @@ Arduino style: pinMode.
 .br
 
 .EX
-gpioSetMode(17, PI_INPUT);  // Set gpio17 as input.
+gpioSetMode(17, PI_INPUT);  // Set GPIO17 as input.
 .br
 
 .br
-gpioSetMode(18, PI_OUTPUT); // Set gpio18 as output.
+gpioSetMode(18, PI_OUTPUT); // Set GPIO18 as output.
 .br
 
 .br
-gpioSetMode(22,PI_ALT0);    // Set gpio22 to alternative mode 0.
+gpioSetMode(22,PI_ALT0);    // Set GPIO22 to alternative mode 0.
 .br
 
 .EE
+
+.br
+
+.br
+See \fBhttp://www.raspberrypi.org/documentation/hardware/raspberrypi/bcm2835/BCM2835-ARM-Peripherals.pdf\fP page 102 for an overview of the modes.
 
 .IP "\fBint gpioGetMode(unsigned gpio)\fP"
 .IP "" 4
@@ -355,7 +365,7 @@ if (gpioGetMode(17) != PI_ALT0)
 .br
 {
 .br
-   gpioSetMode(17, PI_ALT0);  // set gpio17 to ALT0
+   gpioSetMode(17, PI_ALT0);  // set GPIO17 to ALT0
 .br
 }
 .br
@@ -434,7 +444,7 @@ Arduino style: digitalRead.
 .br
 
 .EX
-printf("gpio24 is level %d", gpioRead(24));
+printf("GPIO24 is level %d", gpioRead(24));
 .br
 
 .EE
@@ -450,7 +460,7 @@ Sets the GPIO level, on or off.
 .EX
  gpio: 0-53
 .br
-level: 0,1
+level: 0-1
 .br
 
 .EE
@@ -477,7 +487,7 @@ Arduino style: digitalWrite
 .br
 
 .EX
-gpioWrite(24, 1); // Set gpio24 high.
+gpioWrite(24, 1); // Set GPIO24 high.
 .br
 
 .EE
@@ -528,15 +538,15 @@ range of 255.
 .br
 
 .EX
-gpioPWM(17, 255); // Sets gpio17 full on.
+gpioPWM(17, 255); // Sets GPIO17 full on.
 .br
 
 .br
-gpioPWM(18, 128); // Sets gpio18 half on.
+gpioPWM(18, 128); // Sets GPIO18 half on.
 .br
 
 .br
-gpioPWM(23, 0);   // Sets gpio23 full off.
+gpioPWM(23, 0);   // Sets GPIO23 full off.
 .br
 
 .EE
@@ -749,8 +759,8 @@ PI_BAD_USER_GPIO.
 .br
 
 .br
-The selectable frequencies depend upon the sample rate which
-may be 1, 2, 4, 5, 8, or 10 microseconds (default 5).
+If PWM is currently active on the GPIO it will be
+switched off and then back on at the new frequency.
 
 .br
 
@@ -761,8 +771,8 @@ frequencies.
 .br
 
 .br
-If PWM is currently active on the GPIO it will be
-switched off and then back on at the new frequency.
+The selectable frequencies depend upon the sample rate which
+may be 1, 2, 4, 5, 8, or 10 microseconds (default 5).
 
 .br
 
@@ -824,15 +834,15 @@ sample
 .br
 
 .EX
-gpioSetPWMfrequency(23, 0); // Set gpio23 to lowest frequency.
+gpioSetPWMfrequency(23, 0); // Set GPIO23 to lowest frequency.
 .br
 
 .br
-gpioSetPWMfrequency(24, 500); // Set gpio24 to 500Hz.
+gpioSetPWMfrequency(24, 500); // Set GPIO24 to 500Hz.
 .br
 
 .br
-gpioSetPWMfrequency(25, 100000); // Set gpio25 to highest frequency.
+gpioSetPWMfrequency(25, 100000); // Set GPIO25 to highest frequency.
 .br
 
 .EE
@@ -877,7 +887,7 @@ will be that set by \fBgpioHardwarePWM\fP.
 .br
 
 .EX
-f = gpioGetPWMfrequency(23); // Get frequency used for gpio23.
+f = gpioGetPWMfrequency(23); // Get frequency used for GPIO23.
 .br
 
 .EE
@@ -977,7 +987,7 @@ the servo pulsewidth.
 .br
 
 .br
-E.g. If you want to update a servo connected to gpio25 at 400Hz
+E.g. If you want to update a servo connected to GPIO25 at 400Hz
 
 .br
 
@@ -1016,7 +1026,7 @@ user_gpio: 0-31
 .br
 
 .br
-Returns , 0 (off), 500 (most anti-clockwise) to 2500 (most clockwise)
+Returns 0 (off), 500 (most anti-clockwise) to 2500 (most clockwise)
 if OK, otherwise PI_BAD_USER_GPIO or PI_NOT_SERVO_GPIO.
 
 .IP "\fBint gpioSetAlertFunc(unsigned user_gpio, gpioAlertFunc_t f)\fP"
@@ -1044,12 +1054,42 @@ Returns 0 if OK, otherwise PI_BAD_USER_GPIO.
 .br
 
 .br
-One function may be registered per GPIO.
+One callback may be registered per GPIO.
 
 .br
 
 .br
-The function is passed the GPIO, the new level, and the tick.
+The callback is passed the GPIO, the new level, and the tick.
+
+.br
+
+.br
+
+.EX
+Parameter   Value    Meaning
+.br
+
+.br
+GPIO        0-31     The GPIO which has changed state
+.br
+
+.br
+level       0-2      0 = change to low (a falling edge)
+.br
+                     1 = change to high (a rising edge)
+.br
+                     2 = no level change (a watchdog timeout)
+.br
+
+.br
+tick        32 bit   The number of microseconds since boot
+.br
+                     WARNING: this wraps around from
+.br
+                     4294967295 to 0 roughly every 72 minutes
+.br
+
+.EE
 
 .br
 
@@ -1138,7 +1178,7 @@ void aFunction(int gpio, int level, uint32_t tick)
 .br
 
 .br
-gpioSetAlertFunc(4F, aFunction);
+gpioSetAlertFunc(4, aFunction);
 .br
 
 .EE
@@ -1170,13 +1210,52 @@ Returns 0 if OK, otherwise PI_BAD_USER_GPIO.
 .br
 
 .br
-One function may be registered per GPIO.
+One callback may be registered per GPIO.
 
 .br
 
 .br
-The function is passed the GPIO, the new level, the tick, and
+The callback is passed the GPIO, the new level, the tick, and
 the userdata pointer.
+
+.br
+
+.br
+
+.EX
+Parameter   Value    Meaning
+.br
+
+.br
+GPIO        0-31     The GPIO which has changed state
+.br
+
+.br
+level       0-2      0 = change to low (a falling edge)
+.br
+                     1 = change to high (a rising edge)
+.br
+                     2 = no level change (a watchdog timeout)
+.br
+
+.br
+tick        32 bit   The number of microseconds since boot
+.br
+                     WARNING: this wraps around from
+.br
+                     4294967295 to 0 roughly every 72 minutes
+.br
+
+.br
+userdata    pointer  Pointer to an arbitrary object
+.br
+
+.EE
+
+.br
+
+.br
+See \fBgpioSetAlertFunc\fP for further details.
 
 .br
 
@@ -1184,12 +1263,7 @@ the userdata pointer.
 Only one of \fBgpioSetAlertFunc\fP or \fBgpioSetAlertFuncEx\fP can be
 registered per GPIO.
 
-.br
-
-.br
-See \fBgpioSetAlertFunc\fP for further details.
-
-.IP "\fBint gpioSetISRFunc(unsigned user_gpio, unsigned edge, int timeout, gpioISRFunc_t f)\fP"
+.IP "\fBint gpioSetISRFunc(unsigned gpio, unsigned edge, int timeout, gpioISRFunc_t f)\fP"
 .IP "" 4
 Registers a function to be called (a callback) whenever the specified
 GPIO interrupt occurs.
@@ -1199,13 +1273,13 @@ GPIO interrupt occurs.
 .br
 
 .EX
-user_gpio: 0-31
+   gpio: 0-53
 .br
-     edge: RISING_EDGE, FALLING_EDGE, or EITHER_EDGE
+   edge: RISING_EDGE, FALLING_EDGE, or EITHER_EDGE
 .br
-  timeout: interrupt timeout in milliseconds (<=0 to cancel)
+timeout: interrupt timeout in milliseconds (<=0 to cancel)
 .br
-        f: the callback function
+      f: the callback function
 .br
 
 .EE
@@ -1213,7 +1287,7 @@ user_gpio: 0-31
 .br
 
 .br
-Returns 0 if OK, otherwise PI_BAD_USER_GPIO, PI_BAD_EDGE,
+Returns 0 if OK, otherwise PI_BAD_GPIO, PI_BAD_EDGE,
 or PI_BAD_ISR_INIT.
 
 .br
@@ -1227,6 +1301,36 @@ One function may be registered per GPIO.
 The function is passed the GPIO, the current level, and the
 current tick.  The level will be PI_TIMEOUT if the optional
 interrupt timeout expires.
+
+.br
+
+.br
+
+.EX
+Parameter   Value    Meaning
+.br
+
+.br
+GPIO        0-53     The GPIO which has changed state
+.br
+
+.br
+level       0-2      0 = change to low (a falling edge)
+.br
+                     1 = change to high (a rising edge)
+.br
+                     2 = no level change (interrupt timeout)
+.br
+
+.br
+tick        32 bit   The number of microseconds since boot
+.br
+                     WARNING: this wraps around from
+.br
+                     4294967295 to 0 roughly every 72 minutes
+.br
+
+.EE
 
 .br
 
@@ -1272,7 +1376,7 @@ interrupts happening in rapid succession may be missed by the
 kernel (i.e. this mechanism can not be used to capture several
 interrupts only a few microseconds apart).
 
-.IP "\fBint gpioSetISRFuncEx(unsigned user_gpio, unsigned edge, int timeout, gpioISRFuncEx_t f, void *userdata)\fP"
+.IP "\fBint gpioSetISRFuncEx(unsigned gpio, unsigned edge, int timeout, gpioISRFuncEx_t f, void *userdata)\fP"
 .IP "" 4
 Registers a function to be called (a callback) whenever the specified
 GPIO interrupt occurs.
@@ -1282,15 +1386,15 @@ GPIO interrupt occurs.
 .br
 
 .EX
-user_gpio: 0-31
+    gpio: 0-53
 .br
-     edge: RISING_EDGE, FALLING_EDGE, or EITHER_EDGE
+    edge: RISING_EDGE, FALLING_EDGE, or EITHER_EDGE
 .br
-  timeout: interrupt timeout in milliseconds (<=0 to cancel)
+ timeout: interrupt timeout in milliseconds (<=0 to cancel)
 .br
-        f: the callback function
+       f: the callback function
 .br
- userdata: pointer to arbitrary user data
+userdata: pointer to arbitrary user data
 .br
 
 .EE
@@ -1298,7 +1402,7 @@ user_gpio: 0-31
 .br
 
 .br
-Returns 0 if OK, otherwise PI_BAD_USER_GPIO, PI_BAD_EDGE,
+Returns 0 if OK, otherwise PI_BAD_GPIO, PI_BAD_EDGE,
 or PI_BAD_ISR_INIT.
 
 .br
@@ -1306,6 +1410,40 @@ or PI_BAD_ISR_INIT.
 .br
 The function is passed the GPIO, the current level, the
 current tick, and the userdata pointer.
+
+.br
+
+.br
+
+.EX
+Parameter   Value    Meaning
+.br
+
+.br
+GPIO        0-53     The GPIO which has changed state
+.br
+
+.br
+level       0-2      0 = change to low (a falling edge)
+.br
+                     1 = change to high (a rising edge)
+.br
+                     2 = no level change (interrupt timeout)
+.br
+
+.br
+tick        32 bit   The number of microseconds since boot
+.br
+                     WARNING: this wraps around from
+.br
+                     4294967295 to 0 roughly every 72 minutes
+.br
+
+.br
+userdata    pointer  Pointer to an arbitrary object
+.br
+
+.EE
 
 .br
 
@@ -1367,7 +1505,7 @@ if (h >= 0)
 .br
 
 .br
-   fd = open(str, "r");
+   fd = open(str, O_RDONLY);
 .br
 
 .br
@@ -1479,12 +1617,27 @@ by one for each report.
 .br
 
 .br
-flags: two flags are defined, PI_NTFY_FLAGS_WDOG and PI_NTFY_FLAGS_ALIVE.
+flags: three flags are defined, PI_NTFY_FLAGS_WDOG,
+PI_NTFY_FLAGS_ALIVE, and PI_NTFY_FLAGS_EVENT.
+
+.br
+
+.br
 If bit 5 is set (PI_NTFY_FLAGS_WDOG) then bits 0-4 of the flags
-indicate a GPIO which has had a watchdog timeout; if bit 6 is set
-(PI_NTFY_FLAGS_ALIVE) this indicates a keep alive signal on the
-pipe/socket and is sent once a minute in the absence of other
-notification activity.
+indicate a GPIO which has had a watchdog timeout.
+
+.br
+
+.br
+If bit 6 is set (PI_NTFY_FLAGS_ALIVE) this indicates a keep alive
+signal on the pipe/socket and is sent once a minute in the absence
+of other notification activity.
+
+.br
+
+.br
+If bit 7 is set (PI_NTFY_FLAGS_EVENT) then bits 0-4 of the flags
+indicate an event which has been triggered.
 
 .br
 
@@ -1773,9 +1926,9 @@ data_bits: 1-32
 .br
 stop_bits: 2-8
 .br
-   offset: 0-
+   offset: >=0
 .br
- numBytes: 1-
+ numBytes: >=1
 .br
       str: an array of chars (which may contain nulls)
 .br
@@ -1978,6 +2131,24 @@ This function deletes the waveform with id wave_id.
 .br
 
 .br
+The wave is flagged for deletion.  The resources used by the wave
+will only be reused when either of the following apply.
+
+.br
+
+.br
+- all waves with higher numbered wave ids have been deleted or have
+been flagged for deletion.
+
+.br
+
+.br
+- a new wave is created which uses exactly the same resources as
+the current wave (see the C source for gpioWaveCreate for details).
+
+.br
+
+.br
 
 .EX
 wave_id: >=0, as returned by \fBgpioWaveCreate\fP
@@ -2094,19 +2265,14 @@ The following command codes are supported:
 
 .br
 Name           Cmd & Data   Meaning
-
 .br
 Loop Start     255 0        Identify start of a wave block
-
 .br
 Loop Repeat    255 1 x y    loop x + y*256 times
-
 .br
 Delay          255 2 x y    delay x + y*256 microseconds
-
 .br
 Loop Forever   255 3        loop forever
-
 .br
 
 .br
@@ -2361,7 +2527,7 @@ This function configures the level logic for bit bang serial reads.
 .br
 
 .br
-Pass PI_BB_SER_INVERT to invert the serial logic.  Pass PI_BB_SER_NORMAL for
+Use PI_BB_SER_INVERT to invert the serial logic and PI_BB_SER_NORMAL for
 normal logic.  Default is PI_BB_SER_NORMAL.
 
 .br
@@ -2371,7 +2537,7 @@ normal logic.  Default is PI_BB_SER_NORMAL.
 .EX
 user_gpio: 0-31
 .br
-invert: 0-1
+   invert: 0-1
 .br
 
 .EE
@@ -2402,7 +2568,7 @@ user_gpio: 0-31, previously opened with \fBgpioSerialReadOpen\fP
 .br
       buf: an array to receive the read bytes
 .br
-  bufSize: 0-
+  bufSize: >=0
 .br
 
 .EE
@@ -2456,9 +2622,9 @@ This returns a handle for the device at the address on the I2C bus.
 .br
 
 .EX
-  i2cBus: 0-1
+  i2cBus: >=0
 .br
- i2cAddr: 0x00-0x7F
+ i2cAddr: 0-0x7F
 .br
 i2cFlags: 0
 .br
@@ -2469,6 +2635,27 @@ i2cFlags: 0
 
 .br
 No flags are currently defined.  This parameter should be set to zero.
+
+.br
+
+.br
+Physically buses 0 and 1 are available on the Pi.  Higher numbered buses
+will be available if a kernel supported bus multiplexor is being used.
+
+.br
+
+.br
+The GPIO used are given in the following table.
+
+.br
+
+.br
+        SDA   SCL
+.br
+I2C 0    0     1
+.br
+I2C 1    2     3
+.br
 
 .br
 
@@ -3171,31 +3358,22 @@ The following command codes are supported:
 
 .br
 Name      Cmd & Data   Meaning
-
 .br
 End       0            No more commands
-
 .br
 Escape    1            Next P is two bytes
-
 .br
 On        2            Switch combined flag on
-
 .br
 Off       3            Switch combined flag off
-
 .br
 Address   4 P          Set I2C address to P
-
 .br
 Flags     5 lsb msb    Set I2C flags to lsb + (msb << 8)
-
 .br
 Read      6 P          Read P bytes of data
-
 .br
 Write     7 P ...      Write P bytes of data
-
 .br
 
 .br
@@ -3360,31 +3538,22 @@ The following command codes are supported:
 
 .br
 Name      Cmd & Data     Meaning
-
 .br
 End       0              No more commands
-
 .br
 Escape    1              Next P is two bytes
-
 .br
 Start     2              Start condition
-
 .br
 Stop      3              Stop condition
-
 .br
 Address   4 P            Set I2C address to P
-
 .br
 Flags     5 lsb msb      Set I2C flags to lsb + (msb << 8)
-
 .br
 Read      6 P            Read P bytes of data
-
 .br
 Write     7 P ...        Write P bytes of data
-
 .br
 
 .br
@@ -3457,6 +3626,550 @@ End
 
 .EE
 
+.IP "\fBint bscXfer(bsc_xfer_t *bsc_xfer)\fP"
+.IP "" 4
+This function provides a low-level interface to the
+SPI/I2C Slave peripheral.  This peripheral allows the
+Pi to act as a slave device on an I2C or SPI bus.
+
+.br
+
+.br
+This function is not available on the BCM2711 (e.g. as
+used in the Pi4B).
+
+.br
+
+.br
+I can't get SPI to work properly.  I tried with a
+control word of 0x303 and swapped MISO and MOSI.
+
+.br
+
+.br
+The function sets the BSC mode, writes any data in
+the transmit buffer to the BSC transmit FIFO, and
+copies any data in the BSC receive FIFO to the
+receive buffer.
+
+.br
+
+.br
+
+.EX
+bsc_xfer:= a structure defining the transfer
+.br
+
+.br
+typedef struct
+.br
+{
+.br
+   uint32_t control;          // Write
+.br
+   int rxCnt;                 // Read only
+.br
+   char rxBuf[BSC_FIFO_SIZE]; // Read only
+.br
+   int txCnt;                 // Write
+.br
+   char txBuf[BSC_FIFO_SIZE]; // Write
+.br
+} bsc_xfer_t;
+.br
+
+.EE
+
+.br
+
+.br
+To start a transfer set control (see below) and copy the bytes to
+be sent (if any) to txBuf and set the byte count in txCnt.
+
+.br
+
+.br
+Upon return rxCnt will be set to the number of received bytes placed
+in rxBuf.
+
+.br
+
+.br
+Note that the control word sets the BSC mode.  The BSC will stay in
+that mode until a different control word is sent.
+
+.br
+
+.br
+The BSC peripheral uses GPIO 18 (SDA) and 19 (SCL) in I2C mode
+and GPIO 18 (MOSI), 19 (SCLK), 20 (MISO), and 21 (CE) in SPI mode.  You
+need to swap MISO/MOSI between master and slave.
+
+.br
+
+.br
+When a zero control word is received GPIO 18-21 will be reset
+to INPUT mode.
+
+.br
+
+.br
+The returned function value is the status of the transfer (see below).
+
+.br
+
+.br
+If there was an error the status will be less than zero
+(and will contain the error code).
+
+.br
+
+.br
+The most significant word of the returned status contains the number
+of bytes actually copied from txBuf to the BSC transmit FIFO (may be
+less than requested if the FIFO already contained untransmitted data).
+
+.br
+
+.br
+control consists of the following bits.
+
+.br
+
+.br
+
+.EX
+22 21 20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
+.br
+ a  a  a  a  a  a  a  -  - IT HC TF IR RE TE BK EC ES PL PH I2 SP EN
+.br
+
+.EE
+
+.br
+
+.br
+Bits 0-13 are copied unchanged to the BSC CR register.  See
+pages 163-165 of the Broadcom peripherals document for full
+details.
+
+.br
+
+.br
+aaaaaaa   defines the I2C slave address (only relevant in I2C mode)
+.br
+IT        invert transmit status flags
+.br
+HC        enable host control
+.br
+TF        enable test FIFO
+.br
+IR        invert receive status flags
+.br
+RE        enable receive
+.br
+TE        enable transmit
+.br
+BK        abort operation and clear FIFOs
+.br
+EC        send control register as first I2C byte
+.br
+ES        send status register as first I2C byte
+.br
+PL        set SPI polarity high
+.br
+PH        set SPI phase high
+.br
+I2        enable I2C mode
+.br
+SP        enable SPI mode
+.br
+EN        enable BSC peripheral
+.br
+
+.br
+
+.br
+The returned status has the following format
+
+.br
+
+.br
+
+.EX
+20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
+.br
+ S  S  S  S  S  R  R  R  R  R  T  T  T  T  T RB TE RF TF RE TB
+.br
+
+.EE
+
+.br
+
+.br
+Bits 0-15 are copied unchanged from the BSC FR register.  See
+pages 165-166 of the Broadcom peripherals document for full
+details.
+
+.br
+
+.br
+SSSSS   number of bytes successfully copied to transmit FIFO
+.br
+RRRRR   number of bytes in receieve FIFO
+.br
+TTTTT   number of bytes in transmit FIFO
+.br
+RB      receive busy
+.br
+TE      transmit FIFO empty
+.br
+RF      receive FIFO full
+.br
+TF      transmit FIFO full
+.br
+RE      receive FIFO empty
+.br
+TB      transmit busy
+.br
+
+.br
+
+.br
+The following example shows how to configure the BSC peripheral as
+an I2C slave with address 0x13 and send four bytes.
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+bsc_xfer_t xfer;
+.br
+
+.br
+xfer.control = (0x13<<16) | 0x305;
+.br
+
+.br
+memcpy(xfer.txBuf, "ABCD", 4);
+.br
+xfer.txCnt = 4;
+.br
+
+.br
+status = bscXfer(&xfer);
+.br
+
+.br
+if (status >= 0)
+.br
+{
+.br
+   // process transfer
+.br
+}
+.br
+
+.EE
+
+.IP "\fBint bbSPIOpen(unsigned CS, unsigned MISO, unsigned MOSI, unsigned SCLK, unsigned baud, unsigned spiFlags)\fP"
+.IP "" 4
+This function selects a set of GPIO for bit banging SPI with
+a specified baud rate and mode.
+
+.br
+
+.br
+
+.EX
+      CS: 0-31
+.br
+    MISO: 0-31
+.br
+    MOSI: 0-31
+.br
+    SCLK: 0-31
+.br
+    baud: 50-250000
+.br
+spiFlags: see below
+.br
+
+.EE
+
+.br
+
+.br
+spiFlags consists of the least significant 22 bits.
+
+.br
+
+.br
+
+.EX
+21 20 19 18 17 16 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
+.br
+ 0  0  0  0  0  0  R  T  0  0  0  0  0  0  0  0  0  0  0  p  m  m
+.br
+
+.EE
+
+.br
+
+.br
+mm defines the SPI mode, defaults to 0
+
+.br
+
+.br
+
+.EX
+Mode CPOL CPHA
+.br
+ 0    0    0
+.br
+ 1    0    1
+.br
+ 2    1    0
+.br
+ 3    1    1
+.br
+
+.EE
+
+.br
+
+.br
+p is 0 if CS is active low (default) and 1 for active high.
+
+.br
+
+.br
+T is 1 if the least significant bit is transmitted on MOSI first, the
+default (0) shifts the most significant bit out first.
+
+.br
+
+.br
+R is 1 if the least significant bit is received on MISO first, the
+default (0) receives the most significant bit first.
+
+.br
+
+.br
+The other bits in flags should be set to zero.
+
+.br
+
+.br
+Returns 0 if OK, otherwise PI_BAD_USER_GPIO, PI_BAD_SPI_BAUD, or
+PI_GPIO_IN_USE.
+
+.br
+
+.br
+If more than one device is connected to the SPI bus (defined by
+SCLK, MOSI, and MISO) each must have its own CS.
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+bbSPIOpen(10, MISO, MOSI, SCLK, 10000, 0); // device 1
+.br
+bbSPIOpen(11, MISO, MOSI, SCLK, 20000, 3); // device 2
+.br
+
+.EE
+
+.IP "\fBint bbSPIClose(unsigned CS)\fP"
+.IP "" 4
+This function stops bit banging SPI on a set of GPIO
+opened with \fBbbSPIOpen\fP.
+
+.br
+
+.br
+
+.EX
+CS: 0-31, the CS GPIO used in a prior call to \fBbbSPIOpen\fP
+.br
+
+.EE
+
+.br
+
+.br
+Returns 0 if OK, otherwise PI_BAD_USER_GPIO, or PI_NOT_SPI_GPIO.
+
+.IP "\fBint bbSPIXfer(unsigned CS, char *inBuf, char *outBuf, unsigned count)\fP"
+.IP "" 4
+This function executes a bit banged SPI transfer.
+
+.br
+
+.br
+
+.EX
+    CS: 0-31 (as used in a prior call to \fBbbSPIOpen\fP)
+.br
+ inBuf: pointer to buffer to hold data to be sent
+.br
+outBuf: pointer to buffer to hold returned data
+.br
+ count: size of data transfer
+.br
+
+.EE
+
+.br
+
+.br
+Returns >= 0 if OK (the number of bytes read), otherwise
+PI_BAD_USER_GPIO, PI_NOT_SPI_GPIO or PI_BAD_POINTER.
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+// gcc -Wall -pthread -o bbSPIx_test bbSPIx_test.c -lpigpio
+.br
+// sudo ./bbSPIx_test
+.br
+
+.br
+
+.br
+#include <stdio.h>
+.br
+
+.br
+#include "pigpio.h"
+.br
+
+.br
+#define CE0 5
+.br
+#define CE1 6
+.br
+#define MISO 13
+.br
+#define MOSI 19
+.br
+#define SCLK 12
+.br
+
+.br
+int main(int argc, char *argv[])
+.br
+{
+.br
+   int i, count, set_val, read_val;
+.br
+   unsigned char inBuf[3];
+.br
+   char cmd1[] = {0, 0};
+.br
+   char cmd2[] = {12, 0};
+.br
+   char cmd3[] = {1, 128, 0};
+.br
+
+.br
+   if (gpioInitialise() < 0)
+.br
+   {
+.br
+      fprintf(stderr, "pigpio initialisation failed.\n");
+.br
+      return 1;
+.br
+   }
+.br
+
+.br
+   bbSPIOpen(CE0, MISO, MOSI, SCLK, 10000, 0); // MCP4251 DAC
+.br
+   bbSPIOpen(CE1, MISO, MOSI, SCLK, 20000, 3); // MCP3008 ADC
+.br
+
+.br
+   for (i=0; i<256; i++)
+.br
+   {
+.br
+      cmd1[1] = i;
+.br
+
+.br
+      count = bbSPIXfer(CE0, cmd1, (char *)inBuf, 2); // > DAC
+.br
+
+.br
+      if (count == 2)
+.br
+      {
+.br
+         count = bbSPIXfer(CE0, cmd2, (char *)inBuf, 2); // < DAC
+.br
+
+.br
+         if (count == 2)
+.br
+         {
+.br
+            set_val = inBuf[1];
+.br
+
+.br
+            count = bbSPIXfer(CE1, cmd3, (char *)inBuf, 3); // < ADC
+.br
+
+.br
+            if (count == 3)
+.br
+            {
+.br
+               read_val = ((inBuf[1]&3)<<8) | inBuf[2];
+.br
+               printf("%d %d\n", set_val, read_val);
+.br
+            }
+.br
+         }
+.br
+      }
+.br
+   }
+.br
+
+.br
+   bbSPIClose(CE0);
+.br
+   bbSPIClose(CE1);
+.br
+
+.br
+   gpioTerminate();
+.br
+
+.br
+   return 0;
+.br
+}
+.br
+
+.EE
+
 .IP "\fBint spiOpen(unsigned spiChan, unsigned baud, unsigned spiFlags)\fP"
 .IP "" 4
 This function returns a handle for the SPI device on the channel.
@@ -3467,17 +4180,40 @@ active low chip select.
 .br
 
 .br
-An auxiliary SPI device is available on all models but the
-A and B and may be selected by setting the A bit in the flags.
-The auxiliary device has 3 chip selects and a selectable word
-size in bits.
+The Pi has two SPI peripherals: main and auxiliary.
+
+.br
+
+.br
+The main SPI has two chip selects (channels), the auxiliary has
+three.
+
+.br
+
+.br
+The auxiliary SPI is available on all models but the A and B.
+
+.br
+
+.br
+The GPIO used are given in the following table.
+
+.br
+
+.br
+           MISO   MOSI   SCLK   CE0   CE1   CE2
+.br
+Main SPI      9     10     11     8     7     -
+.br
+Aux SPI      19     20     21    18    17    16
+.br
 
 .br
 
 .br
 
 .EX
- spiChan: 0-1 (0-2 for the auxiliary SPI device)
+ spiChan: 0-1 (0-2 for the auxiliary SPI)
 .br
     baud: 32K-125M (values above 30M are unlikely to work)
 .br
@@ -3517,7 +4253,7 @@ mm defines the SPI mode.
 .br
 
 .br
-Warning: modes 1 and 3 do not appear to work on the auxiliary device.
+Warning: modes 1 and 3 do not appear to work on the auxiliary SPI.
 
 .br
 
@@ -3550,40 +4286,40 @@ ux is 0 if the CEx GPIO is reserved for SPI (default) and 1 otherwise.
 .br
 
 .br
-A is 0 for the standard SPI device, 1 for the auxiliary SPI.
+A is 0 for the main SPI, 1 for the auxiliary SPI.
 
 .br
 
 .br
-W is 0 if the device is not 3-wire, 1 if the device is 3-wire.  Standard
-SPI device only.
+W is 0 if the device is not 3-wire, 1 if the device is 3-wire.  Main
+SPI only.
 
 .br
 
 .br
 nnnn defines the number of bytes (0-15) to write before switching
 the MOSI line to MISO to read data.  This field is ignored
-if W is not set.  Standard SPI device only.
+if W is not set.  Main SPI only.
 
 .br
 
 .br
 T is 1 if the least significant bit is transmitted on MOSI first, the
 default (0) shifts the most significant bit out first.  Auxiliary SPI
-device only.
+only.
 
 .br
 
 .br
 R is 1 if the least significant bit is received on MISO first, the
 default (0) receives the most significant bit first.  Auxiliary SPI
-device only.
+only.
 
 .br
 
 .br
 bbbbbb defines the word size in bits (0-32).  The default (0)
-sets 8 bits per word.  Auxiliary SPI device only.
+sets 8 bits per word.  Auxiliary SPI only.
 
 .br
 
@@ -3595,17 +4331,28 @@ the word size in bits.
 .br
 
 .br
-For bits 1-8 there will be one byte per character.
+For bits 1-8 there will be one byte per word.
 .br
-For bits 9-16 there will be two bytes per character.
+For bits 9-16 there will be two bytes per word.
 .br
-For bits 17-32 there will be four bytes per character.
+For bits 17-32 there will be four bytes per word.
 
 .br
 
 .br
-E.g. to transfer 32 12-bit words buf should contain 64 bytes
+Multi-byte transfers are made in least significant byte first order.
+
+.br
+
+.br
+E.g. to transfer 32 11-bit words buf should contain 64 bytes
 and count should be 64.
+
+.br
+
+.br
+E.g. to transfer the 14 bit value 0x1ABC send the bytes 0xBC followed
+by 0x1A.
 
 .br
 
@@ -3712,14 +4459,15 @@ PI_BAD_HANDLE, PI_BAD_SPI_COUNT, or PI_SPI_XFER_FAILED.
 .IP "\fBint serOpen(char *sertty, unsigned baud, unsigned serFlags)\fP"
 .IP "" 4
 This function opens a serial device at a specified baud rate
-with specified flags.
+and with specified flags.  The device name must start with
+/dev/tty or /dev/serial.
 
 .br
 
 .br
 
 .EX
-  sertty: the serial device to open, /dev/tty*
+  sertty: the serial device to open
 .br
     baud: the baud rate in bits per second, see below
 .br
@@ -3805,6 +4553,11 @@ handle: >=0, as returned by a call to \fBserOpen\fP
 Returns the read byte (>=0) if OK, otherwise PI_BAD_HANDLE,
 PI_SER_READ_NO_DATA, or PI_SER_READ_FAILED.
 
+.br
+
+.br
+If no data is ready PI_SER_READ_NO_DATA is returned.
+
 .IP "\fBint serWrite(unsigned handle, char *buf, unsigned count)\fP"
 .IP "" 4
 This function writes count bytes from buf to the the serial port
@@ -3840,7 +4593,7 @@ associated with handle and writes them to buf.
 .br
 
 .EX
-handle: >=0, as returned by a call to serial_open
+handle: >=0, as returned by a call to \fBserOpen\fP
 .br
    buf: an array to receive the read data
 .br
@@ -3852,8 +4605,13 @@ handle: >=0, as returned by a call to serial_open
 .br
 
 .br
-Returns the number of bytes read (>0) if OK, otherwise PI_BAD_HANDLE,
-PI_BAD_PARAM, PI_SER_READ_NO_DATA, or PI_SER_WRITE_FAILED.
+Returns the number of bytes read (>0=) if OK, otherwise PI_BAD_HANDLE,
+PI_BAD_PARAM, or PI_SER_READ_NO_DATA.
+
+.br
+
+.br
+If no data is ready zero is returned.
 
 .IP "\fBint serDataAvailable(unsigned handle)\fP"
 .IP "" 4
@@ -3940,16 +4698,24 @@ The watchdog may be cancelled by setting timeout to 0.
 .br
 
 .br
-If no level change has been detected for the GPIO for timeout
-milliseconds:-
+Until cancelled a timeout will be reported every timeout milliseconds
+after the last GPIO activity.
 
 .br
 
 .br
-1) any registered alert function for the GPIO is called with
+In particular:
+
+.br
+
+.br
+1) any registered alert function for the GPIO will be called with
    the level set to PI_TIMEOUT.
+
 .br
-2) any notification for the GPIO has a report written to the
+
+.br
+2) any notification for the GPIO will have a report written to the
    fifo with the flags set to indicate a watchdog timeout.
 
 .br
@@ -4016,7 +4782,21 @@ Returns 0 if OK, otherwise PI_BAD_USER_GPIO, or PI_BAD_FILTER.
 .br
 
 .br
-Note, level changes before and after the active period may
+This filter affects the GPIO samples returned to callbacks set up
+with \fBgpioSetAlertFunc\fP, \fBgpioSetAlertFuncEx\fP, \fBgpioSetGetSamplesFunc\fP,
+and \fBgpioSetGetSamplesFuncEx\fP.
+
+.br
+
+.br
+It does not affect interrupts set up with \fBgpioSetISRFunc\fP,
+\fBgpioSetISRFuncEx\fP, or levels read by \fBgpioRead\fP,
+\fBgpioRead_Bits_0_31\fP, or \fBgpioRead_Bits_32_53\fP.
+
+.br
+
+.br
+Level changes before and after the active period may
 be reported.  Your software must be designed to cope with
 such reports.
 
@@ -4052,7 +4832,21 @@ Returns 0 if OK, otherwise PI_BAD_USER_GPIO, or PI_BAD_FILTER.
 .br
 
 .br
-Note, each (stable) edge will be timestamped \fBsteady\fP microseconds
+This filter affects the GPIO samples returned to callbacks set up
+with \fBgpioSetAlertFunc\fP, \fBgpioSetAlertFuncEx\fP, \fBgpioSetGetSamplesFunc\fP,
+and \fBgpioSetGetSamplesFuncEx\fP.
+
+.br
+
+.br
+It does not affect interrupts set up with \fBgpioSetISRFunc\fP,
+\fBgpioSetISRFuncEx\fP, or levels read by \fBgpioRead\fP,
+\fBgpioRead_Bits_0_31\fP, or \fBgpioRead_Bits_32_53\fP.
+
+.br
+
+.br
+Each (stable) edge will be timestamped \fBsteady\fP microseconds
 after it was first detected.
 
 .IP "\fBint gpioSetGetSamplesFunc(gpioGetSamplesFunc_t f, uint32_t bits)\fP"
@@ -4387,6 +5181,11 @@ This function stores a null terminated script for later execution.
 .br
 
 .br
+See \fBhttp://abyz.me.uk/rpi/pigpio/pigs.html#Scripts\fP for details.
+
+.br
+
+.br
 
 .EX
 script: the text of the script
@@ -4403,6 +5202,68 @@ otherwise PI_BAD_SCRIPT.
 .IP "\fBint gpioRunScript(unsigned script_id, unsigned numPar, uint32_t *param)\fP"
 .IP "" 4
 This function runs a stored script.
+
+.br
+
+.br
+
+.EX
+script_id: >=0, as returned by \fBgpioStoreScript\fP
+.br
+   numPar: 0-10, the number of parameters
+.br
+    param: an array of parameters
+.br
+
+.EE
+
+.br
+
+.br
+The function returns 0 if OK, otherwise PI_BAD_SCRIPT_ID, or
+PI_TOO_MANY_PARAM.
+
+.br
+
+.br
+param is an array of up to 10 parameters which may be referenced in
+the script as p0 to p9.
+
+.IP "\fBint gpioRunScript(unsigned script_id, unsigned numPar, uint32_t *param)\fP"
+.IP "" 4
+This function runs a stored script.
+
+.br
+
+.br
+
+.EX
+script_id: >=0, as returned by \fBgpioStoreScript\fP
+.br
+   numPar: 0-10, the number of parameters
+.br
+    param: an array of parameters
+.br
+
+.EE
+
+.br
+
+.br
+The function returns 0 if OK, otherwise PI_BAD_SCRIPT_ID, or
+PI_TOO_MANY_PARAM.
+
+.br
+
+.br
+param is an array of up to 10 parameters which may be referenced in
+the script as p0 to p9.
+
+.IP "\fBint gpioUpdateScript(unsigned script_id, unsigned numPar, uint32_t *param)\fP"
+.IP "" 4
+This function sets the parameters of a script.  The script may or
+may not be running.  The first numPar parameters of the script are
+overwritten with the new values.
 
 .br
 
@@ -4724,7 +5585,7 @@ Frequencies above 30MHz are unlikely to work.
 .EX
    gpio: see description
 .br
-clkfreq: 0 (off) or 4689-250000000 (250M)
+clkfreq: 0 (off) or 4689-250M (13184-375M for the BCM2711)
 .br
 
 .EE
@@ -4808,7 +5669,7 @@ main clock defaults to PCM but may be overridden by a call to
 .EX
    gpio: see description
 .br
-PWMfreq: 0 (off) or 1-125000000 (125M)
+PWMfreq: 0 (off) or 1-125M (1-187.5M for the BCM2711)
 .br
 PWMduty: 0 (off) to 1000000 (1M)(fully on)
 .br
@@ -4865,18 +5726,18 @@ The GPIO must be one of the following.
 
 .br
 The actual number of steps beween off and fully on is the
-integral part of 250 million divided by PWMfreq.
+integral part of 250M/PWMfreq (375M/PWMfreq for the BCM2711).
 
 .br
 
 .br
-The actual frequency set is 250 million / steps.
+The actual frequency set is 250M/steps (375M/steps for the BCM2711).
 
 .br
 
 .br
-There will only be a million steps for a PWMfreq of 250.
-Lower frequencies will have more steps and higher
+There will only be a million steps for a PWMfreq of 250 (375 for
+the BCM2711). Lower frequencies will have more steps and higher
 frequencies will have fewer steps.  PWMduty is
 automatically scaled to take this into account.
 
@@ -5134,6 +5995,861 @@ for "Revision       : 000g" the function returns 0.
 .IP "" 4
 Returns the pigpio version.
 
+.IP "\fBint gpioGetPad(unsigned pad)\fP"
+.IP "" 4
+This function returns the pad drive strength in mA.
+
+.br
+
+.br
+
+.EX
+pad: 0-2, the pad to get
+.br
+
+.EE
+
+.br
+
+.br
+Returns the pad drive strength if OK, otherwise PI_BAD_PAD.
+
+.br
+
+.br
+Pad   GPIO
+.br
+0     0-27
+.br
+1     28-45
+.br
+2     46-53
+.br
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+strength = gpioGetPad(1); // get pad 1 strength
+.br
+
+.EE
+
+.IP "\fBint gpioSetPad(unsigned pad, unsigned padStrength)\fP"
+.IP "" 4
+This function sets the pad drive strength in mA.
+
+.br
+
+.br
+
+.EX
+        pad: 0-2, the pad to set
+.br
+padStrength: 1-16 mA
+.br
+
+.EE
+
+.br
+
+.br
+Returns 0 if OK, otherwise PI_BAD_PAD, or PI_BAD_STRENGTH.
+
+.br
+
+.br
+Pad   GPIO
+.br
+0     0-27
+.br
+1     28-45
+.br
+2     46-53
+.br
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+gpioSetPad(0, 16); // set pad 0 strength to 16 mA
+.br
+
+.EE
+
+.IP "\fBint eventMonitor(unsigned handle, uint32_t bits)\fP"
+.IP "" 4
+This function selects the events to be reported on a previously
+opened handle.
+
+.br
+
+.br
+
+.EX
+handle: >=0, as returned by \fBgpioNotifyOpen\fP
+.br
+  bits: a bit mask indicating the events of interest
+.br
+
+.EE
+
+.br
+
+.br
+Returns 0 if OK, otherwise PI_BAD_HANDLE.
+
+.br
+
+.br
+A report is sent each time an event is triggered providing the
+corresponding bit in bits is set.
+
+.br
+
+.br
+See \fBgpioNotifyBegin\fP for the notification format.
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+// Start reporting events 3, 6, and 7.
+.br
+
+.br
+//  bit      76543210
+.br
+// (0xC8 = 0b11001000)
+.br
+
+.br
+eventMonitor(h, 0xC8);
+.br
+
+.EE
+
+.br
+
+.br
+
+.IP "\fBint eventSetFunc(unsigned event, eventFunc_t f)\fP"
+.IP "" 4
+Registers a function to be called (a callback) when the specified
+event occurs.
+
+.br
+
+.br
+
+.EX
+event: 0-31
+.br
+    f: the callback function
+.br
+
+.EE
+
+.br
+
+.br
+Returns 0 if OK, otherwise PI_BAD_EVENT_ID.
+
+.br
+
+.br
+One function may be registered per event.
+
+.br
+
+.br
+The function is passed the event, and the tick.
+
+.br
+
+.br
+The callback may be cancelled by passing NULL as the function.
+
+.IP "\fBint eventSetFuncEx(unsigned event, eventFuncEx_t f, void *userdata)\fP"
+.IP "" 4
+Registers a function to be called (a callback) when the specified
+event occurs.
+
+.br
+
+.br
+
+.EX
+   event: 0-31
+.br
+       f: the callback function
+.br
+userdata: pointer to arbitrary user data
+.br
+
+.EE
+
+.br
+
+.br
+Returns 0 if OK, otherwise PI_BAD_EVENT_ID.
+
+.br
+
+.br
+One function may be registered per event.
+
+.br
+
+.br
+The function is passed the event, the tick, and the ueserdata pointer.
+
+.br
+
+.br
+The callback may be cancelled by passing NULL as the function.
+
+.br
+
+.br
+Only one of \fBeventSetFunc\fP or \fBeventSetFuncEx\fP can be
+registered per event.
+
+.IP "\fBint eventTrigger(unsigned event)\fP"
+.IP "" 4
+This function signals the occurrence of an event.
+
+.br
+
+.br
+
+.EX
+event: 0-31, the event
+.br
+
+.EE
+
+.br
+
+.br
+Returns 0 if OK, otherwise PI_BAD_EVENT_ID.
+
+.br
+
+.br
+An event is a signal used to inform one or more consumers
+to start an action.  Each consumer which has registered an interest
+in the event (e.g. by calling \fBeventSetFunc\fP) will be informed by
+a callback.
+
+.br
+
+.br
+One event, PI_EVENT_BSC (31) is predefined.  This event is
+auto generated on BSC slave activity.
+
+.br
+
+.br
+The meaning of other events is arbitrary.
+
+.br
+
+.br
+Note that other than its id and its tick there is no data associated
+with an event.
+
+.IP "\fBint shell(char *scriptName, char *scriptString)\fP"
+.IP "" 4
+This function uses the system call to execute a shell script
+with the given string as its parameter.
+
+.br
+
+.br
+
+.EX
+  scriptName: the name of the script, only alphanumeric characters,
+.br
+              '-' and '_' are allowed in the name
+.br
+scriptString: the string to pass to the script
+.br
+
+.EE
+
+.br
+
+.br
+The exit status of the system call is returned if OK, otherwise
+PI_BAD_SHELL_STATUS.
+
+.br
+
+.br
+scriptName must exist in /opt/pigpio/cgi and must be executable.
+
+.br
+
+.br
+The returned exit status is normally 256 times that set by the
+shell script exit function.  If the script can't be found 32512 will
+be returned.
+
+.br
+
+.br
+The following table gives some example returned statuses.
+
+.br
+
+.br
+Script exit status   Returned system call status
+.br
+1                    256
+.br
+5                    1280
+.br
+10                   2560
+.br
+200                  51200
+.br
+script not found     32512
+.br
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+// pass two parameters, hello and world
+.br
+status = shell("scr1", "hello world");
+.br
+
+.br
+// pass three parameters, hello, string with spaces, and world
+.br
+status = shell("scr1", "hello 'string with spaces' world");
+.br
+
+.br
+// pass one parameter, hello string with spaces world
+.br
+status = shell("scr1", "\"hello string with spaces world\"");
+.br
+
+.EE
+
+.IP "\fBint fileOpen(char *file, unsigned mode)\fP"
+.IP "" 4
+This function returns a handle to a file opened in a specified mode.
+
+.br
+
+.br
+
+.EX
+file: the file to open
+.br
+mode: the file open mode
+.br
+
+.EE
+
+.br
+
+.br
+Returns a handle (>=0) if OK, otherwise PI_NO_HANDLE, PI_NO_FILE_ACCESS,
+PI_BAD_FILE_MODE, PI_FILE_OPEN_FAILED, or PI_FILE_IS_A_DIR.
+
+.br
+
+.br
+File
+
+.br
+
+.br
+A file may only be opened if permission is granted by an entry in
+/opt/pigpio/access.  This is intended to allow remote access to files
+in a more or less controlled manner.
+
+.br
+
+.br
+Each entry in /opt/pigpio/access takes the form of a file path
+which may contain wildcards followed by a single letter permission.
+The permission may be R for read, W for write, U for read/write,
+and N for no access.
+
+.br
+
+.br
+Where more than one entry matches a file the most specific rule
+applies.  If no entry matches a file then access is denied.
+
+.br
+
+.br
+Suppose /opt/pigpio/access contains the following entries
+
+.br
+
+.br
+
+.EX
+/home/* n
+.br
+/home/pi/shared/dir_1/* w
+.br
+/home/pi/shared/dir_2/* r
+.br
+/home/pi/shared/dir_3/* u
+.br
+/home/pi/shared/dir_1/file.txt n
+.br
+
+.EE
+
+.br
+
+.br
+Files may be written in directory dir_1 with the exception
+of file.txt.
+
+.br
+
+.br
+Files may be read in directory dir_2.
+
+.br
+
+.br
+Files may be read and written in directory dir_3.
+
+.br
+
+.br
+If a directory allows read, write, or read/write access then files may
+be created in that directory.
+
+.br
+
+.br
+In an attempt to prevent risky permissions the following paths are
+ignored in /opt/pigpio/access.
+
+.br
+
+.br
+
+.EX
+a path containing ..
+.br
+a path containing only wildcards (*?)
+.br
+a path containing less than two non-wildcard parts
+.br
+
+.EE
+
+.br
+
+.br
+Mode
+
+.br
+
+.br
+The mode may have the following values.
+
+.br
+
+.br
+Macro           Value   Meaning
+.br
+PI_FILE_READ      1     open file for reading
+.br
+PI_FILE_WRITE     2     open file for writing
+.br
+PI_FILE_RW        3     open file for reading and writing
+.br
+
+.br
+
+.br
+The following values may be or'd into the mode.
+
+.br
+
+.br
+Macro            Value   Meaning
+.br
+PI_FILE_APPEND   4       Writes append data to the end of the file
+.br
+PI_FILE_CREATE   8       The file is created if it doesn't exist
+.br
+PI_FILE_TRUNC    16      The file is truncated
+.br
+
+.br
+
+.br
+Newly created files are owned by root with permissions owner read and write.
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+#include <stdio.h>
+.br
+#include <pigpio.h>
+.br
+
+.br
+int main(int argc, char *argv[])
+.br
+{
+.br
+   int handle, c;
+.br
+   char buf[60000];
+.br
+
+.br
+   if (gpioInitialise() < 0) return 1;
+.br
+
+.br
+   // assumes /opt/pigpio/access contains the following line
+.br
+   // /ram/*.c r
+.br
+
+.br
+   handle = fileOpen("/ram/pigpio.c", PI_FILE_READ);
+.br
+
+.br
+   if (handle >= 0)
+.br
+   {
+.br
+      while ((c=fileRead(handle, buf, sizeof(buf)-1)))
+.br
+      {
+.br
+         buf[c] = 0;
+.br
+         printf("%s", buf);
+.br
+      }
+.br
+
+.br
+      fileClose(handle);
+.br
+   }
+.br
+
+.br
+   gpioTerminate();
+.br
+}
+.br
+
+.EE
+
+.IP "\fBint fileClose(unsigned handle)\fP"
+.IP "" 4
+This function closes the file associated with handle.
+
+.br
+
+.br
+
+.EX
+handle: >=0, as returned by a call to \fBfileOpen\fP
+.br
+
+.EE
+
+.br
+
+.br
+Returns 0 if OK, otherwise PI_BAD_HANDLE.
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+fileClose(h);
+.br
+
+.EE
+
+.IP "\fBint fileWrite(unsigned handle, char *buf, unsigned count)\fP"
+.IP "" 4
+This function writes count bytes from buf to the the file
+associated with handle.
+
+.br
+
+.br
+
+.EX
+handle: >=0, as returned by a call to \fBfileOpen\fP
+.br
+   buf: the array of bytes to write
+.br
+ count: the number of bytes to write
+.br
+
+.EE
+
+.br
+
+.br
+Returns 0 if OK, otherwise PI_BAD_HANDLE, PI_BAD_PARAM,
+PI_FILE_NOT_WOPEN, or PI_BAD_FILE_WRITE.
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+status = fileWrite(h, buf, count);
+.br
+if (status == 0)
+.br
+{
+.br
+   // okay
+.br
+}
+.br
+else
+.br
+{
+.br
+   // error
+.br
+}
+.br
+
+.EE
+
+.IP "\fBint fileRead(unsigned handle, char *buf, unsigned count)\fP"
+.IP "" 4
+This function reads up to count bytes from the the file
+associated with handle and writes them to buf.
+
+.br
+
+.br
+
+.EX
+handle: >=0, as returned by a call to \fBfileOpen\fP
+.br
+   buf: an array to receive the read data
+.br
+ count: the maximum number of bytes to read
+.br
+
+.EE
+
+.br
+
+.br
+Returns the number of bytes read (>=0) if OK, otherwise PI_BAD_HANDLE, PI_BAD_PARAM, PI_FILE_NOT_ROPEN, or PI_BAD_FILE_WRITE.
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+if (fileRead(h, buf, sizeof(buf)) > 0)
+.br
+{
+.br
+   // process read data
+.br
+}
+.br
+
+.EE
+
+.IP "\fBint fileSeek(unsigned handle, int32_t seekOffset, int seekFrom)\fP"
+.IP "" 4
+This function seeks to a position within the file associated
+with handle.
+
+.br
+
+.br
+
+.EX
+    handle: >=0, as returned by a call to \fBfileOpen\fP
+.br
+seekOffset: the number of bytes to move.  Positive offsets
+.br
+            move forward, negative offsets backwards.
+.br
+  seekFrom: one of PI_FROM_START (0), PI_FROM_CURRENT (1),
+.br
+            or PI_FROM_END (2)
+.br
+
+.EE
+
+.br
+
+.br
+Returns the new byte position within the file (>=0) if OK, otherwise PI_BAD_HANDLE, or PI_BAD_FILE_SEEK.
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+fileSeek(0, 20, PI_FROM_START); // Seek to start plus 20
+.br
+
+.br
+size = fileSeek(0, 0, PI_FROM_END); // Seek to end, return size
+.br
+
+.br
+pos = fileSeek(0, 0, PI_FROM_CURRENT); // Return current position
+.br
+
+.EE
+
+.IP "\fBint fileList(char *fpat, char *buf, unsigned count)\fP"
+.IP "" 4
+This function returns a list of files which match a pattern.  The
+pattern may contain wildcards.
+
+.br
+
+.br
+
+.EX
+ fpat: file pattern to match
+.br
+  buf: an array to receive the matching file names
+.br
+count: the maximum number of bytes to read
+.br
+
+.EE
+
+.br
+
+.br
+Returns the number of returned bytes if OK, otherwise PI_NO_FILE_ACCESS,
+or PI_NO_FILE_MATCH.
+
+.br
+
+.br
+The pattern must match an entry in /opt/pigpio/access.  The pattern
+may contain wildcards.  See \fBfileOpen\fP.
+
+.br
+
+.br
+NOTE
+
+.br
+
+.br
+The returned value is not the number of files, it is the number
+of bytes in the buffer.  The file names are separated by newline
+characters.
+
+.br
+
+.br
+\fBExample\fP
+.br
+
+.EX
+#include <stdio.h>
+.br
+#include <pigpio.h>
+.br
+
+.br
+int main(int argc, char *argv[])
+.br
+{
+.br
+   int c;
+.br
+   char buf[1000];
+.br
+
+.br
+   if (gpioInitialise() < 0) return 1;
+.br
+
+.br
+   // assumes /opt/pigpio/access contains the following line
+.br
+   // /ram/*.c r
+.br
+
+.br
+   c = fileList("/ram/p*.c", buf, sizeof(buf));
+.br
+
+.br
+   if (c >= 0)
+.br
+   {
+.br
+      // terminate string
+.br
+      buf[c] = 0;
+.br
+      printf("%s", buf);
+.br
+   }
+.br
+
+.br
+   gpioTerminate();
+.br
+}
+.br
+
+.EE
+
 .IP "\fBint gpioCfgBufferSize(unsigned cfgMillis)\fP"
 .IP "" 4
 Configures pigpio to buffer cfgMillis milliseconds of GPIO samples.
@@ -5319,8 +7035,20 @@ secondaryChannel: 0-14
 .br
 
 .br
-The default setting is to use channel 14 for the primary channel and
-channel 6 for the secondary channel.
+The default setting depends on whether the Pi has a BCM2711 chip or
+not (currently only the Pi4B has a BCM2711).
+
+.br
+
+.br
+The default setting for a non-BCM2711 is to use channel 14 for the
+primary channel and channel 6 for the secondary channel.
+
+.br
+
+.br
+The default setting for a BCM2711 is to use channel 7 for the
+primary channel and channel 6 for the secondary channel.
 
 .br
 
@@ -5344,8 +7072,11 @@ and 611 control blocks on a lite channel.
 
 .IP "\fBint gpioCfgPermissions(uint64_t updateMask)\fP"
 .IP "" 4
-Configures pigpio to only allow updates (writes or mode changes) for the
-GPIO specified by the mask.
+Configures pigpio to restrict GPIO updates via the socket or pipe
+interfaces to the GPIO specified by the mask.  Programs directly
+calling the pigpio library (i.e. linked with -lpigpio are not
+affected).  A GPIO update is a write to a GPIO or a GPIO mode
+change or any function which would force such an action.
 
 .br
 
@@ -5371,24 +7102,20 @@ added to the mask.
 .br
 
 .br
-If the board revision is not recognised then GPIO 0-31 are allowed.
+If the board revision is not recognised then GPIO 2-27 are allowed.
 
 .br
 
 .br
-Unknown board   PI_DEFAULT_UPDATE_MASK_UNKNOWN   0xFFFFFFFF
+Unknown board   PI_DEFAULT_UPDATE_MASK_UNKNOWN   0x0FFFFFFC
 .br
-
 .br
 Type 1 board    PI_DEFAULT_UPDATE_MASK_B1   0x03E6CF93
 .br
-
 .br
 Type 2 board    PI_DEFAULT_UPDATE_MASK_A_B2   0xFBC6CF9C
-
 .br
 Type 3 board    PI_DEFAULT_UPDATE_MASK_R3   0x0FFFFFFC
-
 .br
 
 .IP "\fBint gpioCfgSocketPort(unsigned port)\fP"
@@ -5487,6 +7214,28 @@ method uses the mailbox property interface to allocate bus memory.
 .br
 Auto will use the mailbox method unless a larger than default buffer
 size is requested with \fBgpioCfgBufferSize\fP.
+
+.IP "\fBint gpioCfgNetAddr(int numSockAddr, uint32_t *sockAddr)\fP"
+.IP "" 4
+Sets the network addresses which are allowed to talk over the
+socket interface.
+
+.br
+
+.br
+This function is only effective if called before \fBgpioInitialise\fP.
+
+.br
+
+.br
+
+.EX
+numSockAddr: 0-256 (0 means all addresses allowed)
+.br
+   sockAddr: an array of permitted network addresses.
+.br
+
+.EE
 
 .IP "\fBint gpioCfgInternals(unsigned cfgWhat, unsigned cfgVal)\fP"
 .IP "" 4
@@ -5695,7 +7444,7 @@ Not intended for general use.
 
 .IP "\fBrawCbs_t *rawWaveCBAdr(int cbNum)\fP"
 .IP "" 4
-Return the Linux address of contol block cbNum.
+Return the (Linux) address of contol block cbNum.
 
 .br
 
@@ -5712,9 +7461,54 @@ cbNum: the cb of interest
 .br
 Not intended for general use.
 
+.IP "\fBuint32_t rawWaveGetOOL(int pos)\fP"
+.IP "" 4
+Gets the OOL parameter stored at pos.
+
+.br
+
+.br
+
+.EX
+pos: the position of interest.
+.br
+
+.EE
+
+.br
+
+.br
+Not intended for general use.
+
+.IP "\fBvoid rawWaveSetOOL(int pos, uint32_t lVal)\fP"
+.IP "" 4
+Sets the OOL parameter stored at pos to value.
+
+.br
+
+.br
+
+.EX
+ pos: the position of interest
+.br
+lVal: the value to write
+.br
+
+.EE
+
+.br
+
+.br
+Not intended for general use.
+
 .IP "\fBuint32_t rawWaveGetOut(int pos)\fP"
 .IP "" 4
 Gets the wave output parameter stored at pos.
+
+.br
+
+.br
+DEPRECATED: use rawWaveGetOOL instead.
 
 .br
 
@@ -5734,6 +7528,11 @@ Not intended for general use.
 .IP "\fBvoid rawWaveSetOut(int pos, uint32_t lVal)\fP"
 .IP "" 4
 Sets the wave output parameter stored at pos to value.
+
+.br
+
+.br
+DEPRECATED: use rawWaveSetOOL instead.
 
 .br
 
@@ -5759,6 +7558,11 @@ Gets the wave input value parameter stored at pos.
 .br
 
 .br
+DEPRECATED: use rawWaveGetOOL instead.
+
+.br
+
+.br
 
 .EX
 pos: the position of interest
@@ -5774,6 +7578,11 @@ Not intended for general use.
 .IP "\fBvoid rawWaveSetIn(int pos, uint32_t lVal)\fP"
 .IP "" 4
 Sets the wave input value stored at pos to value.
+
+.br
+
+.br
+DEPRECATED: use rawWaveSetOOL instead.
 
 .br
 
@@ -6000,6 +7809,43 @@ e.g. to select bits 5, 9, 23 you could use (1<<5) | (1<<9) | (1<<23).
 
 .br
 
+.IP "\fB*bsc_xfer\fP" 0
+A pointer to a \fBbsc_xfer_t\fP object used to control a BSC transfer.
+
+.br
+
+.br
+
+.IP "\fBbsc_xfer_t\fP" 0
+
+.br
+
+.br
+
+.EX
+typedef struct
+.br
+{
+.br
+   uint32_t control;          // Write
+.br
+   int rxCnt;                 // Read only
+.br
+   char rxBuf[BSC_FIFO_SIZE]; // Read only
+.br
+   int txCnt;                 // Write
+.br
+   char txBuf[BSC_FIFO_SIZE]; // Write
+.br
+} bsc_xfer_t;
+.br
+
+.EE
+
+.br
+
+.br
+
 .IP "\fB*buf\fP" 0
 
 .br
@@ -6132,7 +7978,7 @@ A single character, an 8 bit quantity able to store 0-255.
 
 .br
 
-.IP "\fBclkfreq\fP: 4689-250M" 0
+.IP "\fBclkfreq\fP: 4689-250M (13184-375M for the BCM2711)" 0
 
 .br
 
@@ -6148,6 +7994,8 @@ PI_HW_CLK_MIN_FREQ 4689
 .br
 PI_HW_CLK_MAX_FREQ 250000000
 .br
+PI_HW_CLK_MAX_FREQ_2711 375000000
+.br
 
 .EE
 
@@ -6156,12 +8004,15 @@ PI_HW_CLK_MAX_FREQ 250000000
 .br
 
 .IP "\fBcount\fP" 0
-
-.br
-
-.br
 The number of bytes to be transferred in an I2C, SPI, or Serial
 command.
+
+.br
+
+.br
+
+.IP "\fBCS\fP" 0
+The GPIO used for the slave select signal when bit banging SPI.
 
 .br
 
@@ -6191,12 +8042,12 @@ PI_MAX_WAVE_DATABITS 32
 
 .br
 
-.IP "\fBDMAchannel\fP: 0-14" 0
+.IP "\fBDMAchannel\fP: 0-15" 0
 
 .EX
 PI_MIN_DMA_CHANNEL 0
 .br
-PI_MAX_DMA_CHANNEL 14
+PI_MAX_DMA_CHANNEL 15
 .br
 
 .EE
@@ -6234,7 +8085,7 @@ The number may vary between 0 and range (default 255) where
 .br
 
 .IP "\fBedge\fP: 0-2" 0
-The type of GPIO edge to generate an intrrupt.  See\fBgpioSetISRFunc\fP,
+The type of GPIO edge to generate an interrupt.  See \fBgpioSetISRFunc\fP
 and \fBgpioSetISRFuncEx\fP.
 
 .br
@@ -6255,6 +8106,40 @@ EITHER_EDGE 2
 
 .br
 
+.IP "\fBevent\fP: 0-31" 0
+An event is a signal used to inform one or more consumers
+to start an action.
+
+.br
+
+.br
+
+.IP "\fBeventFunc_t\fP" 0
+
+.EX
+typedef void (*eventFunc_t) (int event, uint32_t tick);
+.br
+
+.EE
+
+.br
+
+.br
+
+.IP "\fBeventFuncEx_t\fP" 0
+
+.EX
+typedef void (*eventFuncEx_t)
+.br
+   (int event, uint32_t tick, void *userdata);
+.br
+
+.EE
+
+.br
+
+.br
+
 .IP "\fBf\fP" 0
 
 .br
@@ -6266,7 +8151,23 @@ A function.
 
 .br
 
-.IP "\fBfrequency\fP: 0-" 0
+.IP "\fB*file\fP" 0
+A full file path.  To be accessible the path must match an entry in
+/opt/pigpio/access.
+
+.br
+
+.br
+
+.IP "\fB*fpat\fP" 0
+A file path which may contain wildcards.  To be accessible the path
+must match an entry in /opt/pigpio/access.
+
+.br
+
+.br
+
+.IP "\fBfrequency\fP: >=0" 0
 
 .br
 
@@ -6290,14 +8191,14 @@ A Broadcom numbered GPIO, in the range 0-53.
 .br
 
 .br
-There  are 54 General Purpose Input Outputs (GPIO) named gpio0 through
-gpio53.
+There  are 54 General Purpose Input Outputs (GPIO) named GPIO0 through
+GPIO53.
 
 .br
 
 .br
-They are split into two  banks.   Bank  1  consists  of  gpio0  through
-gpio31.  Bank 2 consists of gpio32 through gpio53.
+They are split into two  banks.   Bank  1  consists  of  GPIO0  through
+GPIO31.  Bank 2 consists of GPIO32 through GPIO53.
 
 .br
 
@@ -6361,9 +8262,9 @@ typedef void (*gpioAlertFunc_t) (int gpio, int level, uint32_t tick);
 .IP "\fBgpioAlertFuncEx_t\fP" 0
 
 .EX
-typedef void (*gpioAlertFuncEx_t)
+typedef void (*eventFuncEx_t)
 .br
-   (int gpio, int level, uint32_t tick, void *userdata);
+   (int event, int level, uint32_t tick, void *userdata);
 .br
 
 .EE
@@ -6580,7 +8481,7 @@ One of
 
 .br
 
-.IP "\fBhandle\fP: 0-" 0
+.IP "\fBhandle\fP: >=0" 0
 
 .br
 
@@ -6590,9 +8491,11 @@ A number referencing an object opened by one of
 .br
 
 .br
-\fBi2cOpen\fP
+\fBfileOpen\fP
 .br
 \fBgpioNotifyOpen\fP
+.br
+\fBi2cOpen\fP
 .br
 \fBserOpen\fP
 .br
@@ -6602,19 +8505,19 @@ A number referencing an object opened by one of
 
 .br
 
-.IP "\fBi2cAddr\fP" 0
+.IP "\fBi2cAddr\fP: 0-0x7F" 0
 The address of a device on the I2C bus.
 
 .br
 
 .br
 
-.IP "\fBi2cBus\fP: 0-1" 0
+.IP "\fBi2cBus\fP: >=0" 0
 
 .br
 
 .br
-An I2C bus, 0 or 1.
+An I2C bus number.
 
 .br
 
@@ -6672,6 +8575,13 @@ The number of bytes of data in a buffer.
 
 .IP "\fBint\fP" 0
 A whole number, negative or positive.
+
+.br
+
+.br
+
+.IP "\fBint32_t\fP" 0
+A 32-bit signed value.
 
 .br
 
@@ -6804,12 +8714,19 @@ A value representing milliseconds.
 
 .br
 
-.IP "\fBmode\fP: 0-7" 0
+.IP "\fBMISO\fP" 0
+The GPIO used for the MISO signal when bit banging SPI.
 
 .br
 
 .br
-The operational mode of a GPIO, normally INPUT or OUTPUT.
+
+.IP "\fBmode\fP" 0
+
+.br
+
+.br
+1. The operational mode of a GPIO, normally INPUT or OUTPUT.
 
 .br
 
@@ -6834,6 +8751,51 @@ PI_ALT5 2
 .br
 
 .EE
+
+.br
+
+.br
+2. A file open mode.
+
+.br
+
+.br
+
+.EX
+PI_FILE_READ  1
+.br
+PI_FILE_WRITE 2
+.br
+PI_FILE_RW    3
+.br
+
+.EE
+
+.br
+
+.br
+The following values can be or'd into the mode.
+
+.br
+
+.br
+
+.EX
+PI_FILE_APPEND 4
+.br
+PI_FILE_CREATE 8
+.br
+PI_FILE_TRUNC  16
+.br
+
+.EE
+
+.br
+
+.br
+
+.IP "\fBMOSI\fP" 0
+The GPIO used for the MOSI signal when bit banging SPI.
 
 .br
 
@@ -6880,6 +8842,18 @@ The number of segments in a combined I2C transaction.
 
 .br
 
+.IP "\fBnumSockAddr\fP" 0
+The number of network addresses allowed to use the socket interface.
+
+.br
+
+.br
+0 means all addresses allowed.
+
+.br
+
+.br
+
 .IP "\fBoffset\fP" 0
 The associated data starts this number of microseconds from the start of
 the waveform.
@@ -6897,6 +8871,33 @@ A buffer used to return data from a function.
 
 .IP "\fBoutLen\fP" 0
 The size in bytes of an output buffer.
+
+.br
+
+.br
+
+.IP "\fBpad\fP: 0-2" 0
+A set of GPIO which share common drivers.
+
+.br
+
+.br
+Pad   GPIO
+.br
+0     0-27
+.br
+1     28-45
+.br
+2     46-53
+.br
+
+.br
+
+.br
+
+.IP "\fBpadStrength\fP: 1-16" 0
+The mA which may be drawn from each GPIO whilst still guaranteeing the
+high and low levels.
 
 .br
 
@@ -6947,7 +8948,7 @@ The position of an item.
 
 .br
 
-.IP "\fBprimaryChannel\fP: 0-14" 0
+.IP "\fBprimaryChannel\fP: 0-15" 0
 The DMA channel used to time the sampling of GPIO and to time servo and
 PWM pulses.
 
@@ -6984,6 +8985,10 @@ A thread identifier.
 .br
 The setting of the pull up/down resistor for a GPIO, which may be off,
 pull-up, or pull-down.
+
+.br
+
+.br
 
 .EX
 PI_PUD_OFF 0
@@ -7054,7 +9059,7 @@ PI_HW_PWM_RANGE 1000000
 
 .br
 
-.IP "\fBPWMfreq\fP: 5-250K" 0
+.IP "\fBPWMfreq\fP: 1-125M (1-187.5M for the BCM2711)" 0
 The hardware PWM frequency.
 
 .br
@@ -7065,6 +9070,8 @@ The hardware PWM frequency.
 PI_HW_PWM_MIN_FREQ 1
 .br
 PI_HW_PWM_MAX_FREQ 125000000
+.br
+PI_HW_PWM_MAX_FREQ_2711 187500000
 .br
 
 .EE
@@ -7239,21 +9246,20 @@ A pointer to a buffer to receive data.
 .br
 
 .IP "\fBSCL\fP" 0
-
-.br
-
-.br
 The user GPIO to use for the clock when bit banging I2C.
 
 .br
 
 .br
 
+.IP "\fBSCLK\fP" 0
+The GPIO used for the SCLK signal when bit banging SPI.
+
+.br
+
+.br
+
 .IP "\fB*script\fP" 0
-
-.br
-
-.br
 A pointer to the text of a script.
 
 .br
@@ -7261,21 +9267,28 @@ A pointer to the text of a script.
 .br
 
 .IP "\fBscript_id\fP" 0
-
-.br
-
-.br
 An id of a stored script as returned by \fBgpioStoreScript\fP.
 
 .br
 
 .br
 
+.IP "\fB*scriptName\fP" 0
+The name of a \fBshell\fP script to be executed.  The script must be present in
+/opt/pigpio/cgi and must have execute permission.
+
+.br
+
+.br
+
+.IP "\fB*scriptString\fP" 0
+The string to be passed to a \fBshell\fP script to be executed.
+
+.br
+
+.br
+
 .IP "\fBSDA\fP" 0
-
-.br
-
-.br
 The user GPIO to use for data when bit banging I2C.
 
 .br
@@ -7306,21 +9319,41 @@ a returned time.
 .br
 
 .IP "\fBseconds\fP" 0
-
-.br
-
-.br
 The number of seconds.
 
 .br
 
 .br
 
+.IP "\fBseekFrom\fP" 0
+
+.br
+
+.br
+
+.EX
+PI_FROM_START   0
+.br
+PI_FROM_CURRENT 1
+.br
+PI_FROM_END     2
+.br
+
+.EE
+
+.br
+
+.br
+
+.IP "\fBseekOffset\fP" 0
+The number of bytes to move forward (positive) or backwards (negative)
+from the seek position (start, current, or end of file).
+
+.br
+
+.br
+
 .IP "\fB*segs\fP" 0
-
-.br
-
-.br
 An array of segments which make up a combined I2C transaction.
 
 .br
@@ -7373,6 +9406,19 @@ A standard type used to indicate the size of an object in bytes.
 
 .br
 
+.IP "\fB*sockAddr\fP" 0
+An array of network addresses allowed to use the socket interface encoded
+as 32 bit numbers.
+
+.br
+
+.br
+E.g. address 192.168.1.66 would be encoded as 0x4201a8c0.
+
+.br
+
+.br
+
 .IP "\fB*spi\fP" 0
 A pointer to a \fBrawSPI_t\fP structure.
 
@@ -7413,7 +9459,7 @@ A SPI channel, 0-2.
 .br
 
 .IP "\fBspiFlags\fP" 0
-See \fBspiOpen\fP.
+See \fBspiOpen\fP and \fBbbSPIOpen\fP.
 
 .br
 
@@ -7611,10 +9657,6 @@ See \fBgpio\fP.
 .br
 
 .IP "\fB*userdata\fP" 0
-
-.br
-
-.br
 A pointer to arbitrary user data.  This may be used to identify the instance.
 
 .br
@@ -7633,16 +9675,24 @@ In the calling function:
 .br
 
 .br
+
+.EX
 user_type *userdata;
 .br
+.br
+.br
 user_type my_userdata;
-
 .br
 
 .br
 userdata = malloc(sizeof(user_type));
 .br
+.br
+.br
 *userdata = my_userdata;
+.br
+
+.EE
 
 .br
 
@@ -7652,12 +9702,16 @@ In the receiving function:
 .br
 
 .br
-user_type my_userdata = *(user_type*)userdata;
 
+.EX
+user_type my_userdata = *(user_type*)userdata;
 .br
 
 .br
 free(userdata);
+.br
+
+.EE
 
 .br
 
@@ -7964,6 +10018,52 @@ A 16-bit word value.
 .br
 
 .br
+#define PI_CMD_PADS  102
+.br
+#define PI_CMD_PADG  103
+.br
+
+.br
+#define PI_CMD_FO    104
+.br
+#define PI_CMD_FC    105
+.br
+#define PI_CMD_FR    106
+.br
+#define PI_CMD_FW    107
+.br
+#define PI_CMD_FS    108
+.br
+#define PI_CMD_FL    109
+.br
+
+.br
+#define PI_CMD_SHELL 110
+.br
+
+.br
+#define PI_CMD_BSPIC 111
+.br
+#define PI_CMD_BSPIO 112
+.br
+#define PI_CMD_BSPIX 113
+.br
+
+.br
+#define PI_CMD_BSCX  114
+.br
+
+.br
+#define PI_CMD_EVM   115
+.br
+#define PI_CMD_EVT   116
+.br
+
+.br
+#define PI_CMD_PROCU 117
+.br
+
+.br
 
 .EE
 .SH Error Codes
@@ -8023,17 +10123,17 @@ A 16-bit word value.
 .br
 #define PI_BAD_HANDLE       -25 // unknown handle
 .br
-#define PI_BAD_IF_FLAGS     -26 // ifFlags > 3
+#define PI_BAD_IF_FLAGS     -26 // ifFlags > 4
 .br
-#define PI_BAD_CHANNEL      -27 // DMA channel not 0-14
+#define PI_BAD_CHANNEL      -27 // DMA channel not 0-15
 .br
-#define PI_BAD_PRIM_CHANNEL -27 // DMA primary channel not 0-14
+#define PI_BAD_PRIM_CHANNEL -27 // DMA primary channel not 0-15
 .br
 #define PI_BAD_SOCKET_PORT  -28 // socket port not 1024-32000
 .br
 #define PI_BAD_FIFO_COMMAND -29 // unrecognized fifo command
 .br
-#define PI_BAD_SECO_CHANNEL -30 // DMA secondary channel not 0-6
+#define PI_BAD_SECO_CHANNEL -30 // DMA secondary channel not 0-15
 .br
 #define PI_NOT_INITIALISED  -31 // function called before gpioInitialise
 .br
@@ -8049,7 +10149,7 @@ A 16-bit word value.
 .br
 #define PI_TOO_MANY_CHARS   -37 // waveform has too many chars
 .br
-#define PI_NOT_SERIAL_GPIO  -38 // no bit bang serial read in progress on GPIO
+#define PI_NOT_SERIAL_GPIO  -38 // no bit bang serial read on GPIO
 .br
 #define PI_BAD_SERIAL_STRUC -39 // bad (null) serial structure parameter
 .br
@@ -8097,7 +10197,9 @@ A 16-bit word value.
 .br
 #define PI_TOO_MANY_PARAM   -61 // too many script parameters (> 10)
 .br
-#define PI_NOT_HALTED       -62 // script already running or failed
+#define PI_NOT_HALTED       -62 // DEPRECATED
+.br
+#define PI_SCRIPT_NOT_READY -62 // script initialising
 .br
 #define PI_BAD_TAG          -63 // script has unresolved tag
 .br
@@ -8165,11 +10267,11 @@ A 16-bit word value.
 .br
 #define PI_NOT_HPWM_GPIO    -95 // GPIO has no hardware PWM
 .br
-#define PI_BAD_HPWM_FREQ    -96 // hardware PWM frequency not 1-125M
+#define PI_BAD_HPWM_FREQ    -96 // invalid hardware PWM frequency
 .br
 #define PI_BAD_HPWM_DUTY    -97 // hardware PWM dutycycle not 0-1M
 .br
-#define PI_BAD_HCLK_FREQ    -98 // hardware clock frequency not 4689-250M
+#define PI_BAD_HCLK_FREQ    -98 // invalid hardware clock frequency
 .br
 #define PI_BAD_HCLK_PASS    -99 // need password to use hardware clock 1
 .br
@@ -8221,9 +10323,51 @@ A 16-bit word value.
 .br
 #define PI_BAD_ISR_INIT    -123 // bad ISR initialisation
 .br
-#define PI_BAD_FOREVER     -124 // loop forever must be last chain command
+#define PI_BAD_FOREVER     -124 // loop forever must be last command
 .br
 #define PI_BAD_FILTER      -125 // bad filter parameter
+.br
+#define PI_BAD_PAD         -126 // bad pad number
+.br
+#define PI_BAD_STRENGTH    -127 // bad pad drive strength
+.br
+#define PI_FIL_OPEN_FAILED -128 // file open failed
+.br
+#define PI_BAD_FILE_MODE   -129 // bad file mode
+.br
+#define PI_BAD_FILE_FLAG   -130 // bad file flag
+.br
+#define PI_BAD_FILE_READ   -131 // bad file read
+.br
+#define PI_BAD_FILE_WRITE  -132 // bad file write
+.br
+#define PI_FILE_NOT_ROPEN  -133 // file not open for read
+.br
+#define PI_FILE_NOT_WOPEN  -134 // file not open for write
+.br
+#define PI_BAD_FILE_SEEK   -135 // bad file seek
+.br
+#define PI_NO_FILE_MATCH   -136 // no files match pattern
+.br
+#define PI_NO_FILE_ACCESS  -137 // no permission to access file
+.br
+#define PI_FILE_IS_A_DIR   -138 // file is a directory
+.br
+#define PI_BAD_SHELL_STATUS -139 // bad shell return status
+.br
+#define PI_BAD_SCRIPT_NAME -140 // bad script name
+.br
+#define PI_BAD_SPI_BAUD    -141 // bad SPI baud rate, not 50-500k
+.br
+#define PI_NOT_SPI_GPIO    -142 // no bit bang SPI in progress on GPIO
+.br
+#define PI_BAD_EVENT_ID    -143 // bad event id
+.br
+#define PI_CMD_INTERRUPTED -144 // Used by Python
+.br
+#define PI_NOT_ON_BCM2711  -145 // not available on BCM2711
+.br
+#define PI_ONLY_ON_BCM2711 -146 // only available on BCM2711
 .br
 
 .br
@@ -8254,11 +10398,19 @@ A 16-bit word value.
 .br
 #define PI_DEFAULT_IF_FLAGS                0
 .br
+#define PI_DEFAULT_FOREGROUND              0
+.br
 #define PI_DEFAULT_DMA_CHANNEL             14
 .br
 #define PI_DEFAULT_DMA_PRIMARY_CHANNEL     14
 .br
 #define PI_DEFAULT_DMA_SECONDARY_CHANNEL   6
+.br
+#define PI_DEFAULT_DMA_PRIMARY_CH_2711     7
+.br
+#define PI_DEFAULT_DMA_SECONDARY_CH_2711   6
+.br
+#define PI_DEFAULT_DMA_NOT_SET             15
 .br
 #define PI_DEFAULT_SOCKET_PORT             8888
 .br
@@ -8266,7 +10418,7 @@ A 16-bit word value.
 .br
 #define PI_DEFAULT_SOCKET_ADDR_STR         "127.0.0.1"
 .br
-#define PI_DEFAULT_UPDATE_MASK_UNKNOWN     0xFFFFFFFF
+#define PI_DEFAULT_UPDATE_MASK_UNKNOWN     0x0000000FFFFFFCLL
 .br
 #define PI_DEFAULT_UPDATE_MASK_B1          0x03E7CF93
 .br
@@ -8280,13 +10432,15 @@ A 16-bit word value.
 .br
 #define PI_DEFAULT_UPDATE_MASK_PI3B        0x0000000FFFFFFCLL
 .br
+#define PI_DEFAULT_UPDATE_MASK_PI4B        0x0000000FFFFFFCLL
+.br
 #define PI_DEFAULT_UPDATE_MASK_COMPUTE     0x00FFFFFFFFFFFFLL
 .br
 #define PI_DEFAULT_MEM_ALLOC_MODE          PI_MEM_ALLOC_AUTO
 .br
 
 .br
-#define PI_DEFAULT_CFG_INTERNALS         0
+#define PI_DEFAULT_CFG_INTERNALS           0
 .br
 
 .br
@@ -8298,4 +10452,4 @@ A 16-bit word value.
 pigpiod(1), pig2vcd(1), pigs(1), pigpiod_if(3), pigpiod_if2(3)
 .SH AUTHOR
 
-joan@abyz.co.uk
+joan@abyz.me.uk

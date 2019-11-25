@@ -30,11 +30,11 @@ Here is a picture of a RAK831 gateway mounted in an outdoor case running our fra
 Installation and test
 ---------------------
 
-**Use our** [SD card image](https://github.com/CongducPham/LowCostLoRaGw#get-our-sd-card-image) (not the one provided by the RAK gateway if any) because it has everything you need for all the added features.
+**Use our** [SD card image](https://github.com/CongducPham/LowCostLoRaGw#get-our-sd-card-image) (not the one provided by the RAK gateway if any) because it has everything you need for all the added features. At time of writing, the latest RAK software for RAK2245/RAK831 RPI-based gateway can be obtained from https://github.com/RAKWireless/rak_common_for_gateway. We provide an `install_rak_lora.sh` script that performs a light installation that it is recommended to use with our gateway software instead of the RAK's installer which is more adapted to install a regular LoRaWAN packet forwarder to TTN.
 
-Then, you need to install the Semtech's `lora_gateway` and `packet_forwarder` packages. For RAK831/2245, see https://github.com/RAKWireless/RAK2245-RAK831-LoRaGateway-RPi-Raspbian-OS. **Note** that our latest SD card image already has these packages so you can also skip this step.
-
-Once Semtech's `lora_gateway` and `packet_forwarder` have been installed (assuming in `/opt/ttn-gateway` as for the RAK831's installation). Go into `/home/pi/lora_gateway/scripts/rak831_util_pkt_logger` and type:
+	> sudo ./install_rak_lora.sh
+	
+It will install the Semtech's `lora_gateway` & `packet_forwarder` packages from github and will also copy some RAK's specific files. Once Semtech's `lora_gateway` and `packet_forwarder` have been installed (in `/opt/ttn-gateway` as for the RAK's installation). Go into `/home/pi/lora_gateway/scripts/rak2245-rak831` and type:
 
 	> ./install_lpf.sh
 	
@@ -177,7 +177,7 @@ Instead of using `lora_pkt_fwd` which requires Internet connectivity for various
 Installation and test
 ---------------------
 
-Once Semtech's `lora_gateway` and `packet_forwarder` have been installed (assuming in `/opt/ttn-gateway` as for the RAK831's installation). Go into `/home/pi/lora_gateway/scripts/rak831_util_pkt_logger` and type:
+Once Semtech's `lora_gateway` and `packet_forwarder` have been installed (assuming in `/opt/ttn-gateway` similar to the RAK2245/831's installation procedure). Go into `/home/pi/lora_gateway/scripts/rak2245-rak831` and type:
 
 	> ./install_upl.sh
 	

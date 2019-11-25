@@ -26,7 +26,7 @@ For more information, please refer to <http://unlicense.org/>
 */
 
 /*
-This version is for pigpio version 34+
+This version is for pigpio version 69+
 */
 
 #include <stdio.h>
@@ -42,26 +42,31 @@ This version is for pigpio version 34+
 
 #include "pigpio.h"
 #include "command.h"
+#include "pigs.h"
 
 /*
 This program provides a socket interface to some of
 the commands available from pigpio.
 */
 
-char command_buf[8192];
-char response_buf[8192];
+char command_buf[CMD_MAX_EXTENSION];
+char response_buf[CMD_MAX_EXTENSION];
 
 int printFlags = 0;
+
+int status = PIGS_OK;
 
 #define SOCKET_OPEN_FAILED -1
 
 #define PRINT_HEX 1
 #define PRINT_ASCII 2
 
-void fatal(char *fmt, ...)
+void report(int err, char *fmt, ...)
 {
    char buf[128];
    va_list ap;
+
+   if (err > status) status = err;
 
    va_start(ap, fmt);
    vsnprintf(buf, sizeof(buf), fmt, ap);
@@ -75,6 +80,8 @@ void fatal(char *fmt, ...)
 static int initOpts(int argc, char *argv[])
 {
    int opt, args;
+
+   opterr = 0;
 
    args = 1;
 
@@ -91,7 +98,11 @@ static int initOpts(int argc, char *argv[])
             printFlags |= PRINT_HEX;
             args++;
             break;
-        }
+
+         default:
+            args++;
+            report(PIGS_OPTION_ERR, "ERROR: bad option %c", optopt);
+      }
     }
    return args;
 }
@@ -150,13 +161,13 @@ void print_result(int sock, int rv, cmdCmd_t cmd)
          if (r < 0)
          {
             printf("%d\n", r);
-            fatal("ERROR: %s", cmdErrStr(r));
+            report(PIGS_SCRIPT_ERR, "ERROR: %s", cmdErrStr(r));
          }
          break;
 
       case 2:
          printf("%d\n", r);
-         if (r < 0) fatal("ERROR: %s", cmdErrStr(r));
+         if (r < 0) report(PIGS_SCRIPT_ERR, "ERROR: %s", cmdErrStr(r));
          break;
 
       case 3:
@@ -171,9 +182,12 @@ void print_result(int sock, int rv, cmdCmd_t cmd)
          printf("%s", cmdUsage);
          break;
 
-      case 6: /* BI2CZ CF2 I2CPK I2CRD I2CRI I2CRK I2CZ SERR SLR SPIX SPIR */
+      case 6: /*
+                 BI2CZ  CF2  FL  FR  I2CPK  I2CRD  I2CRI  I2CRK
+                 I2CZ  SERR  SLR  SPIX  SPIR
+              */
          printf("%d", r);
-         if (r < 0) fatal("ERROR: %s", cmdErrStr(r));
+         if (r < 0) report(PIGS_SCRIPT_ERR, "ERROR: %s", cmdErrStr(r));
          if (r > 0)
          {
             if (printFlags == PRINT_ASCII) printf(" ");
@@ -186,7 +200,8 @@ void print_result(int sock, int rv, cmdCmd_t cmd)
 
                else if (printFlags & PRINT_ASCII)
                {
-                  if ((ch > 31) && (ch < 127)) printf("%c", ch);
+                  if (isprint(ch) || (ch == '\n') || (ch == '\r'))
+                     printf("%c", ch);
                   else printf("\\x%02hhx", ch);
                }
                else printf(" %hhu", response_buf[i]);
@@ -199,7 +214,7 @@ void print_result(int sock, int rv, cmdCmd_t cmd)
          if (r != (4 + (4*PI_MAX_SCRIPT_PARAMS)))
          {
             printf("%d", r);
-            fatal("ERROR: %s", cmdErrStr(r));
+            report(PIGS_SCRIPT_ERR, "ERROR: %s", cmdErrStr(r));
          }
          else
          {
@@ -212,6 +227,42 @@ void print_result(int sock, int rv, cmdCmd_t cmd)
          }
          printf("\n");
          break;
+
+      case 8: /*
+                 BSCX
+              */
+         if (r < 0)
+         {
+            printf("%d\n", r);
+            report(PIGS_SCRIPT_ERR, "ERROR: %s", cmdErrStr(r));
+            break;
+         }
+
+         p = (uint32_t *)response_buf;
+         printf("%d %d", r-3, p[0]);
+
+         if (r > 4)
+         {
+            if (printFlags == PRINT_ASCII) printf(" ");
+
+            for (i=4; i<r; i++)
+            {
+               ch = response_buf[i];
+
+               if (printFlags & PRINT_HEX) printf(" %hhx", ch);
+
+               else if (printFlags & PRINT_ASCII)
+               {
+                  if (isprint(ch) || (ch == '\n') || (ch == '\r'))
+                     printf("%c", ch);
+                  else printf("\\x%02hhx", ch);
+               }
+               else printf(" %hhu", response_buf[i]);
+            }
+         }
+         printf("\n");
+         break;
+
    }
 }
 
@@ -220,7 +271,11 @@ void get_extensions(int sock, int command, int res)
    switch (command)
    {
       case PI_CMD_BI2CZ:
+      case PI_CMD_BSCX:
+      case PI_CMD_BSPIX:
       case PI_CMD_CF2:
+      case PI_CMD_FL:
+      case PI_CMD_FR:
       case PI_CMD_I2CPK:
       case PI_CMD_I2CRD:
       case PI_CMD_I2CRI:
@@ -246,7 +301,7 @@ int main(int argc , char *argv[])
    int sock, command;
    int args, idx, i, pp, l, len;
    cmdCmd_t cmd;
-   uint32_t p[CMD_P_ARR];
+   uintptr_t p[CMD_P_ARR];
    cmdCtlParse_t ctl;
    cmdScript_t s;
    char v[CMD_MAX_EXTENSION];
@@ -311,26 +366,29 @@ int main(int argc , char *argv[])
 
                         print_result(sock, cmdInfo[idx].rv, cmd);
                      }
-                     else fatal("socket receive failed");
+                     else report(PIGS_CONNECT_ERR, "socket receive failed");
                   }
-                  else fatal("socket send failed");
+                  else report(PIGS_CONNECT_ERR, "socket send failed");
                }
-               else fatal("socket connect failed");
+               else report(PIGS_CONNECT_ERR, "socket connect failed");
             }
          }
-         else fatal("%s only allowed within a script", cmdInfo[idx].name);
+         else report(PIGS_SCRIPT_ERR,
+                 "%s only allowed within a script", cmdInfo[idx].name);
       }
       else
       {
          if (idx == CMD_UNKNOWN_CMD)
-            fatal("%s? unknown command, pigs h for help", cmdStr());
+            report(PIGS_SCRIPT_ERR,
+               "%s? unknown command, pigs h for help", cmdStr());
          else
-            fatal("%s: bad parameter, pigs h for help", cmdStr());
+            report(PIGS_SCRIPT_ERR,
+               "%s: bad parameter, pigs h for help", cmdStr());
       }
    }
 
    if (sock >= 0) close(sock);
 
-   return 0;
+   return status;
 }
 

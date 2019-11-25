@@ -78,6 +78,7 @@ void t1()
    CHECK(1, 5, v, 0, 0, "read");
 
    gpioWrite(GPIO, PI_HIGH);
+   gpioDelay(1); /* 1 micro delay to let GPIO reach level reliably */
    v = gpioRead(GPIO);
    CHECK(1, 6, v, 1, 0, "write, read");
 }
@@ -282,14 +283,12 @@ void t4()
    gpioSetPWMrange(GPIO, 100);
 
    h = gpioNotifyOpen();
-   e = gpioNotifyBegin(h, (1<<GPIO));
-   CHECK(4, 1, e, 0, 0, "notify open/begin");
-
-   time_sleep(1);
 
    sprintf(p, "/dev/pigpio%d", h);
-
    f = open(p, O_RDONLY);
+
+   e = gpioNotifyBegin(h, (1<<GPIO));
+   CHECK(4, 1, e, 0, 0, "notify open/begin");
 
    gpioPWM(GPIO, 50);
    time_sleep(4);
@@ -858,7 +857,7 @@ int main(int argc, char *argv[])
 {
    int i, t, c, status;
 
-   char test[64];
+   char test[64]={0,};
 
    if (argc > 1)
    {

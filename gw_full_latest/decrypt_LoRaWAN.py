@@ -1,5 +1,5 @@
 #------------------------------------------------------------
-# Copyright 2016 Congduc Pham, University of Pau, France.
+# Copyright 2019 Congduc Pham, University of Pau, France.
 # 
 # Congduc.Pham@univ-pau.fr 
 #
@@ -108,7 +108,6 @@ def loraWAN_process_pkt(lorapkt):
 	
 		appskey=bytearray.fromhex(AppSKey)
 		appskeylist=[]
-
 		for i in range (0,len(appskey)):
 			appskeylist.append(appskey[i])
 
@@ -120,6 +119,7 @@ def loraWAN_process_pkt(lorapkt):
 		lorawan = LoRaWAN.new(nwkskeylist)
 		lorawan.read(lorapkt)
 		lorawan.compute_mic()
+		
 		if lorawan.valid_mic():
 			print "?loraWAN: valid MIC"
 			lorawan = LoRaWAN.new(appskeylist)
@@ -133,8 +133,20 @@ def loraWAN_process_pkt(lorapkt):
 	else:
 		return "###BADMIC###"	
 		
-def loraWAN_get_MIC(device, lorapktstr):
+def loraWAN_get_MIC(src, lorapktstr):
 
+	src_str=str(src)
+
+	if src_str in key.device_key:		
+		print "found device %0.8X in device key list" % src_str
+	else:
+		print "did not find device 0x%s in device key list" % src_str
+		print "using AppSKey and NwkSKey from default device"	
+		src_str = 'default'
+
+	AppSKey = key.device_key[src_str]['AppSKey']
+	NwkSKey = key.device_key[src_str]['NwkSKey']
+	
 	appskey=bytearray.fromhex(key.AppSKey)
 	appskeylist=[]
 	for i in range (0,len(appskey)):
@@ -145,27 +157,26 @@ def loraWAN_get_MIC(device, lorapktstr):
 	for i in range (0,len(nwkskey)):
 		nwkskeylist.append(nwkskey[i])
 	
-	deviceHex = "%0.8X" % device
-	deviceArray=bytearray.fromhex(deviceHex)
-	devaddr=[]
+	srcHex = "%0.8X" % src
+	srcArray=bytearray.fromhex(srcHex)
+	srcaddr=[]
 
-	for i in range (0,len(deviceArray)):
-		devaddr.append(deviceArray[len(deviceArray)-1-i])
+	for i in range (0,len(srcArray)):
+		srcaddr.append(srcArray[len(srcArray)-1-i])
 
-	#print devaddr
-	#print '[{}]'.format(', '.join(hex(x) for x in devaddr))
+	#print srcaddr
+	#print '[{}]'.format(', '.join(hex(x) for x in srcaddr))
 	
 	lorawan = LoRaWAN.new(appskey)
 	
-	lorawan.create(MHDR.UNCONF_DATA_UP, {'devaddr': devaddr, 'data': list(map(ord, lorapktstr)) })
+	lorawan.create(MHDR.UNCONF_DATA_UP, {'devaddr': srcaddr, 'data': list(map(ord, lorapktstr)) })
 	
 	lorawan.__init__(nwkskey)
 	MIC=lorawan.compute_mic()	
 	
 	#print '[{}]'.format(', '.join(hex(x) for x in MIC))
 	
-	return MIC
-					
+	return MIC			
 		
 if __name__ == "__main__":
 	
@@ -214,15 +225,12 @@ if __name__ == "__main__":
 	if plain_payload=="###BADMIC###":
 		print '?'+plain_payload
 	else:
-		#the output is clear data
-		ptype = ptype & (~PKT_FLAG_DATA_ENCRYPTED)		
+		#the output is clear data		
 		print "?plain payload is: "+plain_payload
 		if argc>2:
+			ptype = ptype & (~PKT_FLAG_DATA_ENCRYPTED)		
 			print "^p%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,len(plain_payload),SNR,RSSI)
 		if argc>3:
 			print "^r"+rdata
 		print "\xFF\xFE"+plain_payload
 
-		
-	
-			

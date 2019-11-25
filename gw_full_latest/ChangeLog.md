@@ -1,12 +1,16 @@
 Change logs
 ===========
 
+Nov 20th, 2019
+--------------
+- ported to Raspbian Buster
+
 Nov 11th, 2019
 --------------
 - rename `loraWAN.py` in `decrypt_LoRaWAN.py` and `loraWAN_config.py` in `key_LoRaWAN.py`. Allow LoRaWAN packet to be decoded locally with `aes_lorawan` option in `gateway_conf.json`. This is now separated from the encapsulated encrypted mode which can be enabled with `aes` option in `gateway_conf.json`. For the encapsulated encrypted mode, `decrypt_AES.py` and `key_AES.py` are defined.
 - `key_LoRaWAN.py` defines a Python dictionary where you can add your device id (4-byte device address) and the associated NwkSKey and AppSKey. 
 - similarly, and to maintain consistency in naming convention, `LSC_decrypt.py` has been renamed in `decrypt_LSC.py` and the key is stored in `key_LSC.py`
-- in `clouds.json`, all python scripts are now launched with the `-B` option disabling byte code compilation of imported modules, thus enabling dynamic changes in `key_*` files. In most of `Cloud*` scripts, the `sys.dont_write_bytecode = True` is also added for the same purpose, in case some old version of `clouds.json` are not updated.
+- in most of `Cloud*` scripts, the `sys.dont_write_bytecode = True` is added to disable byte code compilation of imported modules, thus enabling dynamic changes in `key_*` files.
 - v3.9b post-processing_gw.py
 	* now, it is possible to upload a LoRaWAN packet to TTN for instance, and still be able to decrypt locally the packet to inject the clear data for upload to normal clouds (such as ThingSpeak or WAZIUP cloud for instance).
 	* raw mode is forced to true at post-processing level when LoRa mode is set to 11 (LoRaWAN mode)

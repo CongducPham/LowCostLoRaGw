@@ -230,9 +230,6 @@ fi
 
 if [ "$1" = "waziup_conf" ]
 then
-	#For example to update write_key for ThingSpeak cloud: 
-	# jq '.[] | map((select(.script == "python CloudThingSpeak.py") | .write_key) |= "")' clouds.json
-
 	tmp=$(mktemp)
 	if [ $# == 3 ] 
 	then
@@ -245,7 +242,7 @@ fi
 if [ "$1" = "waziup_key" ]
 then
 	###################################
-	# Configure Orion Key
+	# Configure WAZIUP Key
 	###################################
 	#Replacing data in /home/pi/lora_gateway/key_Orion.p
 	if [ $2 = "source_list" ]
@@ -277,9 +274,6 @@ then
 	###################################
 	# Configure ThingSpeak
 	###################################
-
-	#For example to update write_key for ThingSpeak cloud: 
-	# jq '.[] | map((select(.script == "python CloudThingSpeak.py") | .write_key) |= "")' clouds.json
 	tmp=$(mktemp)
 	if [ $# == 3 ] 
 	then
@@ -551,5 +545,3 @@ then
 	jq '.password="'$3'" ' /etc/gw_web_admin/database.json > "$tmp" && mv "$tmp" /etc/gw_web_admin/database.json
 	sudo chmod +r /etc/gw_web_admin/database.json
 fi
-
-

@@ -26,7 +26,7 @@ For more information, please refer to <http://unlicense.org/>
 */
 
 /*
-This version is for pigpio version 48+
+This version is for pigpio version 70+
 */
 
 #include <stdio.h>
@@ -34,203 +34,230 @@ This version is for pigpio version 48+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <inttypes.h>
 
 #include "pigpio.h"
 #include "command.h"
 
 cmdInfo_t cmdInfo[]=
 {
-   /* num          str    vfyt retv */
+   /* num          str    vfyt retv script*/
 
-   {PI_CMD_BC1,   "BC1",   111, 1}, // gpioWrite_Bits_0_31_Clear
-   {PI_CMD_BC2,   "BC2",   111, 1}, // gpioWrite_Bits_32_53_Clear
+   {PI_CMD_BC1,   "BC1",   111, 1, 1}, // gpioWrite_Bits_0_31_Clear
+   {PI_CMD_BC2,   "BC2",   111, 1, 1}, // gpioWrite_Bits_32_53_Clear
 
-   {PI_CMD_BI2CC, "BI2CC", 112, 0}, // bbI2CClose
-   {PI_CMD_BI2CO, "BI2CO", 131, 0}, // bbI2COpen
-   {PI_CMD_BI2CZ, "BI2CZ", 193, 6}, // bbI2CZip
+   {PI_CMD_BI2CC, "BI2CC", 112, 0, 1}, // bbI2CClose
+   {PI_CMD_BI2CO, "BI2CO", 131, 0, 1}, // bbI2COpen
+   {PI_CMD_BI2CZ, "BI2CZ", 193, 6, 0}, // bbI2CZip
 
-   {PI_CMD_BR1,   "BR1",   101, 3}, // gpioRead_Bits_0_31
-   {PI_CMD_BR2,   "BR2",   101, 3}, // gpioRead_Bits_32_53
+   {PI_CMD_BR1,   "BR1",   101, 3, 1}, // gpioRead_Bits_0_31
+   {PI_CMD_BR2,   "BR2",   101, 3, 1}, // gpioRead_Bits_32_53
 
-   {PI_CMD_BS1,   "BS1",   111, 1}, // gpioWrite_Bits_0_31_Set
-   {PI_CMD_BS2,   "BS2",   111, 1}, // gpioWrite_Bits_32_53_Set
+   {PI_CMD_BS1,   "BS1",   111, 1, 1}, // gpioWrite_Bits_0_31_Set
+   {PI_CMD_BS2,   "BS2",   111, 1, 1}, // gpioWrite_Bits_32_53_Set
 
-   {PI_CMD_CF1,   "CF1",   195, 2}, // gpioCustom1
-   {PI_CMD_CF2,   "CF2",   195, 6}, // gpioCustom2
+   {PI_CMD_BSCX,  "BSCX",  193, 8, 0}, // bscXfer
 
-   {PI_CMD_CGI,   "CGI",   101, 4}, // gpioCfgGetInternals
-   {PI_CMD_CSI,   "CSI",   111, 1}, // gpioCfgSetInternals
+   {PI_CMD_BSPIC, "BSPIC", 112, 0, 1}, // bbSPIClose
+   {PI_CMD_BSPIO, "BSPIO", 134, 0, 0}, // bbSPIOpen
+   {PI_CMD_BSPIX, "BSPIX", 193, 6, 0}, // bbSPIXfer
 
-   {PI_CMD_FG,    "FG",    121, 0}, // gpioGlitchFilter
-   {PI_CMD_FN,    "FN",    131, 0}, // gpioNoiseFilter
+   {PI_CMD_CF1,   "CF1",   195, 2, 0}, // gpioCustom1
+   {PI_CMD_CF2,   "CF2",   195, 6, 0}, // gpioCustom2
 
-   {PI_CMD_GDC,   "GDC",   112, 2}, // gpioGetPWMdutycycle
-   {PI_CMD_GPW,   "GPW",   112, 2}, // gpioGetServoPulsewidth
+   {PI_CMD_CGI,   "CGI",   101, 4, 1}, // gpioCfgGetInternals
+   {PI_CMD_CSI,   "CSI",   111, 1, 1}, // gpioCfgSetInternals
 
-   {PI_CMD_HELP,  "H",     101, 5}, // cmdUsage
-   {PI_CMD_HELP,  "HELP",  101, 5}, // cmdUsage
+   {PI_CMD_EVM,   "EVM",   122, 1, 1}, // eventMonitor
+   {PI_CMD_EVT,   "EVT",   112, 0, 1}, // eventTrigger
 
-   {PI_CMD_HC,    "HC",    121, 0}, // gpioHardwareClock
-   {PI_CMD_HP,    "HP",    131, 0}, // gpioHardwarePWM
+   {PI_CMD_FC,    "FC",    112, 0, 1}, // fileClose
 
-   {PI_CMD_HWVER, "HWVER", 101, 4}, // gpioHardwareRevision
+   {PI_CMD_FG,    "FG",    121, 0, 1}, // gpioGlitchFilter
 
-   {PI_CMD_I2CC,  "I2CC",  112, 0}, // i2cClose
-   {PI_CMD_I2CO,  "I2CO",  131, 2}, // i2cOpen
+   {PI_CMD_FL,    "FL",    127, 6, 0}, // fileList
 
-   {PI_CMD_I2CPC, "I2CPC", 131, 2}, // i2cProcessCall
-   {PI_CMD_I2CPK, "I2CPK", 194, 6}, // i2cBlockProcessCall
+   {PI_CMD_FN,    "FN",    131, 0, 1}, // gpioNoiseFilter
 
-   {PI_CMD_I2CRB, "I2CRB", 121, 2}, // i2cReadByteData
-   {PI_CMD_I2CRD, "I2CRD", 121, 6}, // i2cReadDevice
-   {PI_CMD_I2CRI, "I2CRI", 131, 6}, // i2cReadI2CBlockData
-   {PI_CMD_I2CRK, "I2CRK", 121, 6}, // i2cReadBlockData
-   {PI_CMD_I2CRS, "I2CRS", 112, 2}, // i2cReadByte
-   {PI_CMD_I2CRW, "I2CRW", 121, 2}, // i2cReadWordData
+   {PI_CMD_FO,    "FO",    127, 2, 0}, // fileOpen
+   {PI_CMD_FR,    "FR",    121, 6, 0}, // fileRead
+   {PI_CMD_FS,    "FS",    133, 2, 1}, // fileSeek
+   {PI_CMD_FW,    "FW",    193, 0, 0}, // fileWrite
 
-   {PI_CMD_I2CWB, "I2CWB", 131, 0}, // i2cWriteByteData
-   {PI_CMD_I2CWD, "I2CWD", 193, 0}, // i2cWriteDevice
-   {PI_CMD_I2CWI, "I2CWI", 194, 0}, // i2cWriteI2CBlockData
-   {PI_CMD_I2CWK, "I2CWK", 194, 0}, // i2cWriteBlockData
-   {PI_CMD_I2CWQ, "I2CWQ", 121, 0}, // i2cWriteQuick
-   {PI_CMD_I2CWS, "I2CWS", 121, 0}, // i2cWriteByte
-   {PI_CMD_I2CWW, "I2CWW", 131, 0}, // i2cWriteWordData
+   {PI_CMD_GDC,   "GDC",   112, 2, 1}, // gpioGetPWMdutycycle
+   {PI_CMD_GPW,   "GPW",   112, 2, 1}, // gpioGetServoPulsewidth
 
-   {PI_CMD_I2CZ,  "I2CZ",  193, 6}, // i2cZip
+   {PI_CMD_HELP,  "H",     101, 5, 0}, // cmdUsage
+   {PI_CMD_HELP,  "HELP",  101, 5, 0}, // cmdUsage
 
-   {PI_CMD_MICS,  "MICS",  112, 0}, // gpioDelay
-   {PI_CMD_MILS,  "MILS",  112, 0}, // gpioDelay
+   {PI_CMD_HC,    "HC",    121, 0, 1}, // gpioHardwareClock
+   {PI_CMD_HP,    "HP",    131, 0, 1}, // gpioHardwarePWM
 
-   {PI_CMD_MODEG, "MG"   , 112, 2}, // gpioGetMode
-   {PI_CMD_MODEG, "MODEG", 112, 2}, // gpioGetMode
+   {PI_CMD_HWVER, "HWVER", 101, 4, 1}, // gpioHardwareRevision
 
-   {PI_CMD_MODES, "M",     125, 0}, // gpioSetMode
-   {PI_CMD_MODES, "MODES", 125, 0}, // gpioSetMode
+   {PI_CMD_I2CC,  "I2CC",  112, 0, 1}, // i2cClose
+   {PI_CMD_I2CO,  "I2CO",  131, 2, 1}, // i2cOpen
 
-   {PI_CMD_NB,    "NB",    122, 0}, // gpioNotifyBegin
-   {PI_CMD_NC,    "NC",    112, 0}, // gpioNotifyClose
-   {PI_CMD_NO,    "NO",    101, 2}, // gpioNotifyOpen
-   {PI_CMD_NP,    "NP",    112, 0}, // gpioNotifyPause
+   {PI_CMD_I2CPC, "I2CPC", 131, 2, 1}, // i2cProcessCall
+   {PI_CMD_I2CPK, "I2CPK", 194, 6, 0}, // i2cBlockProcessCall
 
-   {PI_CMD_PARSE, "PARSE", 115, 0}, // cmdParseScript
+   {PI_CMD_I2CRB, "I2CRB", 121, 2, 1}, // i2cReadByteData
+   {PI_CMD_I2CRD, "I2CRD", 121, 6, 0}, // i2cReadDevice
+   {PI_CMD_I2CRI, "I2CRI", 131, 6, 0}, // i2cReadI2CBlockData
+   {PI_CMD_I2CRK, "I2CRK", 121, 6, 0}, // i2cReadBlockData
+   {PI_CMD_I2CRS, "I2CRS", 112, 2, 1}, // i2cReadByte
+   {PI_CMD_I2CRW, "I2CRW", 121, 2, 1}, // i2cReadWordData
 
-   {PI_CMD_PFG,   "PFG",   112, 2}, // gpioGetPWMfrequency
-   {PI_CMD_PFS,   "PFS",   121, 2}, // gpioSetPWMfrequency
+   {PI_CMD_I2CWB, "I2CWB", 131, 0, 1}, // i2cWriteByteData
+   {PI_CMD_I2CWD, "I2CWD", 193, 0, 0}, // i2cWriteDevice
+   {PI_CMD_I2CWI, "I2CWI", 194, 0, 0}, // i2cWriteI2CBlockData
+   {PI_CMD_I2CWK, "I2CWK", 194, 0, 0}, // i2cWriteBlockData
+   {PI_CMD_I2CWQ, "I2CWQ", 121, 0, 1}, // i2cWriteQuick
+   {PI_CMD_I2CWS, "I2CWS", 121, 0, 1}, // i2cWriteByte
+   {PI_CMD_I2CWW, "I2CWW", 131, 0, 1}, // i2cWriteWordData
 
-   {PI_CMD_PIGPV, "PIGPV", 101, 4}, // gpioVersion
+   {PI_CMD_I2CZ,  "I2CZ",  193, 6, 0}, // i2cZip
 
-   {PI_CMD_PRG,   "PRG",   112, 2}, // gpioGetPWMrange
+   {PI_CMD_MICS,  "MICS",  112, 0, 1}, // gpioDelay
+   {PI_CMD_MILS,  "MILS",  112, 0, 1}, // gpioDelay
 
-   {PI_CMD_PROC,  "PROC",  115, 2}, // gpioStoreScript
-   {PI_CMD_PROCD, "PROCD", 112, 0}, // gpioDeleteScript
-   {PI_CMD_PROCP, "PROCP", 112, 7}, // gpioScriptStatus
-   {PI_CMD_PROCR, "PROCR", 191, 0}, // gpioRunScript
-   {PI_CMD_PROCS, "PROCS", 112, 0}, // gpioStopScript
+   {PI_CMD_MODEG, "MG"   , 112, 2, 1}, // gpioGetMode
+   {PI_CMD_MODEG, "MODEG", 112, 2, 1}, // gpioGetMode
 
-   {PI_CMD_PRRG,  "PRRG",  112, 2}, // gpioGetPWMrealRange
-   {PI_CMD_PRS,   "PRS",   121, 2}, // gpioSetPWMrange
+   {PI_CMD_MODES, "M",     125, 0, 1}, // gpioSetMode
+   {PI_CMD_MODES, "MODES", 125, 0, 1}, // gpioSetMode
 
-   {PI_CMD_PUD,   "PUD",   126, 0}, // gpioSetPullUpDown
+   {PI_CMD_NB,    "NB",    122, 0, 1}, // gpioNotifyBegin
+   {PI_CMD_NC,    "NC",    112, 0, 1}, // gpioNotifyClose
+   {PI_CMD_NO,    "NO",    101, 2, 1}, // gpioNotifyOpen
+   {PI_CMD_NP,    "NP",    112, 0, 1}, // gpioNotifyPause
 
-   {PI_CMD_PWM,   "P",     121, 0}, // gpioPWM
-   {PI_CMD_PWM,   "PWM",   121, 0}, // gpioPWM
+   {PI_CMD_PADG,  "PADG",  112, 2, 1}, // gpioGetPad
+   {PI_CMD_PADS,  "PADS",  121, 0, 1}, // gpioSetPad
 
-   {PI_CMD_READ,  "R",     112, 2}, // gpioRead
-   {PI_CMD_READ,  "READ",  112, 2}, // gpioRead
+   {PI_CMD_PARSE, "PARSE", 115, 0, 0}, // cmdParseScript
 
-   {PI_CMD_SERRB, "SERRB", 112, 2}, // serReadByte
-   {PI_CMD_SERWB, "SERWB", 121, 0}, // serWriteByte
-   {PI_CMD_SERC,  "SERC",  112, 0}, // serClose
-   {PI_CMD_SERDA, "SERDA", 112, 2}, // serDataAvailable
-   {PI_CMD_SERO,  "SERO",  132, 2}, // serOpen
-   {PI_CMD_SERR,  "SERR",  121, 6}, // serRead
-   {PI_CMD_SERW,  "SERW",  193, 0}, // serWrite
+   {PI_CMD_PFG,   "PFG",   112, 2, 1}, // gpioGetPWMfrequency
+   {PI_CMD_PFS,   "PFS",   121, 2, 1}, // gpioSetPWMfrequency
 
-   {PI_CMD_SERVO, "S",     121, 0}, // gpioServo
-   {PI_CMD_SERVO, "SERVO", 121, 0}, // gpioServo
+   {PI_CMD_PIGPV, "PIGPV", 101, 4, 1}, // gpioVersion
 
-   {PI_CMD_SLR,   "SLR",   121, 6}, // gpioSerialRead
-   {PI_CMD_SLRC,  "SLRC",  112, 0}, // gpioSerialReadClose
-   {PI_CMD_SLRO,  "SLRO",  131, 0}, // gpioSerialReadOpen
-   {PI_CMD_SLRI,  "SLRI",  121, 0}, // gpioSerialReadInvert
+   {PI_CMD_PRG,   "PRG",   112, 2, 1}, // gpioGetPWMrange
 
-   {PI_CMD_SPIC,  "SPIC",  112, 0}, // spiClose
-   {PI_CMD_SPIO,  "SPIO",  131, 2}, // spiOpen
-   {PI_CMD_SPIR,  "SPIR",  121, 6}, // spiRead
-   {PI_CMD_SPIW,  "SPIW",  193, 0}, // spiWrite
-   {PI_CMD_SPIX,  "SPIX",  193, 6}, // spiXfer
+   {PI_CMD_PROC,  "PROC",  115, 2, 0}, // gpioStoreScript
+   {PI_CMD_PROCD, "PROCD", 112, 0, 0}, // gpioDeleteScript
+   {PI_CMD_PROCP, "PROCP", 112, 7, 0}, // gpioScriptStatus
+   {PI_CMD_PROCR, "PROCR", 191, 0, 0}, // gpioRunScript
+   {PI_CMD_PROCS, "PROCS", 112, 0, 0}, // gpioStopScript
+   {PI_CMD_PROCU, "PROCU", 191, 0, 0}, // gpioUpdateScript
 
-   {PI_CMD_TICK,  "T",     101, 4}, // gpioTick
-   {PI_CMD_TICK,  "TICK",  101, 4}, // gpioTick
+   {PI_CMD_PRRG,  "PRRG",  112, 2, 1}, // gpioGetPWMrealRange
+   {PI_CMD_PRS,   "PRS",   121, 2, 1}, // gpioSetPWMrange
 
-   {PI_CMD_TRIG,  "TRIG",  131, 0}, // gpioTrigger
+   {PI_CMD_PUD,   "PUD",   126, 0, 1}, // gpioSetPullUpDown
 
-   {PI_CMD_WDOG,  "WDOG",  121, 0}, // gpioSetWatchdog
+   {PI_CMD_PWM,   "P",     121, 0, 1}, // gpioPWM
+   {PI_CMD_PWM,   "PWM",   121, 0, 1}, // gpioPWM
 
-   {PI_CMD_WRITE, "W",     121, 0}, // gpioWrite
-   {PI_CMD_WRITE, "WRITE", 121, 0}, // gpioWrite
+   {PI_CMD_READ,  "R",     112, 2, 1}, // gpioRead
+   {PI_CMD_READ,  "READ",  112, 2, 1}, // gpioRead
 
-   {PI_CMD_WVAG,  "WVAG",  192, 2}, // gpioWaveAddGeneric
-   {PI_CMD_WVAS,  "WVAS",  196, 2}, // gpioWaveAddSerial
-   {PI_CMD_WVTAT, "WVTAT", 101, 2}, // gpioWaveTxAt
-   {PI_CMD_WVBSY, "WVBSY", 101, 2}, // gpioWaveTxBusy
-   {PI_CMD_WVCHA, "WVCHA", 197, 0}, // gpioWaveChain
-   {PI_CMD_WVCLR, "WVCLR", 101, 0}, // gpioWaveClear
-   {PI_CMD_WVCRE, "WVCRE", 101, 2}, // gpioWaveCreate
-   {PI_CMD_WVDEL, "WVDEL", 112, 0}, // gpioWaveDelete
-   {PI_CMD_WVGO,  "WVGO" , 101, 2}, // gpioWaveTxStart
-   {PI_CMD_WVGOR, "WVGOR", 101, 2}, // gpioWaveTxStart
-   {PI_CMD_WVHLT, "WVHLT", 101, 0}, // gpioWaveTxStop
-   {PI_CMD_WVNEW, "WVNEW", 101, 0}, // gpioWaveAddNew
-   {PI_CMD_WVSC,  "WVSC",  112, 2}, // gpioWaveGet*Cbs
-   {PI_CMD_WVSM,  "WVSM",  112, 2}, // gpioWaveGet*Micros
-   {PI_CMD_WVSP,  "WVSP",  112, 2}, // gpioWaveGet*Pulses
-   {PI_CMD_WVTX,  "WVTX",  112, 2}, // gpioWaveTxSend
-   {PI_CMD_WVTXM, "WVTXM", 121, 2}, // gpioWaveTxSend
-   {PI_CMD_WVTXR, "WVTXR", 112, 2}, // gpioWaveTxSend
+   {PI_CMD_SERC,  "SERC",  112, 0, 1}, // serClose
+   {PI_CMD_SERDA, "SERDA", 112, 2, 1}, // serDataAvailable
+   {PI_CMD_SERO,  "SERO",  132, 2, 0}, // serOpen
+   {PI_CMD_SERR,  "SERR",  121, 6, 0}, // serRead
+   {PI_CMD_SERRB, "SERRB", 112, 2, 1}, // serReadByte
+   {PI_CMD_SERW,  "SERW",  193, 0, 0}, // serWrite
+   {PI_CMD_SERWB, "SERWB", 121, 0, 1}, // serWriteByte
 
-   {PI_CMD_ADD  , "ADD"  , 111, 0},
-   {PI_CMD_AND  , "AND"  , 111, 0},
-   {PI_CMD_CALL , "CALL" , 114, 0},
-   {PI_CMD_CMDR  ,"CMDR" , 111, 0},
-   {PI_CMD_CMDW , "CMDW" , 111, 0},
-   {PI_CMD_CMP  , "CMP"  , 111, 0},
-   {PI_CMD_DCR  , "DCR"  , 113, 0},
-   {PI_CMD_DCRA , "DCRA" , 101, 0},
-   {PI_CMD_DIV  , "DIV"  , 111, 0},
-   {PI_CMD_HALT , "HALT" , 101, 0},
-   {PI_CMD_INR  , "INR"  , 113, 0},
-   {PI_CMD_INRA , "INRA" , 101, 0},
-   {PI_CMD_JM   , "JM"   , 114, 0},
-   {PI_CMD_JMP  , "JMP"  , 114, 0},
-   {PI_CMD_JNZ  , "JNZ"  , 114, 0},
-   {PI_CMD_JP   , "JP"   , 114, 0},
-   {PI_CMD_JZ   , "JZ"   , 114, 0},
-   {PI_CMD_LD   , "LD"   , 123, 0},
-   {PI_CMD_LDA  , "LDA"  , 111, 0},
-   {PI_CMD_LDAB , "LDAB" , 111, 0},
-   {PI_CMD_MLT  , "MLT"  , 111, 0},
-   {PI_CMD_MOD  , "MOD"  , 111, 0},
-   {PI_CMD_NOP  , "NOP"  , 101, 0},
-   {PI_CMD_OR   , "OR"   , 111, 0},
-   {PI_CMD_POP  , "POP"  , 113, 0},
-   {PI_CMD_POPA , "POPA" , 101, 0},
-   {PI_CMD_PUSH , "PUSH" , 113, 0},
-   {PI_CMD_PUSHA, "PUSHA", 101, 0},
-   {PI_CMD_RET  , "RET"  , 101, 0},
-   {PI_CMD_RL   , "RL"   , 123, 0},
-   {PI_CMD_RLA  , "RLA"  , 111, 0},
-   {PI_CMD_RR   , "RR"   , 123, 0},
-   {PI_CMD_RRA  , "RRA"  , 111, 0},
-   {PI_CMD_STA  , "STA"  , 113, 0},
-   {PI_CMD_STAB , "STAB" , 111, 0},
-   {PI_CMD_SUB  , "SUB"  , 111, 0},
-   {PI_CMD_SYS  , "SYS"  , 116, 0},
-   {PI_CMD_TAG  , "TAG"  , 114, 0},
-   {PI_CMD_WAIT , "WAIT" , 111, 0},
-   {PI_CMD_X    , "X"    , 124, 0},
-   {PI_CMD_XA   , "XA"   , 113, 0},
-   {PI_CMD_XOR  , "XOR"  , 111, 0},
+   {PI_CMD_SERVO, "S",     121, 0, 1}, // gpioServo
+   {PI_CMD_SERVO, "SERVO", 121, 0, 1}, // gpioServo
+
+   {PI_CMD_SHELL, "SHELL", 128, 2, 0}, // shell
+
+   {PI_CMD_SLR,   "SLR",   121, 6, 0}, // gpioSerialRead
+   {PI_CMD_SLRC,  "SLRC",  112, 0, 1}, // gpioSerialReadClose
+   {PI_CMD_SLRO,  "SLRO",  131, 0, 1}, // gpioSerialReadOpen
+   {PI_CMD_SLRI,  "SLRI",  121, 0, 1}, // gpioSerialReadInvert
+
+   {PI_CMD_SPIC,  "SPIC",  112, 0, 1}, // spiClose
+   {PI_CMD_SPIO,  "SPIO",  131, 2, 1}, // spiOpen
+   {PI_CMD_SPIR,  "SPIR",  121, 6, 0}, // spiRead
+   {PI_CMD_SPIW,  "SPIW",  193, 0, 0}, // spiWrite
+   {PI_CMD_SPIX,  "SPIX",  193, 6, 0}, // spiXfer
+
+   {PI_CMD_TICK,  "T",     101, 4, 1}, // gpioTick
+   {PI_CMD_TICK,  "TICK",  101, 4, 1}, // gpioTick
+
+   {PI_CMD_TRIG,  "TRIG",  131, 0, 1}, // gpioTrigger
+
+   {PI_CMD_WDOG,  "WDOG",  121, 0, 1}, // gpioSetWatchdog
+
+   {PI_CMD_WRITE, "W",     121, 0, 1}, // gpioWrite
+   {PI_CMD_WRITE, "WRITE", 121, 0, 1}, // gpioWrite
+
+   {PI_CMD_WVAG,  "WVAG",  192, 2, 0}, // gpioWaveAddGeneric
+   {PI_CMD_WVAS,  "WVAS",  196, 2, 0}, // gpioWaveAddSerial
+   {PI_CMD_WVBSY, "WVBSY", 101, 2, 1}, // gpioWaveTxBusy
+   {PI_CMD_WVCHA, "WVCHA", 197, 0, 0}, // gpioWaveChain
+   {PI_CMD_WVCLR, "WVCLR", 101, 0, 1}, // gpioWaveClear
+   {PI_CMD_WVCRE, "WVCRE", 101, 2, 1}, // gpioWaveCreate
+   {PI_CMD_WVDEL, "WVDEL", 112, 0, 1}, // gpioWaveDelete
+   {PI_CMD_WVGO,  "WVGO" , 101, 2, 0}, // gpioWaveTxStart
+   {PI_CMD_WVGOR, "WVGOR", 101, 2, 0}, // gpioWaveTxStart
+   {PI_CMD_WVHLT, "WVHLT", 101, 0, 1}, // gpioWaveTxStop
+   {PI_CMD_WVNEW, "WVNEW", 101, 0, 1}, // gpioWaveAddNew
+   {PI_CMD_WVSC,  "WVSC",  112, 2, 1}, // gpioWaveGet*Cbs
+   {PI_CMD_WVSM,  "WVSM",  112, 2, 1}, // gpioWaveGet*Micros
+   {PI_CMD_WVSP,  "WVSP",  112, 2, 1}, // gpioWaveGet*Pulses
+   {PI_CMD_WVTAT, "WVTAT", 101, 2, 1}, // gpioWaveTxAt
+   {PI_CMD_WVTX,  "WVTX",  112, 2, 1}, // gpioWaveTxSend
+   {PI_CMD_WVTXM, "WVTXM", 121, 2, 1}, // gpioWaveTxSend
+   {PI_CMD_WVTXR, "WVTXR", 112, 2, 1}, // gpioWaveTxSend
+
+   {PI_CMD_ADD  , "ADD"  , 111, 0, 1},
+   {PI_CMD_AND  , "AND"  , 111, 0, 1},
+   {PI_CMD_CALL , "CALL" , 114, 0, 1},
+   {PI_CMD_CMDR  ,"CMDR" , 111, 0, 1},
+   {PI_CMD_CMDW , "CMDW" , 111, 0, 1},
+   {PI_CMD_CMP  , "CMP"  , 111, 0, 1},
+   {PI_CMD_DCR  , "DCR"  , 113, 0, 1},
+   {PI_CMD_DCRA , "DCRA" , 101, 0, 1},
+   {PI_CMD_DIV  , "DIV"  , 111, 0, 1},
+   {PI_CMD_EVTWT, "EVTWT", 111, 0, 1},
+   {PI_CMD_HALT , "HALT" , 101, 0, 1},
+   {PI_CMD_INR  , "INR"  , 113, 0, 1},
+   {PI_CMD_INRA , "INRA" , 101, 0, 1},
+   {PI_CMD_JM   , "JM"   , 114, 0, 1},
+   {PI_CMD_JMP  , "JMP"  , 114, 0, 1},
+   {PI_CMD_JNZ  , "JNZ"  , 114, 0, 1},
+   {PI_CMD_JP   , "JP"   , 114, 0, 1},
+   {PI_CMD_JZ   , "JZ"   , 114, 0, 1},
+   {PI_CMD_LD   , "LD"   , 123, 0, 1},
+   {PI_CMD_LDA  , "LDA"  , 111, 0, 1},
+   {PI_CMD_LDAB , "LDAB" , 111, 0, 1},
+   {PI_CMD_MLT  , "MLT"  , 111, 0, 1},
+   {PI_CMD_MOD  , "MOD"  , 111, 0, 1},
+   {PI_CMD_NOP  , "NOP"  , 101, 0, 1},
+   {PI_CMD_OR   , "OR"   , 111, 0, 1},
+   {PI_CMD_POP  , "POP"  , 113, 0, 1},
+   {PI_CMD_POPA , "POPA" , 101, 0, 1},
+   {PI_CMD_PUSH , "PUSH" , 113, 0, 1},
+   {PI_CMD_PUSHA, "PUSHA", 101, 0, 1},
+   {PI_CMD_RET  , "RET"  , 101, 0, 1},
+   {PI_CMD_RL   , "RL"   , 123, 0, 1},
+   {PI_CMD_RLA  , "RLA"  , 111, 0, 1},
+   {PI_CMD_RR   , "RR"   , 123, 0, 1},
+   {PI_CMD_RRA  , "RRA"  , 111, 0, 1},
+   {PI_CMD_STA  , "STA"  , 113, 0, 1},
+   {PI_CMD_STAB , "STAB" , 111, 0, 1},
+   {PI_CMD_SUB  , "SUB"  , 111, 0, 1},
+   {PI_CMD_SYS  , "SYS"  , 116, 0, 1},
+   {PI_CMD_TAG  , "TAG"  , 114, 0, 1},
+   {PI_CMD_WAIT , "WAIT" , 111, 0, 1},
+   {PI_CMD_X    , "X"    , 124, 0, 1},
+   {PI_CMD_XA   , "XA"   , 113, 0, 1},
+   {PI_CMD_XOR  , "XOR"  , 111, 0, 1},
 
 };
 
@@ -241,10 +268,18 @@ BC2 bits         Clear GPIO in bank 2\n\
 BI2CC sda        Close bit bang I2C\n\
 BI2CO sda scl baud | Open bit bang I2C\n\
 BI2CZ sda ...    I2C bit bang multiple transactions\n\
+\n\
+BSPIC cs        Close bit bang SPI\n\
+BSPIO cs miso mosi sclk baud flag | Open bit bang SPI\n\
+BSPIX cs ...    SPI bit bang transfer\n\
+\n\
 BR1              Read bank 1 GPIO\n\
 BR2              Read bank 2 GPIO\n\
+\n\
 BS1 bits         Set GPIO in bank 1\n\
 BS2 bits         Set GPIO in bank 2\n\
+\n\
+BSCX bctl bvs    BSC I2C/SPI transfer\n\
 \n\
 CF1 ...          Custom function 1\n\
 CF2 ...          Custom function 2\n\
@@ -252,8 +287,17 @@ CF2 ...          Custom function 2\n\
 CGI              Configuration get internals\n\
 CSI v            Configuration set internals\n\
 \n\
+EVM h bits       Set events to monitor\n\
+EVT n            Trigger event\n\
+\n\
+FC h             Close file handle\n\
 FG g steady      Set glitch filter on GPIO\n\
+FL pat n         List files which match pattern\n\
 FN g steady active | Set noise filter on GPIO\n\
+FO file mode     Open a file in mode\n\
+FR h n           Read bytes from file handle\n\
+FS h n from      Seek to file handle position\n\
+FW h ...         Write bytes to file handle\n\
 \n\
 GDC g            Get PWM dutycycle for GPIO\n\
 GPW g            Get servo pulsewidth for GPIO\n\
@@ -293,6 +337,8 @@ NO               Request a notification\n\
 NP h             Pause notification\n\
 \n\
 P/PWM g v        Set GPIO PWM value\n\
+PADG pad         Get pad drive strength\n\
+PADS pad v       Set pad drive strength\n\
 PARSE text       Validate script\n\
 PFG g            Get GPIO PWM frequency\n\
 PFS g v          Set GPIO PWM frequency\n\
@@ -303,6 +349,7 @@ PROCD sid        Delete script\n\
 PROCP sid        Get script status and parameters\n\
 PROCR sid ...    Run script\n\
 PROCS sid        Stop script\n\
+PROCU sid ...    Set script parameters\n\
 PRRG g           Get GPIO PWM real range\n\
 PRS g v          Set GPIO PWM range\n\
 PUD g pud        Set GPIO pull up/down\n\
@@ -316,7 +363,8 @@ SERO text baud flags | Open serial device at baud with flags\n\
 SERR h n         Read bytes from serial handle\n\
 SERRB h          Read byte from serial handle\n\
 SERW h ...       Write bytes to serial handle\n\
-SERWB h byte        Write byte to serial handle\n\
+SERWB h byte     Write byte to serial handle\n\
+SHELL name str   Execute a shell command\n\
 SLR g v          Read bit bang serial data from GPIO\n\
 SLRC g           Close GPIO for bit bang serial data\n\
 SLRO g baud bitlen | Open GPIO for bit bang serial data\n\
@@ -351,11 +399,18 @@ WVTX wid         Transmit wave as one-shot\n\
 WVTXM wid wmde   Transmit wave using mode\n\
 WVTXR wid        Transmit wave repeatedly\n\
 \n\
-\n\
 Numbers may be entered as hex (prefix 0x), octal (prefix 0),\n\
 otherwise they are assumed to be decimal.\n\
 \n\
-man pigs for full details.\n\n";
+Examples\n\
+\n\
+pigs w 4 1         # set GPIO 4 high\n\
+pigs r 5           # read GPIO 5\n\
+pigs t             # get current tick\n\
+pigs i2co 1 0x20 0 # get handle to device 0x20 on I2C bus 1\n\
+\n\
+man pigs for full details.\n\
+\n";
 
 typedef struct
 {
@@ -390,7 +445,7 @@ static errInfo_t errInfo[]=
    {PI_BAD_PATHNAME     , "can't open pathname"},
    {PI_NO_HANDLE        , "no handle available"},
    {PI_BAD_HANDLE       , "unknown handle"},
-   {PI_BAD_IF_FLAGS     , "ifFlags > 3"},
+   {PI_BAD_IF_FLAGS     , "ifFlags > 4"},
    {PI_BAD_CHANNEL      , "DMA channel not 0-14"},
    {PI_BAD_SOCKET_PORT  , "socket port not 1024-30000"},
    {PI_BAD_FIFO_COMMAND , "unknown fifo command"},
@@ -426,7 +481,7 @@ static errInfo_t errInfo[]=
    {PI_SOCK_READ_FAILED , "socket read failed"},
    {PI_SOCK_WRIT_FAILED , "socket write failed"},
    {PI_TOO_MANY_PARAM   , "too many script parameters (> 10)"},
-   {PI_NOT_HALTED       , "script already running or failed"},
+   {PI_SCRIPT_NOT_READY , "script initialising"},
    {PI_BAD_TAG          , "script has unresolved tag"},
    {PI_BAD_MICS_DELAY   , "bad MICS delay (too large)"},
    {PI_BAD_MILS_DELAY   , "bad MILS delay (too large)"},
@@ -460,9 +515,9 @@ static errInfo_t errInfo[]=
    {PI_NOT_SERVO_GPIO   , "GPIO is not in use for servo pulses"},
    {PI_NOT_HCLK_GPIO    , "GPIO has no hardware clock"},
    {PI_NOT_HPWM_GPIO    , "GPIO has no hardware PWM"},
-   {PI_BAD_HPWM_FREQ    , "hardware PWM frequency not 1-125M"},
+   {PI_BAD_HPWM_FREQ    , "invalid hardware PWM frequency"},
    {PI_BAD_HPWM_DUTY    , "hardware PWM dutycycle not 0-1M"},
-   {PI_BAD_HCLK_FREQ    , "hardware clock frequency not 4689-250M"},
+   {PI_BAD_HCLK_FREQ    , "invalid hardware clock frequency"},
    {PI_BAD_HCLK_PASS    , "need password to use hardware clock 1"},
    {PI_HPWM_ILLEGAL     , "illegal, PWM in use for main clock"},
    {PI_BAD_DATABITS     , "serial data bits not 1-32"},
@@ -490,6 +545,27 @@ static errInfo_t errInfo[]=
    {PI_BAD_ISR_INIT     , "bad ISR initialisation"},
    {PI_BAD_FOREVER      , "loop forever must be last chain command"},
    {PI_BAD_FILTER       , "bad filter parameter"},
+   {PI_BAD_PAD          , "bad pad number"},
+   {PI_BAD_STRENGTH     , "bad pad drive strength"},
+   {PI_FIL_OPEN_FAILED  , "file open failed"},
+   {PI_BAD_FILE_MODE    , "bad file mode"},
+   {PI_BAD_FILE_FLAG    , "bad file flag"},
+   {PI_BAD_FILE_READ    , "bad file read"},
+   {PI_BAD_FILE_WRITE   , "bad file write"},
+   {PI_FILE_NOT_ROPEN   , "file not open for read"},
+   {PI_FILE_NOT_WOPEN   , "file not open for write"},
+   {PI_BAD_FILE_SEEK    , "bad file seek"},
+   {PI_NO_FILE_MATCH    , "no files match pattern"},
+   {PI_NO_FILE_ACCESS   , "no permission to access file"},
+   {PI_FILE_IS_A_DIR    , "file is a directory"},
+   {PI_BAD_SHELL_STATUS , "bad shell return status"},
+   {PI_BAD_SCRIPT_NAME  , "bad script name"},
+   {PI_BAD_SPI_BAUD     , "bad SPI baud rate, not 50-500k"},
+   {PI_NOT_SPI_GPIO     , "no bit bang SPI in progress on GPIO"},
+   {PI_BAD_EVENT_ID     , "bad event id"},
+   {PI_CMD_INTERRUPTED  , "command interrupted, Python"},
+   {PI_NOT_ON_BCM2711   , "not available on BCM2711"},
+   {PI_ONLY_ON_BCM2711  , "only available on BCM2711"},
 
 };
 
@@ -507,14 +583,14 @@ static int cmdMatch(char *str)
    return CMD_UNKNOWN_CMD;
 }
 
-static int getNum(char *str, unsigned *val, int8_t *opt)
+static int getNum(char *str, uintptr_t *val, int8_t *opt)
 {
    int f, n;
-   unsigned v;
+   intmax_t v;
 
    *opt = 0;
 
-   f = sscanf(str, " %i %n", &v, &n);
+   f = sscanf(str, " %ji %n", &v, &n);
 
    if (f == 1)
    {
@@ -523,7 +599,7 @@ static int getNum(char *str, unsigned *val, int8_t *opt)
       return n;
    }
 
-   f = sscanf(str, " v%i %n", &v, &n);
+   f = sscanf(str, " v%ji %n", &v, &n);
 
    if (f == 1)
    {
@@ -533,7 +609,7 @@ static int getNum(char *str, unsigned *val, int8_t *opt)
       return n;
    }
 
-   f = sscanf(str, " p%i %n", &v, &n);
+   f = sscanf(str, " p%ji %n", &v, &n);
 
    if (f == 1)
    {
@@ -547,6 +623,7 @@ static int getNum(char *str, unsigned *val, int8_t *opt)
 }
 
 static char intCmdStr[32];
+static int intCmdIdx;
 
 char *cmdStr(void)
 {
@@ -554,14 +631,14 @@ char *cmdStr(void)
 }
 
 int cmdParse(
-   char *buf, uint32_t *p, unsigned ext_len, char *ext, cmdCtlParse_t *ctl)
+   char *buf, uintptr_t *p, unsigned ext_len, char *ext, cmdCtlParse_t *ctl)
 {
-   int f, valid, idx, val, pp, pars, n, n2, i;
+   int f, valid, idx, val, pp, pars, n, n2;
    char *p8;
    int32_t *p32;
    char c;
-   uint32_t tp1=0, tp2=0, tp3=0;
-   int8_t to1, to2, to3;
+   uintptr_t tp1=0, tp2=0, tp3=0, tp4=0, tp5=0;
+   int8_t to1, to2, to3, to4, to5;
    int eaten;
 
    /* Check that ext is big enough for the largest message. */
@@ -576,6 +653,8 @@ int cmdParse(
    p[0] = -1;
 
    idx = cmdMatch(intCmdStr);
+
+   intCmdIdx = idx;
 
    if (idx < 0) return idx;
 
@@ -611,10 +690,10 @@ int cmdParse(
 
          break;
 
-      case 112: /* BI2CC GDC  GPW  I2CC
-                   I2CRB MG  MICS  MILS  MODEG  NC  NP  PFG  PRG
+      case 112: /* BI2CC FC  GDC  GPW  I2CC  I2CRB
+                   MG  MICS  MILS  MODEG  NC  NP  PADG PFG  PRG
                    PROCD  PROCP  PROCS  PRRG  R  READ  SLRC  SPIC
-                   WVDEL  WVSC  WVSM  WVSP  WVTX  WVTXR
+                   WVDEL  WVSC  WVSM  WVSP  WVTX  WVTXR  BSPIC
 
                    One positive parameter.
                 */
@@ -656,37 +735,23 @@ int cmdParse(
 
       case 116: /* SYS
 
-                   One parameter, a string of letters, digits, '-' and '_'.
+                   One parameter, a string.
                 */
          f = sscanf(buf+ctl->eaten, " %*s%n %n", &n, &n2);
          if ((f >= 0) && n)
          {
+            p[3] = n;
+            ctl->opt[3] = CMD_NUMERIC;
+            memcpy(ext, buf+ctl->eaten, n);
+            ctl->eaten += n2;
             valid = 1;
-
-            for (i=0; i<n; i++)
-            {
-               c = buf[ctl->eaten+i];
-
-               if ((!isalnum(c)) && (c != '_') && (c != '-'))
-               {
-                  valid = 0;
-                  break;
-               }
-            }
-
-            if (valid)
-            {
-               p[3] = n;
-               ctl->opt[3] = CMD_NUMERIC;
-               memcpy(ext, buf+ctl->eaten, n);
-               ctl->eaten += n2;
-            }
          }
 
          break;
 
-      case 121: /* HC I2CRD  I2CRR  I2CRW  I2CWB I2CWQ  P  PFS  PRS
-                   PWM  S  SERVO  SLR  SLRI  W  WDOG  WRITE WVTXM
+      case 121: /* HC  FR  I2CRD  I2CRR  I2CRW  I2CWB I2CWQ  P
+                   PADS  PFS  PRS  PWM  S  SERVO  SLR  SLRI  W
+                   WDOG  WRITE  WVTXM
 
                    Two positive parameters.
                 */
@@ -782,18 +847,63 @@ int cmdParse(
 
          break;
 
-      case 131: /* BI2CO HP I2CO  I2CPC  I2CRI  I2CWB  I2CWW  SLRO
-                   SPIO  TRIG
+      case 127: /* FL  FO
+
+                   Two parameters, first a string, other positive.
+                */
+         f = sscanf(buf+ctl->eaten, " %*s%n %n", &n, &n2);
+         if ((f >= 0) && n)
+         {
+            p[3] = n;
+            ctl->opt[2] = CMD_NUMERIC;
+            memcpy(ext, buf+ctl->eaten, n);
+            ctl->eaten += n2;
+
+            ctl->eaten += getNum(buf+ctl->eaten, &p[1], &ctl->opt[1]);
+
+            if ((ctl->opt[1] > 0) && ((int)p[1] >= 0))
+               valid = 1;
+         }
+
+         break;
+
+      case 128: /* SHELL
+
+                   Two string parameters, the first space teminated.
+                   The second arbitrary.
+                */
+         f = sscanf(buf+ctl->eaten, " %*s%n %n", &n, &n2);
+
+         if ((f >= 0) && n)
+         {
+            valid = 1;
+
+            p[1] = n;
+            memcpy(ext, buf+ctl->eaten, n);
+            ctl->eaten += n;
+            ext[n] = 0; /* terminate first string */
+
+            n2 = strlen(buf+ctl->eaten+1);
+            memcpy(ext+n+1, buf+ctl->eaten+1, n2);
+            ctl->eaten += n2;
+            ctl->eaten ++;
+            p[3] = p[1] + n2 + 1;
+         }
+
+         break;
+
+      case 131: /* BI2CO  HP  I2CO  I2CPC  I2CRI  I2CWB  I2CWW
+                   SLRO  SPIO  TRIG
 
                    Three positive parameters.
                 */
          ctl->eaten += getNum(buf+ctl->eaten, &p[1], &ctl->opt[1]);
          ctl->eaten += getNum(buf+ctl->eaten, &p[2], &ctl->opt[2]);
-         ctl->eaten += getNum(buf+ctl->eaten, &tp1, &to1);
+         ctl->eaten += getNum(buf+ctl->eaten, &tp1, &ctl->opt[3]);
 
          if ((ctl->opt[1] > 0) && ((int)p[1] >= 0) &&
              (ctl->opt[2] > 0) && ((int)p[2] >= 0) &&
-             (to1 == CMD_NUMERIC) && ((int)tp1 >= 0))
+             (ctl->opt[3] > 0) && ((int)tp1 >= 0))
          {
             p[3] = 4;
             memcpy(ext, &tp1, 4);
@@ -824,7 +934,57 @@ int cmdParse(
 
          break;
 
-      case 191: /* PROCR
+      case 133: /* FS
+
+                   Three parameters.  First and third positive.
+                   Second may be negative when interpreted as an int.
+                */
+         ctl->eaten += getNum(buf+ctl->eaten, &p[1], &ctl->opt[1]);
+         ctl->eaten += getNum(buf+ctl->eaten, &p[2], &ctl->opt[2]);
+         ctl->eaten += getNum(buf+ctl->eaten, &tp1, &to1);
+
+         if ((ctl->opt[1] > 0) && ((int)p[1] >= 0) &&
+             (ctl->opt[2] > 0) &&
+             (to1 == CMD_NUMERIC) && ((int)tp1 >= 0))
+         {
+            p[3] = 4;
+            memcpy(ext, &tp1, 4);
+            valid = 1;
+         }
+
+         break;
+
+      case 134: /* BSPIO
+
+                   Six parameters.  First to Fifth positive.
+                   Sixth may be negative when interpreted as an int.
+                */
+         ctl->eaten += getNum(buf+ctl->eaten, &p[1], &ctl->opt[1]);
+         ctl->eaten += getNum(buf+ctl->eaten, &tp1, &to1);
+         ctl->eaten += getNum(buf+ctl->eaten, &tp2, &to2);
+         ctl->eaten += getNum(buf+ctl->eaten, &tp3, &to3);
+         ctl->eaten += getNum(buf+ctl->eaten, &tp4, &to4);
+         ctl->eaten += getNum(buf+ctl->eaten, &tp5, &to5);
+                                    
+         if ((ctl->opt[1] > 0) && ((int)p[1] >= 0) &&
+             (to1 == CMD_NUMERIC) && ((int)tp1 >= 0) &&
+             (to2 == CMD_NUMERIC) && ((int)tp2 >= 0) &&
+             (to3 == CMD_NUMERIC) && ((int)tp3 >= 0) &&
+             (to4 == CMD_NUMERIC) && ((int)tp4 >= 0) &&
+             (to5 == CMD_NUMERIC))
+         {
+            p[3] = 5 * 4;
+            memcpy(ext+ 0, &tp1, 4);
+            memcpy(ext+ 4, &tp2, 4);
+            memcpy(ext+ 8, &tp3, 4);
+            memcpy(ext+12, &tp4, 4);
+            memcpy(ext+16, &tp5, 4);
+            valid = 1;
+         }
+
+         break;
+
+      case 191: /* PROCR PROCU
 
                    One to 11 parameters, first positive,
                    optional remainder, any value.
@@ -880,9 +1040,12 @@ int cmdParse(
 
          break;
 
-      case 193: /* BI2CZ  I2CWD  I2CZ  SERW  SPIW  SPIX
+      case 193: /* BI2CZ  BSCX  BSPIX  FW  I2CWD  I2CZ  SERW
+		   SPIW  SPIX
 
                    Two or more parameters, first >=0, rest 0-255.
+
+		   BSCX is special case one or more.
                 */
          ctl->eaten += getNum(buf+ctl->eaten, &p[1], &ctl->opt[1]);
 
@@ -909,7 +1072,7 @@ int cmdParse(
 
             p[3] = pars;
 
-            if (pars) valid = 1;
+            if (pars || (p[0]==PI_CMD_BSCX)) valid = 1;
          }
 
          break;
@@ -1103,7 +1266,7 @@ int cmdParseScript(char *script, cmdScript_t *s, int diags)
 {
    int idx, len, b, i, j, tags, resolved;
    int status;
-   uint32_t p[10];
+   uintptr_t p[10];
    cmdInstr_t instr;
    cmdCtlParse_t ctl;
    char v[CMD_MAX_EXTENSION];
@@ -1144,6 +1307,13 @@ int cmdParseScript(char *script, cmdScript_t *s, int diags)
    {
       idx = cmdParse(script, p, CMD_MAX_EXTENSION, v, &ctl);
 
+      /* abort if command is illegal in a script */
+
+      if ((idx >= 0) || (idx != CMD_UNKNOWN_CMD))
+      {
+         if (!cmdInfo[intCmdIdx].cvis) idx = CMD_NOT_IN_SCRIPT;
+      }
+
       if (idx >= 0)
       {
          if (p[3])
@@ -1167,7 +1337,7 @@ int cmdParseScript(char *script, cmdScript_t *s, int diags)
                   {
                      if (diags)
                      {
-                        fprintf(stderr, "Duplicate tag: %d\n", instr.p[1]);
+                        fprintf(stderr, "Duplicate tag: %"PRIdPTR"\n", instr.p[1]);
                      }
 
                      if (!status) status = PI_DUP_TAG;
@@ -1183,7 +1353,7 @@ int cmdParseScript(char *script, cmdScript_t *s, int diags)
             {
                if (diags)
                {
-                  fprintf(stderr, "Too many tags: %d\n", instr.p[1]);
+                  fprintf(stderr, "Too many tags: %"PRIdPTR"\n", instr.p[1]);
                }
                if (!status) status = PI_TOO_MANY_TAGS;
                idx = -1;
@@ -1196,6 +1366,8 @@ int cmdParseScript(char *script, cmdScript_t *s, int diags)
          {
             if (idx == CMD_UNKNOWN_CMD)
                fprintf(stderr, "Unknown command: %s\n", cmdStr());
+            else if (idx == CMD_NOT_IN_SCRIPT)
+               fprintf(stderr, "Command illegal in script: %s\n", cmdStr());
             else
                fprintf(stderr, "Bad parameter to %s\n", cmdStr());
          }
@@ -1238,7 +1410,7 @@ int cmdParseScript(char *script, cmdScript_t *s, int diags)
          {
             if (diags)
             {
-               fprintf(stderr, "Can't resolve tag %d\n", instr.p[1]);
+               fprintf(stderr, "Can't resolve tag %"PRIdPTR"\n", instr.p[1]);
             }
             if (!status) status = PI_BAD_TAG;
          }

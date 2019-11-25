@@ -72,6 +72,8 @@
 */
 
 /*  Change logs
+ *  Nov, 22nd, 2919. v1.9a 
+ *      handle getopt issue on newer Linux distrib, compile with -DGETOPT_ISSUE
  *	March 23rd, 2019. v1.9
  *		  improve suport for LoRaWAN
  *		  the radio info string has a frequency information, e.g. 125,5,12,868100
@@ -243,9 +245,14 @@
 
 #ifndef ARDUINO
 #include <stdio.h>
-#include <getopt.h>
 #include <stdlib.h>
 #include <unistd.h>
+#ifdef GETOPT_ISSUE
+int getopt (int argc, char * const argv[], const char *optstring);
+extern char *optarg;
+extern int optind, opterr, optopt;
+#endif
+#include <getopt.h>
 #include <termios.h> 
 #include <signal.h>
 #include <sys/time.h>
@@ -480,6 +487,7 @@ long getCmdValue(int &i, char* strBuff=NULL) {
         }
         else
                 return (atol(seqStr));
+        return 0;        
 }   
 
 void startConfig() {
