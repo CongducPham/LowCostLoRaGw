@@ -9,7 +9,8 @@ import key_GpsFile
 import key_MQTT
 import key_NodeRed
 
-key_data = {'project_name':key_WAZIUP.project_name, 
+key_data = {'waziup_server':key_WAZIUP.waziup_server,
+		'project_name':key_WAZIUP.project_name, 
 		'organization_name':key_WAZIUP.organization_name, 
 		'service_tree':key_WAZIUP.service_tree,
 		'username':key_WAZIUP.username,

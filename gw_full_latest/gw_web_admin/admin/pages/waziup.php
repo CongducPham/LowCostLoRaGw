@@ -6,12 +6,44 @@
 	<div id="waziup_status_msg"></div>
 	
 	<div class="col-md-10 col-md-offset-0">
+		<p>
+		<?php									
+			ob_start();
+			system("tac /home/pi/lora_gateway/log/post-processing.log | egrep -a -m 1 'uploading with python.*CloudWAZIUP.*py' | cut -d '>' -f1"); 
+			//system("egrep -a 'uploading with python.*CloudWAZIUP.*py' /home/pi/lora_gateway/log/post-processing.log | tail -1 | cut -d '>' -f1");
+			$last_upload=ob_get_contents(); 
+			ob_clean();
+			if ($last_upload=='') {
+				echo '<font color="red"><b>no upload with CloudWAZIUP.py found</b></font>';					
+			}
+			else {
+				echo 'last upload time with CloudWAZIUP.py: <font color="green"><b>';
+				echo $last_upload;
+				echo '</b></font>';					
+			}									
+		?>                            
+		</p>
+				
 		<div class="table-responsive">
 		<table class="table table-striped table-bordered table-hover">
 			<thead></thead>
 			<tbody>
 			<tr>
-			<td>Enabled</td>
+			<td>Enabled
+				<?php 
+					ob_start(); 
+					$server=$key_clouds['waziup_server'];
+					system("wget -q --spider $server/devices", $retval);
+					$msg=ob_get_contents(); 
+					ob_clean();
+					if ($retval == 0) {
+						echo ' <font color="green"><b>[server online]</b></font>';					
+					}
+					else {
+						echo ' <font color="red"><b>[server offline]</b></font>';					
+					}				 
+				?>
+			</td>
 			<td id="waziup_status_value"><?php cloud_status($clouds, "python CloudWAZIUP.py"); ?></td>
 			<td align="right"><button id="btn_edit_waziup_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
 			<td id="td_edit_waziup_status">

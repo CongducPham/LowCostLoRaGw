@@ -90,7 +90,7 @@ require 'header.php';
                                 						<div class="form-group">
                                 							<label>SSID</label>
                                 							<input id="ssid" class="form-control" placeholder="current SSID is <?php $ssid=exec('egrep "^ssid=" /etc/hostapd/hostapd.conf | cut -d "=" --field=2'); echo $ssid; ?>" name="ssid" type="text" value="">	
-                                							<p><font color="grey">default SSID would be WAZIUP_PI_GW_<?php $gw_id=exec('cat /home/pi/lora_gateway/gateway_id.txt | cut -c 7-'); echo $gw_id; ?></font></p>
+                                							<p><font color="grey">default SSID would be WAZIUP_PI_GW_<?php $gw_id=exec('cat /home/pi/lora_gateway/gateway_id.txt | cut -c 5-'); echo $gw_id; ?></font></p>
                                 						</div>
                                 						<div class="form-group">
                                 							<label>WPA Passphrase</label>

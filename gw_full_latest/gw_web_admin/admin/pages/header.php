@@ -55,7 +55,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="index.php">Gateway Web Admin</a>
+                <a class="navbar-brand" href="gateway_config.php">Gateway Web Admin</a>
             </div>
             <!-- /.navbar-header -->
 
@@ -66,9 +66,26 @@
             	</li>
                 <!-- /.dropdown -->
                 <li class="dropdown">
-                    <button id="btn_internet" type="button" class="btn btn-primary" href="process.php?internet=true">Internet</button>
-                    
+                	<?php
+                		$date=date('Y-m-d\TH:i:s');
+						echo $date;
+						
+						ob_start(); 
+						system("wget -q --spider http://www.google.com", $retval);
+						$msg=ob_get_contents(); 
+						ob_clean();
+						if ($retval == 0) {
+							echo ' <font color="green"><b>[online]</b></font>';					
+						}
+						else {
+							echo ' <font color="red"><b>[offline]</b></font>';					
+						}
+					?>			
+                    <button id="btn_internet" type="button" class="btn btn-primary" href="process.php?internet=true">Test Internet</button>
+<!--
                     <button id="btn_low_level_status" type="button" class="btn btn-primary" href="process.php?low_level_status=true">Low-level status ON</button>
+-->                                        
+                    <button id="btn_pkt_logger" type="button" class="btn btn-primary" onclick="window.location.href='pkt_logger.php';">pkt logger</button>
                     
     				<button id="btn_reboot" class="btn btn-primary" data-href="process.php?reboot=true" data-toggle="modal" data-target="#confirm-reboot">
         				Reboot

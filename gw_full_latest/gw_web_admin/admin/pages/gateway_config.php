@@ -14,6 +14,7 @@ $radio_conf= null; $gw_conf= null; $alert_conf = null;
 process_gw_conf_json($radio_conf, $gw_conf, $alert_conf);
 
 $maxAddr = 255;
+$low_level_status_interval = 11;
 
 require 'header.php';
 ?>
@@ -104,8 +105,64 @@ require 'header.php';
 											}
 										?>                            
 									</p>
+									
+									<?php
+										$date=date('Y-m-d\TH:i:s');
+										echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;Date/Time: ';
+										echo $date;
+										echo '</p>';									
+										ob_start(); 
+										system("grep -a 'Low-level gw status ON' /home/pi/lora_gateway/log/post-processing.log | tail -1 | cut -d '.' -f1");
+										$low_level=ob_get_contents(); 
+										ob_clean();
+										if ($low_level=='') {
+											echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>no low-level status</b></font></p>';					
+										}
+										else {
+											$date=str_replace("T", " ", $date, $count);
+											$datetime1 = new DateTime($date);
+											$low_level_1=str_replace("T", " ", $low_level, $count);
+											$datetime2 = new DateTime($low_level_1);
+											$interval = $datetime1->diff($datetime2);
+											
+											$interval_minute=intval($interval->format('%i'));
+											
+											//we have to check month, day and hour because minute is only between 1..59
+											if (intval($interval->format('%m'))>0 || intval($interval->format('%d'))>0 || intval($interval->format('%h'))>0) {
+												$interval_minute=$low_level_status_interval+1;
+											}
+											
+											echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;last low-level status: ';
+											
+											if ($interval_minute > $low_level_status_interval) {
+												echo '<font color="red"><b>';
+											}
+											else {
+												echo '<font color="green"><b>';
+											}
+				
+											echo $low_level;
+											echo $interval->format(' %mm-%dd-%hh-%imin from current date');	
+											echo '</b></font></p>';				
+										}									
+									?>    									
+									<?php									
+										ob_start(); 
+										system("grep -a 'rxlora' /home/pi/lora_gateway/log/post-processing.log | tail -1");
+										$rx=ob_get_contents(); 
+										ob_clean();
+										if ($rx=='') {
+											echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>no rx found</b></font>';					
+										}
+										else {
+											echo '&nbsp;&nbsp;&nbsp;&nbsp;last rx: <font color="green"><b>';
+											echo $rx;
+											echo '</b></font></p>';					
+										}									
+									?>                            
+								
                                     </br>
-                                                                
+                                    
                                     <div id="radio_msg"></div>
                                     
                                     <div class="col-md-10 col-md-offset-0">
