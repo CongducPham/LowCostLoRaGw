@@ -237,7 +237,12 @@ def copy_log():
 		os.system(cmd)
 	except:
 		print "post status copy log: Error when setting file ownership to pi:www-data"
-		
+
+def call_no_internet_cloud():
+			
+	from CloudNoInternet import upload_internet_pending
+	upload_internet_pending()
+			
 #------------------------------------------------------------
 #add whatever you want in the main function 
 #------------------------------------------------------------
@@ -297,7 +302,28 @@ def main(stats_str):
 	if copy_log:
 		print 'post status: copy log file is requested'
 		copy_log()		
-				
+
+	#------------------------------------------------------------
+	#check internet pending
+	#------------------------------------------------------------
+	try:
+		check_internet_pending = gw_json_array["status_conf"]["check_internet_pending"]
+		#here we check for our own script entry
+		for cloud in clouds:
+			if "CloudNoInternet.py" in cloud["script"]:
+				try:
+					CloudNoInternet_enabled = cloud["enabled"]
+				except KeyError:
+					CloudNoInternet_enabled = False
+		if CloudNoInternet_enabled == False:
+			check_internet_pending = False									
+	except KeyError:
+		check_internet_pending = False							
+
+	if check_internet_pending:
+		print 'post status: check internet pending is requested'
+		call_no_internet_cloud()
+						
 	#------------------------------------------------------------		
 	#print current GPS
 	#------------------------------------------------------------

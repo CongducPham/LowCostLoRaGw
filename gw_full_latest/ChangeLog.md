@@ -1,9 +1,23 @@
 Change logs
 ===========
 
+Nov 30th, 2019
+--------------
+- web admin interface
+	* add Internet online/offline indicator
+	* add simple packet logger (display last 15 LoRa packet receptions with a refresh rate of 5s)
+	* add indication of last low-level status and last rxlora in radio tab
+	* add cloud server online/offline indicator in cloud tabs as well as last upload time per cloud
+- `CloudNoInternet.py`
+	* a maximum number of pending messages can be defined (set to 10 by default) to limit the number of uploads per received message
+- `post_status_processing_gw.py`
+	* `gateway_conf.json:"status_conf":"check_internet_pending": true` can be used to trigger upload of Internet pending messages in a periodic manner (check will be performed every `gateway_conf.json:"gateway_conf":"status` 	
+	
 Nov 20th, 2019
 --------------
 - ported to Raspbian Buster
+- v1.9a `lora_gateway.cpp` 
+	* handle getopt issue on newer Linux distrib, compile with `-DGETOPT_ISSUE`
 
 Nov 11th, 2019
 --------------
@@ -11,9 +25,9 @@ Nov 11th, 2019
 - `key_LoRaWAN.py` defines a Python dictionary where you can add your device id (4-byte device address) and the associated NwkSKey and AppSKey. 
 - similarly, and to maintain consistency in naming convention, `LSC_decrypt.py` has been renamed in `decrypt_LSC.py` and the key is stored in `key_LSC.py`
 - in most of `Cloud*` scripts, the `sys.dont_write_bytecode = True` is added to disable byte code compilation of imported modules, thus enabling dynamic changes in `key_*` files.
-- v3.9b post-processing_gw.py
+- v3.9b `post_processing_gw.py`
 	* now, it is possible to upload a LoRaWAN packet to TTN for instance, and still be able to decrypt locally the packet to inject the clear data for upload to normal clouds (such as ThingSpeak or WAZIUP cloud for instance).
-	* raw mode is forced to true at post-processing level when LoRa mode is set to 11 (LoRaWAN mode)
+	* raw mode is forced to true at post_processing level when LoRa mode is set to 11 (LoRaWAN mode)
 - `MQTT_server` field in `key_MQTT.py` can now specify a port number, i.e. `test.mosquitto.org:1234`, and `CloudMQTT.py` can add the `-p` parameter when running the `mosquitto_pub` command.	
 
 Oct 30th, 2019
@@ -36,7 +50,7 @@ May 22nd, 2019
 
 May 15th, 2019
 --------------
-- fast statistics is controlled by `gateway_conf.json:"status_conf":"fast_stats: 5"`
+- fast statistics is controlled by `gateway_conf.json:"status_conf":"fast_stats: 15`
 	- 0 will disable
 	- a value greater than 0, expressed in seconds, will trigger periodic fast statistics tasks
 	- for fast statistic details refer to change logs of December 12th, 2018
@@ -69,7 +83,7 @@ March 26rd, 2019
 March 23rd, 2019
 ----------------
 - improved LoRaWAN support
-- v1.9 lora_gateway.cpp
+- v1.9 `lora_gateway.cpp`
 	* fix bug for LoRaWAN reception by low-cost gateway
 - set mode to 11 in `gateway_conf.json` to configure for LoRaWAN reception on single channel
 - when mode is set to 11, specific bw, cr and sf in `gateway_conf.json` can be taken into account, so make sure they are set correctly. LoRaWAN mostly uses BW125. You can change SF
@@ -83,14 +97,14 @@ March 23rd, 2019
 		
 January 15th, 2019
 -------------------
-- v3.9a post-processing_gw.py
+- v3.9a `post_processing_gw.py`
 	* add support for Lightweight Stream Cipher (LSC)
-	* add `LSC_decrypt.py` library file that will be called by `post-processing_gw.py`	
+	* add `LSC_decrypt.py` library file that will be called by `post_processing_gw.py`	
 	* in `gateway_conf.json` file, `gateway_conf` section, `"lsc" : true` enables local LSC decryption at gateway
-	* `post-processing_gw.py` will try to decrypt an encrypted packet with all enabled encryption modules, e.g. AES, LSC, ...
+	* `post_processing_gw.py` will try to decrypt an encrypted packet with all enabled encryption modules, e.g. AES, LSC, ...
 		* this process is done sequentially, module by module
 		* as it is most likely that decryption will succeed only when both encryption and decryption algorithms do match, there is normally only one decryption method that will succeed
-		* therefore `post-processing_gw.py` will stop when a decryption module succeeds
+		* therefore `post_processing_gw.py` will stop when a decryption module succeeds
 		* actually, it is mandatory for an encryption module to implement a Message Integrity Check (MIC) procedure at both the sender and receiver side. A correct MIC means that encryption and decryption algorithms match
 	* `Arduino_LoRa_temp` has also been updated to be able to send an LSC-encrypted packet
 		* comment `WITH_AES` and uncomment `WITH_LSC`
@@ -98,7 +112,7 @@ January 15th, 2019
 	
 December 12th, 2018
 -------------------
-- v3.8a post-processing_gw.py
+- v3.8a `post_processing_gw.py`
 	* add a fast rate statistic thread that will be launched if _gw_statistics is set to True
 	* the thread will periodically (every 5s, currently hard-coded) call `python sensors_in_raspi/stats.py`
 	* `stats.py` is mainly based from Adafruit example (https://learn.adafruit.com/adafruit-pioled-128x32-mini-oled-for-raspberry-pi/usage)
@@ -114,7 +128,7 @@ December 12th, 2018
 
 November 21st, 2018
 -------------------
-- scripts/start_gw.sh
+- `scripts/start_gw.sh`
 	* run `piShutdown.py` script at startup (use the RPI2 long header by default)
 		- to shutdown the gateway properly by connecting GPIO26 (pin 37) to ground which can be pin 39 that is next to pin 37
 		- to reboot the gateway by connecting GPIO21 (pin 40) to ground which can be pin 39 that is next to pin 40
@@ -138,14 +152,14 @@ shutdown        +-> | 37 || 38 |
 
 November 13th, 2018
 -------------------
-- scripts/start_gw.sh
+- `scripts/start_gw.sh`
 	* run `mongo_repair.sh` at startup to repair a damaged database when gateway has been shutdown abruptly.
 
 June 15th, 2018
 ---------------
 - when downloading and installing a .zip file with the web admin interface, the zip file will be uncompressed and its content will overwrite existing files in `/home/pi/lora_gateway`. It is a convenient way to update the gateway by providing a .zip archive.
 
-- scripts/start_gw.sh and scripts/update_gw.sh
+- `scripts/start_gw.sh` and `scripts/update_gw.sh`
 	* manage gateway software version from github
 	* `/home/pi/git-VERSION.txt` contains the github version
 	* `/home/pi/VERSION.txt` contains the installed version 
@@ -154,27 +168,27 @@ June 15th, 2018
 
 May 28th, 2018
 --------------
-- scripts/start_gw.sh
+- `scripts/start_gw.sh`
 	* adds routing rules to share the wired Internet connection (eth0) through the WiFi access point
 	* now, a device connected to the gateway's WiFi has Internet connection assuming the gateway has Internet connection with the wired interface
 	* these rules are added if the gateway runs in access point mode 
 	
 April 25th, 2018
 ----------------
-- scripts/start_gw.sh
+- `scripts/start_gw.sh`
 	* run `node-red-start` if `CloudNodeRed.py` is enabled in `clouds.json`
 
 March 4th, 2018
 ---------------
-- post-processing_gw.py
+- `post_processing_gw.py`
 	* fix a bug when locally decrypting received data. Now the packet type is updated to remove the `PKT_FLAG_DATA_ENCRYPTED` flag
 	* this bug mainly affected `CloudMQTT.py` that can both publish clear and encrypted data
 	
 February 28th, 2018
 -------------------
-- v3.8 post-processing_gw.py
-	* `post_status_processing_gw.py` can now compute a LoRaWAN-like MIC (Message Integrity Code) for downlink request so that the low-level gateway program can add the 4-byte MIC in downlink packet. Downlink data are still sent in clear but the end-device can now check the received MIC and compared it with a valid MIC by performing encryption on the clear data.
-- v1.8 lora_gateway.cpp
+- v3.8 `post_processing_gw.py`
+	* `post_processing_gw.py` can now compute a LoRaWAN-like MIC (Message Integrity Code) for downlink request so that the low-level gateway program can add the 4-byte MIC in downlink packet. Downlink data are still sent in clear but the end-device can now check the received MIC and compared it with a valid MIC by performing encryption on the clear data.
+- v1.8 `lora_gateway.cpp`
 	* add a 4-byte MIC when sending downlink packet
 	* packet type is then set to `PKT_TYPE_DATA | PKT_FLAG_DATA_ENCRYPTED | PKT_FLAG_DATA_DOWNLINK`
 - there is no longer `is_binary` flag in SX1272.h, replaced by `is_downlink` flag
@@ -186,14 +200,14 @@ December 29th, 2017
 
 December 12th, 2017
 -------------------
-- v3.7 post-processing_gw.py
+- v3.7 `post_processing_gw.py`
 	* List of app keys has been move to `key_AppKey.py` file. 
 	* `post_status_processing_gw.py` will be called periodically by `post_processing_gw.py` (defined by `"status":600` for instance in `gateway_conf.json`, 600 means every 600s). Periodic tasks can then be added into `post_status_processing_gw.py`. For the moment, the gateway will just indicate periodically that it is up and will show its GPS coordinates. In `gateway_conf.json`, a new section called `"status_conf"` can be used to store dedicated information/variable to be used by custom tasks defined in `post_status_processing_gw.py`.
 	* `post_processing_gw.py` has been slightly modified to be able to support other low-level gateway bridge (e.g. 802.14.5). Still experimental.
 	
 November 22th, 2017
 -------------------
-- v3.6 post-processing_gw.py
+- v3.6 `post_processing_gw.py`
 	* `post_processing_gw.py` can now handle the 4-byte LoRaWAN devAddr and pass this address to cloud scripts. All scripts have been modified to handle both 1-byte address and 4-byte address. 
 
 - Add Node-Red support
@@ -212,7 +226,7 @@ November 2nd, 2017
 
 October 17th, 2017
 ------------------
-- v3.5 post-processing_gw.py
+- v3.5 `post_processing_gw.py`
 	* Timestamps are in ISO format with timezone information if `dateutil.tz` is installed (`pip install python-dateutil`), otherwise it is the "naïve" version without timezone information.
 
 October 1st, 2017

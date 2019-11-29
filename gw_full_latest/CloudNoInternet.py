@@ -38,6 +38,9 @@ except AttributeError:
 	key_NoInternet.source_list=[]
 	
 _internet_pending_file = "delayed_uploading/internet_pending.txt"
+#set max_processed_lines to -1 to upload all pending messages
+#otherwise only max_processed_lines pending messages will be uploaded at each packet reception
+max_processed_lines = 10
 
 #------------------------------------------------------------
 #check Internet connectivity
@@ -112,6 +115,9 @@ def upload_internet_pending():
 				lines = f.readlines()
 				f.close()
 
+				lines_processed_index=[]
+				l_index=0
+				
 				for line in lines:
 					#remove \r=0xOD from line if some are inserted by OS and various tools
 					line = line.replace('\r','')
@@ -120,7 +126,7 @@ def upload_internet_pending():
 						#print line_json
 						try:
 							cloud_script = key_NoInternet.execute
-							print "uploading with "+cloud_script
+							print "delayed uploading: message %d uploading with %s" % (l_index, cloud_script)
 							sys.stdout.flush()
 							cmd_arg=cloud_script+" \""+line_json["ldata"].replace('\n','')+"\""+" \""+line_json["pdata"].replace('\n','')+"\""+" \""+line_json["rdata"].replace('\n','')+"\""+" \""+line_json["tdata"].replace('\n','')+"\""+" \""+line_json["gwid"].replace('\n','')+"\""
 						except UnicodeDecodeError, ude:
@@ -130,11 +136,39 @@ def upload_internet_pending():
 							sys.stdout.flush()
 							try:
 								os.system(cmd_arg)
+								#the call succeeded but the script may have issues with the server in which case
+								#the line being processed will be written at the end of _internet_pending_file
+								#so we can indicate that the current line has been processed
+								lines_processed_index.append(l_index)
+								print "delayed uploading: ",
+								print lines_processed_index
 							except:
 								print "Error when uploading data to the cloud"	
 					
-				print "delayed uploading: all internet pending data uploaded"
-				os.remove(os.path.expanduser(_internet_pending_file))
+					l_index=l_index+1
+					
+					if max_processed_lines>0 and l_index >= max_processed_lines:
+						print "delayed uploading: max number of messages processed, stop"
+						break
+				
+				if l_index < len(lines):
+					#in case some messages have been stored meanwhile
+					print "delayed uploading: re-reading "+_internet_pending_file
+					f = open(os.path.expanduser(_internet_pending_file),"r")
+					lines = f.readlines()
+					f.close()				
+					print "delayed uploading: removing processed messages"
+					for line in lines_processed_index:
+						lines[line]='processed'
+					print "delayed uploading: updating "+_internet_pending_file
+					f = open(os.path.expanduser(_internet_pending_file),"w")
+					for line in lines:
+						if line!='processed':
+							f.write(line)
+					f.close()		
+				else:	
+					print "delayed uploading: all internet pending data uploaded"
+					os.remove(os.path.expanduser(_internet_pending_file))
 					
 			else:
 				print "delayed uploading: no internet pending data"

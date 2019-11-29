@@ -29,6 +29,7 @@
 		"copy_post_processing_log" : false,
 		"dht22" : false,
 		"dht22_mongo": false,
+		"check_internet_pending": true,		
 		"fast_stats": 15,
 		"ttn_status" : true
 	},	

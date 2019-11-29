@@ -14,13 +14,7 @@
 			"type":"smsservice",
 			"enabled":false,
 			"always_enabled":false
-		},
-		{
-			"name":"Temporary storage for no Internet connection",
-			"script":"python CloudNoInternet.py",
-			"type":"file",            
-			"enabled":false
-        },			
+		},			
 		{	
 			"name":"WAZIUP SMS Service ",
 			"script":"python CloudWAZIUP_SMS.py",
@@ -75,7 +69,14 @@
 			"script":"python CloudFireBase.py",
 			"type":"jsoncloud",			
 			"enabled":false
-		},		
+		},
+		{
+			"name":"Temporary storage for no Internet connection",
+			"notice":"it is preferable to let this cloud definition at the end of all cloud definitions",
+			"script":"python CloudNoInternet.py",
+			"type":"file",            
+			"enabled":false
+        },				
 		{	
 			"name":"example template",
 			"script":"name of your script, preceded by the script launcher",

@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.9
+ *  Version:                1.9a
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -72,8 +72,8 @@
 */
 
 /*  Change logs
- *  Nov, 22nd, 2919. v1.9a 
- *      handle getopt issue on newer Linux distrib, compile with -DGETOPT_ISSUE
+ *  Nov, 22nd, 2019. v1.9a 
+ *		  handle getopt issue on newer Linux distrib, compile with -DGETOPT_ISSUE
  *	March 23rd, 2019. v1.9
  *		  improve suport for LoRaWAN
  *		  the radio info string has a frequency information, e.g. 125,5,12,868100

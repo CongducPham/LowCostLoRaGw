@@ -610,11 +610,13 @@ def main(ldata, pdata, rdata, tdata, gwid):
 		else:
 			print("CloudWAZIUP: not uploading")
 			
-			if (CloudNoInternet_enabled):
-				print("Using CloudNoInternet")
-				from CloudNoInternet import store_internet_pending
-				# we call store_internet_pending to store the message for future upload
-				store_internet_pending(ldata, pdata, rdata, tdata, gwid)
+			## CloudNoInternet already stores the data
+			##
+			#if (CloudNoInternet_enabled):
+			#	print("Using CloudNoInternet")
+			#	from CloudNoInternet import store_internet_pending
+			#	# we call store_internet_pending to store the message for future upload
+			#	store_internet_pending(ldata, pdata, rdata, tdata, gwid)
 			
 		# update connection_failure value
 		global connection_failure
