@@ -7,6 +7,7 @@ import key_NoInternet
 import key_GpsFile
 import key_MQTT
 import key_NodeRed
+import key_TTN
 
 key_data = {'thingspeak_channel_key':key_ThingSpeak._def_thingspeak_channel_key,
 		'thingspeak_source_list':key_ThingSpeak.source_list,
@@ -27,6 +28,7 @@ key_data = {'thingspeak_channel_key':key_ThingSpeak._def_thingspeak_channel_key,
 		'nodered_organization_name':key_NodeRed.organization_name,
 		'nodered_sensor_name':key_NodeRed.sensor_name,
 		'nodered_source_list':key_NodeRed.source_list,
-		'nointernet_source_list':key_NoInternet.source_list
+		'nointernet_source_list':key_NoInternet.source_list,
+		'ttn_source_list':key_TTN.source_list
 		}
 print json.dumps(key_data)

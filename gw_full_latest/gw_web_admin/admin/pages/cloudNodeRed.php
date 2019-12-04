@@ -61,22 +61,7 @@
 					<button id="btn_cloudNodeRed_status_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
 				</td>
 			   </tr>
-			   <!--
-			   <tr>
-				<td>Write Key</td>
-				<td id="write_key_value"><?php echo $key_clouds['thingspeak_channel_key']; ?></td>
-				<td align="right"><button id="btn_edit_write_key" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
-				<td id="td_edit_write_key">
-					<div id="div_update_write_key" class="form-group">
-						<label>Write Key</label>
-						<input id="write_key_input" class="form-control" placeholder="Write key" name="write_key" type="text" value="" autofocus>
-					</div>
-				</td> 
-				<td id="td_write_key_submit" align="right">
-						<button id="write_key_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
-				</td>
-			   </tr>
-			   -->
+
 			 </tbody>
 			</table>
 		  </div>

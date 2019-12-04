@@ -1071,6 +1071,7 @@ if (isset($_GET["visibility"]) && (! empty($_GET["visibility"]))) {
 // 	-cloudGpsFile
 // 	-cloudMQTT
 // 	-cloudNodeRed
+//	-CloudTTN
 //+++++++++++++++++++++++++++++++++++++ 
 if (
 	isset($_GET["cloud_status"]) && (! empty($_GET["cloud_status"])) &&
@@ -1095,6 +1096,7 @@ if (
 // 	-cloudGpsFile
 // 	-cloudMQTT
 // 	-cloudNodeRed
+//	-CloudTTN
 //+++++++++++++++++++++++++++++++++++++ 
 
 if(
@@ -1106,8 +1108,7 @@ if(
 	$cloud_key_name = htmlspecialchars($_GET["clouds_key_name"]);
 	$cloud_key_value =  htmlspecialchars($_GET["clouds_key_value"]);
 
-
-	$output =clouds_conf($cloud_key ,$cloud_key_value,$cloud_key_name );
+	$output =clouds_conf($cloud_key ,$cloud_key_value,$cloud_key_name);
 
 	if($output == 0){
 		switch($cloud_key_name){
@@ -1123,6 +1124,12 @@ if(
 			case "nodered_key":
 				echo '<p><center><font color="green">Cloud Node-Red updated</font></center></p>';
 				break;
+			case "nodered_key":
+				echo '<p><center><font color="green">Cloud Node-Red updated</font></center></p>';
+				break;
+			case "ttn_key":
+				echo '<p><center><font color="green">Cloud TTN updated</font></center></p>';
+				break;								
 			default :
 				echo '<p><center><font color="green">Cloud updated</font></center></p>';
 		}	
@@ -1141,6 +1148,9 @@ if(
 			case "nodered_key":
 				echo '<p><center><font color="red">Failed to update cloud Node-Red</font></center></p>';	
 				break;
+			case "ttn_key":
+				echo '<p><center><font color="red">Failed to update cloud TTN</font></center></p>';	
+				break;				
 			default :
 				echo '<p><center><font color="red">Failed to update cloud</font></center></p>';
 		}

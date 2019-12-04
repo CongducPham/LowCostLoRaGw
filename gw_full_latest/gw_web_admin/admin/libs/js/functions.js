@@ -2437,7 +2437,7 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 			$('#td_edit_cloudMQTT_source_list').hide();
 			$('#td_cloudMQTT_source_list_submit').hide();
 		}
-});
+	});
 	
 
 //+++++++++++++++++++++++++++++++++++++
@@ -2447,7 +2447,6 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 //==================================
 // Setting Cloud Node Red status
 //==================================
-
 
 	$('#td_edit_cloudNodeRed_status').hide();
 	$('#td_cloudNodeRed_status_submit').hide();
@@ -2473,5 +2472,37 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 	    $('#td_cloudNodeRed_status_submit').hide();
 	});
 
+//+++++++++++++++++++++++++++++++++++++
+// CLOUD TTN
+//+++++++++++++++++++++++++++++++++++++
+
+//==================================
+// Setting Cloud TTN status
+//==================================
+
+	$('#td_edit_cloudTTN_status').hide();
+	$('#td_cloudTTN_status_submit').hide();
+	
+	$('#btn_edit_cloudTTN_status').click(function(){
+		$('#td_edit_cloudTTN_status').show();
+		$('#td_cloudTTN_status_submit').show();
+	});
+	
+	$('#btn_cloudTTN_status_submit').click(function(){
+	    	var cloud_status = $( "#cloudTTN_status_group input:checked" ).val();
+	    	var cloud_name = "cloudttn_conf";
+	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+				$('#cloud_msg').html(data);
+		    		//erase message after 5 seconds
+		   		 setTimeout(function() {
+	  				$('#cloud_msg').html("");
+		   		 },defaultMsgDisplayTimer);
+		});
+	    	
+		$('#cloudTTN_status_value').html(cloud_status);
+		$('#td_edit_cloudTTN_status').hide();
+	    $('#td_cloudTTN_status_submit').hide();
+	});
+	
 //End of main block
 });

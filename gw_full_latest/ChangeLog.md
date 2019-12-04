@@ -1,6 +1,11 @@
 Change logs
 ===========
 
+Dev 4th, 2019
+--------------
+- web admin interface
+	* add `Cloud TTN` tab to handle `CloudTTN.py` which is the script to upload to TTN platform
+
 Nov 30th, 2019
 --------------
 - web admin interface

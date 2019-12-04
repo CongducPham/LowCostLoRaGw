@@ -56,7 +56,13 @@
                     <span class="icon-bar"></span>
                 </button>
                 <a class="navbar-brand" href="gateway_config.php">Gateway Web Admin</a>
+                <?php
+                	if (is_file("my_logo_1.png")) {
+                		echo '<img class="navbar-brand" alt=" " src="my_logo_1.png" align="middle">';
+                	}
+				?>
             </div>
+
             <!-- /.navbar-header -->
 
             <ul class="nav navbar-top-links navbar-right">

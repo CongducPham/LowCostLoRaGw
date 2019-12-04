@@ -79,13 +79,16 @@ require 'header.php';
 											<p>
 											<?php 
 												ob_start(); 
-												system("tac /home/pi/lora_gateway/log/post-processing.log | egrep -a -m 15 rxlora", $retval);
+												system("tac /home/pi/lora_gateway/log/post-processing.log | egrep -a -m 15 'rxlora|: 256,.*,0x.*,'", $retval);
 												$string=ob_get_contents(); 
 												ob_clean();
-												
-												$pattern = '/(.+)SF=(\d+)/i';
-												$replacement = '${1}SF=$2<br>';
-												echo preg_replace($pattern, $replacement, $string);				 
+												$patterns = array();
+												$patterns[0] = '/(.+)SF=(\d+)/i';
+												$patterns[1] = '/update(.+)-(\d+)/i';
+												$replacements = array(); 
+												$replacements[0] = '${1}SF=$2<br>';
+												$replacements[1] = 'update${1}-$2<br>';
+												echo preg_replace($patterns, $replacements, $string);				 
 											?>					
 											</p>
  

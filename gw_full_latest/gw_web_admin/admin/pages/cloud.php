@@ -75,6 +75,8 @@ require 'header.php';
 								</li>
 								<li><a href="#cloudNodeRed-pills" data-toggle="tab">Cloud Node-RED </a>
 								</li>
+								<li><a href="#cloudTTN-pills" data-toggle="tab">Cloud TTN </a>
+								</li>								
                             </ul>
 							</br>
             				<p>&nbsp;&nbsp;&nbsp;&nbsp;When enabling a new cloud, you need to reboot for changes to take effect.</p>
@@ -245,7 +247,7 @@ require 'header.php';
                                 <?php require 'cloudGpsFile.php'; ?> 
                                 <?php require 'cloudMQTT.php'; ?>
                                 <?php require 'cloudNodeRed.php'; ?>
-                      			
+                      			<?php require 'cloudTTN.php'; ?>
                                 <!-- tab-pane -->  
                         </div>        
                         <!-- /.panel-body -->
