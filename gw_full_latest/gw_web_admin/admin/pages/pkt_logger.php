@@ -72,7 +72,7 @@ require 'header.php';
                             <!-- Tab panes -->				
                             	<div class="tab-pane fade in active" id="rxlora">
                                    </br>
-                                    <div class="col-md-10 col-md-offset-0"> 
+                                    <div class="col-md-12 col-md-offset-0"> 
                     						<div class="panel-body">
                     						<p>Showing last 15 packet reception. Refreshing every 5s.</p>
                     						
