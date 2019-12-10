@@ -40,6 +40,16 @@ try:
 except AttributeError:
 	key_TTN.source_list=[]
 
+try:
+	key_TTN.TTN_server
+except AttributeError:
+	key_TTN.TTN_server="router.eu.thethings.network"
+	
+try:
+	key_TTN.TTN_port
+except AttributeError:
+	key_TTN.TTN_port=1700
+			
 PROTOCOL_VERSION = 1
 
 PUSH_DATA = 0
