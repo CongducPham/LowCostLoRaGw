@@ -29,16 +29,13 @@ var defaultMsgDisplayTimer = 1500;
         
         // Send the form data using post
         $.post("process.php", formValues, function(data){
-            // Display the returned data in browser
-            //$("#gw_update_form_msg").html(data);
-	    $('#gw_config_msg').html(data);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#gw_config_msg').html("");
-	    },defaultMsgDisplayTimer);
+	    	$('#gw_config_msg').html(data);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	    	},defaultMsgDisplayTimer);
         });
-        $('#download_sx1301_conf_form')[0].reset();    
-        
+        $('#download_sx1301_conf_form')[0].reset();            
     });
     
 //==================================
@@ -59,29 +56,22 @@ var defaultMsgDisplayTimer = 1500;
     	
     	if(mode == ''){
     		//alert("Please select one mode!");
-		setTimeout(function(){
+			setTimeout(function(){
 			$('#radio_msg').html("Please select one mode!");
 			}, 3000);
     	}
     	else{ 
     		$.get("process.php", {mode: mode}, function(data){
-				//$('#radio_msg').html(data);
-				//$('#radio_msg').show();
 				$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
+            	//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+	     		},defaultMsgDisplayTimer);
         	});
     		
         	$('#mode_value').html(mode);
         	$('#td_edit_mode').hide();
     		$('#mode_submit').hide();
-    		//$('#mode_select').html($('#mode_select option:selected').val());
-    		//$('#mode_select option:selected').text();
-    		//setTimeOut(function(){$('#radio_msg').hide();}, 3000);
-    		//$('#radio_msg').show().delay(3000).hide();
-    		//$("#radio_msg").hide().delay(3000);
     	}
     });
 
@@ -108,13 +98,11 @@ var defaultMsgDisplayTimer = 1500;
     	}
     	else{ 
     		$.get("process.php", {sf: sf}, function(data){
-				//$('#radio_msg').html(data);
-				//$('#radio_msg').show();
 				$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
+            	//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+	     		},defaultMsgDisplayTimer);
         	});
     		
         	$('#sf_value').html(sf);
@@ -163,68 +151,33 @@ var defaultMsgDisplayTimer = 1500;
     
     $('#freq_submit').click(function() {	
     	band = $('#band_freq_select').val();
-	freq = $('#freq_select').val();
+		freq = $('#freq_select').val();
     	
-	$.get("process.php", {band:band, freq: freq}, function(data){
-            	// Display the returned data in browser
-            	//$("#mode_test").html(data);
-            	//alert(data);
-		//$('#radio_msg').html(data);
-		//$('#radio_msg').show();
-		$("#gw_config_msg").html(data);
-            	//erase message after 5 seconds
-	   	setTimeout(function() {
-  			$('#gw_config_msg').html("");
-	     	},defaultMsgDisplayTimer);
-        });
+		$.get("process.php", {band:band, freq: freq}, function(data){
+			$("#gw_config_msg").html(data);
+				//erase message after 5 seconds
+				setTimeout(function() {
+					$('#gw_config_msg').html("");
+				},defaultMsgDisplayTimer);
+			});
 	
-	if(freq != '' && band != ''){
-		$('#freq_value').html(freq);
-	}
+		if(freq != '' && band != ''){
+			$('#freq_value').html(freq);
+		}
 	
-    $('#td_edit_freq').hide();
-    $('#freq_submit').hide();
-	
-	
-	/*
-	$band = $('#band_freq_select').val();
-    	if($band == ''){
-    		alert("Please select one frequency band!");
-    	}
-    	else{
-    		$freq = $('#freq_select').val();
-
-    		if($freq == ''){
-    			alert("Please select one frequency!");
-    		}
-    		else{
-    			// test de contrôle sur le mode
-    				$.get("process.php", {freq: $freq}, function(data){
-            		// Display the returned data in browser
-            		//$("#mode_test").html(data);
-            		//alert(data);
-					$('#radio_msg').html(data);
-					$('#radio_msg').show();
-        		});
-    			
-    			//$.post($(this).attr('href'), function (res) { 
-            		//$('#msg').html(res);
-        		//});
-        		$('#freq_value').html($freq);
-        		$('#td_edit_freq').hide();
-    			$('#freq_submit').hide();
-    		}
-    	}*/
-    	
+		$('#td_edit_freq').hide();
+		$('#freq_submit').hide();
+	    	
     });
 
 //==================================
 // Setting PABOOST
 //==================================
+	
+	//obsolete
     $('#td_edit_paboost').hide();
     $('#td_paboost_submit').hide();
     $("#gw_msg").hide();
-    //$("#div_mode_select").hide();
     
     $('#btn_edit_paboost').click(function() {	
     	$('#td_edit_paboost').show();
@@ -234,19 +187,30 @@ var defaultMsgDisplayTimer = 1500;
     $('#btn_paboost_submit').click(function() {	
     	paboost = $( "#paboost_group input:checked" ).val();
         $.get("process.php", {paboost: paboost}, function(data){
-            // handle the response (*) by storing the message into the DIV#message
-            //$('#gw_full_update_msg').html(res);
-	     $('#gw_config_msg').html(data);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#gw_config_msg').html("");
-	    },defaultMsgDisplayTimer);
+	    	$('#gw_config_msg').html(data);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	    	},defaultMsgDisplayTimer);
         });
     	
         $('#paboost_value').html(paboost);
         $('#td_edit_paboost').hide();
     	$('#td_paboost_submit').hide();
     });
+    
+    //new
+	$('#paboost_status_toggle').change(function() {  
+    	paboost = $(this).prop('checked');
+    	
+    	$.get("process.php", {paboost: paboost}, function(data){	
+			$('#gw_config_msg').html(data);
+	   		 //erase message after 5 seconds
+	    		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	    		},defaultMsgDisplayTimer);
+        });
+  	});    
        										   
 //+++++++++++++++++++++++++++++++++++++
 // GATEWAY
@@ -258,7 +222,6 @@ var defaultMsgDisplayTimer = 1500;
     $('#td_edit_gw_id').hide();
     $('#td_gw_id_submit').hide();
     $("#gw_msg").hide();
-    //$("#div_mode_select").hide();
     
     $('#btn_edit_gw_id').click(function() {	
     	$('#td_edit_gw_id').show();
@@ -269,17 +232,15 @@ var defaultMsgDisplayTimer = 1500;
     	gw_id = $('#gw_id_input').val();
     	
     	$.get("process.php", {gateway_ID: gw_id}, function(data){	
-			//$('#gw_msg').html(data);
-			//$('#gw_msg').show();
 			$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer);
         });
     	
 		if(gw_id != '')	{
-				$('#gw_id_value').html(gw_id);
+			$('#gw_id_value').html(gw_id);
 			$('#gw_id_input').val("");
 			$('#td_edit_gw_id').hide();
 			$('#td_gw_id_submit').hide();
@@ -301,7 +262,6 @@ var defaultMsgDisplayTimer = 1500;
 		$('#td_submit_position').show();
 	});
 	$('#format_dd').click(function(){
-		//$('#div_info_format').html("");
 		$('#div_info_format').hide();
 		$('#td_format_position_dd').show();
 		$('#td_format_position_dms').hide();
@@ -359,11 +319,11 @@ var defaultMsgDisplayTimer = 1500;
 		}
 		//alert("ref_latitude : "+ref_latitude+"ref_longitude : "+ref_longitude );
 		$.get("process.php", {ref_latitude: ref_latitude.toString(),ref_longitude: ref_longitude.toString()}, function(data){	
-				$("#gw_config_msg").html(data);
-		    			//erase message after 5 seconds
-		   			setTimeout(function() {
-	  					$('#gw_config_msg').html("");
-		     			},defaultMsgDisplayTimer);
+			$("#gw_config_msg").html(data);
+		    //erase message after 5 seconds
+		   	setTimeout(function() {
+	  			$('#gw_config_msg').html("");
+		     },defaultMsgDisplayTimer);
 		});
 		$('#latitude_gw_conf').html(ref_latitude);
 		$('#longitude_gw_conf').html(ref_longitude);
@@ -381,19 +341,6 @@ var defaultMsgDisplayTimer = 1500;
 
 	$('#latitude_gw_conf').hide();
 	$('#longitude_gw_conf').hide();
-/*
-	$('#display_format_dms').click(function(){
-		var val_latitude = parseFloat($('#latitude_gw_conf').html());
-		var val_longitude = parseFloat($('#longitude_gw_conf').html());
-
-		var latitude_dms = convertDdToDms(val_latitude);
-		var longitude_dms = convertDdToDms(val_longitude);
-	
-		$('#latitude_value').html("Latitude : "+latitude_dms);
-		$('#longitude_value').html("Longitude : "+longitude_dms);
-	
-	});
-*/
 
 	function convertDdToDms(val){
 		var val_abs = Math.abs(val)
@@ -409,16 +356,12 @@ var defaultMsgDisplayTimer = 1500;
 	
 		return display;
 	}
-/*
-	$('#display_format_dd').click(function(){
-		$('#latitude_value').html("Latitude : "+$('#latitude_gw_conf').html());
-		$('#longitude_value').html("Longitude : "+$('#longitude_gw_conf').html());
-	});
-*/
 
 //==================================
 //# Setting wappkey
-//==================================	
+//==================================
+
+	//obsolete	
  	$('#td_edit_wappkey').hide();
 	$('#td_wappkey_submit').hide();
 	
@@ -432,20 +375,35 @@ var defaultMsgDisplayTimer = 1500;
 		//alert(wappkey);
 		$.get("process.php", {wappkey: wappkey}, function(data){	
 			$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer);
         });
     	
     	$('#wappkey_value').html(wappkey);
         $('#td_edit_wappkey').hide();
     	$('#td_wappkey_submit').hide();
 	});
+	
+	//new
+	$('#wappkey_status_toggle').change(function() {  
+    	wappkey = $(this).prop('checked');
+    	
+    	$.get("process.php", {wappkey: wappkey}, function(data){	
+			$('#gw_config_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});	
 		
 //==================================
 // Setting raw
-//==================================	
+//==================================
+
+	//obsolete	
  	$('#td_edit_raw').hide();
 	$('#td_raw_submit').hide();
 	
@@ -459,20 +417,35 @@ var defaultMsgDisplayTimer = 1500;
 		//alert(raw);
 		$.get("process.php", {raw: raw}, function(data){	
 			$("#gw_config_msg").html(data);
-            	//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer);
         });
     	
     	$('#raw_value').html(raw);
         $('#td_edit_raw').hide();
     	$('#td_raw_submit').hide();
 	});
+	
+	//new
+	$('#raw_status_toggle').change(function() {  
+    	raw = $(this).prop('checked');
+    	
+    	$.get("process.php", {raw: raw}, function(data){	
+			$('#gw_config_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});		
 
 //==================================
 // Setting AES LoRaWAN
 //==================================
+
+	//obsolete
     $('#td_edit_aes_lorawan').hide();
     $('#td_aes_lorawan_submit').hide();
     $("#gw_msg").hide();
@@ -486,10 +459,10 @@ var defaultMsgDisplayTimer = 1500;
     	aes_lorawan = $( "#aes_lorawan_group input:checked" ).val();
     	$.get("process.php", {aes_lorawan: aes_lorawan}, function(data){	
 			$("#gw_config_msg").html(data);
-            	//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer); 	
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer); 	
         });
     	
 		$('#aes_lorawan_value').html(aes_lorawan);
@@ -497,9 +470,23 @@ var defaultMsgDisplayTimer = 1500;
 		$('#td_aes_lorawan_submit').hide();	
     });
 
+	$('#aes_lorawan_status_toggle').change(function() {  
+    	aes_lorawan = $(this).prop('checked');
+    	
+    	$.get("process.php", {aes_lorawan: aes_lorawan}, function(data){	
+			$('#gw_config_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});	
+  	
 //==================================
 // Setting AES
 //==================================
+
+	//obsolete
     $('#td_edit_aes').hide();
     $('#td_aes_submit').hide();
     $("#gw_msg").hide();
@@ -513,20 +500,35 @@ var defaultMsgDisplayTimer = 1500;
     	aes = $( "#aes_group input:checked" ).val();
     	$.get("process.php", {aes: aes}, function(data){	
 			$("#gw_config_msg").html(data);
-            	//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer); 	
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer); 	
         });
     	
 		$('#aes_value').html(aes);
 		$('#td_edit_aes').hide();
 		$('#td_aes_submit').hide();	
     });
+    
+    //new
+	$('#aes_status_toggle').change(function() {  
+    	aes = $(this).prop('checked');
+    	
+    	$.get("process.php", {aes: aes}, function(data){	
+			$('#gw_config_msg').html(data);
+	   		 //erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});	    
 
 //==================================
-// Setting AES
+// Setting LSC
 //==================================
+
+	//obsolete
     $('#td_edit_lsc').hide();
     $('#td_lsc_submit').hide();
     $("#gw_msg").hide();
@@ -540,16 +542,29 @@ var defaultMsgDisplayTimer = 1500;
     	lsc = $( "#lsc_group input:checked" ).val();
     	$.get("process.php", {lsc: lsc}, function(data){	
 			$("#gw_config_msg").html(data);
-            	//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer); 	
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer); 	
         });
     	
 		$('#lsc_value').html(lsc);
 		$('#td_edit_lsc').hide();
 		$('#td_lsc_submit').hide();	
     });
+    
+    //new
+	$('#lsc_status_toggle').change(function() {  
+    	lsc = $(this).prop('checked');
+    	
+    	$.get("process.php", {lsc: lsc}, function(data){	
+			$('#gw_config_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");	
+	    	},defaultMsgDisplayTimer);
+        });
+  	});	     
 
 //==================================
 // Setting downlink
@@ -557,7 +572,6 @@ var defaultMsgDisplayTimer = 1500;
     $('#td_edit_downlink').hide();
     $('#td_downlink_submit').hide();
     $("#gw_msg").hide();
-    //$("#div_mode_select").hide();
     
     $('#btn_edit_downlink').click(function() {	
     	$('#td_edit_downlink').show();
@@ -567,13 +581,11 @@ var defaultMsgDisplayTimer = 1500;
     $('#btn_downlink_submit').click(function() {	
     	downlink = $("#downlink_input").val();
     	$.get("process.php", {downlink: downlink}, function(data){	
-			//$('#gw_msg').html(data);
-			//$('#gw_msg').show();
 			$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer);
         });
 
 		$('#downlink_value').html(downlink);
@@ -598,10 +610,10 @@ var defaultMsgDisplayTimer = 1500;
     	status = $("#status_input").val();
     	$.get("process.php", {status: status}, function(data){	
 			$("#gw_config_msg").html(data);
-            	//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer);
         });
 
 		$('#status_value').html(status);
@@ -634,14 +646,13 @@ var defaultMsgDisplayTimer = 1500;
         $.post("process.php", formValues, function(data){
             // Display the returned data in browser
             //$("#downlink_form_msg").html(data);
-	    $("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+	    	$("#gw_config_msg").html(data);
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer);
         });
-        $('#downlink_form')[0].reset();
-        
+        $('#downlink_form')[0].reset(); 
     });
 	
 //+++++++++++++++++++++++++++++++++++++
@@ -651,10 +662,11 @@ var defaultMsgDisplayTimer = 1500;
 //==================================
 // Setting alert sms
 //==================================
+	
+	//obsolete
     $('#td_edit_use_sms').hide();
     $('#td_use_sms_submit').hide();
     $("#alert_sms_msg").hide();
-    //$("#div_mode_select").hide();
     
     $('#btn_edit_use_sms').click(function() {	
     	$('#td_edit_use_sms').show();
@@ -664,20 +676,31 @@ var defaultMsgDisplayTimer = 1500;
     $('#btn_use_sms_submit').click(function() {	
     	use_sms = $( "#use_sms_group input:checked" ).val();
     	
-    	$.get("process.php", {use_sms: use_sms}, function(data){	
-			//$('#alert_sms_msg').html(data);
-			//$('#alert_sms_msg').show();
+    	$.get("process.php", {use_sms: use_sms}, function(data){
 			$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer);
         });
     	if(use_sms != '')	
         	$('#use_sms_value').html(use_sms);
         $('#td_edit_use_sms').hide();
     	$('#td_use_sms_submit').hide();
     });
+    
+    //new
+	$('#use_sms_status_toggle').change(function() {  
+    	use_sms = $(this).prop('checked');
+    	
+    	$.get("process.php", {use_sms: use_sms}, function(data){	
+			$('#gw_config_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});	     
 
 //==================================
 // Setting sms pin
@@ -685,7 +708,6 @@ var defaultMsgDisplayTimer = 1500;
     $('#td_edit_sms_pin').hide();
     $('#td_sms_pin_submit').hide();
     $("#alert_sms_msg").hide();
-    //$("#div_mode_select").hide();
     
     $('#btn_edit_sms_pin').click(function() {	
     	$('#td_edit_sms_pin').show();
@@ -694,33 +716,30 @@ var defaultMsgDisplayTimer = 1500;
  
     $('#btn_sms_pin_submit').click(function() {	
     	sms_pin = $("#sms_pin_input").val();
-    	
-	if (! /^\d{4}$/.test(sms_pin)){
-		//$('#alert_sms_msg').html('<p><center><font color="red">Please enter a valid format!.</font></center></p>');
-		//$('#alert_sms_msg').show();
-		$("#gw_config_msg").html('<p><center><font color="red">Please enter a valid format!.</font></center></p>');
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
-	}
-	else{
-		$.get("process.php", {sms_pin: sms_pin}, function(data){	
-			//$('#alert_sms_msg').html(data);
-			//$('#alert_sms_msg').show();
-			$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
-       		 });
-    		
-        	$('#sms_pin_value').html(sms_pin);
-        	$("#sms_pin_input").val("");
-       		 $('#td_edit_sms_pin').hide();
-    		$('#td_sms_pin_submit').hide();
-	}
-    	
+		
+		if (! /^\d{4}$/.test(sms_pin)){
+			$("#gw_config_msg").html('<p><center><font color="red">Please enter a valid format!.</font></center></p>');
+			//erase message after 5 seconds
+			setTimeout(function() {
+				$('#gw_config_msg').html("");
+			 },defaultMsgDisplayTimer);
+		}
+		else{
+			$.get("process.php", {sms_pin: sms_pin}, function(data){	
+				//$('#alert_sms_msg').html(data);
+				//$('#alert_sms_msg').show();
+				$("#gw_config_msg").html(data);
+				//erase message after 5 seconds
+				setTimeout(function() {
+					$('#gw_config_msg').html("");
+				},defaultMsgDisplayTimer);
+			});
+			
+			$('#sms_pin_value').html(sms_pin);
+			$("#sms_pin_input").val("");
+			$('#td_edit_sms_pin').hide();
+			$('#td_sms_pin_submit').hide();
+		}
     });
     
 //==================================
@@ -752,10 +771,10 @@ var defaultMsgDisplayTimer = 1500;
 			//$('#alert_sms_msg').html('<p><center><font color="red">Please enter a valid phone number.</font></center></p>');
 			//$('#alert_sms_msg').show();
 			$("#gw_config_msg").html('<p><center><font color="red">Please enter a valid phone number.</font></center></p>');
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer);
 		}
 		else{
 			var contactsJSON = JSON.stringify(contacts);
@@ -763,10 +782,10 @@ var defaultMsgDisplayTimer = 1500;
 				//$('#alert_sms_msg').html(data);
 				//$('#alert_sms_msg').show();
 				$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
+            	//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+	     		},defaultMsgDisplayTimer);
 				$('#td_edit_contact_sms').hide();
     			$('#td_contact_sms_submit').hide();
         	});
@@ -776,7 +795,6 @@ var defaultMsgDisplayTimer = 1500;
         	$('#td_edit_contact_sms').hide();
     		$('#td_contact_sms_submit').hide();
 		}
-    	
     });
 
 //+++++++++++++++++++++++++++++++++++++
@@ -786,10 +804,11 @@ var defaultMsgDisplayTimer = 1500;
 //==================================
 // Setting alert mail
 //==================================
+
+	//obsolete
     $('#td_edit_use_mail').hide();
     $('#td_use_mail_submit').hide();
     $("#alert_mail_msg").hide();
-    //$("#div_mode_select").hide();
     
     $('#btn_edit_use_mail').click(function() {	
     	$('#td_edit_use_mail').show();
@@ -803,10 +822,10 @@ var defaultMsgDisplayTimer = 1500;
 			//$('#alert_mail_msg').html(data);
 			//$('#alert_mail_msg').show();
 			$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer);
         });
     	
 	if(use_mail != '')		
@@ -814,6 +833,19 @@ var defaultMsgDisplayTimer = 1500;
         $('#td_edit_use_mail').hide();
     	$('#td_use_mail_submit').hide();
     });
+    
+    //new
+	$('#use_mail_status_toggle').change(function() {  
+    	use_mail = $(this).prop('checked');
+    	
+    	$.get("process.php", {use_mail: use_mail}, function(data){	
+			$('#gw_config_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});    
 
 //==================================
 // Setting mail account
@@ -821,7 +853,6 @@ var defaultMsgDisplayTimer = 1500;
     $('#td_edit_mail_from').hide();
     $('#td_mail_from_submit').hide();
     $("#alert_mail_msg").hide();
-    //$("#div_mode_select").hide();
     
     $('#btn_edit_mail_from').click(function() {	
     	$('#td_edit_mail_from').show();
@@ -831,29 +862,23 @@ var defaultMsgDisplayTimer = 1500;
     $('#btn_mail_from_submit').click(function() {	
     	mail_from = $("#mail_from_input").val();
 	
-	if (! /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(mail_from)){
-		//$('#alert_mail_msg').html('<p><center><font color="red">Please enter a valid email address.</font></center></p>');
-		//$('#alert_mail_msg').show();
-		$("#gw_config_msg").html('<p><center><font color="red">Please enter a valid email address.</font></center></p>');
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
-	}
-	else{
-		$.get("process.php", {mail_from: mail_from}, function(data){	
-			//$('#alert_mail_msg').html(data);
-			//$('#alert_mail_msg').show();
-			$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
-       		 });
-		
-		$('#mail_from_value').html(mail_from);
-	}
-    		
+		if (! /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(mail_from)){
+			$("#gw_config_msg").html('<p><center><font color="red">Please enter a valid email address.</font></center></p>');
+			//erase message after 5 seconds
+			setTimeout(function() {
+				$('#gw_config_msg').html("");
+			},defaultMsgDisplayTimer);
+		}
+		else{
+			$.get("process.php", {mail_from: mail_from}, function(data){	
+				$("#gw_config_msg").html(data);
+				//erase message after 5 seconds
+				setTimeout(function() {
+					$('#gw_config_msg').html("");
+				},defaultMsgDisplayTimer);
+			});
+			$('#mail_from_value').html(mail_from);
+		}
         $("#mail_from_input").val("");
         $('#td_edit_mail_from').hide();
     	$('#td_mail_from_submit').hide();
@@ -876,16 +901,14 @@ var defaultMsgDisplayTimer = 1500;
     	mail_passwd = $("#mail_passwd_input").val();
     	
     	$.get("process.php", {mail_passwd: mail_passwd}, function(data){	
-			//$('#alert_mail_msg').html(data);
-			//$('#alert_mail_msg').show();
 			$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer);
         });
     	
-	if(mail_passwd != '')	
+		if(mail_passwd != '')	
         	$('#mail_passwd_value').html(mail_passwd);
         $("#mail_passwd_input").val("");
         $('#td_edit_mail_passwd').hide();
@@ -898,7 +921,6 @@ var defaultMsgDisplayTimer = 1500;
     $('#td_edit_mail_server').hide();
     $('#td_mail_server_submit').hide();
     $("#alert_mail_msg").hide();
-    //$("#div_mode_select").hide();
     
     $('#btn_edit_mail_server').click(function() {	
     	$('#td_edit_mail_server').show();
@@ -908,22 +930,19 @@ var defaultMsgDisplayTimer = 1500;
     $('#btn_mail_server_submit').click(function() {	
     	mail_server = $("#mail_server_input").val();
     	
-	$.get("process.php", {mail_server: mail_server}, function(data){	
-		//$('#alert_mail_msg').html(data);
-		//$('#alert_mail_msg').show();
-		$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
-        });
+		$.get("process.php", {mail_server: mail_server}, function(data){	
+			$("#gw_config_msg").html(data);
+			//erase message after 5 seconds
+			setTimeout(function() {
+				$('#gw_config_msg').html("");
+			},defaultMsgDisplayTimer);
+		});
 	
-	if(mail_server != '')	
-		$('#mail_server_value').html(mail_server);
-        $("#mail_server_input").val("");
-        $('#td_edit_mail_server').hide();
-    	$('#td_mail_server_submit').hide();
-
+		if(mail_server != '')	
+			$('#mail_server_value').html(mail_server);
+		$("#mail_server_input").val("");
+		$('#td_edit_mail_server').hide();
+		$('#td_mail_server_submit').hide();
     });
     
 //==================================
@@ -952,26 +971,22 @@ var defaultMsgDisplayTimer = 1500;
 		} 
 		
 		if(!valid){
-			//$('#alert_mail_msg').html('<p><center><font color="red">Please enter a valid email address.</font></center></p>');
-			//$('#alert_mail_msg').show();
 			$("#gw_config_msg").html('<p><center><font color="red">Please enter a valid email address.</font></center></p>');
-            			//erase message after 5 seconds
-	   			setTimeout(function() {
-  					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+            //erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	     	},defaultMsgDisplayTimer);
 			$('#td_edit_contact_mail').hide();
     		$('#td_contact_mail_submit').hide();
 		}
 		else{
 			contactsJSON = JSON.stringify(contacts);
 			$.get("process.php", {contact_mail: contactsJSON}, function(data){		
-				//$('#alert_mail_msg').html(data);
-				//$('#alert_mail_msg').show();
 				$("#gw_config_msg").html(data);
-            			//erase message after 5 seconds
+            	//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
-	     			},defaultMsgDisplayTimer);
+	     		},defaultMsgDisplayTimer);
 				$('#contact_mail_value').html(contact_mail);
         	});
     		
@@ -990,13 +1005,11 @@ var defaultMsgDisplayTimer = 1500;
 //==================================
 	$('#btn_copy_log_file').click(function() {
         $.post($(this).attr('href'), function (res) { 
-            // handle the response (*) by storing the message into the DIV#message
-            //$('#gw_full_update_msg').html(res);
-	     $('#gw_config_msg').html(res);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#gw_config_msg').html("");
-	    },defaultMsgDisplayTimer);
+	    	$('#gw_config_msg').html(res);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");
+	    	},defaultMsgDisplayTimer);
         });
     });
 
@@ -1016,8 +1029,6 @@ var defaultMsgDisplayTimer = 1500;
 			$('#gw_update_msg').html(msg);
 
 			$.post($(this).attr('href'), function (res) { 
-            	// handle the response (*) by storing the message into the DIV#message
-	   			//$('#gw_update_msg').html("");
 	    		$('#gw_update_msg').html(res);
 	    		//erase message after 5 seconds
 	    		setTimeout(function() {
@@ -1042,8 +1053,6 @@ var defaultMsgDisplayTimer = 1500;
 			$('#gw_update_msg').html(msg);
 
 			$.post($(this).attr('href'), function (res) { 
-            	// handle the response (*) by storing the message into the DIV#message
-             	//$('#gw_update_msg').html("");
 	    		$('#gw_update_msg').html(res);
 	    		//erase message after 5 seconds
 	   		 	setTimeout(function() {
@@ -1064,14 +1073,12 @@ var defaultMsgDisplayTimer = 1500;
         msg = '<p><center><font color="green">Basic gateway configuration in progress, wait for finish notification.</font></center></p>';
         $('#gw_update_msg').html(msg);	
         $.post($(this).attr('href'), function (res) { 
-            // handle the response (*) by storing the message into the DIV#message
-            //$('#gw_basic_conf_msg').html(res);
-	     $('#gw_update_msg').html(res);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#gw_update_msg').html("");
-  		window.location.reload();  		
-	    },defaultMsgDisplayTimer);
+	    	$('#gw_update_msg').html(res);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  			$('#gw_update_msg').html("");
+  				window.location.reload();  		
+	    	},defaultMsgDisplayTimer);
         });
     });
       
@@ -1095,16 +1102,13 @@ var defaultMsgDisplayTimer = 1500;
         
         // Send the form data using post
         $.post("process.php", formValues, function(data){
-            // Display the returned data in browser
-            //$("#gw_update_form_msg").html(data);
-	    $('#gw_update_msg').html(data);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#gw_update_msg').html("");
-	    },defaultMsgDisplayTimer);
+	    	$('#gw_update_msg').html(data);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_update_msg').html("");
+	    	},defaultMsgDisplayTimer);
         });
-        $('#gw_download_file_form')[0].reset();    
-        
+        $('#gw_download_file_form')[0].reset();
     });
     
 //==================================
@@ -1114,14 +1118,12 @@ var defaultMsgDisplayTimer = 1500;
         msg = '<p><center><font color="green">Web admin interface update in progress, wait for finish notification.</font></center></p>';
         $('#gw_update_msg').html(msg);	
         $.post($(this).attr('href'), function (res) { 
-            // handle the response (*) by storing the message into the DIV#message
-            //$('#gw_full_update_msg').html(res);
-	     $('#gw_update_msg').html(res);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#gw_update_msg').html("");
-  		window.location.reload();  		
-	    },defaultMsgDisplayTimer);
+	    	$('#gw_update_msg').html(res);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_update_msg').html("");
+  				window.location.reload();  		
+	    	},defaultMsgDisplayTimer);
         });
     });
 
@@ -1133,14 +1135,6 @@ var defaultMsgDisplayTimer = 1500;
 //==================================
 // Reboot
 //==================================
-   /*
-	$('#btn_reboot').click(function() {
-        $.post($(this).attr('href'), function (res) { 
-            // handle the response (*) by storing the message into the DIV#message
-            //$('#msg').html(res);
-        });
-    });
-   */
     
     $("#btn_reboot").click(function(e) {
         e.preventDefault();
@@ -1152,24 +1146,14 @@ var defaultMsgDisplayTimer = 1500;
     });
     
     $("#ok_reboot").click(function() {
-        //$("#confirm_reboot").modal("hide");
-
         $.get("process.php", {reboot: 'true'}, function(data){
-            //alert(data);
-        });
+        	//alert(data);
+    	});
     }); 
   
 //==================================
 // Shutdown
 //==================================
-   /*	
-	$('#btn_shutdown').click(function() {
-        $.post($(this).attr('href'), function (res) { 
-            // handle the response (*) by storing the message into the DIV#message
-            //$('#msg').html(res);
-        });
-    });
-   */  
     
     $("#btn_shutdown").click(function(e) {
         e.preventDefault();
@@ -1182,8 +1166,6 @@ var defaultMsgDisplayTimer = 1500;
     });
     
     $("#ok_shutdown").click(function() {
-        //$("#confirm_shutdown").modal("hide");
-    
         $.get("process.php", {shutdown: 'true'}, function(data){
         	//alert(data);
         });
@@ -1210,7 +1192,7 @@ var defaultMsgDisplayTimer = 1500;
 	$('#btn_low_level_status').click(function() {
         $.post($(this).attr('href'), function (data) { 
            	$('#header_msg').html(data);
-          		 //erase message after 9 seconds
+          	//erase message after 9 seconds
 			setTimeout(function() {
   				$('#header_msg').html("");
 			},9000);
@@ -1222,15 +1204,9 @@ var defaultMsgDisplayTimer = 1500;
 //==================================
 	
 	$('#logout').click(function() {
-		//alert("cool");
         $.post($(this).attr('href'), function (data) { 
            //display message
-	   alert(data);
-           //$('#header_msg').html(data);
-           //erase message after 5 seconds
-	   //		setTimeout(function() {
-  	   //			$('#header_msg').html("");
-	   //		},defaultMsgDisplayTimer);
+	   		alert(data);
         });
     });
 
@@ -1241,7 +1217,6 @@ var defaultMsgDisplayTimer = 1500;
 	
 	$('#btn_hostapd_form_reset').click(function() {	
     	$('#hostapd_form')[0].reset();
-    	//$("#form_msg").html("");
 	$("#system_msg").html("");
     });	
 
@@ -1254,14 +1229,12 @@ var defaultMsgDisplayTimer = 1500;
         
         // Send the form data using post
         $.post("process.php", formValues, function(data){
-            // Display the returned data in browser
-            //$("#form_msg").html(data);
-	    $("#system_msg").html(data);
+	    	$("#system_msg").html(data);
             //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#system_msg').html("");
-  		window.location.reload();
-	     },defaultMsgDisplayTimer);
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+  				window.location.reload();
+	     	},defaultMsgDisplayTimer);
         });
         $('#hostapd_form')[0].reset();
     });
@@ -1272,7 +1245,6 @@ var defaultMsgDisplayTimer = 1500;
 	
 	$('#btn_wificlient_form_reset').click(function() {	
     	$('#wificlient_form')[0].reset();
-    	//$("#form_msg").html("");
 	$("#system_msg").html("");
     });	
 
@@ -1285,16 +1257,13 @@ var defaultMsgDisplayTimer = 1500;
         
         // Send the form data using post
         $.post("process.php", formValues, function(data){
-            // Display the returned data in browser
-            //$("#form_msg").html(data);
-	    $("#system_msg").html(data);
+	    	$("#system_msg").html(data);
             //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#system_msg').html("");
-	     },defaultMsgDisplayTimer);
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+	     	},defaultMsgDisplayTimer);
         });
         $('#wificlient_form')[0].reset();
-        
     });
 
 //==================================
@@ -1317,11 +1286,11 @@ var defaultMsgDisplayTimer = 1500;
 
 	$('#btn_apmodenow').click(function() {
         $.post($(this).attr('href'), function (res) { 
-	     $('#system_msg').html(res);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#system_msg').html("");
-	    },defaultMsgDisplayTimer);
+	    	$('#system_msg').html(res);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+	    	},defaultMsgDisplayTimer);
         });
     });
 
@@ -1329,14 +1298,15 @@ var defaultMsgDisplayTimer = 1500;
 // Setting dongle on
 //==================================
 
+	//obsolete
 	$('#btn_dongle_on').click(function() {
         $.post($(this).attr('href'), function (res) { 
-	     $('#system_msg').html(res);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#system_msg').html("");
-  		window.location.reload();
-	    },defaultMsgDisplayTimer);
+	    	$('#system_msg').html(res);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+  				window.location.reload();
+	    	},defaultMsgDisplayTimer);
         });
     });
 
@@ -1344,29 +1314,48 @@ var defaultMsgDisplayTimer = 1500;
 // Setting dongle off
 //==================================
 
+	//obsolete
 	$('#btn_dongle_off').click(function() {
         $.post($(this).attr('href'), function (res) { 
-	     $('#system_msg').html(res);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#system_msg').html("");
-  		window.location.reload();
-	    },defaultMsgDisplayTimer);
+	    	$('#system_msg').html(res);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+  				window.location.reload();
+	    	},defaultMsgDisplayTimer);
         });
     });
+    
+    //new
+	$('#dongle_on_boot_status_toggle').change(function() {  
+    	dongle = $(this).prop('checked');
+    	
+    	if(dongle) {
+    		$('#loranga_on_boot_status_toggle').prop('checked', false).change();	
+    	} 
+    	
+    	$.get("process.php", {dongle: dongle}, function(data){	
+			$('#system_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});    
     
 //==================================
 // Setting Loranga on
 //==================================
-
+	
+	//obsolete
 	$('#btn_loranga_on').click(function() {
         $.post($(this).attr('href'), function (res) { 
-	     $('#system_msg').html(res);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#system_msg').html("");
-  		window.location.reload();
-	    },defaultMsgDisplayTimer);
+	    	$('#system_msg').html(res);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+  				window.location.reload();
+	    	},defaultMsgDisplayTimer);
         });
     });
 
@@ -1374,29 +1363,48 @@ var defaultMsgDisplayTimer = 1500;
 // Setting Loranga off
 //==================================
 
+	//obsolete
 	$('#btn_loranga_off').click(function() {
         $.post($(this).attr('href'), function (res) { 
-	     $('#system_msg').html(res);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#system_msg').html("");
-  		window.location.reload();
-	    },defaultMsgDisplayTimer);
+	    	$('#system_msg').html(res);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+  			window.location.reload();
+	    	},defaultMsgDisplayTimer);
         });
     });
+    
+    //new
+	$('#loranga_on_boot_status_toggle').change(function() {  
+    	loranga = $(this).prop('checked');	
+    	
+    	if(loranga) {
+    		$('#dongle_on_boot_status_toggle').prop('checked', false).change();	
+    	} 
+    	
+    	$.get("process.php", {loranga: loranga}, function(data){	
+			$('#system_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});    
         
 //==================================
 // Setting Loranga2G
 //==================================
 
+	//obsolete
 	$('#btn_loranga_2G').click(function() {
         $.post($(this).attr('href'), function (res) { 
-	     $('#system_msg').html(res);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#system_msg').html("");
-  		window.location.reload();
-	    },defaultMsgDisplayTimer);
+	    	$('#system_msg').html(res);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+  				window.location.reload();
+	    	},defaultMsgDisplayTimer);
         });
     });
 
@@ -1404,16 +1412,30 @@ var defaultMsgDisplayTimer = 1500;
 // Setting Loranga3G
 //==================================
 
+	//obsolete
 	$('#btn_loranga_3G').click(function() {
         $.post($(this).attr('href'), function (res) { 
-	     $('#system_msg').html(res);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#system_msg').html("");
-  		window.location.reload();
-	    },defaultMsgDisplayTimer);
+	    	$('#system_msg').html(res);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+  				window.location.reload();
+	    	},defaultMsgDisplayTimer);
         });
     });
+    
+    //new
+	$('#loranga_3G_2G_status_toggle').change(function() {  
+    	loranga3G = $(this).prop('checked');	
+    	
+    	$.get("process.php", {loranga3G: loranga3G}, function(data){	
+			$('#system_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});    
                                 
 //==================================
 // Setting profile
@@ -1421,7 +1443,7 @@ var defaultMsgDisplayTimer = 1500;
 	
 	$('#btn_profile_form_reset').click(function() {	
     	$('#profile_form')[0].reset();
-	$("system_msg").html("");
+		$("system_msg").html("");
     });	
 
 	$("#profile_form").submit(function(event){
@@ -1434,14 +1456,13 @@ var defaultMsgDisplayTimer = 1500;
         // Send the form data using post
         $.post("process.php", formValues, function(data){
             // Display the returned data in browser
-	    $("#system_msg").html(data);
+	    	$("#system_msg").html(data);
             //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#system_msg').html("");
-	     },defaultMsgDisplayTimer);
+	    	setTimeout(function() {
+  				$('#system_msg').html("");
+	     	},defaultMsgDisplayTimer);
         });
         $('#profile_form')[0].reset();
-        
     });
 
 //#######################################################################################
@@ -1458,7 +1479,6 @@ var defaultMsgDisplayTimer = 1500;
     $('#td_edit_thingspeak_status').hide();
     $('#td_thingspeak_status_submit').hide();
     $("#thingspeak_status_msg").hide();
-    //$("#div_mode_select").hide();
     
     $('#btn_edit_thingspeak_status').click(function() {	
     	$('#td_edit_thingspeak_status').show();
@@ -1469,19 +1489,29 @@ var defaultMsgDisplayTimer = 1500;
     	thingspeak_status = $( "#thingspeak_status_group input:checked" ).val();
     	
     	$.get("process.php", {thingspeak_status: thingspeak_status}, function(data){	
-			//$('#thingspeak_status_msg').html(data);
-			//$('#thingspeak_status_msg').show();
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
         });
 
         $('#thingspeak_status_value').html(thingspeak_status);
         $('#td_edit_thingspeak_status').hide();
     	$('#td_thingspeak_status_submit').hide();
     });
+    
+	$('#thingspeak_status_toggle').change(function() {  
+    	thingspeak_status = $(this).prop('checked');
+    	
+    	$.get("process.php", {thingspeak_status: thingspeak_status}, function(data){	
+			$('#cloud_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#cloud_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});     
     
 //==================================
 // Setting ThingSpeak write key
@@ -1499,14 +1529,13 @@ var defaultMsgDisplayTimer = 1500;
     	write_key = $('#write_key_input').val();
     	
     	$.get("process.php", {write_key: write_key}, function(data){	
-			//$('#thingspeak_status_msg').html(data);
-			//$('#thingspeak_status_msg').show();
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	    		setTimeout(function() {
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
         });
+        
     	if(write_key != '')
         	$('#write_key_value').html(write_key);
         $('#write_key_input').val("");
@@ -1518,20 +1547,19 @@ var defaultMsgDisplayTimer = 1500;
 // thingspeak source list
 //==================================
 
-$('#td_edit_thingspeak_source_list').hide();
-$('#td_thingspeak_source_list_submit').hide();
+	$('#td_edit_thingspeak_source_list').hide();
+	$('#td_thingspeak_source_list_submit').hide();
 
-$('#btn_edit_thingspeak_source_list').click(function(){
-	$('#td_edit_thingspeak_source_list').show();
-	$('#td_thingspeak_source_list_submit').show();
-});
+	$('#btn_edit_thingspeak_source_list').click(function(){
+		$('#td_edit_thingspeak_source_list').show();
+		$('#td_thingspeak_source_list_submit').show();
+	});
 
-$('#btn_thingspeak_source_list_submit').click(function(){
+	$('#btn_thingspeak_source_list_submit').click(function(){
 		var cloud_key_value = $('#thingspeak_source_list_input').val();
 		var cloud_key_name = "thingspeak_key";
 		var cloud_key = "source_list";
 
-		
 		cloud_key_value = String(cloud_key_value);
 		var buffer = cloud_key_value.split(",");
 		for(x in buffer){
@@ -1546,12 +1574,12 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 		var keyJSON = JSON.stringify(buffer);
 		cloud_key_value = keyJSON;		
 
-	    	$.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
+		$.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
-  				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+			//erase message after 5 seconds
+			setTimeout(function() {
+				$('#cloud_msg').html("");
+			},defaultMsgDisplayTimer);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -1559,7 +1587,7 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 			$('#td_edit_thingspeak_source_list').hide();
 			$('#td_thingspeak_source_list_submit').hide();
 		}
-});
+	});
 
 //==================================
 // Setting ThingSpeak
@@ -1579,16 +1607,13 @@ $('#btn_thingspeak_source_list_submit').click(function(){
         
         // Send the form data using post
         $.post("process.php", formValues, function(data){
-            // Display the returned data in browser
-            //$("#thingspeak_form_msg").html(data);
-	     $('#cloud_msg').html(data);
-	    //erase message after 5 seconds
-	    setTimeout(function() {
-  		$('#cloud_msg').html("");
-	    },defaultMsgDisplayTimer);
+	    	$('#cloud_msg').html(data);
+	    	//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#cloud_msg').html("");
+	    	},defaultMsgDisplayTimer);
         });
         $('#thingspeak_form')[0].reset();
-        
     });
     
 //+++++++++++++++++++++++++++++++++++++
@@ -1598,10 +1623,11 @@ $('#btn_thingspeak_source_list_submit').click(function(){
 //==================================
 // Setting Waziup status
 //==================================
+
+	//obsolete
     $('#td_edit_waziup_status').hide();
     $('#td_waziup_status_submit').hide();
     $("#waziup_status_msg").hide();
-    //$("#div_mode_select").hide();
     
     $('#btn_edit_waziup_status').click(function() {	
     	$('#td_edit_waziup_status').show();
@@ -1612,19 +1638,30 @@ $('#btn_thingspeak_source_list_submit').click(function(){
     	waziup_status = $( "#waziup_status_group input:checked" ).val();
     	
     	$.get("process.php", {waziup_status: waziup_status}, function(data){	
-			//$('#waziup_status_msg').html(data);
-			//$('#waziup_status_msg').show();
 			$('#cloud_msg').html(data);
-	   		 //erase message after 5 seconds
-	    		setTimeout(function() {
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
   				$('#cloud_msg').html("");
-	    		},defaultMsgDisplayTimer);
+	    	},defaultMsgDisplayTimer);
         });
 
         $('#waziup_status_value').html(waziup_status);
         $('#td_edit_waziup_status').hide();
     	$('#td_waziup_status_submit').hide();
     });
+    
+    //new
+	$('#waziup_status_toggle').change(function() {  
+    	waziup_status = $(this).prop('checked');
+    	
+    	$.get("process.php", {waziup_status: waziup_status}, function(data){	
+			$('#cloud_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#cloud_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	}); 
 
 //==================================
 // Setting Waziup project name
@@ -1642,13 +1679,11 @@ $('#btn_thingspeak_source_list_submit').click(function(){
     	project = $('#project_input').val();
     	
     	$.get("process.php", {project_name: project}, function(data){	
-			//$('#waziup_status_msg').html(data);
-			//$('#waziup_status_msg').show();
 			$('#cloud_msg').html(data);
-	   		 //erase message after 5 seconds
-	    		setTimeout(function() {
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
   				$('#cloud_msg').html("");
-	    		},defaultMsgDisplayTimer);
+	    	},defaultMsgDisplayTimer);
         });
     	
 		if(project !='') {	
@@ -1675,13 +1710,11 @@ $('#btn_thingspeak_source_list_submit').click(function(){
     	org = $('#organization_input').val();
     	
     	$.get("process.php", {organization_name: org}, function(data){	
-			//$('#waziup_status_msg').html(data);
-			//$('#waziup_status_msg').show();
 			$('#cloud_msg').html(data);
-	   		 //erase message after 5 seconds
-	    		setTimeout(function() {
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
   				$('#cloud_msg').html("");
-	    		},defaultMsgDisplayTimer);
+	    	},defaultMsgDisplayTimer);
         });
     	
 		if(org !='') {	
@@ -1708,14 +1741,12 @@ $('#btn_thingspeak_source_list_submit').click(function(){
     	serv = $('#service_tree_input').val();
     	//alert(serv);
     	$.get("process.php", {service_tree: serv}, function(data){	
-			//$('#waziup_status_msg').html(data);
-			//$('#waziup_status_msg').show();
 			$('#cloud_msg').html(data);
-	   		 //erase message after 5 seconds
-	    		setTimeout(function() {
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
   				$('#cloud_msg').html("");
   				window.location.reload();
-	    		},defaultMsgDisplayTimer);
+	    	},defaultMsgDisplayTimer);
         });
     
     	// service_tree can be empty	
@@ -1740,34 +1771,31 @@ $('#btn_thingspeak_source_list_submit').click(function(){
     $('#username_submit').click(function() {	
     	username = $('#username_input').val();
     	
-	if (! /^[A-Za-z0-9]{1,}$/.test(username)){
-		$("#cloud_msg").html('<p><center><font color="red">Enter username where only letters and numbers [A-Za-z0-9] are allowed</font></center></p>');
-            	//erase message after 2 seconds
-	   			setTimeout(function() {
-  					$('#cloud_msg').html("");
-	     			},defaultMsgDisplayTimer);
-	}
-	else{    	
-    	$.get("process.php", {username: username}, function(data){	
-			//$('#waziup_status_msg').html(data);
-			//$('#waziup_status_msg').show();
-			$('#cloud_msg').html(data);
-	   		 //erase message after 5s
-	    		setTimeout(function() {
-  				$('#cloud_msg').html("");
-  				window.location.reload();
-	    		},defaultMsgDisplayTimer);
-        });
-    	
-		if(username == '')
-			username = "guest"		
-        
-        $('#username_value').html(username);    
-        $('#username_input').val("");
-        $('#td_edit_username').hide();
-    	$('#td_username_submit').hide();
-    }
-    
+		if (! /^[A-Za-z0-9]{1,}$/.test(username)){
+			$("#cloud_msg").html('<p><center><font color="red">Enter username where only letters and numbers [A-Za-z0-9] are allowed</font></center></p>');
+			//erase message after 2 seconds
+			setTimeout(function() {
+				$('#cloud_msg').html("");
+			 },defaultMsgDisplayTimer);
+		}
+		else{    	
+			$.get("process.php", {username: username}, function(data){	
+				$('#cloud_msg').html(data);
+				//erase message after 5s
+				setTimeout(function() {
+					$('#cloud_msg').html("");
+					window.location.reload();
+				},defaultMsgDisplayTimer);
+			});
+		
+			if(username == '')
+				username = "guest"		
+		
+			$('#username_value').html(username);    
+			$('#username_input').val("");
+			$('#td_edit_username').hide();
+			$('#td_username_submit').hide();
+		}
     });
 
 //==================================
@@ -1784,53 +1812,49 @@ $('#btn_thingspeak_source_list_submit').click(function(){
     $('#password_submit').click(function() {	
     	password = $('#password_input').val();
     	
-	if (! /^[A-Za-z0-9]{1,}$/.test(password)){
-		$("#cloud_msg").html('<p><center><font color="red">Enter password where only letters and numbers [A-Za-z0-9] are allowed</font></center></p>');
-            	//erase message after 2 seconds
-	   			setTimeout(function() {
-  					$('#cloud_msg').html("");
-	     			},defaultMsgDisplayTimer);
-	}
-	else{    	
-    	$.get("process.php", {password: password}, function(data){	
-			//$('#waziup_status_msg').html(data);
-			//$('#waziup_status_msg').show();
-			$('#cloud_msg').html(data);
-	   		 //erase message after 5s
-	    		setTimeout(function() {
-  				$('#cloud_msg').html("");
-  				window.location.reload();
-	    		},defaultMsgDisplayTimer);
-        });
-    	
-		if(password !='')		
-        	$('#password_value').html("***********");
-        	
-        $('#password_input').val("");
-        $('#td_edit_password').hide();
-    	$('#td_password_submit').hide();
-    	
-    }
-    
+		if (! /^[A-Za-z0-9]{1,}$/.test(password)){
+			$("#cloud_msg").html('<p><center><font color="red">Enter password where only letters and numbers [A-Za-z0-9] are allowed</font></center></p>');
+			//erase message after 2 seconds
+			setTimeout(function() {
+				$('#cloud_msg').html("");
+			 },defaultMsgDisplayTimer);
+		}
+		else{    	
+			$.get("process.php", {password: password}, function(data){	
+				$('#cloud_msg').html(data);
+				//erase message after 5s
+				setTimeout(function() {
+					$('#cloud_msg').html("");
+					window.location.reload();
+				},defaultMsgDisplayTimer);
+			});
+		
+			if(password !='')		
+				$('#password_value').html("***********");
+			
+			$('#password_input').val("");
+			$('#td_edit_password').hide();
+			$('#td_password_submit').hide();
+		
+		}
     });    
     
 //==================================
 // Waziup source list
 //==================================
-$('#td_edit_waziup_source_list').hide();
-$('#td_waziup_source_list_submit').hide();
+	$('#td_edit_waziup_source_list').hide();
+	$('#td_waziup_source_list_submit').hide();
 
-$('#btn_edit_waziup_source_list').click(function(){
-	$('#td_edit_waziup_source_list').show();
-	$('#td_waziup_source_list_submit').show();
-});
+	$('#btn_edit_waziup_source_list').click(function(){
+		$('#td_edit_waziup_source_list').show();
+		$('#td_waziup_source_list_submit').show();
+	});
 
-$('#btn_waziup_source_list_submit').click(function(){
+	$('#btn_waziup_source_list_submit').click(function(){
 		var cloud_key_value = $('#waziup_source_list_input').val();
 		var cloud_key_name = "waziup_key";
 		var cloud_key = "source_list";
 
-		
 		cloud_key_value = String(cloud_key_value);
 		var buffer = cloud_key_value.split(",");
 		for(x in buffer){
@@ -1845,12 +1869,12 @@ $('#btn_waziup_source_list_submit').click(function(){
 		var keyJSON = JSON.stringify(buffer);
 		cloud_key_value = keyJSON;		
 
-	    	$.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
+		$.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
-  				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+			//erase message after 5 seconds
+			setTimeout(function() {
+				$('#cloud_msg').html("");
+			},defaultMsgDisplayTimer);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -1876,10 +1900,10 @@ $('#btn_waziup_source_list_submit').click(function(){
     	
     	$.get("process.php", {visibility:visibility}, function(data){	
 			$('#cloud_msg').html(data);
-	   		 //erase message after 5 seconds
-	    		setTimeout(function() {
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
   				$('#cloud_msg').html("");
-	    		},defaultMsgDisplayTimer);
+	    	},defaultMsgDisplayTimer);
         });
 
         $('#visibility_value').html(visibility);
@@ -1894,6 +1918,8 @@ $('#btn_waziup_source_list_submit').click(function(){
 //----------------------------------
 // Setting Cloud No Internet status
 //----------------------------------
+
+	//obsolete
 	$('#td_edit_cloudNoInternet_status').hide();
 	$('#cloudNoInternet_status_msg').hide();
 	$('#td_cloudNoInternet_status_submit').hide();
@@ -1904,20 +1930,33 @@ $('#btn_waziup_source_list_submit').click(function(){
 	});
 	
 	$('#btn_cloudNoInternet_status_submit').click(function(){
-	    	var cloud_status = $( "#cloudNoInternet_status_group input:checked" ).val();
-	    	var cloud_name = "cloudnointernet_conf";
-	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
-				$('#cloud_msg').html(data);
-		    		//erase message after 5 seconds
-		   		 setTimeout(function() {
-	  				$('#cloud_msg').html("");
-		   		 },defaultMsgDisplayTimer);
+		var cloud_status = $( "#cloudNoInternet_status_group input:checked" ).val();
+		var cloud_name = "cloudnointernet_conf";
+		$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+			$('#cloud_msg').html(data);
+			//erase message after 5 seconds
+			setTimeout(function() {
+				$('#cloud_msg').html("");
+			},defaultMsgDisplayTimer);
 		});
 	   	
 		$('#cloudNoInternet_status_value').html(cloud_status);
 		$('#td_edit_cloudNoInternet_status').hide();
 	    $('#td_cloudNoInternet_status_submit').hide();
 	});
+	
+	//new
+	$('#nointernet_status_toggle').change(function() {  
+    	var cloud_status = $(this).prop('checked');
+    	var cloud_name = "cloudnointernet_conf";
+    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+			$('#cloud_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#cloud_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});	
 
 //+++++++++++++++++++++++++++++++++++++
 // CLOUD GPS
@@ -1927,6 +1966,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 // Setting Cloud Gps File status
 //==================================
 
+	//obsolete
 	$('#td_edit_cloudGpsFile_status').hide();
 	$('#td_cloudGpsFile_status_submit').hide();
 	
@@ -1936,20 +1976,33 @@ $('#btn_waziup_source_list_submit').click(function(){
 	});
 	
 	$('#btn_cloudGpsFile_status_submit').click(function(){
-	    	var cloud_status = $( "#cloudGpsFile_status_group input:checked" ).val();
-	    	var cloud_name = "cloudgpsfile_conf";
-	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
-				$('#cloud_msg').html(data);
-		    		//erase message after 5 seconds
-		   		 setTimeout(function() {
-	  				$('#cloud_msg').html("");
-		   		 },defaultMsgDisplayTimer);
+		var cloud_status = $( "#cloudGpsFile_status_group input:checked" ).val();
+		var cloud_name = "cloudgpsfile_conf";
+		$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+			$('#cloud_msg').html(data);
+			//erase message after 5 seconds
+			setTimeout(function() {
+				$('#cloud_msg').html("");
+			},defaultMsgDisplayTimer);
 		});
 	    	
 		$('#cloudGpsFile_status_value').html(cloud_status);
 		$('#td_edit_cloudGpsFile_status').hide();
 	    $('#td_cloudGpsFile_status_submit').hide();
 	});
+	
+	//new
+	$('#gpsfile_status_toggle').change(function() {  
+    	var cloud_status = $(this).prop('checked');
+    	var cloud_name = "cloudgpsfile_conf";
+    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+			$('#cloud_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#cloud_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});	
 	
 //==================================
 // Setting Cloud Gps File project name
@@ -1962,17 +2015,16 @@ $('#btn_waziup_source_list_submit').click(function(){
 		$('#td_cloudGpsFile_project_name_submit').show();
 	});
 
-
  	$('#btn_cloudGpsFile_project_name_submit').click(function(){
 		var cloud_key_value = $('#cloudGpsFile_project_name_input').val();
 		var cloud_key_name = "gpsfile_key";
 		var cloud_key = "project_name";
-	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+		$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
-  				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+			//erase message after 5 seconds
+			setTimeout(function() {
+				$('#cloud_msg').html("");
+			},defaultMsgDisplayTimer);
 		});
 	    	
 		if(cloud_key_value  != ''){
@@ -1997,15 +2049,15 @@ $('#btn_waziup_source_list_submit').click(function(){
 		var cloud_key_value = $('#cloudGpsFile_organization_name_input').val();
 		var cloud_key_name = "gpsfile_key";
 		var cloud_key = "organization_name";
-	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+		$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
-  				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+			//erase message after 5 seconds
+		 	setTimeout(function() {
+				$('#cloud_msg').html("");
+		 	},defaultMsgDisplayTimer);
 		});
 	    	
-		if(cloud_key_value  != ''){
+		if(cloud_key_value != ''){
 			$('#cloudGpsFile_project_name_value').html(cloud_key_value );
 			$('#td_edit_cloudGpsFile_organization_name').hide();
 			$('#td_cloudGpsFile_organization_name_submit').hide();
@@ -2026,15 +2078,15 @@ $('#btn_waziup_source_list_submit').click(function(){
 		var cloud_key_value = $('#cloudGpsFile_sensor_name_input').val();
 		var cloud_key_name = "gpsfile_key";
 		var cloud_key = "sensor_name";
-	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+	    $.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
 		});
 	    	
-		if(cloud_key_value  != ''){
+		if(cloud_key_value != ''){
 			$('#cloudGpsFile_sensor_name_value').html(cloud_key_value );
 			$('#td_edit_cloudGpsFile_sensor_name').hide();
 			$('#td_cloudGpsFile_sensor_name_submit').hide();
@@ -2070,15 +2122,15 @@ $('#btn_waziup_source_list_submit').click(function(){
 		var keyJSON = JSON.stringify(buffer);
 		cloud_key_value = keyJSON;		
 
-	    	$.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
+	    $.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
 		});
 	    	
-		if(cloud_key_value  != ''){
+		if(cloud_key_value != ''){
 			$('#cloudGpsFile_source_list_value').html(cloud_key_value);
 			$('#td_edit_cloudGpsFile_source_list').hide();
 			$('#td_cloudGpsFile_source_list_submit').hide();
@@ -2106,15 +2158,15 @@ $('#btn_waziup_source_list_submit').click(function(){
 			$('#cloud_msg').html("It is not a number !");
 			return -1; 
 		}
-	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+	    $.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
 		});
 	    	
-		if(cloud_key_value  != ''){
+		if(cloud_key_value != ''){
 			$('#cloudGpsFile_active_interval_value').html(cloud_key_value );
 			$('#td_edit_cloudGpsFile_active_interval').hide();
 			$('#td_cloudGpsFile_active_interval_submit').hide();
@@ -2137,15 +2189,15 @@ $('#btn_waziup_source_list_submit').click(function(){
 		var cloud_key_name = "gpsfile_key";
 		var cloud_key = "sms";
 		
-	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+	    $.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
 		});
 	    	
-		if(cloud_key_value  != ''){
+		if(cloud_key_value != ''){
 			if(cloud_key_value === "true"){
 				$('#cloudGpsFile_sms_value').html("Enable");
 			}else{
@@ -2172,15 +2224,15 @@ $('#btn_waziup_source_list_submit').click(function(){
 		var cloud_key_name = "gpsfile_key";
 		var cloud_key = "sms";
 		
-	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+	    $.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
 		});
 	    	
-		if(cloud_key_value  != ''){
+		if(cloud_key_value != ''){
 			$('#cloudGpsFile_pin_value').html(cloud_key_value );
 			$('#td_edit_cloudGpsFile_pin').hide();
 			$('#td_cloudGpsFile_pin_submit').hide();
@@ -2219,15 +2271,15 @@ $('#btn_waziup_source_list_submit').click(function(){
 		var keyJSON = JSON.stringify(buffer);
 		cloud_key_value = keyJSON;
 
-	    	$.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : cloud_key_value}, function(data){	
+	    $.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : cloud_key_value}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
 		});
 	    	
-		if(cloud_key_value  != ''){
+		if(cloud_key_value != ''){
 			$('#cloudGpsFile_contacts_value').html(cloud_key_value );
 			$('#td_edit_cloudGpsFile_contacts').hide();
 			$('#td_cloudGpsFile_contacts_submit').hide();
@@ -2242,6 +2294,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 // Setting Cloud MQTT status
 //==================================
 
+	//obsolete
 	$('#td_edit_cloudMQTT_status').hide();
 	$('#td_cloudMQTT_status_submit').hide();
 
@@ -2251,22 +2304,35 @@ $('#btn_waziup_source_list_submit').click(function(){
 	});
 	
 	$('#btn_cloudMQTT_status_submit').click(function(){
-	    	var cloud_status = $( "#cloudMQTT_status_group input:checked" ).val();
-	    	var cloud_name = "cloudmqtt_conf";
-	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
-				$('#cloud_msg').html(data);
-		    		//erase message after 5 seconds
-		   		 setTimeout(function() {
-	  				$('#cloud_msg').html("");
-		   		 },defaultMsgDisplayTimer);
+	    var cloud_status = $( "#cloudMQTT_status_group input:checked" ).val();
+	    var cloud_name = "cloudmqtt_conf";
+	    $.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+			$('#cloud_msg').html(data);
+		    //erase message after 5 seconds
+		   	setTimeout(function() {
+	  			$('#cloud_msg').html("");
+		   	},defaultMsgDisplayTimer);
 		});
 	    	
 		if(cloud_status != ''){
 			$('#cloudMQTT_status_value').html(cloud_status);
 			$('#td_edit_cloudMQTT_status').hide();
-	    		$('#td_cloudMQTT_status_submit').hide();
+	    	$('#td_cloudMQTT_status_submit').hide();
 		}
 	});
+	
+	//new
+	$('#mqtt_status_toggle').change(function() {  
+    	var cloud_status = $(this).prop('checked');
+    	var cloud_name = "cloudmqtt_conf";
+    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+			$('#cloud_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#cloud_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});	
 	
 //==================================
 //	Cloud MQTT server
@@ -2279,26 +2345,24 @@ $('#btn_waziup_source_list_submit').click(function(){
 		$('#td_cloudMQTT_MQTT_server_submit').show();
 	});
 
-
  	$('#btn_cloudMQTT_MQTT_server_submit').click(function(){
 		var cloud_key_value = $('#cloudMQTT_MQTT_server_input').val();
 		var cloud_key_name = "mqtt_key";
 		var cloud_key = "MQTT_server";
-	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+	    $.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
 		});
 	    	
-		if(cloud_key_value  != ''){
+		if(cloud_key_value != ''){
 			$('#td_cloudMQTT_MQTT_server_value').html(cloud_key_value );
 			$('#td_edit_cloudMQTT_MQTT_server').hide();
 			$('#td_cloudMQTT_MQTT_server_submit').hide();
 		}	
 	});
-
 
 //==================================
 //	Cloud MQTT project name
@@ -2311,20 +2375,19 @@ $('#btn_waziup_source_list_submit').click(function(){
 		$('#td_cloudMQTT_project_name_submit').show();
 	});
 
-
  	$('#btn_cloudMQTT_project_name_submit').click(function(){
 		var cloud_key_value = $('#cloudMQTT_project_name_input').val();
 		var cloud_key_name = "mqtt_key";
 		var cloud_key = "project_name";
-	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+	    $.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
 		});
 	    	
-		if(cloud_key_value  != ''){
+		if(cloud_key_value != ''){
 			$('#td_cloudMQTT_project_name_value').html(cloud_key_value );
 			$('#td_edit_cloudMQTT_project_name').hide();
 			$('#td_cloudMQTT_project_name_submit').hide();
@@ -2332,7 +2395,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	});
 
 //==================================
-//#	Cloud MQTT oraganization name
+//#	Cloud MQTT organization name
 //==================================
 	$('#td_edit_cloudMQTT_organization_name').hide();
 	$('#td_cloudMQTT_organization_name_submit').hide();
@@ -2342,20 +2405,19 @@ $('#btn_waziup_source_list_submit').click(function(){
 		$('#td_cloudMQTT_organization_name_submit').show();
 	});
 
-
  	$('#btn_cloudMQTT_organization_name_submit').click(function(){
 		var cloud_key_value = $('#cloudMQTT_organization_name_input').val();
 		var cloud_key_name = "mqtt_key";
 		var cloud_key = "organization_name";
-	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+	    $.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
 		});
 	    	
-		if(cloud_key_value  != ''){
+		if(cloud_key_value != ''){
 			$('#td_cloudMQTT_organization_name_value').html(cloud_key_value );
 			$('#td_edit_cloudMQTT_organization_name').hide();
 			$('#td_cloudMQTT_organization_name_submit').hide();
@@ -2363,7 +2425,7 @@ $('#btn_waziup_source_list_submit').click(function(){
 	});
 
 //==================================
-//	Cloud MQTT sensor  name
+//	Cloud MQTT sensor name
 //==================================
 	$('#td_edit_cloudMQTT_sensor_name').hide();
 	$('#td_cloudMQTT_sensor_name_submit').hide();
@@ -2378,15 +2440,15 @@ $('#btn_waziup_source_list_submit').click(function(){
 		var cloud_key_value = $('#cloudMQTT_sensor_name_input').val();
 		var cloud_key_name = "mqtt_key";
 		var cloud_key = "sensor_name";
-	    	$.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+	    $.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
 		});
 	    	
-		if(cloud_key_value  != ''){
+		if(cloud_key_value != ''){
 			$('#td_cloudMQTT_sensor_name_value').html(cloud_key_value );
 			$('#td_edit_cloudMQTT_sensor_name').hide();
 			$('#td_cloudMQTT_sensor_name_submit').hide();
@@ -2396,20 +2458,19 @@ $('#btn_waziup_source_list_submit').click(function(){
 //==================================
 //	Cloud MQTT source list
 //==================================
-$('#td_edit_cloudMQTT_source_list').hide();
-$('#td_cloudMQTT_source_list_submit').hide();
+	$('#td_edit_cloudMQTT_source_list').hide();
+	$('#td_cloudMQTT_source_list_submit').hide();
 
-$('#btn_edit_cloudMQTT_source_list').click(function(){
-	$('#td_edit_cloudMQTT_source_list').show();
-	$('#td_cloudMQTT_source_list_submit').show();
-});
+	$('#btn_edit_cloudMQTT_source_list').click(function(){
+		$('#td_edit_cloudMQTT_source_list').show();
+		$('#td_cloudMQTT_source_list_submit').show();
+	});
 
-$('#btn_cloudMQTT_source_list_submit').click(function(){
+	$('#btn_cloudMQTT_source_list_submit').click(function(){
 		var cloud_key_value = $('#cloudMQTT_source_list_input').val();
 		var cloud_key_name = "mqtt_key";
 		var cloud_key = "source_list";
 
-		
 		cloud_key_value = String(cloud_key_value);
 		var buffer = cloud_key_value.split(",");
 		for(x in buffer){
@@ -2424,15 +2485,15 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 		var keyJSON = JSON.stringify(buffer);
 		cloud_key_value = keyJSON;		
 
-	    	$.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
+	    $.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
 			$('#cloud_msg').html(data);
-	    		//erase message after 5 seconds
-	   		 setTimeout(function() {
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
   				$('#cloud_msg').html("");
-	   		 },defaultMsgDisplayTimer);
+	   		},defaultMsgDisplayTimer);
 		});
 	    	
-		if(cloud_key_value  != ''){
+		if(cloud_key_value != ''){
 			$('#td_cloudMQTT_source_list_value').html(cloud_key_value);
 			$('#td_edit_cloudMQTT_source_list').hide();
 			$('#td_cloudMQTT_source_list_submit').hide();
@@ -2447,7 +2508,8 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 //==================================
 // Setting Cloud Node Red status
 //==================================
-
+	
+	//obsolete
 	$('#td_edit_cloudNodeRed_status').hide();
 	$('#td_cloudNodeRed_status_submit').hide();
 	
@@ -2457,20 +2519,33 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 	});
 	
 	$('#btn_cloudNodeRed_status_submit').click(function(){
-	    	var cloud_status = $( "#cloudNodeRed_status_group input:checked" ).val();
-	    	var cloud_name = "cloudnodered_conf";
-	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
-				$('#cloud_msg').html(data);
-		    		//erase message after 5 seconds
-		   		 setTimeout(function() {
-	  				$('#cloud_msg').html("");
-		   		 },defaultMsgDisplayTimer);
+		var cloud_status = $( "#cloudNodeRed_status_group input:checked" ).val();
+		var cloud_name = "cloudnodered_conf";
+		$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+			$('#cloud_msg').html(data);
+			//erase message after 5 seconds
+			setTimeout(function() {
+				$('#cloud_msg').html("");
+			},defaultMsgDisplayTimer);
 		});
 	    	
 		$('#cloudNodeRed_status_value').html(cloud_status);
 		$('#td_edit_cloudNodeRed_status').hide();
 	    $('#td_cloudNodeRed_status_submit').hide();
 	});
+	
+	//new
+	$('#nodered_status_toggle').change(function() {  
+    	var cloud_status = $(this).prop('checked');
+    	var cloud_name = "cloudnodered_conf";
+    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+			$('#cloud_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#cloud_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});	
 
 //+++++++++++++++++++++++++++++++++++++
 // CLOUD TTN
@@ -2480,6 +2555,7 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 // Setting Cloud TTN status
 //==================================
 
+	//obsolete
 	$('#td_edit_cloudTTN_status').hide();
 	$('#td_cloudTTN_status_submit').hide();
 	
@@ -2489,20 +2565,33 @@ $('#btn_cloudMQTT_source_list_submit').click(function(){
 	});
 	
 	$('#btn_cloudTTN_status_submit').click(function(){
-	    	var cloud_status = $( "#cloudTTN_status_group input:checked" ).val();
-	    	var cloud_name = "cloudttn_conf";
-	    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
-				$('#cloud_msg').html(data);
-		    		//erase message after 5 seconds
-		   		 setTimeout(function() {
-	  				$('#cloud_msg').html("");
-		   		 },defaultMsgDisplayTimer);
+		var cloud_status = $( "#cloudTTN_status_group input:checked" ).val();
+		var cloud_name = "cloudttn_conf";
+		$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+			$('#cloud_msg').html(data);
+			//erase message after 5 seconds
+			setTimeout(function() {
+				$('#cloud_msg').html("");
+			},defaultMsgDisplayTimer);
 		});
 	    	
 		$('#cloudTTN_status_value').html(cloud_status);
 		$('#td_edit_cloudTTN_status').hide();
 	    $('#td_cloudTTN_status_submit').hide();
 	});
+    
+    //new
+	$('#ttn_status_toggle').change(function() {  
+    	var cloud_status = $(this).prop('checked');
+    	var cloud_name = "cloudttn_conf";
+    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){	
+			$('#cloud_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#cloud_msg').html("");
+	    	},defaultMsgDisplayTimer);
+        });
+  	});	
 	
 //End of main block
 });

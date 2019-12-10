@@ -54,8 +54,15 @@
 							}				 
 						?>					
 					</td>
-					<td id="cloudMQTT_status_value"><?php cloud_status($clouds, "python CloudMQTT.py"); ?></td>
-					<td align="right"><button id="btn_edit_cloudMQTT_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+					
+					<td id="cloudMQTT_status_value"></td>
+					
+					<td align="right">
+					<input type="checkbox" id="mqtt_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if(get_cloud_status($clouds, "python CloudMQTT.py")) echo "checked";?>>
+					</td>
+			
+					<!-- <td align="right"><button id="btn_edit_cloudMQTT_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+					
 					<td id="td_edit_cloudMQTT_status">
 						<div id="div_cloudMQTT_status_options" class="form-group">
 							<div class="radio">

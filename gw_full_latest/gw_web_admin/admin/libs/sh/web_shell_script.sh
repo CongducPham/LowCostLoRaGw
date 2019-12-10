@@ -36,7 +36,7 @@ then
 	# update paboost
 	###################################
 
-	if [ $2 == "Enabled" ]
+	if [ $2 == "true" ]
 	then
 		sudo sed -i 's/#*CFLAGS/CFLAGS/g' /home/pi/lora_gateway/radio.makefile	
 	else
@@ -494,7 +494,7 @@ fi
 if [ "$1" = "dongle_on" ]
 then
 	###################################
-	# configure wifi client
+	# configure dongle
 	###################################
 	cd /home/pi/lora_gateway/3GDongle/loranga
 	./disable-loranga-internet-on-boot.sh	
@@ -505,7 +505,7 @@ fi
 if [ "$1" = "dongle_off" ]
 then
 	###################################
-	# configure wifi client
+	# configure dongle
 	###################################
 	cd /home/pi/lora_gateway/3GDongle
 	./disable-3GDongle-internet-on-boot.sh
@@ -514,7 +514,7 @@ fi
 if [ "$1" = "loranga_on" ]
 then
 	###################################
-	# configure wifi client
+	# configure loranga
 	###################################
 	cd /home/pi/lora_gateway/3GDongle
 	./disable-3GDongle-internet-on-boot.sh	
@@ -525,7 +525,7 @@ fi
 if [ "$1" = "loranga_off" ]
 then
 	###################################
-	# configure wifi client
+	# configure loranga
 	###################################
 	cd /home/pi/lora_gateway/3GDongle/loranga
 	./disable-loranga-internet-on-boot.sh
@@ -534,7 +534,7 @@ fi
 if [ "$1" = "loranga_2G" ]
 then
 	###################################
-	# configure wifi client
+	# configure loranga
 	###################################
 	cd /home/pi/lora_gateway/3GDongle/loranga
 	rm -rf loranga3G.txt
@@ -543,7 +543,7 @@ fi
 if [ "$1" = "loranga_3G" ]
 then
 	###################################
-	# configure wifi client
+	# configure loranga
 	###################################
 	cd /home/pi/lora_gateway/3GDongle/loranga
 	./select-loranga3G-board.sh

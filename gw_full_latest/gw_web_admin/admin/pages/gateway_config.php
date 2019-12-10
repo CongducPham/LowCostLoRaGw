@@ -237,27 +237,33 @@ require 'header.php';
     												
     												if ($current_paboost=='')
 													{
-    													echo "Disabled";
+    													//echo "Disabled";
     													$current_paboost=false;    
 													}
 													else {
-   					 									echo "Enabled";
+   					 									//echo "Enabled";
    					 									$current_paboost=true;   
 													}
-    											?>    										
+    											?>  										
     										</td>
-    										<td align="right"><button id="btn_edit_paboost" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+    										
+											<td align="right">
+											<input type="checkbox" id="paboost_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($current_paboost) echo "checked";?>>
+											</td>
+			
+											<!-- <td align="right"><button id="btn_edit_paboost" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+											
    										   	<td id="td_edit_paboost">
    										    	<div id="div_paboost_options" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
                                            			<fieldset id="paboost_group" >
                                                 		<label>
-                                                    		<input type="radio" name="paboost_group" id="paboost_true" value="Enabled" <?php if($current_paboost) echo "checked"?> >Enabled
+                                                    		<input type="radio" name="paboost_group" id="paboost_true" value="Enabled" <?php if($current_paboost) echo "checked";?> >Enabled
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="paboost_group" id="paboost_false" value="Disabled" <?php if(!$current_paboost) echo "checked"?> >Disabled
+                                                    		<input type="radio" name="paboost_group" id="paboost_false" value="Disabled" <?php if(!$current_paboost) echo "checked";?> >Disabled
                                                 		</label>
                                             		</div>
                                         		</div>
@@ -525,28 +531,22 @@ require 'header.php';
    										   
     										   <tr>
    										   		<td>wappkey</td>
-   										   		<td id="wappkey_value">
-   										   		<?php 
-    												if($gw_conf['wappkey'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-   										   		?>
-   										   		</td>
-   										   		<td align="right" ><button id="btn_edit_wappkey" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   		<td id="wappkey_value"></td>
+												<td align="right">
+												<input type="checkbox" id="wappkey_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($gw_conf['wappkey']) echo "checked";?>>
+												</td>
+												<!-- <td align="right" ><button id="btn_edit_wappkey" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+   										   		
    										   		<td id="td_edit_wappkey">
    										   			<div id="div_wappkey" class="form-group">
    										   				<div class="radio">
    										   				<fieldset id="wappkey_group" >	
    										   				<label>
-   										   					<input type="radio" name="wappkey_group" id="wappkey_true" value="true" <?php if($gw_conf['wappkey']) echo "checked"?> >True
+   										   					<input type="radio" name="wappkey_group" id="wappkey_true" value="true" <?php if($gw_conf['wappkey']) echo "checked";?> >True
    										   				</label>
    										   				</br>
    										   				<label>
-   										   					<input type="radio" name="wappkey_group" id="wappkey_false" value="false" <?php if(!$gw_conf['wappkey']) echo "checked"?> >False
+   										   					<input type="radio" name="wappkey_group" id="wappkey_false" value="false" <?php if(!$gw_conf['wappkey']) echo "checked";?> >False
    										   				</label>
    										   				</fieldset>
    										   				</div>
@@ -559,28 +559,22 @@ require 'header.php';
    										        										   
    										   <tr>
    										   		<td>raw format</td>
-   										   		<td id="raw_value">
-   										   		<?php 
-    												if($gw_conf['raw'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-   										   		?>
-   										   		</td>
-   										   		<td align="right" ><button id="btn_edit_raw" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   		<td id="raw_value"></td>   										   		
+												<td align="right">
+												<input type="checkbox" id="raw_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($gw_conf['raw']) echo "checked";?>>
+												</td>
+												<!-- <td align="right" ><button id="btn_edit_raw" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+												
    										   		<td id="td_edit_raw">
    										   			<div id="div_edit_raw" class="form-group">
    										   				<div class="radio">
    										   				<fieldset id="raw_group" >	
    										   				<label>
-   										   					<input type="radio" name="raw_group" id="raw_true" value="true" <?php if($gw_conf['raw']) echo "checked"?> >True
+   										   					<input type="radio" name="raw_group" id="raw_true" value="true" <?php if($gw_conf['raw']) echo "checked";?> >True
    										   				</label>
    										   				</br>
    										   				<label>
-   										   					<input type="radio" name="raw_group" id="raw_false" value="false" <?php if(!$gw_conf['raw']) echo "checked"?> >False
+   										   					<input type="radio" name="raw_group" id="raw_false" value="false" <?php if(!$gw_conf['raw']) echo "checked";?> >False
    										   				</label>
    										   				</fieldset>
    										   				</div>
@@ -593,29 +587,23 @@ require 'header.php';
 
    										   <tr>
     									    <td>aes_lorawan</td>
-    										<td id="aes_lorawan_value">
-    											<?php
-    												if($gw_conf['aes_lorawan'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-    											?>
-    										</td>
-    										<td align="right"><button id="btn_edit_aes_lorawan" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+    										<td id="aes_lorawan_value"></td>
+											<td align="right">
+											<input type="checkbox" id="aes_lorawan_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($gw_conf['aes_lorawan']) echo "checked";?>>
+											</td>
+											<!-- <td align="right"><button id="btn_edit_aes_lorawan" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+												
    										   	<td id="td_edit_aes_lorawan">
    										    	<div id="div_edit_aes_lorawan" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
                                            			<fieldset id="aes_lorawan_group" >
                                                 		<label>
-                                                    		<input type="radio" name="aes_lorawan_group" id="aes_lorawan_true" value="true" <?php if($gw_conf['aes_lorawan']) echo "checked"?> >True
+                                                    		<input type="radio" name="aes_lorawan_group" id="aes_lorawan_true" value="true" <?php if($gw_conf['aes_lorawan']) echo "checked";?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="aes_lorawan_group" id="aes_lorawan_false" value="false" <?php if(!$gw_conf['aes_lorawan']) echo "checked"?> >False
+                                                    		<input type="radio" name="aes_lorawan_group" id="aes_lorawan_false" value="false" <?php if(!$gw_conf['aes_lorawan']) echo "checked";?> >False
                                                 		</label>
                                                 		</fieldset>
                                             		</div>
@@ -628,29 +616,23 @@ require 'header.php';
    										      										   
    										   <tr>
     									    <td>aes</td>
-    										<td id="aes_value">
-    											<?php
-    												if($gw_conf['aes'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-    											?>
-    										</td>
-    										<td align="right"><button id="btn_edit_aes" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+    										<td id="aes_value"></td>
+											<td align="right">
+											<input type="checkbox" id="aes_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($gw_conf['aes']) echo "checked";?>>
+											</td>
+											<!-- <td align="right"><button id="btn_edit_aes" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+											
    										   	<td id="td_edit_aes">
    										    	<div id="div_edit_aes" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
                                            			<fieldset id="aes_group" >
                                                 		<label>
-                                                    		<input type="radio" name="aes_group" id="aes_true" value="true" <?php if($gw_conf['aes']) echo "checked"?> >True
+                                                    		<input type="radio" name="aes_group" id="aes_true" value="true" <?php if($gw_conf['aes']) echo "checked";?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="aes_group" id="aes_false" value="false" <?php if(!$gw_conf['aes']) echo "checked"?> >False
+                                                    		<input type="radio" name="aes_group" id="aes_false" value="false" <?php if(!$gw_conf['aes']) echo "checked";?> >False
                                                 		</label>
                                                 		</fieldset>
                                             		</div>
@@ -663,29 +645,23 @@ require 'header.php';
 
    										   <tr>
     									    <td>lsc</td>
-    										<td id="lsc_value">
-    											<?php
-    												if($gw_conf['lsc'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-    											?>
-    										</td>
-    										<td align="right"><button id="btn_edit_lsc" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+    										<td id="lsc_value"></td>
+											<td align="right">
+											<input type="checkbox" id="lsc_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($gw_conf['lsc']) echo "checked";?>>
+											</td>
+											<!-- <td align="right"><button id="btn_edit_lsc" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+											
    										   	<td id="td_edit_lsc">
    										    	<div id="div_edit_lsc" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
                                            			<fieldset id="lsc_group" >
                                                 		<label>
-                                                    		<input type="radio" name="lsc_group" id="lsc_true" value="true" <?php if($gw_conf['lsc']) echo "checked"?> >True
+                                                    		<input type="radio" name="lsc_group" id="lsc_true" value="true" <?php if($gw_conf['lsc']) echo "checked";?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="aes_group" id="aes_false" value="false" <?php if(!$gw_conf['lsc']) echo "checked"?> >False
+                                                    		<input type="radio" name="aes_group" id="aes_false" value="false" <?php if(!$gw_conf['lsc']) echo "checked";?> >False
                                                 		</label>
                                                 		</fieldset>
                                             		</div>
@@ -734,7 +710,7 @@ require 'header.php';
 										 </tbody>
     								    </table>
     								    <p>For LoRaWAN, if the gateway ID is 0000B827EBEFC4A6, then use B827EB<b>FFFF</b>EFC4A6 the register the gateway EUI on LoRaWAN network server platform such as TheThingsNetwork (TTN) for instance.</p>
-    								    <p>If LoRaWAN mode is enabled, set raw to true and AES to false to upload the encrypted LoRaWAN packet to the network server.</p>
+    								    <p>If LoRaWAN mode is enabled, set raw to true and aes_lorawan to false to upload the encrypted LoRaWAN packet to the network server.</p>
     							      </div>
     							    </div>
     							
@@ -754,30 +730,23 @@ require 'header.php';
 										<tbody>
 										   <tr>
     									    <td>Enabled</td>
-    										<!-- <td id="use_mail_value"><?php echo $alert_conf['use_mail']; ?></td> -->
-    										<td id="use_mail_value">
-    											<?php
-    												if($alert_conf['use_mail'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-    											?>
-    										</td>
-    										<td align="right"><button id="btn_edit_use_mail" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+    										<td id="use_mail_value"></td>									
+											<td align="right">
+											<input type="checkbox" id="use_mail_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($alert_conf['use_mail']) echo "checked";?>>											
+											</td>
+											<!-- <td align="right"><button id="btn_edit_use_mail" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+											
    										   	<td id="td_edit_use_mail">
    										    	<div id="div_use_mail_options" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
                                            			<fieldset id="use_mail_group" >
                                                 		<label>
-                                                    		<input type="radio" name="use_mail_group" id="use_mail_true" value="true" <?php if($alert_conf['use_mail']) echo "checked"?> >True
+                                                    		<input type="radio" name="use_mail_group" id="use_mail_true" value="true" <?php if($alert_conf['use_mail']) echo "checked";?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="use_mail_group" id="use_mail_false" value="false" <?php if(!$alert_conf['use_mail']) echo "checked"?> >False
+                                                    		<input type="radio" name="use_mail_group" id="use_mail_false" value="false" <?php if(!$alert_conf['use_mail']) echo "checked";?> >False
                                                 		</label>
                                                 		</fieldset>
                                             		</div>
@@ -872,30 +841,22 @@ require 'header.php';
 										<tbody>
    										   <tr>
     									    <td>Enabled</td>
-    										<!-- <td id="use_sms_value"><?php echo $alert_conf['use_sms']; ?></td> -->
-    										<td id="use_sms_value">
-    											<?php
-    												if($alert_conf['use_sms'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-    											?>
-    										</td>
-    										<td align="right"><button id="btn_edit_use_sms" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+    										<td id="use_sms_value"></td>
+											<td align="right">
+											<input type="checkbox" id="use_sms_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($alert_conf['use_sms']) echo "checked";?>>											
+											</td>
+											<!-- <td align="right"><button id="btn_edit_use_sms" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
    										   	<td id="td_edit_use_sms">
    										    	<div id="div_use_sms_options" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
                                            			<fieldset id="use_sms_group" >
                                                 		<label>
-                                                    		<input type="radio" name="use_sms_group" id="use_sms_true" value="true" <?php if($alert_conf['use_sms']) echo "checked"?> >True
+                                                    		<input type="radio" name="use_sms_group" id="use_sms_true" value="true" <?php if($alert_conf['use_sms']) echo "checked";?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="use_sms_group" id="use_sms_false" value="false" <?php if(!$alert_conf['use_sms']) echo "checked"?> >False
+                                                    		<input type="radio" name="use_sms_group" id="use_sms_false" value="false" <?php if(!$alert_conf['use_sms']) echo "checked";?> >False
                                                 		</label>
                                                 		</fieldset>
                                             		</div>

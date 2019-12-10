@@ -39,27 +39,34 @@
 			  <thead></thead>
 			 <tbody>
 			   <tr>
-				<td>Enabled</td>
-				<td id="cloudTTN_status_value"><?php cloud_status($lorawan_encrypted_clouds, "python CloudTTN.py"); ?></td>
-				<td align="right"><button id="btn_edit_cloudTTN_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
-				<td id="td_edit_cloudTTN_status">
-					<div id="div_cloudTTN_status_options" class="form-group">
-						<div class="radio">
-						<fieldset id="cloudTTN_status_group" >
-							<label>
-								<input type="radio" name="cloudTTN_status_group" id="cloudTTN_true" value="true" checked>True
-							</label>
-							</br>
-							<label>
-								<input type="radio" name="cloudTTN_status_group" id="cloudTTN_false" value="false" >False
-							</label>
-							</fieldset>
+					<td>Enabled
+					</td>
+					<td id="cloudTTN_status_value"></td>
+					
+					<td align="right">
+					<input type="checkbox" id="ttn_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if(get_cloud_status($lorawan_encrypted_clouds, "python CloudTTN.py")) echo "checked";?>>
+					</td>
+			
+					<!-- <td align="right"><button id="btn_edit_cloudTTN_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+					
+					<td id="td_edit_cloudTTN_status">
+						<div id="div_cloudTTN_status_options" class="form-group">
+							<div class="radio">
+							<fieldset id="cloudTTN_status_group" >
+								<label>
+									<input type="radio" name="cloudTTN_status_group" id="cloudTTN_true" value="true" checked>True
+								</label>
+								</br>
+								<label>
+									<input type="radio" name="cloudTTN_status_group" id="cloudTTN_false" value="false" >False
+								</label>
+								</fieldset>
+							</div>
 						</div>
-					</div>
-				</td> 
-				<td id="td_cloudTTN_status_submit" align="right">
-					<button id="btn_cloudTTN_status_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
-				</td>
+					</td> 
+					<td id="td_cloudTTN_status_submit" align="right">
+						<button id="btn_cloudTTN_status_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+					</td>
 			   </tr>
 
 			 </tbody>

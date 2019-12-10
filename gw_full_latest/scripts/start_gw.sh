@@ -194,7 +194,10 @@ fi
 ############################################
 
 #run the gateway
-if [ $# -eq 0 ]
+if [ -f /boot/do_not_start_lora_gw.txt ]
+then
+	echo 'forced to not start lora_gateway'
+elif [ $# -eq 0 ]
 then
 	python start_gw.py &
 fi

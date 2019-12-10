@@ -2,7 +2,6 @@
 
 ?>
 
-	</br>
 	<div id="waziup_status_msg"></div>
 	
 	<div class="col-md-10 col-md-offset-0">
@@ -54,19 +53,25 @@
 					}				 
 				?>
 			</td>
-			<td id="waziup_status_value"><?php cloud_status($clouds, "python CloudWAZIUP.py"); ?></td>
-			<td align="right"><button id="btn_edit_waziup_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+			<td id="waziup_status_value">								
+			</td>
+			
+			<td align="right">
+			<input type="checkbox" id="waziup_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if(get_cloud_status($clouds, "python CloudWAZIUP.py")) echo "checked";?>>
+			</td>
+			
+			<!-- <td align="right"><button id="btn_edit_waziup_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>  -->
 			<td id="td_edit_waziup_status">
 				<div id="div_waziup_status_options" class="form-group">
 					
 					<div class="radio">
 					<fieldset id="waziup_status_group" >
 						<label>
-							<input type="radio" name="waziup_status_group" id="waziup_true" value="true" checked>True
+							<input type="radio" name="waziup_status_group" id="waziup_true" value="true" <?php if(get_cloud_status($clouds, "python CloudWAZIUP.py")) echo "checked";?>>True
 						</label>
 						</br>
 						<label>
-							<input type="radio" name="waziup_status_group" id="waziup_false" value="false" >False
+							<input type="radio" name="waziup_status_group" id="waziup_false" value="false" <?php if(get_cloud_status($clouds, "python CloudWAZIUP.py")) echo "checked";?>>False
 						</label>
 					</div>
 				</div>

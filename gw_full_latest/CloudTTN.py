@@ -39,9 +39,6 @@ try:
 	key_TTN.source_list
 except AttributeError:
 	key_TTN.source_list=[]
-	
-SERVER = 'router.eu.thethings.network'
-PORT = 1700
 
 PROTOCOL_VERSION = 1
 
@@ -206,8 +203,8 @@ def main(ldata, pdata, rdata, tdata, gwid):
 			frequency=rfq,
 			bw=rbw,
 			sf=rsf,
-			server=SERVER,
-			port=PORT)
+			server=key_TTN.TTN_server,
+			port=key_TTN.TTN_port)
 
 		ttn.start()
 		

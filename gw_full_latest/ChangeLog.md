@@ -4,13 +4,15 @@ Change logs
 Dev 4th, 2019
 --------------
 - web admin interface
+	* use toggle switch for boolean configuration items (`bootstrap-toggle`)
 	* add `Cloud TTN` tab to handle `CloudTTN.py` which is the script to upload to TTN platform
+	* if an image file called `my_logo_1.png` is present in the `pages` folder then the image will be displayed as logo brand for instance. Replace the existing image with yours or simply delete this image.
 
 Nov 30th, 2019
 --------------
 - web admin interface
 	* add Internet online/offline indicator
-	* add simple packet logger (display last 15 LoRa packet receptions with a refresh rate of 5s)
+	* add simple packet logger (display last 20 LoRa packet receptions with a refresh rate of 5s)
 	* add indication of last low-level status and last rxlora in radio tab
 	* add cloud server online/offline indicator in cloud tabs as well as last upload time per cloud
 - `CloudNoInternet.py`

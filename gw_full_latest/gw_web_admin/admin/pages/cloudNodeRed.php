@@ -40,8 +40,15 @@
 			 <tbody>
 			   <tr>
 				<td>Enabled</td>
-				<td id="cloudNodeRed_status_value"><?php cloud_status($clouds, "python CloudNodeRed.py"); ?></td>
-				<td align="right"><button id="btn_edit_cloudNodeRed_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+				
+				<td id="cloudNodeRed_status_value"></td>
+
+				<td align="right">
+				<input type="checkbox" id="nodered_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if(get_cloud_status($clouds, "python CloudNodeRed.py")) echo "checked";?>>
+				</td>
+			
+				<!-- <td align="right"><button id="btn_edit_cloudNodeRed_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+				
 				<td id="td_edit_cloudNodeRed_status">
 					<div id="div_cloudNodeRed_status_options" class="form-group">
 						<div class="radio">

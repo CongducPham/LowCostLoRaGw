@@ -74,12 +74,12 @@ require 'header.php';
                                    </br>
                                     <div class="col-md-12 col-md-offset-0"> 
                     						<div class="panel-body">
-                    						<p>Showing last 15 packet reception. Refreshing every 5s.</p>
+                    						<p>Showing last 20 packet receptions. Refreshing every 5s.</p>
                     						
 											<p>
 											<?php 
 												ob_start(); 
-												system("tac /home/pi/lora_gateway/log/post-processing.log | egrep -a -m 15 'rxlora|: 256,.*,0x.*,'", $retval);
+												system("tac /home/pi/lora_gateway/log/post-processing.log | egrep -a -m 20 'rxlora|: 256,.*,0x.*,'", $retval);
 												$string=ob_get_contents(); 
 												ob_clean();
 												$patterns = array();

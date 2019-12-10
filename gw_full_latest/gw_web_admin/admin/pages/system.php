@@ -158,24 +158,25 @@ require 'header.php';
                                 	<p>
 										<?php 
 										
-											echo "&nbsp;&nbsp;&nbsp;&nbsp;Current cellular configuration: ";
+											//echo "&nbsp;&nbsp;&nbsp;&nbsp;Current cellular configuration: ";
+											
+											$dongle_on_boot=false;
+											$loranga_on_boot=false;
+											$loranga_3G=false;
 											
 											if(is_file("/home/pi/lora_gateway/3GDongle/use_3GDongle_internet_on_boot.txt")){
-												echo "Use 3G dongle for Internet on boot";
+												//echo "Use 3G dongle for Internet on boot";
+												$dongle_on_boot=true;
 											}
 											elseif(is_file("/home/pi/lora_gateway/3GDongle/loranga/use_loranga_internet_on_boot.txt")){
-												echo "Use Loranga for Internet on boot";
-												
-												if(is_file("/home/pi/lora_gateway/3GDongle/loranga/loranga3G.txt")){
-													echo " – With Loranga 3G";
-												}
-												else {
-													echo " – With Loranga 2G";
-												}												
+												//echo "Use Loranga for Internet on boot";
+												$loranga_on_boot=true;												
 											}
-											else {
-												echo "No cellular network configured";
-											}																						
+											
+											if(is_file("/home/pi/lora_gateway/3GDongle/loranga/loranga3G.txt")){
+												//echo " – With Loranga 3G";
+												$loranga_3G=true;
+											}																				
 										?>  
                             		</p>
                             		
@@ -185,34 +186,26 @@ require 'header.php';
    										  <thead></thead>
 										 <tbody>
 										   <tr>
-    									    <td>Enable Dongle on boot</td>
-    										<td align="right"><button  id="btn_dongle_on" type="button" class="btn btn-primary" href="process.php?dongle=true">Set</button></td>
+    									    <td>Dongle on boot</td>
+											<td align="right">
+											<input type="checkbox" id="dongle_on_boot_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($dongle_on_boot) echo "checked";?>>
+											</td>    									    
    										   </tr>
    										   
    										   <tr>
-    									    <td>Disable Dongle on boot</td>
-    										<td align="right"><button  id="btn_dongle_off" type="button" class="btn btn-primary" href="process.php?dongle=false">Set</button></td>
-   										   </tr>
-   										   
-   										   <tr>
-    									    <td>Enable Loranga on boot</td>
-    										<td align="right"><button  id="btn_loranga_on" type="button" class="btn btn-primary" href="process.php?loranga=true">Set</button></td>
+    									    <td>Loranga on boot</td>
+											<td align="right">
+											<input type="checkbox" id="loranga_on_boot_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($loranga_on_boot) echo "checked";?>>
+											</td>    									    
    										   </tr>   										   
-
-   										   <tr>
-    									    <td>Disable Loranga on boot</td>
-    										<td align="right"><button  id="btn_loranga_off" type="button" class="btn btn-primary" href="process.php?loranga=false">Set</button></td>
-   										   </tr>
    										   
    										   <tr>
-    									    <td>Has Loranga 2G</td>
-    										<td align="right"><button  id="btn_loranga_2G" type="button" class="btn btn-primary" href="process.php?loranga3G=false">Set</button></td>
+    									    <td>Loranga 3G/2G</td>
+											<td align="right">
+											<input type="checkbox" id="loranga_3G_2G_status_toggle" data-toggle="toggle" data-on="3G" data-off="2G" data-onstyle="success" data-offstyle="warning" <?php if($loranga_3G) echo "checked";?>>
+											</td>    									    
    										   </tr>
-
-   										   <tr>
-    									    <td>Has Loranga 3G</td>
-    										<td align="right"><button  id="btn_loranga_3G" type="button" class="btn btn-primary" href="process.php?loranga3G=true">Set</button></td>
-   										   </tr>									      										      										   
+									      										      										   
 										 </tbody>
     								    </table>
     							      </div>

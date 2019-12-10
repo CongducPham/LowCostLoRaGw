@@ -40,8 +40,15 @@
 			 <tbody>
 			   <tr>
 				<td>Enabled</td>
-				<td id="cloudNoInternet_status_value"><?php cloud_status($clouds, "python CloudNoInternet.py"); ?></td>
-				<td align="right"><button id="btn_edit_cloudNoInternet_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+				
+				<td id="cloudNoInternet_status_value"></td>
+				
+				<td align="right">
+				<input type="checkbox" id="nointernet_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if(get_cloud_status($clouds, "python CloudNoInternet.py")) echo "checked";?>>
+				</td>
+			
+				<!-- <td align="right"><button id="btn_edit_cloudNoInternet_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+				
 				<td id="td_edit_cloudNoInternet_status">
 					<div id="div_cloudNoInternet_status_options" class="form-group">
 						

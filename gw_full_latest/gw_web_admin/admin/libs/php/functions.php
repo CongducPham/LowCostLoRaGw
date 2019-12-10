@@ -209,6 +209,23 @@ function cloud_status($clouds_arr, $cloud_script){
     }       							
 }
 
+# Enabled field : true or false
+function get_cloud_status($clouds_arr, $cloud_script){
+	$i = 0; $find = false;        							
+    while($i < count($clouds_arr) && ! $find){
+    	if($clouds_arr[$i]['script'] == $cloud_script){
+    		$find = true;
+			if($clouds_arr[$i]['enabled']){
+				return true; 
+			}
+			else {
+				return false; 
+			}
+		}
+		$i++;
+    }       							
+}
+
 function send_downlink($dst, $msg){
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh downlink_request ".$dst." ".$msg);
 }
