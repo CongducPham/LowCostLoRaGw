@@ -1124,9 +1124,6 @@ if(
 			case "nodered_key":
 				echo '<p><center><font color="green">Cloud Node-Red updated</font></center></p>';
 				break;
-			case "nodered_key":
-				echo '<p><center><font color="green">Cloud Node-Red updated</font></center></p>';
-				break;
 			case "ttn_key":
 				echo '<p><center><font color="green">Cloud TTN updated</font></center></p>';
 				break;								

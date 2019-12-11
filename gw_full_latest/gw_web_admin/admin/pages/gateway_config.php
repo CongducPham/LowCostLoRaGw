@@ -72,95 +72,103 @@ require 'header.php';
 							</br>
                             							
             				<p>&nbsp;&nbsp;&nbsp;&nbsp;After changing gateway parameters, you need to reboot for changes to take effect.</p>
-            				
+							<?php
+								$date=date('Y-m-d\TH:i:s');
+								echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;Date/Time: ';
+								echo $date;
+								echo '</p>';
+							?>	
+										            				
                             <!-- Tab panes -->
                             <div class="tab-content">
                             	<div class="tab-pane fade in active" id="radio_conf-pills">
 
-									<p>
 										<?php 
 											$is_sx1301=exec('egrep "start_[ul]p[lf]_pprocessing_gw.sh" /etc/rc.local');
 									
 											if ($is_sx1301=='')
 											{
-												echo '&nbsp;&nbsp;&nbsp;&nbsp;Radio configuration file is for single channel radio';   
-											}
-											else {
-												echo '&nbsp;&nbsp;&nbsp;&nbsp;Radio configuration file is for SX1301-based multi-channel concentrator [<a href="../log/global_conf.json">global_conf.json</a>][<a href="../log/local_conf.json">local_conf.json</a>]';
-												echo '<div class="col-md-10 col-md-offset-0">';
-													echo '<div class="panel-body">';										
-														echo '<form id="download_sx1301_conf_form" role="form">';
-															echo '<fieldset>';
-																echo '<div class="form-group">';
-																	echo '<label>Enter the URL of a valid <tt>global_conf.json</tt> file if you want to replace the existing one</label>';
-																	echo '<input class="form-control" placeholder="" name="sx1301_conf_file_name_url" type="text" value="" autofocus>';
-																echo '</div>';
-																echo '<p>e.g. from TTN <tt>https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/EU-global_conf.json</tt></p>';
-																echo '<p>e.g. from RAK <tt>https://raw.githubusercontent.com/RAKWireless/rak_common_for_gateway/master/lora/rak2245/global_conf/global_conf.eu_863_870.json</tt></p>';
-																echo '<p><button type="submit" class="btn btn-primary">Download</button></p>';
-															echo '</fieldset>';
-														echo '</form>';
-													echo '</div>';
-												echo '</div>';
-											}
-										?>                            
-									</p>
+												echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;Radio configuration file is for single channel radio</p>';
 									
-									<?php
-										$date=date('Y-m-d\TH:i:s');
-										echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;Date/Time: ';
-										echo $date;
-										echo '</p>';									
-										ob_start(); 
-										system("grep -a 'Low-level gw status ON' /home/pi/lora_gateway/log/post-processing.log | tail -1 | cut -d '.' -f1");
-										$low_level=ob_get_contents(); 
-										ob_clean();
-										if ($low_level=='') {
-											echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>no low-level status</b></font></p>';					
-										}
-										else {
-											$date=str_replace("T", " ", $date, $count);
-											$datetime1 = new DateTime($date);
-											$low_level_1=str_replace("T", " ", $low_level, $count);
-											$datetime2 = new DateTime($low_level_1);
-											$interval = $datetime1->diff($datetime2);
+												ob_start(); 
+												system("grep -a 'Low-level gw status ON' /home/pi/lora_gateway/log/post-processing.log | tail -1 | cut -d '.' -f1");
+												$low_level=ob_get_contents(); 
+												ob_clean();
+												if ($low_level=='') {
+													echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>no low-level status</b></font></p>';					
+												}
+												else {
+													$date=str_replace("T", " ", $date, $count);
+													$datetime1 = new DateTime($date);
+													$low_level_1=str_replace("T", " ", $low_level, $count);
+													$datetime2 = new DateTime($low_level_1);
+													$interval = $datetime1->diff($datetime2);
 											
-											$interval_minute=intval($interval->format('%i'));
+													$interval_minute=intval($interval->format('%i'));
 											
-											//we have to check month, day and hour because minute is only between 1..59
-											if (intval($interval->format('%m'))>0 || intval($interval->format('%d'))>0 || intval($interval->format('%h'))>0) {
-												$interval_minute=$low_level_status_interval+1;
-											}
+													//we have to check month, day and hour because minute is only between 1..59
+													if (intval($interval->format('%m'))>0 || intval($interval->format('%d'))>0 || intval($interval->format('%h'))>0) {
+														$interval_minute=$low_level_status_interval+1;
+													}
 											
-											echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;last low-level status: ';
+													echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;last low-level status: ';
 											
-											if ($interval_minute > $low_level_status_interval) {
-												echo '<font color="red"><b>';
+													if ($interval_minute > $low_level_status_interval) {
+														echo '<font color="red"><b>';
+													}
+													else {
+														echo '<font color="green"><b>';
+													}
+				
+													echo $low_level;
+													echo $interval->format(' %mm-%dd-%hh-%imin from current date');	
+													echo '</b></font></p>';				
+												}
+												
+												ob_start(); 
+												system("grep -a 'rxlora' /home/pi/lora_gateway/log/post-processing.log | tail -1");
+												$rx=ob_get_contents(); 
+												ob_clean();
+												if ($rx=='') {
+													echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>no rx found</b></font>';					
+												}
+												else {
+													echo '&nbsp;&nbsp;&nbsp;&nbsp;last rx: <font color="green"><b>';
+													echo $rx;
+													echo '</b></font></p>';					
+												}																								
 											}
 											else {
-												echo '<font color="green"><b>';
+												echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;Radio configuration file is for SX1301-based multi-channel concentrator [<a href="../log/global_conf.json">global_conf.json</a>][<a href="../log/local_conf.json">local_conf.json</a>]</p>';
+												echo '<div style="margin-left: 1em;">';
+													echo '<form id="download_sx1301_conf_form" role="form">';
+														echo '<fieldset>';
+															echo '<div class="form-group">';
+																echo '<label>Enter the URL of a valid <tt>global_conf.json</tt> file if you want to replace the existing one</label>';
+																echo '<input class="form-control" placeholder="" name="sx1301_conf_file_name_url" type="text" value="" autofocus>';
+															echo '</div>';
+															echo '<p>e.g. EU863-870 from TTN [<a href="https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/EU-global_conf.json">copy link</a>]';
+															echo ' or from RAK [<a href="https://raw.githubusercontent.com/RAKWireless/rak_common_for_gateway/master/lora/rak2245/global_conf/global_conf.eu_863_870.json">copy link</a>]&nbsp;&nbsp;&nbsp;&nbsp;';
+															echo '<button type="submit" class="btn btn-primary">Download</button></p></br>';
+														echo '</fieldset>';
+													echo '</form>';
+												echo '</div>';
+												
+												ob_start(); 
+												system("grep -a 'rcv ctrl pkt info' /home/pi/lora_gateway/log/post-processing.log | tail -1");
+												$rx=ob_get_contents(); 
+												ob_clean();
+												if ($rx=='') {
+													echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>no rx found</b></font>';					
+												}
+												else {
+													echo '&nbsp;&nbsp;&nbsp;&nbsp;last rx: <font color="green"><b>';
+													echo $rx;
+													echo '</b></font></p>';					
+												}													
 											}
-				
-											echo $low_level;
-											echo $interval->format(' %mm-%dd-%hh-%imin from current date');	
-											echo '</b></font></p>';				
-										}									
-									?>    									
-									<?php									
-										ob_start(); 
-										system("grep -a 'rxlora' /home/pi/lora_gateway/log/post-processing.log | tail -1");
-										$rx=ob_get_contents(); 
-										ob_clean();
-										if ($rx=='') {
-											echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>no rx found</b></font>';					
-										}
-										else {
-											echo '&nbsp;&nbsp;&nbsp;&nbsp;last rx: <font color="green"><b>';
-											echo $rx;
-											echo '</b></font></p>';					
-										}									
-									?>                            
-								
+										?>
+									
                                     </br>
                                     
                                     <div id="radio_msg"></div>

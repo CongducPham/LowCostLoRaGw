@@ -1,5 +1,15 @@
 #!/bin/sh
 
+#List of /boot file to control the startup behavior
+#These file can be created by inserting the SD card 
+#into any computer as the /boot partition is in FAT
+#format.
+#
+#	- /boot/rak831.txt
+#	- /boot/basic_config_on_boot.txt
+#	- /boot/do_not_start_lora_gw.txt
+###################################################
+	
 cd /home/pi/lora_gateway
 
 #run script for the shutdown button
@@ -10,6 +20,14 @@ if [ -f /boot/rak831.txt ] || grep start_upl /etc/rc.local>/dev/null || grep sta
 else
 	echo "enabling piShutdown"
 	python /home/pi/lora_gateway/scripts/piShutdown.py &
+fi
+
+if [ -f /boot/basic_config_on_boot.txt ]
+then
+	echo "Running basic_config_gw.sh"
+	cd scripts
+	sudo ./basic_config_gw.sh
+	cd ..
 fi
 
 #create the gw id so that a newly installed gateway is always configured with a correct id

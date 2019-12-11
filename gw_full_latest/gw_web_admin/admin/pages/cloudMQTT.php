@@ -100,7 +100,7 @@
 							<input id="cloudMQTT_MQTT_server_input" class="form-control" placeholder="e.g. test.mosquitto.org" type="text" value="" ></input>
 						</div>
 					</td>
-					<td id="td_cloudMQTT_MQTT_server_submit">
+					<td id="td_cloudMQTT_MQTT_server_submit" align="right">
 						<button id="btn_cloudMQTT_MQTT_server_submit" type="submit" class="btn btn-primary">
 						Submit
 							<span class="fa fa-arrow-right"></span>
@@ -125,7 +125,7 @@
 							<input id="cloudMQTT_project_name_input" class="form-control" placeholder="e.g. waziup" type="text" value="" ></input>
 						</div>
 					</td>
-					<td id="td_cloudMQTT_project_name_submit">
+					<td id="td_cloudMQTT_project_name_submit" align="right">
 						<button id="btn_cloudMQTT_project_name_submit" type="submit" class="btn btn-primary">
 						Submit
 							<span class="fa fa-arrow-right"></span>
@@ -150,7 +150,7 @@
 							<input id="cloudMQTT_organization_name_input" class="form-control" placeholder="e.g. UPPA" type="text" value="" ></input>
 						</div>
 					</td>
-					<td id="td_cloudMQTT_organization_name_submit">
+					<td id="td_cloudMQTT_organization_name_submit" align="right">
 						<button id="btn_cloudMQTT_organization_name_submit" type="submit" class="btn btn-primary">
 						Submit
 							<span class="fa fa-arrow-right"></span>
@@ -175,7 +175,7 @@
 							<input id="cloudMQTT_sensor_name_input" class="form-control" placeholder="e.g. Sensor" type="text" value="" ></input>
 						</div>
 					</td>
-					<td id="td_cloudMQTT_sensor_name_submit">
+					<td id="td_cloudMQTT_sensor_name_submit" align="right">
 						<button id="btn_cloudMQTT_sensor_name_submit" type="submit" class="btn btn-primary">
 						Submit
 							<span class="fa fa-arrow-right"></span>
@@ -226,7 +226,7 @@
 							 autofocus>
 						</div>
 					</td>
-					<td id="td_cloudMQTT_source_list_submit">
+					<td id="td_cloudMQTT_source_list_submit" align="right">
 						<button id="btn_cloudMQTT_source_list_submit" type="submit" class="btn btn-primary">
 						Submit
 							<span class="fa fa-arrow-right"></span>

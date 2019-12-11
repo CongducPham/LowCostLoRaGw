@@ -140,7 +140,7 @@ function thingspeak_conf($key, $value){
 }
 
 /*For other clouds***************/
-function clouds_conf($key, $value,$conf){
+function clouds_conf($key, $value, $conf){
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh ".$conf." ".$key." ".$value);
 }
 /********************************/
