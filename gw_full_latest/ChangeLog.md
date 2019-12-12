@@ -1,7 +1,14 @@
 Change logs
 ===========
 
-Dev 4th, 2019
+Dec 12th, 2019
+--------------
+- `post_processing_gw.py`
+	* when receiving packet from the low-level LoRa bridge (either from single `lora_gateway` or Semtech `lora_pkt_fwd`), `post_processing_gw.py` will print a summary line beginning with `+++ rxlora`. This pattern is used by the web admin packet logger page.
+		- `+++ rxlora[865199]. dst=1 type=0x12 src=3 seq=140 len=77 SNR=5 RSSIpkt=-43 BW=500 CR=4/5 SF=12`
+		- `+++ rxlora[868100]. lorawan type=0x40 src=0x26041F24 seq=59 len=10 SNR=10 RSSIpkt=-42 BW=125 CR=4/5 SF=12`
+			
+Dec 4th, 2019
 --------------
 - web admin interface
 	* use toggle switch for boolean configuration items (`bootstrap-toggle`)
@@ -34,7 +41,7 @@ Nov 11th, 2019
 - in most of `Cloud*` scripts, the `sys.dont_write_bytecode = True` is added to disable byte code compilation of imported modules, thus enabling dynamic changes in `key_*` files.
 - v3.9b `post_processing_gw.py`
 	* now, it is possible to upload a LoRaWAN packet to TTN for instance, and still be able to decrypt locally the packet to inject the clear data for upload to normal clouds (such as ThingSpeak or WAZIUP cloud for instance).
-	* raw mode is forced to true at post_processing level when LoRa mode is set to 11 (LoRaWAN mode)
+	* raw mode is forced to true at post-processing level when LoRa mode is set to 11 (LoRaWAN mode)
 - `MQTT_server` field in `key_MQTT.py` can now specify a port number, i.e. `test.mosquitto.org:1234`, and `CloudMQTT.py` can add the `-p` parameter when running the `mosquitto_pub` command.	
 
 Oct 30th, 2019

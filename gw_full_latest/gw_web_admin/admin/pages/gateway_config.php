@@ -123,20 +123,7 @@ require 'header.php';
 													echo $low_level;
 													echo $interval->format(' %mm-%dd-%hh-%imin from current date');	
 													echo '</b></font></p>';				
-												}
-												
-												ob_start(); 
-												system("grep -a 'rxlora' /home/pi/lora_gateway/log/post-processing.log | tail -1");
-												$rx=ob_get_contents(); 
-												ob_clean();
-												if ($rx=='') {
-													echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>no rx found</b></font>';					
-												}
-												else {
-													echo '&nbsp;&nbsp;&nbsp;&nbsp;last rx: <font color="green"><b>';
-													echo $rx;
-													echo '</b></font></p>';					
-												}																								
+												}																							
 											}
 											else {
 												echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;Radio configuration file is for SX1301-based multi-channel concentrator [<a href="../log/global_conf.json">global_conf.json</a>][<a href="../log/local_conf.json">local_conf.json</a>]</p>';
@@ -152,21 +139,21 @@ require 'header.php';
 															echo '<button type="submit" class="btn btn-primary">Download</button></p></br>';
 														echo '</fieldset>';
 													echo '</form>';
-												echo '</div>';
-												
-												ob_start(); 
-												system("grep -a 'rcv ctrl pkt info' /home/pi/lora_gateway/log/post-processing.log | tail -1");
-												$rx=ob_get_contents(); 
-												ob_clean();
-												if ($rx=='') {
-													echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>no rx found</b></font>';					
-												}
-												else {
-													echo '&nbsp;&nbsp;&nbsp;&nbsp;last rx: <font color="green"><b>';
-													echo $rx;
-													echo '</b></font></p>';					
-												}													
+												echo '</div>';												
 											}
+											
+											ob_start(); 
+											system("grep -a '\+\+\+ rxlora' /home/pi/lora_gateway/log/post-processing.log | tail -1");
+											$rx=ob_get_contents(); 
+											ob_clean();
+											if ($rx=='') {
+												echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>no rx found</b></font>';					
+											}
+											else {
+												echo '&nbsp;&nbsp;&nbsp;&nbsp;last rx: <font color="green"><b>';
+												echo $rx;
+												echo '</b></font></p>';					
+											}												
 										?>
 									
                                     </br>

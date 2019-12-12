@@ -128,6 +128,7 @@ RSSI=0
 bw=0
 cr=0
 sf=0
+rfq=0
 
 _hasRadioData=False
 #------------------------------------------------------------
@@ -911,6 +912,7 @@ while True:
 			bw=arr[0]
 			cr=arr[1]
 			sf=arr[2]
+			rfq=arr[3]
 			info_str="(BW=%d CR=%d SF=%d)" % (bw,cr,sf)
 			print info_str
 
@@ -1085,7 +1087,8 @@ while True:
 					fillLinebuf(datalen-HEADER_SIZE)
 					datalen=datalen-HEADER_SIZE
 					pdata="%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,datalen,SNR,RSSI)
-					print "update ctrl pkt info (^p): "+pdata				
+					print "update ctrl pkt info (^p): "+pdata
+					print "+++ rxlora[%d]. dst=%d type=0x%.2X src=%d seq=%d len=%d SNR=%d RSSIpkt=%d BW=%d CR=4/%d SF=%d" % (rfq,dst,ptype,src,seq,datalen,SNR,RSSI,bw,cr,sf)				
 				
 				#LoRaWAN uses the MHDR(1B)
 				#----------------------------
@@ -1124,6 +1127,8 @@ while True:
 					#just to print the src in 0x01020304 form
 					pdata="%d,%d,%s,%d,%d,%d,%d" % (256,ord(ch),"0x%0.8X" % src,seq,datalen,SNR,RSSI)
 					print "update ctrl pkt info (^p): "+pdata
+					print "+++ rxlora[%d]. lorawan type=0x%.2X src=%s seq=%d len=%d SNR=%d RSSIpkt=%d BW=%d CR=4/%d SF=%d" % (rfq,ord(ch),"0x%0.8X" % src,seq,datalen,SNR,RSSI,bw,cr,sf)
+					
 					#internally, we convert in int
 					pdata="%d,%d,%d,%d,%d,%d,%d" % (256,ord(ch),src,seq,datalen,SNR,RSSI)
 					
@@ -1195,7 +1200,8 @@ while True:
 							
 					continue	
 					
-			else:								
+			else:
+				print "+++ rxlora[%d]. dst=%d type=0x%.2X src=%d seq=%d len=%d SNR=%d RSSIpkt=%d BW=%d CR=4/%d SF=%d" % (rfq,dst,ptype,src,seq,datalen,SNR,RSSI,bw,cr,sf)								
 				#now we read datalen bytes in our line buffer
 				fillLinebuf(datalen)				
 				
