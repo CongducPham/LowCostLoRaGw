@@ -26,21 +26,31 @@ choice="Z"
 if [ ! -f gateway_id.txt ]
 then
 	echo "ERROR: gateway_id.txt file not found"
-	echo "Reading MAC address to get last 5 bytes for gateway id"
+	echo "Reading MAC address to get last 6 bytes for gateway id"
 	
-	#get the last 5 bytes of the eth0 MAC addr
-	gwid=`ifconfig | grep 'eth0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
-
-	#get the last 5 bytes of the wlan0 MAC addr
+	#get the eth0 MAC addr
+	gwid=`ifconfig | grep eth0 | grep HWaddr | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }'`
+	
 	if [ "$gwid" = "" ]
 		then
-			gwid=`ifconfig | grep 'wlan0' | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
+			gwid=`ifconfig eth0 | grep 'ether' | awk '{print $2}' | sed 's/://g' | awk '{ print toupper($1) }'`
+		fi
+		
+	#get the wlan0 MAC addr
+	if [ "$gwid" = "" ]
+		then
+			gwid=`ifconfig | grep 'wlan0' | grep HWaddr | awk '{print $NF}' | sed 's/://g' | awk '{ print toupper($1) }'`
+			
+		if [ "$gwid" = "" ]
+			then
+				gwid=`ifconfig wlan0 | grep 'ether' | awk '{print $2}' | sed 's/://g' | awk '{ print toupper($1) }'`
+			fi	
 			
 			#it means that the wlan0 interface works in access point mode or has no IP address assigned
 			#so get the address from the ether field
 			if [ "$gwid" = "00" ]
 			then
-				gwid=`ifconfig | grep 'ether' | awk '{print $2}' | sed 's/://g' | awk '{ print toupper($1) }' | cut -c 3-`
+				gwid=`ifconfig | grep 'ether' | awk '{print $2}' | sed 's/://g' | awk '{ print toupper($1) }'`
 			fi
 	fi
 
@@ -89,7 +99,7 @@ echo "6- less ../Dropbox/LoRa-test/post-processing.log                     +"
 #echo "d- run: ps aux | grep rfcomm                                         +"
 #echo "e- run: tail -f rfcomm.log                                           +"
 echo "---------------------------------------------------* Connectivity *--+"
-echo "f- test: ping www.univ-pau.fr                                        +"
+echo "f- test: ping 8.8.8.8                                                +"
 echo "g- wifi: configure as WiFi client at next reboot                     +"
 echo "h- wifi: indicate WiFi SSID and password at next reboot              +"
 echo "i- wifi: configure as WiFi access point at next reboot               +"
@@ -249,7 +259,7 @@ if [ "$choice" = "f" ]
 	then
 		echo "Test Internet connectivity. CTRL-C to return"
 		trap "echo" SIGINT
-		ping www.univ-pau.fr
+		ping 8.8.8.8
 fi
 
 if [ "$choice" = "g" ] 

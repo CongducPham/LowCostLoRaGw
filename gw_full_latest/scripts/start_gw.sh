@@ -9,6 +9,9 @@
 #	- /boot/basic_config_on_boot.txt
 #	- /boot/do_not_start_lora_gw.txt
 ###################################################
+
+#leave some time for system to completely setup
+sleep 10
 	
 cd /home/pi/lora_gateway/scripts
 
@@ -144,7 +147,9 @@ fi
 
 #check if the gateway is an access point
 #if yes, then enable IP forwarding to give internet connectivity to connected devices, e.g. smartphone, tablets,...
-if [ -f /etc/network/interfaces_not_ap ]
+pid = `pgrep hostapd`
+
+if [ "$pid" != "" ]
 then
 		sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 		sudo sed -i 's/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
