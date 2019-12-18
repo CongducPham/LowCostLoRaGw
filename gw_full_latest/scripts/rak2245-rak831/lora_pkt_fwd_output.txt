@@ -90,5 +90,11 @@ src/jitqueue.c:448:jit_print_queue(): INFO: [jit] queue is empty
 # GPS coordinates: latitude 43.31416, longitude -0.36415, altitude 191 m
 ##### END #####
 
+INFO: [down] PULL_RESP received  - token[4:61] :)
+
+JSON down: {"txpk":{"imme":false,"tmst":974693787,"freq":868.5,"rfch":0,"powe":14,"modu":"LORA","datr":"SF7BW125","codr":"4/5","ipol":true,"size":33,"ncrc":true,"data":"IFH12F7jdVM2leyzvANjdosPo0GKrR9f7n8QhpsoBjyQ"}}
+INFO: tx_start_delay=1495 (1495.500000) - (1497, bw_delay=1.500000, notch_delay=0.000000)
+
+
 JSON up: {"stat":{"time":"2019-05-27 12:42:44 GMT","lati":43.31416,"long":-0.36415,"alti":191,"rxnb":1,"rxok":1,"rxfw":1,"ackr":0.0,"dwnb":0,"txnb":0}}
 

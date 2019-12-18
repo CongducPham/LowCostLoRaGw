@@ -120,10 +120,13 @@ class TTN:
         else:
             return dr + 'BW500'
 
-    def rx_packet(self, ldata, datalen, tdata, rssi, snr):
+    def rx_packet(self, ldata, datalen, tdata, tmst, rssi, snr):
 
         RX_PK["rxpk"][0]["time"] = tdata
-        RX_PK["rxpk"][0]["tmst"] = calendar.timegm(time.gmtime())
+        if tmst=='':
+        	RX_PK["rxpk"][0]["tmst"] = calendar.timegm(time.gmtime())
+        else:
+        	RX_PK["rxpk"][0]["tmst"] = int(tmst)+1500000	
         RX_PK["rxpk"][0]["freq"] = self.frequency
         RX_PK["rxpk"][0]["datr"] = self._sf_bw_to_dr(self.sf, self.bw)
         RX_PK["rxpk"][0]["rssi"] = rssi
@@ -182,13 +185,22 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	datalen=arr[4]
 	SNR=arr[5]
 	RSSI=arr[6]
+
+	tmst=tdata.count('*')
 	
+	if (tmst != 0):
+		tdata_tmp=tdata.split('*')[0]
+		tmst=tdata.split('*')[1]
+		tdata=tdata_tmp
+	else:
+		tmst=''
+					
 	#from 2019-05-14T14:53:10.241191+02:00 (similar to command date +%FT%T.%6N%z)
 	#to 2019-05-14T14:53:10.241191Z (similar to command date +%FT%T.%6NZ)
 	dt = parser.parse(tdata)
 	#in case you want to remove microsecond 
 	#tdata = dt.replace(microsecond=0,tzinfo=None).isoformat()+"Z"	
-	tdata = dt.replace(tzinfo=None).isoformat()+"Z"	
+	tdata = dt.replace(tzinfo=None).isoformat()+"Z"
 	
 	arr = map(int,rdata.split(','))
 	rbw=arr[0]
@@ -218,7 +230,7 @@ def main(ldata, pdata, rdata, tdata, gwid):
 
 		ttn.start()
 		
-		ttn.rx_packet(ldata, datalen, tdata, RSSI, SNR)
+		ttn.rx_packet(ldata, datalen, tdata, tmst, RSSI, SNR)
 			
 	else:
 		print "Source is not is source list, not sending to TTN"	

@@ -3,6 +3,9 @@ Change logs
 
 Dec 12th, 2019
 --------------
+- change network configuration style to use `dhcpcd.conf`
+- add `scripts/compile_lora_gateway.sh` script to mutualize the compilation procedure
+- `scripts/start_gw.sh` will automatically recompile the low-level gateway program if the RPI model has changed from the one it has been compiled for
 - `post_processing_gw.py`
 	* when receiving packet from the low-level LoRa bridge (either from single `lora_gateway` or Semtech `lora_pkt_fwd`), `post_processing_gw.py` will print a summary line beginning with `+++ rxlora`. This pattern is used by the web admin packet logger page.
 		- `+++ rxlora[865199]. dst=1 type=0x12 src=3 seq=140 len=77 SNR=5 RSSIpkt=-43 BW=500 CR=4/5 SF=12`

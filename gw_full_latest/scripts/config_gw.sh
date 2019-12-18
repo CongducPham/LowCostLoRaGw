@@ -11,184 +11,7 @@ read ouinon
 
 if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 	then
-		cd ..
-
-		#remove old binaries
-		make clean		
-		
-		downlink=`jq ".gateway_conf.downlink" gateway_conf.json`
- 
-		if [ "$downlink" != "0" ]
-		then
-			echo "Detecting downlink timer, will compile with downlink support"
-		fi	
-
-		revision=`cat /proc/cpuinfo | grep "Revision" | cut -d ':' -f 2 | tr -d " \t\n\r"`
-
-		rev_hex="0x$revision"
-
-		#uuuuuuuuFMMMCCCCPPPPTTTTTTTTRRRR
-		type=$(( rev_hex & 0x00000FF0 ))
-
-		board=$(( type >> 4 ))
-
-		if [ "$board" = "0" ] || [ "$board" = "1" ] || [ "$board" = "2" ] || [ "$board" = "3" ]
-			then
-				echo "You have a Raspberry 1"		
-				echo "Compiling for Raspberry 1"
-				if [ "$downlink" = "0" ]
-					then 
-						make lora_gateway
-					else
-						make lora_gateway_downlink 
-				fi	
-		elif [ "$board" = "4" ]
-			then
-				echo "You have a Raspberry 2"
-				echo "Compiling for Raspberry 2 and 3"
-				if [ "$downlink" = "0" ]
-					then 
-						make lora_gateway_pi2
-					else
-						make lora_gateway_pi2_downlink 
-				fi		
-		elif [ "$board" = "8" ]
-			then
-				echo "You have a Raspberry 3B"
-				echo "Compiling for Raspberry 2 and 3"
-				if [ "$downlink" = "0" ]
-					then 
-						make lora_gateway_pi2
-					else
-						make lora_gateway_pi2_downlink 
-				fi	
-		elif [ "$board" = "13" ] || [ "$board" = "14" ]
-			then
-				echo "You have a Raspberry 3B+/3A+"
-				echo "Compiling for Raspberry 2 and 3"
-				if [ "$downlink" = "0" ]
-					then 
-						make lora_gateway_pi2
-					else
-						make lora_gateway_pi2_downlink 
-				fi			
-		elif [ "$board" = "9" ]
-			then
-				echo "You have a Raspberry Zero"
-				echo "Compiling for Raspberry Zero (same as Raspberry 1)"
-				if [ "$downlink" = "0" ]
-					then 
-						make lora_gateway
-					else
-						make lora_gateway_downlink 
-				fi	
-		elif [ "$board" = "12" ]
-			then
-				echo "You have a Raspberry Zero W"
-				echo "Compiling for Raspberry Zero W (same as Raspberry 1)"
-				if [ "$downlink" = "0" ]
-					then 
-						make lora_gateway
-					else
-						make lora_gateway_downlink 
-				fi	
-		elif [ "$board" = "17" ]
-			then
-				echo "You have a Raspberry 4B"
-				echo "not supported yet"
-				#echo "Compiling for Raspberry Zero W (same as Raspberry 1)"
-				#if [ "$downlink" = "0" ]
-				#	then 
-				#		make lora_gateway
-				#	else
-				#		make lora_gateway_downlink 
-				#fi
-		else
-			echo "Not support, trying"		
-			echo "Compiling for Raspberry 1"
-			if [ "$downlink" = "0" ]
-				then 
-					make lora_gateway
-				else
-					make lora_gateway_downlink 
-			fi	
-		fi
-
-		#board=`cat /proc/cpuinfo | grep "Revision" | cut -d ':' -f 2 | tr -d " \t\n\r"`	
-	
-		#if [ "$board" = "a01040" ] || [ "$board" = "a01041" ] || [ "$board" = "a21041" ] || [ "$board" = "a22042" ]
-		#	then
-		#		echo "You have a Raspberry 2"
-		#		echo "Compiling for Raspberry 2 and 3"
-		#		if [ "$downlink" = "0" ]
-		#			then 
-		# 				make lora_gateway_pi2
-		# 			else
-		# 				make lora_gateway_pi2_downlink 
-		# 		fi		
-		# elif [ "$board" = "a02082" ] || [ "$board" = "a22082" ] || [ "$board" = "a32082" ] || [ "$board" = "a52082" ] || [ "$board" = "a22083" ]
-		# 	then
-		# 		echo "You have a Raspberry 3B"
-		# 		echo "Compiling for Raspberry 2 and 3"
-		# 		if [ "$downlink" = "0" ]
-		# 			then 
-		# 				make lora_gateway_pi2
-		# 			else
-		# 				make lora_gateway_pi2_downlink 
-		# 		fi	
-		# elif [ "$board" = "a020d3" ]
-		# 	then
-		# 		echo "You have a Raspberry 3B+"
-		# 		echo "Compiling for Raspberry 2 and 3"
-		# 		if [ "$downlink" = "0" ]
-		# 			then 
-		# 				make lora_gateway_pi2
-		# 			else
-		# 				make lora_gateway_pi2_downlink 
-		# 		fi			
-		# elif [ "$board" = "900092" ] || [ "$board" = "900093" ]
-		# 	then
-		# 		echo "You have a Raspberry Zero"
-		# 		echo "Compiling for Raspberry Zero (same as Raspberry 1)"
-		# 		if [ "$downlink" = "0" ]
-		# 			then 
-		# 				make lora_gateway
-		# 			else
-		# 				make lora_gateway_downlink 
-		# 		fi	
-		# elif [ "$board" = "9000c1" ]
-		# 	then
-		# 		echo "You have a Raspberry Zero W"
-		# 		echo "Compiling for Raspberry Zero W (same as Raspberry 1)"
-		# 		if [ "$downlink" = "0" ]
-		# 			then 
-		# 				make lora_gateway
-		# 			else
-		# 				make lora_gateway_downlink 
-		# 		fi	
-		# elif [ "$board" = "a03111" ] || [ "$board" = "b03111" ] || [ "$board" = "c03111" ]
-		# 	then
-		# 		echo "You have a Raspberry 4B"
-		# 		echo "not supported yet"
-		# 		#echo "Compiling for Raspberry Zero W (same as Raspberry 1)"
-		# 		#if [ "$downlink" = "0" ]
-		# 		#	then 
-		# 		#		make lora_gateway
-		# 		#	else
-		# 		#		make lora_gateway_downlink 
-		# 		#fi
-		# else
-		# 	echo "You might have a Raspberry 1"		
-		# 	echo "Compiling for Raspberry 1"
-		# 	if [ "$downlink" = "0" ]
-		# 		then 
-		# 			make lora_gateway
-		# 		else
-		# 			make lora_gateway_downlink 
-		# 	fi	
-		# fi
-		
-		cd scripts
+		./compile_lora_gateway.sh
 fi
 
 if [ $# == 1 ]
@@ -321,8 +144,16 @@ if [ "$ouinon" = "y" ] || [ "$ouinon" = "Y" ]
 				# then in all cases we replace DAEMON_CONF so that if we already have an uncommented DAEMON_CONF it will also work
 				sudo sed -i 's/^DAEMON_CONF.*/DAEMON_CONF="/etc/hostapd/hostapd.conf"/g' /etc/default/hostapd
 				echo "Done"
-				echo "Copying access-point interface configuration file in /etc/network"
-				sudo cp interfaces_ap /etc/network
+				#echo "Copying access-point interface configuration file in /etc/network"
+				#sudo cp interfaces_ap /etc/network
+				##########################
+				#new way to set interfaces
+				##########################
+				sudo mv /etc/network/interfaces /etc/network/interfaces.backup
+				sudo echo "source-directory /etc/network/interfaces.d" > /etc/network/interfaces
+				sudo echo "nohook wpa_supplicant" >> /etc/dhcpcd.conf
+				sudo echo "interface wlan0" >> /etc/dhcpcd.conf
+				sudo echo "static ip_address=192.168.200.1/24" >> /etc/dhcpcd.conf 
 				echo "Done"
 				echo "Add in /etc/dnsmasq.conf DHCP lease IP range, the RPI acces-point will have IP 192.168.200.1"
 				echo "interface=wlan0" >>  /etc/dnsmasq.conf

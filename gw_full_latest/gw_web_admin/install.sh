@@ -80,6 +80,7 @@ sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/sh/web_shell_sc
 sudo echo "www-data ALL=(ALL) NOPASSWD: /usr/bin/python" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /var/www/html/admin/libs/python/key_clouds.py, /var/www/html/admin/libs/python/key_thingspeak.py" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/basic_config_gw.sh" >> /tmp/sudoers.bak
+sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/compile_lora_gateway.sh" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/update_gw.sh" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/prepare_wifi_client.sh" >> /tmp/sudoers.bak
 sudo echo "www-data ALL=(ALL) NOPASSWD: /home/pi/lora_gateway/scripts/prepare_access_point.sh" >> /tmp/sudoers.bak

@@ -71,6 +71,12 @@ while 1:
 
 			if ls[0]=='INFO' and "concentrator stopped" in ls[1]:
 				print l			
+				
+			if ls[0]=='INFO' and "PULL_RESP received" in ls[1]:
+				print l
+				
+			if ls[0]=='INFO' and "tx_start_delay" in ls[1]:
+				print l				
 								
 			if ls[0]=='ERROR':
 				print l				
@@ -82,6 +88,7 @@ while 1:
 			
 			#here we parse the rxpk json line
 			if ls[0]=='JSON up' and "rxpk" in ls[1]:
+				print l
 				
 				try:
 					l_json=json.loads(l[9:])
@@ -103,7 +110,7 @@ while 1:
 					
 						print "^r%d,%d,%d,%d" % (int(bw), int(cr), int(sf), int(rxpk['freq']*1000))
 	
-						print "^t%s" % rxpk['time'].replace('Z','')
+						print "^t%s*%s" % (rxpk['time'].replace('Z',''), rxpk['tmst'])
 				
 						#print ls[payload]
 					
@@ -128,6 +135,7 @@ while 1:
 			#here we parse the stat json line to get the GPS position given by lora_pkt_fwd
 			#we use the GPS coordinates and replace them in our gateway_conf.json file			
 			if ls[0]=='JSON up' and "stat" in ls[1]:
+				print l
 				
 				try:
 					l_json=json.loads(l[9:])
@@ -145,7 +153,7 @@ while 1:
 					if lati!='undef' and long!='undef':
 									
 						gps_pos='lora_pkt_fwd_formatter: GPS(%.5f,%.5f)' % (lati,long)
-						#print gps_pos
+						print gps_pos
 		
 						cmd="""sed -i -- 's/"ref_latitude.*,/"ref_latitude" : """+'"'+str(lati)+'"'+""",/g' /home/pi/lora_gateway/gateway_conf.json"""
 

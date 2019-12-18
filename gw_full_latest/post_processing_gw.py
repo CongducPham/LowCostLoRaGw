@@ -102,6 +102,7 @@ LORAWAN_HEADER_SIZE=13
 pdata="0,0,0,0,0,0,0,0"
 rdata="0,0,0,0"
 tdata="N/A"
+tmst="N/A"
 
 short_info_1="N/A"
 short_info_2="N/A"
@@ -920,6 +921,17 @@ while True:
 			tdata = sys.stdin.readline()
 			print "rcv timestamp (^t): "+tdata
 			tdata = tdata.replace('\n','')
+			
+			tmst=tdata.count('*')
+			
+			if (tmst != 0):
+				tdata_tmp=tdata.split('*')[0]
+				tmst=tdata.split('*')[1]
+				tdata=tdata_tmp
+			else:
+				tmst=''
+			
+			tdata = tdata.split('+')[0]
 			short_info_3=tdata.split('+')[0]
 			
 			if (dateutil_tz==True):
@@ -1094,14 +1106,15 @@ while True:
 				#----------------------------
 				#| 7  6  5 | 4  3  2 | 1  0 |
 				#----------------------------
+				#  0  0  0   0  0  0   0  0		join request
 				#  0  1  0   0  0  0   0  0		unconfirmed data up
-				#  1  0  0   0  0  0   0  0		confirmed data up 
+				#  1  0  0   0  0  0   0  0		confirmed data up
 				#   MType      RFU     major
 				#
 				#the main MType is unconfirmed data up b010 or confirmed data up b100
 				#and packet format is as follows, payload starts at byte 9
 				#MHDR[1] | DevAddr[4] | FCtrl[1] | FCnt[2] | FPort[1] | EncryptedPayload | MIC[4]
-				if ord(ch) & 0x40 == 0x40 or ord(ch) & 0x80 == 0x80:
+				if ord(ch) & 0x40 == 0x40 or ord(ch) & 0x80 == 0x80 or ord(ch) & 0x00 == 0x00:
 					#Do the LoRaWAN decoding
 					print "LoRaWAN?"
 					
@@ -1150,7 +1163,7 @@ while True:
 								cloud_script=_cloud_for_lorawan_encrypted_data[cloud_index]
 								print "uploading with "+cloud_script
 								sys.stdout.flush()
-								cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"\""+" \""+_gwid.replace('\n','')+"\""
+								cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"*"+tmst+"\""+" \""+_gwid.replace('\n','')+"\""
 							except UnicodeDecodeError, ude:
 								print ude
 							else:

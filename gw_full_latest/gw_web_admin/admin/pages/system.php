@@ -68,12 +68,18 @@ require 'header.php';
                             </br>
             				<p>
 								<?php 
-									if(is_file("/etc/network/interfaces_not_ap")){
-										echo "&nbsp;&nbsp;&nbsp;&nbsp;Gateway configuration file is for Access Point mode";
+									ob_start();
+									system("pgrep hostapd"); 
+									$hostapd=ob_get_contents(); 
+									ob_clean();
+									echo '<p>';
+									if ($hostapd=='') {								
+										echo "&nbsp;&nbsp;&nbsp;&nbsp;Gateway is configured as WiFi client. Be sure to have indicated WiFi credentials";
 									}
 									else{
-										echo "&nbsp;&nbsp;&nbsp;&nbsp;Gateway configuration file is for WiFi client mode";
+										echo "&nbsp;&nbsp;&nbsp;&nbsp;Gateway is acting as WiFi Access Point";
 									}
+									echo '</p>';
 								?>                            
                             </p>
                                                         

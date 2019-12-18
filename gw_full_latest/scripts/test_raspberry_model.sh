@@ -17,27 +17,43 @@ echo "type code is (dec) $board"
 
 if [ "$board" = "0" ] || [ "$board" = "1" ] || [ "$board" = "2" ] || [ "$board" = "3" ]
 	then
-		echo "You have a Raspberry 1"			
+		echo "You have a Raspberry 1"
+		echo ">RPI1/0"
+		echo "RPI1/0" > /home/pi/lora_gateway/arch.txt
 elif [ "$board" = "4" ]
 	then
-		echo "You have a Raspberry 2"		
+		echo "You have a Raspberry 2"
+		echo ">RPI2/3"
+		echo "RPI2/3" > /home/pi/lora_gateway/arch.txt
 elif [ "$board" = "8" ]
 	then
 		echo "You have a Raspberry 3B"
+		echo ">RPI2/3"
+		echo "RPI2/3" > /home/pi/lora_gateway/arch.txt
 elif [ "$board" = "13" ] || [ "$board" = "14" ]
 	then
-		echo "You have a Raspberry 3B+/3A+"		
+		echo "You have a Raspberry 3B+/3A+"
+		echo ">RPI2/3"
+		echo "RPI2/3" > /home/pi/lora_gateway/arch.txt
 elif [ "$board" = "9" ]
 	then
 		echo "You have a Raspberry Zero"
+		echo ">RPI1/0"
+		echo "RPI1/0" > /home/pi/lora_gateway/arch.txt
 elif [ "$board" = "12" ]
 	then
 		echo "You have a Raspberry Zero W"
+		echo ">RPI1/0"
+		echo "RPI1/0" > /home/pi/lora_gateway/arch.txt
 elif [ "$board" = "17" ]
 	then
 		echo "You have a Raspberry 4B"
+		echo ">RPI4"
+		echo "RPI4" > /home/pi/lora_gateway/arch.txt
 else
-	echo "Don't know, sorry"			
+	echo "Don't know, sorry"
+	echo ">NA"
+	echo "NA" > /home/pi/lora_gateway/arch.txt
 fi
 
 

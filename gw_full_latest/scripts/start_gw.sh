@@ -3,14 +3,14 @@
 #List of /boot file to control the startup behavior
 #These file can be created by inserting the SD card 
 #into any computer as the /boot partition is in FAT
-#format.
+#format. The content has no meaning, just the file.
 #
 #	- /boot/rak831.txt
 #	- /boot/basic_config_on_boot.txt
 #	- /boot/do_not_start_lora_gw.txt
 ###################################################
 	
-cd /home/pi/lora_gateway
+cd /home/pi/lora_gateway/scripts
 
 #run script for the shutdown button
 if [ -f /boot/rak831.txt ] || grep start_upl /etc/rc.local>/dev/null || grep start_lpf /etc/rc.local>/dev/null: ; then
@@ -22,16 +22,31 @@ else
 	python /home/pi/lora_gateway/scripts/piShutdown.py &
 fi
 
-if [ -f /boot/basic_config_on_boot.txt ]
+#check whether the low-level radio bridge has been compiled for the correct RPI architecture
+arch_compiled="NA"
+
+if [ -f /home/pi/lora_gateway/arch_compiled.txt ]
+then
+	arch_compiled=`cat /home/pi/lora_gateway/arch_compiled.txt`
+	echo "lora_gateway compiled for $arch_compiled"
+fi
+
+arch=`./test_raspberry_model.sh | grep ">" | cut -d ">" -f2`
+echo "detecting RPI arch to be $arch"
+
+#we recompile if architecture has changed, or if we are forced to run basic_config_gw.sh
+if [ -f /boot/basic_config_on_boot.txt ] || [ $arch != $arch_compiled ] || [ $arch_compiled = "NA" ]
 then
 	echo "Running basic_config_gw.sh"
-	cd scripts
 	sudo ./basic_config_gw.sh
 	cd ..
 fi
 
 #create the gw id so that a newly installed gateway is always configured with a correct id
-/home/pi/lora_gateway/scripts/create_gwid.sh
+./create_gwid.sh
+
+
+cd /home/pi/lora_gateway
 
 ###
 ### Start Internet access with 3G dongle
