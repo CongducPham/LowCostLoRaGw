@@ -419,10 +419,10 @@ LoRaWAN example and support
 
 `Arduino_LoRa_LMIC_ABP_BASIC` is the basic LoRaWAN ABP (Activation By Personalization) example from Thomas Telkamp and Matthijs Kooijman using the LMIC port for Arduino. It sends "Hello from LMIC" using DR_SF12 (i.e. BW125SF12). In order to use `Arduino_LoRa_LMIC_ABP_BASIC`, you need to create a device for instance on TTN to get the device short address (32 bits) and, if you want, both NwkSKey and AppSKey. These information have to be filled in the example code. A nice tutorial can be found on [https://medium.com/kkbankol-events/tutorial-build-a-open-source-smart-city-based-on-lora-7ca76b9a098](https://medium.com/kkbankol-events/tutorial-build-a-open-source-smart-city-based-on-lora-7ca76b9a098). Don't forget to change the DIO0, DIO1, RST and DIO2 setting according to your wiring. If you are using our [ProMini PCB](https://github.com/CongducPham/LowCostLoRaGw#pcbs) then the settings is respectively D2, D3, D4 and D5 when you solder together the corresponding solder pads. Normally you only need DIO0, DIO1 and RST. You can use the `Arduino_LoRa_LMIC_ABP_BASIC` example to send data either to a regular LoRaWAN gateway (which of course works) and more interestingly to our low-cost single channel LoRa gateway that has to be configured as follows:
 
-	- set mode to 11 in `gateway_conf.json` to configure for LoRaWAN reception on single channel (868.1MHz)
-	- set "raw" to true in `gateway_conf.json` 
-	- set "aes_lorawan" to false to upload to a LoRaWAN cloud (for instance TheThingNetwork)
-	- enable LoRaWAN encrypted cloud in `clouds.json` as explained in [README-TTN](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-TTN.md)
+- set mode to 11 in `gateway_conf.json` to configure for LoRaWAN reception on single channel (868.1MHz)
+- set "raw" to true in `gateway_conf.json` 
+- set "aes_lorawan" to false to upload to a LoRaWAN cloud (for instance TheThingNetwork)
+- enable LoRaWAN encrypted cloud in `clouds.json` as explained in [README-TTN](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-TTN.md)
 		
 Normally `Arduino_LoRa_LMIC_ABP_BASIC` use 868.1, 868.3 and 868.5. If you send to the low-cost gateway, you will loose 2 packets. You can disable 868.3 and 868.5 by uncommenting a small portion of code at the end of the `Arduino_LoRa_LMIC_ABP_BASIC` example:
 
@@ -441,9 +441,9 @@ Normally `Arduino_LoRa_LMIC_ABP_BASIC` use 868.1, 868.3 and 868.5. If you send t
 
 If you know what you are doing, you can enable local LoRaWAN AES decryption by:
 
-	- setting "aes_lorawan" to true
-		- but then, indicate both NwkSKey and AppSKey in `key_LoRaWAN.py`
-		- these keys can be found on your TTN account if you are using TTN LoRaWAN		
+- setting "aes_lorawan" to true
+- but then, indicate both NwkSKey and AppSKey in `key_LoRaWAN.py`
+- these keys can be found on your TTN account if you are using TTN LoRaWAN		
 		
 `Arduino_LoRa_temp` also shows a limited LoRaWAN support using our library (not LMIC, therefore DIO connection are not needed). You need to enable LoRaWAN features with the following define statements:
 
