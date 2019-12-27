@@ -4,7 +4,8 @@
 #if lora_pkt_fwd is used at low-level, then indicate the server
 #in global_conf.json so that other messages (e.g. downlink, stats,...)
 #are correctly handled
-lorawan_server="router.eu.thethings.network"
+#do not use localhost as it may be converted into ::1 for in IPv6 notation
+lorawan_server="127.0.0.1"
 lorawan_port=1700
 
 #Note how we can indicate a device source addr that are allowed to use the script

@@ -31,7 +31,8 @@
 		"dht22_mongo": false,
 		"check_internet_pending": true,		
 		"fast_stats": 15,
-		"ttn_status" : true
+		"ttn_status" : true,
+		"cs_status" : true
 	},	
 	"alert_conf" : {
 		"use_mail" : false,

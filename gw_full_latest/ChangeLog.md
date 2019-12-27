@@ -1,8 +1,17 @@
 Change logs
 ===========
 
+Dec 24th, 2019
+--------------
+- when using a RAK831/2245 SX1301-based hat with our `lora_pkt_fwd_formatter.py` formatter script to provide multi-channel support, we tested that a LoRaWAN device (commercial or LMIC-based) is fully supported (uplink, downlink, in both ABP and OTAA mode).
+- the gateway can also interact with the ChirpStack open-source LoRaWAN Network Server. Tests have been realized with a locally installed ChirpStack NS (127.0.0.1).
+	* `CloudChirpStack.py`, `key_ChirpStack.py` and `scripts/lorawan_stats/cs_stats.py` are added. They are very similar to the TTN scripts but we choose to duplicate them so that both TTN and ChirpStack can be used at the same time if this is desirable.
+	* see `scripts/chirpstack/README.md` for more details
+
+
 Dec 12th, 2019
 --------------
+- if there is a `lora_gateway` folder in the boot partition then its whole content is copied into `/home/pi/lora_gateway`. This is usefull when you want to configure the gateway by writing on the SD card from a computer. This is done only once as the folder is renamed after its content have been copied. 
 - change network configuration style to use `dhcpcd.conf`
 - add `scripts/compile_lora_gateway.sh` script to mutualize the compilation procedure
 - `scripts/start_gw.sh` will automatically recompile the low-level gateway program if the RPI model has changed from the one it has been compiled for
@@ -58,12 +67,12 @@ May 22nd, 2019
 	- benefit from the open, versatile, multi-cloud Low-cost LoRa IoT framework with the flexibility and scalability of a multi-channel LoRaWAN gateway
 	- you need to install the Semtech's `lora_gateway` and `packet_forwarder` packages
 	- for RAK831: see https://github.com/RAKWireless/RAK2245-RAK831-LoRaGateway-RPi-Raspbian-OS
-	- then run `scripts/rak831_util_pkt_logger/install_lpf.sh`
-		- `cd /home/pi/lora_gateway/scripts/rak831_util_pkt_logger`
+	- then run `scripts/rak2245-rak831/install_lpf.sh`
+		- `cd /home/pi/lora_gateway/scripts/rak2245-rak831`
 		- `sudo ./install_lpf.sh`
 	- a slightly modified version of `lora_pkt_fwd` is used to inject LoRa packets into the post-processing stage		
 	- there is also a slightly modified version of `util_pkt_logger` for no Internet connection deployment scenarios
-	- more details in the dedicated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak831_util_pkt_logger/README.md)	
+	- more details in the dedicated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak2245-rak831/README.md)	
 
 May 15th, 2019
 --------------
@@ -83,7 +92,7 @@ April 25th, 2019
 
 March 26rd, 2019
 ----------------
-- add support of TheThingsNetwork (TTN): `CloudTTN.py`, `key_TTN.py` and `scripts/ttn/ttn_stats.py` are added
+- add support of TheThingsNetwork (TTN): `CloudTTN.py`, `key_TTN.py` and `scripts/lorawan_stats/ttn_stats.py` are added
 - the regular gateway id has been changed from 00000027EBD1B236 (for instance) to 0000B827EBD1B236 to take the 6 bytes of the eth0 MAC address
 - the gateway id for TTN will then be defined as B827EBFFFFD1B236
 - there is a dedicated README file for TTN support and configuration

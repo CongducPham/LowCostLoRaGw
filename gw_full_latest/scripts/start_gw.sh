@@ -12,8 +12,17 @@
 
 #leave some time for system to completely setup
 sleep 10
+
+#if there is a lora_gateway folder in the boot partition then we copy the whole content
+#this is usefull when you want to configure the gateway by writing on the SD card from a computer
+if [ -d /boot/lora_gateway ]
+then
+	echo "Detecting /boot/lora_gateway folder, copy content in /home/pi/lora_gateway"
+	cp -r /boot/lora_gateway/* /home/pi/lora_gateway
+	mv /boot/lora_gateway /boot/lora_gateway_`date +%F`
+fi
 	
-cd /home/pi/lora_gateway/scripts
+cd /home/pi/lora_gateway
 
 #run script for the shutdown button
 if [ -f /boot/rak831.txt ] || grep start_upl /etc/rc.local>/dev/null || grep start_lpf /etc/rc.local>/dev/null: ; then
@@ -34,22 +43,18 @@ then
 	echo "lora_gateway compiled for $arch_compiled"
 fi
 
-arch=`./test_raspberry_model.sh | grep ">" | cut -d ">" -f2`
+arch=`/home/pi/lora_gateway/scripts/test_raspberry_model.sh | grep ">" | cut -d ">" -f2`
 echo "detecting RPI arch to be $arch"
 
 #we recompile if architecture has changed, or if we are forced to run basic_config_gw.sh
 if [ -f /boot/basic_config_on_boot.txt ] || [ $arch != $arch_compiled ] || [ $arch_compiled = "NA" ]
 then
 	echo "Running basic_config_gw.sh"
-	sudo ./basic_config_gw.sh
-	cd ..
+	sudo /home/pi/lora_gateway/scripts/basic_config_gw.sh
 fi
 
 #create the gw id so that a newly installed gateway is always configured with a correct id
-./create_gwid.sh
-
-
-cd /home/pi/lora_gateway
+/home/pi/lora_gateway/scripts/create_gwid.sh
 
 ###
 ### Start Internet access with 3G dongle
@@ -151,11 +156,13 @@ pid = `pgrep hostapd`
 
 if [ "$pid" != "" ]
 then
+		echo "Gateway is acting as WiFi access point, configuring routing rules"
 		sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
 		sudo sed -i 's/^#net.ipv4.ip_forward=1/net.ipv4.ip_forward=1/g' /etc/sysctl.conf
 
 		if [ -f 3GDongle/use_3GDongle_internet_on_boot.txt ] || [ -f 3GDongle/loranga/use_loranga_internet_on_boot.txt ]
 		then
+				echo "Internet connectivity is provided by cellular network, configuring routing rules"
 				sudo iptables -t nat -A POSTROUTING -o ppp0 -j MASQUERADE
 				sudo iptables -A FORWARD -i ppp0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 				sudo iptables -A FORWARD -i wlan0 -o ppp0 -j ACCEPT

@@ -33,8 +33,8 @@ import sys
 #don't generate pyc (no compilation of imported module) so change in key_* file can be done dynamically
 sys.dont_write_bytecode = True
 
-import key_TTN as key_LoRaWAN
-netserv='TTN'
+import key_ChirpStack as key_LoRaWAN
+netserv='ChirpStack'
 
 try:
 	key_LoRaWAN.source_list
@@ -44,7 +44,8 @@ except AttributeError:
 try:
 	key_LoRaWAN.lorawan_server
 except AttributeError:
-	key_LoRaWAN.lorawan_server="router.eu.thethings.network"
+	#do not use localhost as it may be converted into ::1 for in IPv6 notation
+	key_LoRaWAN.lorawan_server="127.0.0.1"
 	
 try:
 	key_LoRaWAN.lorawan_port
@@ -153,11 +154,12 @@ class LoRaWAN:
     def _log(self, message, *args):
 		print('{}'.format(str(message).format(*args)))
 
+
 # Testing with pau_lorawan_testing/Pau_testing_device 0x26011721
 #
-# python CloudTTN.py "QCEXASYAAAABhCGE1L87NCDMk0jLa6hYXm0e+g==" "256,64,637605665,0,28,8,-45" "125,5,12,868100" "2019-03-25T18:46:00.528+01:00" "0000B827EBD1B236"
+# python CloudChirpStack.py "QCEXASYAAAABhCGE1L87NCDMk0jLa6hYXm0e+g==" "256,64,637605665,0,28,8,-45" "125,5,12,868100" "2019-03-25T18:46:00.528+01:00" "0000B827EBD1B236"
 # or
-# python CloudTTN.py "QCEXASYAAAABhCGE1L87NCDMk0jLa6hYXm0e+g==" "256,64,637605665,0,28,8,-45" "125,5,12,868100" "`date +%FT%T%z`" "0000B827EBD1B236"
+# python CloudChirpStack.py "QCEXASYAAAABhCGE1L87NCDMk0jLa6hYXm0e+g==" "256,64,637605665,0,28,8,-45" "125,5,12,868100" "`date +%FT%T%z`" "0000B827EBD1B236"
 #
 # get the base64 encrypted data from `Arduino_LoRa_temp` sending "Hello from UPPA"
 # 
@@ -216,24 +218,24 @@ def main(ldata, pdata, rdata, tdata, gwid):
 
 	if (src_str in key_LoRaWAN.source_list) or (len(key_LoRaWAN.source_list)==0):
 
-		#build the ttn_gwid which is defined to be gwid[4:10]+"FFFF"+gwid[10:]
+		#build the cs_gwid which is defined to be gwid[4:10]+"FFFF"+gwid[10:]
 		#gwid is normally defined as eth0 MAC address filled by 0 in front: 0000B827EBD1B236
-		ttn_gwid=gwid[4:10]+"FFFF"+gwid[10:]
+		cs_gwid=gwid[4:10]+"FFFF"+gwid[10:]
 		
-		ttn = LoRaWAN(
-			id=ttn_gwid,
+		cs = LoRaWAN(
+			id=cs_gwid,
 			frequency=rfq,
 			bw=rbw,
 			sf=rsf,
 			server=key_LoRaWAN.lorawan_server,
 			port=key_LoRaWAN.lorawan_port)
 
-		ttn.start()
+		cs.start()
 		
-		ttn.rx_packet(ldata, datalen, tdata, tmst, RSSI, SNR)
+		cs.rx_packet(ldata, datalen, tdata, tmst, RSSI, SNR)
 			
 	else:
-		print "Source is not is source list, not sending to %s" % netserv	
+		print "Source is not is source list, not sending to %s"  % netserv	
 		            
 if __name__ == "__main__":
 	main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])

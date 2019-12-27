@@ -6,10 +6,27 @@ import socket
 import time
 import datetime
 import sys
-	
-SERVER = 'router.eu.thethings.network'
-PORT = 1700
 
+try:
+	import key_ChirpStack as key_LoRaWAN
+	try:
+		key_LoRaWAN.lorawan_server
+	except AttributeError:
+		#do not use localhost as it may be converted into ::1 for in IPv6 notation
+		key_LoRaWAN.lorawan_server="127.0.0.1"
+	try:
+		key_LoRaWAN.lorawan_port
+	except AttributeError:
+		key_LoRaWAN.lorawan_port=1700
+		
+	lorawan_server=key_LoRaWAN.lorawan_server
+	lorawan_port=key_LoRaWAN.lorawan_port
+	
+except ImportError:
+	#do not use localhost as it may be converted into ::1 for in IPv6 notation
+	lorawan_server="127.0.0.1"
+	lorawan_port=1700
+	
 PROTOCOL_VERSION = 1
 
 PUSH_DATA = 0
@@ -33,7 +50,7 @@ STAT_PK = {
     }
 }
 
-class TTN_stats:
+class CS_stats:
 
     def __init__(self, id, lati, long, rxnb, rxok, rxfw, ackr, dwnb, txnb, server, port):
         self.id = id
@@ -53,11 +70,11 @@ class TTN_stats:
 
     def start(self):
 
-        self._log('ttn_stats: gw id {}', self.id)
+        self._log('cs_stats: gw id {}', self.id)
 
         # get the server IP and create an UDP socket
         self.server_ip = socket.getaddrinfo(self.server, self.port)[0][-1]
-        self._log('ttn_stats: Opening UDP socket to {} ({}) port {}...', self.server, self.server_ip[0], self.server_ip[1])
+        self._log('cs_stats: Opening UDP socket to {} ({}) port {}...', self.server, self.server_ip[0], self.server_ip[1])
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.setblocking(False)
@@ -84,17 +101,17 @@ class TTN_stats:
         token = os.urandom(2)
         packet = bytearray([PROTOCOL_VERSION]) + token + bytearray([PUSH_DATA]) + binascii.unhexlify(self.id) + data
         print ''.join('{:02x}'.format(x) for x in packet)
-        self._log('ttn_stats: Try to send UDP packet: {}', packet)
+        self._log('cs_stats: Try to send UDP packet: {}', packet)
         try:
 	        self.sock.sendto(packet, self.server_ip)
 	        self.sock.close()
         except Exception as ex:
-	        self._log('ttn_stats: Failed to push uplink packet to server: {}', ex)
+	        self._log('cs_stats: Failed to push uplink packet to server: {}', ex)
 
     def _log(self, message, *args):
 		print('{}'.format(str(message).format(*args)))
 
-# python ttn-stats.py "0,0,0,0,0,0" "0.0,0.0" "B827EBFFFFD1B236"
+# python cs_stats.py "0,0,0,0,0,0" "0.0,0.0" "B827EBFFFFD1B236"
 # replace "0,0,0,0,0,0" by "rxnb,rxok,rxfw,ackr,dwnb,txnb"
 # replace "0.0,0.0" by "lati,long"
 
@@ -116,7 +133,7 @@ def main(stats_str, gps_str, gwid):
 		lati="undef"
 		long="undef"		
 	
-	ttn = TTN_stats(
+	cs = CS_stats(
 		id=gwid,
 		lati=lati,
 		long=long,		
@@ -126,10 +143,10 @@ def main(stats_str, gps_str, gwid):
 		ackr=ackr,
 		dwnb=dwnb,
 		txnb=txnb,
-		server=SERVER,
-		port=PORT)
+		server=lorawan_server,
+		port=lorawan_port)
 
-	ttn.start()
+	cs.start()
 	            
 if __name__ == "__main__":
 	main(sys.argv[1], sys.argv[2], sys.argv[3])

@@ -358,11 +358,38 @@ def main(stats_str):
 		
 		try:
 			#provide the stat string, the gps coordinates and the ttn gw id
-			cmd_arg='python scripts/ttn/ttn_stats.py'+" \""+stats_str+"\""+" \""+gps_str+"\""+" \""+ttn_gwid+"\""
+			cmd_arg='python scripts/lorawan_stats/ttn_stats.py'+" \""+stats_str+"\""+" \""+gps_str+"\""+" \""+ttn_gwid+"\""
 			os.system(cmd_arg)		
 		except:
 			print "post status: error when executing %s" % cmd_arg
 
+	#------------------------------------------------------------
+	#notify for ChirpStack gw status
+	#------------------------------------------------------------
+	try:
+		cs_status = gw_json_array["status_conf"]["cs_status"]
+	except KeyError:
+		cs_status = False
+
+	lora_mode = gw_json_array["radio_conf"]["mode"]
+	
+	if lora_mode != 11:
+		cs_status = False
+			
+	if cs_status:
+		#build the cs_gwid which is defined to be _gwid[4:10]+"FFFF"+_gwid[10:]
+		#_gwid is normally defined as eth0 MAC address filled by 0 in front: 0000B827EBD1B236
+		cs_gwid=_gwid[4:10]+"FFFF"+_gwid[10:]	
+		
+		gps_str=_gw_lat+","+_gw_long
+		
+		try:
+			#provide the stat string, the gps coordinates and the cs gw id
+			cmd_arg='python scripts/lorawan_stats/cs_stats.py'+" \""+stats_str+"\""+" \""+gps_str+"\""+" \""+cs_gwid+"\""
+			os.system(cmd_arg)		
+		except:
+			print "post status: error when executing %s" % cmd_arg
+			
 	#------------------------------------------------------------	
 	#------------------------------------------------------------
 		

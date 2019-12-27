@@ -109,9 +109,7 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 			else
 				echo "/opt/ttn_gateway/lora_gateway/util_pkt_logger folder does not exist"
 				echo "Please, install the RAK831/2245 related software first"
-				echo "cd /home/pi; git clone https://github.com/RAKWireless/RAK2245-RAK831-LoRaGateway-RPi-Raspbian-OS.git RAK831"
-				echo "cd RAK831/lora; sudo ./install.sh"
-				echo "If you encounter error with apt-get install dialog, then edit RAK's install.sh and comment the corresponding line"
+				echo "We provide an install_rak_lora.sh script that performs a light installation that it is recommended to use"
 				exit 1
 		fi		
 	else

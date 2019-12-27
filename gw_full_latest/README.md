@@ -94,7 +94,7 @@ If you are using a Raspberry v2 or v3:
 
 On Raspberry v2 or v3 a symbolic link will be created that will point to `lora_gateway_pi2`.
 
-To launch the low-level gateway (use `K` to kill all processes started at boot first):
+To launch the low-level gateway (first, use `K` to kill all processes that have been started at boot):
 
 	> sudo ./lora_gateway
 
@@ -119,19 +119,19 @@ To further log processing output in a file (in `/home/pi/Dropbox/LoRa-test/post_
 
     > mkdir -p Dropbox/LoRa-test 	
 	
-Actually, both `lora_gateway` can take additional parameters to configure the radio module. However, it is more convenient to use the `start_gw.py` script that will parse the gateway configuration file, see below, to launch the low-level gateway accordingly:
+Actually, `lora_gateway` can take additional parameters to configure the radio module. However, it is more convenient to use the `start_gw.py` script to launch the low-level gateway accordingly. 
 
 	> sudo python start_gw.py
-
-This is the command that we recommend and it is actually how the gateway starts when the Raspberry is powered on. To test, just flash a temperature sensor and it should work out-of-the-box on our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794).
-
-As `start_gw.py` simply reads the configuration file to launch `lora_gateway` and the `post_processing_gw.py` script, it is just a simpler way to run the gateway. You can however still use the corresponding command line for test purposes. For instance, with the default configuration file `sudo python start_gw.py` is equivalent to:
+	
+`start_gw.py` simply reads the configuration file to launch `lora_gateway` and the `post_processing_gw.py` script. For instance, with the default configuration file `sudo python start_gw.py` is equivalent to:
 
 	> sudo ./lora_gateway --mode 1 | python ./post_processing_gw.py | python ./log_gw	
 
-You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository https://github.com/CongducPham/tutorials.
+This is the command that is actually launched by the gateway when the Raspberry is powered on. Note that the shell script that is launched at boot is `scripts/start_gw.sh`. This script will call `python start_gw.py` after performing various tasks (starting 3G dongle, starting NodeRed,...). So if you need to add tasks before the gateway starts, it is `scripts/start_gw.sh` that you have to modify. You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutorial repository https://github.com/CongducPham/tutorials.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/post-processing.png)
+
+At this point, to test your gateway, just flash a temperature sensor and it should work out-of-the-box on our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794).
 
 Gateway configuration file
 --------------------------
@@ -180,15 +180,16 @@ or
 - setting in `gateway_cong.json` the gateway id: "gateway_ID" : "0000B827EBBEDA21"
 - creating the `/home/pi/Dropbox/LoRa-test` folder for log files (if it does not exist) 
 - creating a `log` symbolic link in the `lora_gateway` folder pointing to `/home/pi/Dropbox/LoRa-test` folder
-- configuring `/etc/hostapd/hostapd.conf` for WiFi access point 
+- configuring `/etc/hostapd/hostapd.conf` for WiFi access point SSID
 - configuring the gateway to run the `lora_gateway` program at boot
 
 If you need more advanced configuration, then run `config_gw.sh`. for advanced WiFi and Bluettoth configuration tasks (if you use our SD card image, otherwise, you need first to install some required packages). If you don't want some features, just skip them. The configuration script also automatically determines the gateway id like previously. `config_gw.sh` **takes care of:**
 
 - everything that `basic_config_gw.sh` is doing, **plus**
+- configuring WiFi access point and IP address lease range
 - configuring `/etc/bluetooth/main.conf` for Bluetooth 
-- activating MongoDB storage 
-- compiling DHT22 support 
+- activating local MongoDB storage cloud
+- compiling DHT22 support to monitor temperature/humidity in the gateway casing
 
 **Even if you installed from the zipped SD card image `basic_config_gw.sh` or `config_gw.sh` is still needed to personalize your gateway to:**
 
@@ -230,6 +231,7 @@ A typical `gateway_conf.json` is shown below:
 			"copy_post_processing_log" : false,
 			"dht22" : false,
 			"dht22_mongo": false,
+			"check_internet_pending": true,			
 			"fast_stats": 15,
 			"ttn_status" : true
 		},			
@@ -266,33 +268,31 @@ A typical `gateway_conf.json` is shown below:
 
 ["gateway_conf"]["downlink"] indicates the time interval (in second) for `post_processing_gw.py` to check for a `downlink-post.txt`. See this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md).
 
-["gateway_conf"]["status"] indicates the time interval (in second) for `post_processing_gw.py` to call `post_status_processing_gw.py` for periodic tasks. Currently, `post_status_processing_gw.py` will display a status message to indicate that the script is correctly running in case you don't receive packet for a long time.
+["gateway_conf"]["status"] indicates the time interval (in second) for `post_processing_gw.py` to call `post_status_processing_gw.py` for periodic tasks. `post_status_processing_gw.py` will display a status message to indicate that the script is correctly running in case you don't receive packet for a long time.
 
 	2017-12-27T14:30:17.496030> status: start running
-	2017-12-27T14:30:17.496899> status: show current GPS position
-	2017-12-27T14:30:17.497074> show GPS: current GPS coordinate: gw lat my_lat long my_long
+	.................................................
+	.................................................
 	2017-12-27T14:30:17.497242> status: exiting
-
-We plan in the future to send appropriate message to a LoRaWAN network server (such as TTN) in the same way the `single_chan_pkt_fwd` program from Thomas Telkamp works (and like most LoRaWAN gateways). 
 
 ["gateway_conf"]["aux_radio"] indicates the time interval (in second) for `post_processing_gw.py` to check for a `aux_radio_post.txt` file with data received from other radio interfaces, e.g. IEEE802.15.4, etc. This feature is not currently distributed as it is still in the early stage of development.
 
-["status_conf"]["dynamic_gps"] indicates whether you have a USB GPS module connected to update in real-time your gateway GPS position.
+["status_conf"]["dynamic_gps"] indicates whether you have a USB GPS module connected and want to update in real-time your gateway GPS position. As this is called within `post_status_processing_gw.py`, the GPS update interval is controlled by the value of ["gateway_conf"]["status"].
 
 ["status_conf"]["gps_port"] indicates the port for your USB GPS. It is most of the time `/dev/ttyACM0`.
 
-["status_conf"]["copy_post_processing_log"] indicates whether you want to periodically extract the last 500 lines of the log file to be available on the web admin interface. This option is somehow obsolete as the web admin interface has a button to perform on-demand copy of this log file.
+["status_conf"]["copy_post_processing_log"] indicates whether you want to periodically extract the last 500 lines of the log file to be available on the web admin interface. This option is somehow obsolete as the web admin interface has a button to perform on-demand copy of this log file as well as a simple packet logger. As this is called within `post_status_processing_gw.py`, this copy interval is controlled by the value of ["gateway_conf"]["status"].
 
-["status_conf"]["dht22"] indicates the time interval (in second) for `post_processing_gw.py` to trigger a temperature/humidity measure from the DHT22 sensor every N seconds (that you must connect and install, see step H). `post_processing_gw.py` will typically display the following information, that will be logged in the log file.
+["status_conf"]["dht22"] when set to true the temperature/humidity measures from a DHT22 sensor physically connected to the gateway will be collected by `post_status_processing_gw.py` which will typically display the following information, that will be also logged in the gateway's log file. As this is called within `post_status_processing_gw.py`, the measure interval is controlled by the value of ["gateway_conf"]["status"].
 
-	2017-03-31T23:42:52.703430> Getting gateway temperature
-	2017-03-31T23:42:52.703722> Gateway TC : 26.40 C | HU : 24.90 % at 2017-03-31 23:42:52.703074
+	2017-03-31T23:42:52.703430> post status get DHT22: get gateway temperature and humidity level
+	2017-03-31T23:42:52.703722> post status get DHT22: Gateway TC : 26.40 C | HU : 24.90 % at 2017-03-31 23:42:52.703074
 
-["status_conf"]["dht22_mongo"] when set to true will further store the temperature/humidity measure in the local MongDB. Then, these measures will be visible on the gateway's web page. You can check with this feature the condition inside the gateway's case in outdoor deployment.
+["status_conf"]["dht22_mongo"] when set to true `post_status_processing_gw.py` will further store the temperature/humidity measure in the local MongDB. Then, these measures will be visible on the gateway's local data web page. >ith this feature, you can remotely check the condition inside the gateway's case in an outdoor deployment scenario.
 
-["status_conf"]["fast_stats"] indicates the time interval (in second) for `post_processing_gw.py` to trigger a fast statistic task (`post_processing_gw.py` calls `python sensors_in_raspi/stats.py`). Currently, it is mainly used to update the display on a small OLED screen.
+["status_conf"]["fast_stats"] indicates the time interval (in second) for `post_processing_gw.py` to trigger a fast statistic task (`post_processing_gw.py` calls `python sensors_in_raspi/stats.py`). Is it independant from `post_status_processing_gw.py`  and currently, it is mainly used to update the display on a small OLED screen.
 
-["status_conf"]["ttn_status"] indicates whether the gateway should report its status to TheThingNetwork platform. Actually, you can leave it as `true` and the report will only be active when the gateway is running in LoRaWAN mode (see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-TTN.md)).
+["status_conf"]["ttn_status"] indicates whether the gateway should report its status to TheThingNetwork platform. Actually, you can leave it as `true` and the report will only be active when the gateway is running in LoRaWAN mode (see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-TTN.md)). As this is called within `post_status_processing_gw.py`, the TTN statistic report interval is controlled by the value of ["gateway_conf"]["status"].
 
 ["alert_conf"]["use_mail"] when set to true indicates that `post_processing_gw.py` will sent an alerting mail on specific events. There are currently 2 events: when `post_processing_gw.py` is started (which usually means that the gateway has booted and is up) and when the radio module has been reset by the low-level lora_gateway program because of some receive errors.
 
@@ -334,7 +334,7 @@ When you connect with `ssh` to the gateway, a text command interface, `cmd.sh`, 
 	5- tail -f ../Dropbox/LoRa-test/post-processing.log                  +
 	6- less ../Dropbox/LoRa-test/post-processing.log                     +
 	---------------------------------------------------* Connectivity *--+
-	f- test: ping www.univ-pau.fr                                        +
+	f- test: ping 8.8.8.8                                                +
 	g- wifi: configure as WiFi client at next reboot                     +
 	h- wifi: indicate WiFi SSID and password at next reboot              +
 	i- wifi: configure as WiFi access point at next reboot               +	
@@ -367,12 +367,12 @@ When you connect with `ssh` to the gateway, a text command interface, `cmd.sh`, 
 	======================================================================
 	Enter your choice: 
 
-`cmd.sh` needs a file called `gateway_id.txt` that should contain the ID of your gateway. As indicated previously, the gateway ID is composed of 8 bytes in hexadecimal notation with the last 5 bytes being the last 5 bytes of the gateway eth0 interface MAC address. It is exactely the same ID that the one indicated in `gateway_conf.json`. If you start `cmd.sh` without this `gateway_id.txt` file, `cmd.sh` will create such file by determining last 5 bytes of the gateway eth0 interface MAC address:
+`cmd.sh` needs a file called `gateway_id.txt` that should contain the ID of your gateway. As indicated previously, the gateway ID is composed of 8 bytes in hexadecimal notation with the last 6 bytes being the 6 bytes of the gateway eth0 interface MAC address. It is exactely the same ID that the one indicated in `gateway_conf.json`. If you start `cmd.sh` without this `gateway_id.txt` file, `cmd.sh` will create such file by determining the 6 bytes of the gateway eth0 interface MAC address:
 
 	> cat gateway_id.txt
-	00000027EBBEDA21
+	0000B827EBBEDA21
 	
-`cmd.sh` will also set the gateway id in the `gateway_conf.json` file: `"gateway_ID" : "00000027EBBEDA21"`. 
+`cmd.sh` will also set the gateway id in the `gateway_conf.json` file: `"gateway_ID" : "0000B827EBBEDA21"`. 
 
 Normally, the LoRa gateway starts automatically on boot. To verify that you have a running gateway, use option `3`.
 

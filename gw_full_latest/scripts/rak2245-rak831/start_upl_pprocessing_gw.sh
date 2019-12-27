@@ -84,7 +84,7 @@ do
         sleep_time=$[$BACKOFF_RETRY_TIME * $retry]
         
         if [ $sleep_time -gt $MAX_SLEEP_TIME ]; then
-        	sleep_time=$$MAX_SLEEP_TIME
+        	sleep_time=$MAX_SLEEP_TIME
         fi
         	
         echo "retry=$retry. Will retry in $sleep_time seconds" >&2
