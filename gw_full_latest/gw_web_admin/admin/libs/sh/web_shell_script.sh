@@ -77,6 +77,36 @@ then
 	fi
 fi
 
+if [ "$1" = "chirpstack_status" ]
+then
+	###################################
+	# enable/disable chirpstack netserv
+	###################################
+	cd /home/pi/lora_gateway/scripts/chirpstack
+	
+	if [ $2 == "true" ]
+	then
+		sudo ./enable_chirpstack.sh
+	else
+		sudo ./disable_chirpstack.sh
+	fi	
+fi
+
+if [ "$1" = "cloudchirpstack_conf" ]
+then
+	###################################
+	# Configure CloudChirpStack
+	###################################
+
+	tmp=$(mktemp)
+	if [ $# == 3 ] 
+	then
+		jq '.lorawan_encrypted_clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudChirpStack.py") .'$2' = '$3'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
+		sudo chown -R pi:pi /home/pi/lora_gateway/
+		sudo chmod +r /home/pi/lora_gateway/clouds.json
+	fi
+fi
+
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
 # gateway conf alert mail
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -417,6 +447,14 @@ then
 	fi
 fi
 
+if [ "$1" = "nodered_key" ]
+then
+	if [ "$2" = "source_list" ]
+	then
+		sudo sed -i 's/^source_list.*/source_list='"$3"'/g'''  /home/pi/lora_gateway/key_NodeRed.py
+	fi
+fi
+
 if [ "$1" = "cloudttn_conf" ]
 then
 	###################################
@@ -426,9 +464,25 @@ then
 	tmp=$(mktemp)
 	if [ $# == 3 ] 
 	then
-		jq '.clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudTTN.py") .'$2' = '$3'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
+		jq '.lorawan_encrypted_clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudTTN.py") .'$2' = '$3'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
 		sudo chown -R pi:pi /home/pi/lora_gateway/
 		sudo chmod +r /home/pi/lora_gateway/clouds.json
+	fi
+fi
+
+if [ "$1" = "ttn_key" ]
+then
+	if [ "$2" = "source_list" ]
+	then
+		sudo sed -i 's/^source_list.*/source_list='"$3"'/g'''  /home/pi/lora_gateway/key_TTN.py
+	fi
+fi
+
+if [ "$1" = "chirpstack_key" ]
+then
+	if [ "$2" = "source_list" ]
+	then
+		sudo sed -i 's/^source_list.*/source_list='"$3"'/g'''  /home/pi/lora_gateway/key_ChirpStack.py
 	fi
 fi
 

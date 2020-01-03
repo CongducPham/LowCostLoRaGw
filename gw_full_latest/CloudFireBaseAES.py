@@ -144,7 +144,7 @@ def main(ldata_b64, pdata, rdata, tdata, gwid):
 
 	#LoRaWAN packet
 	if dst==256:
-		src_str="%0.8X" % src
+		src_str="0x%0.8X" % src
 	else:
 		src_str=str(src)	
 

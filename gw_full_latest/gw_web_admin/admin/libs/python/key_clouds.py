@@ -9,6 +9,7 @@ import key_GpsFile
 import key_MQTT
 import key_NodeRed
 import key_TTN
+import key_ChirpStack
 
 key_data = {'waziup_server':key_WAZIUP.waziup_server,
 		'project_name':key_WAZIUP.project_name, 
@@ -38,8 +39,9 @@ key_data = {'waziup_server':key_WAZIUP.waziup_server,
 		'nodered_sensor_name':key_NodeRed.sensor_name,
 		'nodered_source_list':key_NodeRed.source_list,
 		'nointernet_source_list':key_NoInternet.source_list,
-		#'ttn_server':key_TTN.TTN_server,
-		#'ttn_port':key_TTN.TTN_port,
-		'ttn_source_list':key_TTN.source_list
+		#'ttn_server':key_TTN.lorawan_server,
+		#'ttn_port':key_TTN.lorawan_port,
+		'ttn_source_list':key_TTN.source_list,
+		'chirpstack_source_list':key_ChirpStack.source_list
 		}
 print json.dumps(key_data)

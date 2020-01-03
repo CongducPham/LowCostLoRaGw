@@ -104,6 +104,18 @@ function update_paboost($value) {
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh paboost ".$value);
 }
 
+function chirpstack_status($value){
+	shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh chirpstack_status ".$value);
+	ob_start();
+	system("systemctl is-active chirpstack-network-server.service | grep inactive");
+	$chirpstack_not_active=ob_get_contents(); 
+	ob_clean();
+	if ($chirpstack_not_active=='')
+		return 0;
+	else
+		return 1;	
+}
+
 function update_contact_sms($contacts){
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh contact_sms ".$contacts);
 }
@@ -198,6 +210,7 @@ function cloud_status($clouds_arr, $cloud_script){
 	$i = 0; $find = false;        							
     while($i < count($clouds_arr) && ! $find){
     	if($clouds_arr[$i]['script'] == $cloud_script){
+    		$find = true;
 			if($clouds_arr[$i]['enabled']){
 				echo "true"; 
 			}

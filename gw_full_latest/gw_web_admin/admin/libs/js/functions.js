@@ -5,6 +5,36 @@ $(function () {
 var maxAddr = 255;
 var defaultMsgDisplayTimer = 1500;
 
+//+++++++++++++++++++++++++++++++++++++
+// keep selected tab active on refresh
+// from https://stackoverflow.com/questions/18999501/bootstrap-3-keep-selected-tab-on-page-refresh
+//+++++++++++++++++++++++++++++++++++++
+
+$('a[data-toggle="tab"]').click(function (e) {
+    e.preventDefault();
+    $(this).tab('show');
+});
+
+$('a[data-toggle="tab"]').on("shown.bs.tab", function (e) {
+    var id = $(e.target).attr("href");
+    localStorage.setItem('selectedTab', id)
+});
+
+var selectedTab = localStorage.getItem('selectedTab');
+if (selectedTab != null) {
+    $('a[data-toggle="tab"][href="' + selectedTab + '"]').tab('show');
+}
+
+//+++++++++++++++++++++++++++++++++++++
+// enable bootstrap tooltip
+//+++++++++++++++++++++++++++++++++++++
+
+$(document).ready(function(){
+  $('[data-toggle="tooltip"]').tooltip();   
+});
+
+$('.my_tooltip').tooltip({html: true})
+
 //#######################################################################################
 // 									GATEWAY CONFIG
 //#######################################################################################
@@ -66,6 +96,7 @@ var defaultMsgDisplayTimer = 1500;
             	//erase message after 5 seconds
 	   			setTimeout(function() {
   					$('#gw_config_msg').html("");
+  					window.location.reload();
 	     		},defaultMsgDisplayTimer);
         	});
     		
@@ -437,6 +468,7 @@ var defaultMsgDisplayTimer = 1500;
 	   		//erase message after 5 seconds
 	    	setTimeout(function() {
   				$('#gw_config_msg').html("");
+  				window.location.reload();
 	    	},defaultMsgDisplayTimer);
         });
   	});		
@@ -478,6 +510,7 @@ var defaultMsgDisplayTimer = 1500;
 	   		//erase message after 5 seconds
 	    	setTimeout(function() {
   				$('#gw_config_msg').html("");
+  				window.location.reload();
 	    	},defaultMsgDisplayTimer);
         });
   	});	
@@ -621,6 +654,36 @@ var defaultMsgDisplayTimer = 1500;
 		$('#td_edit_status').hide();
 		$('#td_status_submit').hide();
     });
+
+//+++++++++++++++++++++++++++++++++++++
+// NETWORK SERVER
+//+++++++++++++++++++++++++++++++++++++
+
+	$('#chirpstack_status_toggle').change(function() {  
+    	chirpstack_status = $(this).prop('checked');
+    	
+    	$.get("process.php", {chirpstack_status: chirpstack_status}, function(data){	
+			$('#gw_config_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");
+  				window.location.reload();
+	    	},defaultMsgDisplayTimer);
+        });
+  	});	
+  	
+	$('#cloudchirpstack_status_toggle').change(function() {  
+    	var cloud_status = $(this).prop('checked');
+    	var cloud_name = "cloudchirpstack_conf";
+    	$.get("process.php", {cloud_status: cloud_status,cloud_name: cloud_name}, function(data){
+			$('#gw_config_msg').html(data);
+	   		//erase message after 5 seconds
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");
+  				window.location.reload();
+	    	},defaultMsgDisplayTimer);
+        });
+  	});  		  	
         
 //+++++++++++++++++++++++++++++++++++++
 // DOWNLINK REQUEST
@@ -1476,6 +1539,8 @@ var defaultMsgDisplayTimer = 1500;
 //==================================
 // Setting ThingSpeak status
 //==================================
+
+	//obsolete
     $('#td_edit_thingspeak_status').hide();
     $('#td_thingspeak_status_submit').hide();
     $("#thingspeak_status_msg").hide();
@@ -1501,6 +1566,7 @@ var defaultMsgDisplayTimer = 1500;
     	$('#td_thingspeak_status_submit').hide();
     });
     
+    //new
 	$('#thingspeak_status_toggle').change(function() {  
     	thingspeak_status = $(this).prop('checked');
     	
@@ -1564,13 +1630,19 @@ var defaultMsgDisplayTimer = 1500;
 		var buffer = cloud_key_value.split(",");
 		for(x in buffer){
 			buffer[x] = buffer[x].split(' ').join("");
-			var n = parseInt(buffer[x]);
-			if(n === NaN || n < 2 || n > maxAddr){
-				console.log(n);
-				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
-				return -1;
-			}					
-		}
+			
+			if (buffer[x][0]=='0' && buffer[x][1]=='x') {
+				//do nothing
+			}
+			else {
+				var n = parseInt(buffer[x]);
+				if(n === NaN || n < 2 || n > maxAddr){
+					console.log(n);
+					$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
+					return -1;
+				}					
+			}
+		}	
 		var keyJSON = JSON.stringify(buffer);
 		cloud_key_value = keyJSON;		
 
@@ -1859,13 +1931,19 @@ var defaultMsgDisplayTimer = 1500;
 		var buffer = cloud_key_value.split(",");
 		for(x in buffer){
 			buffer[x] = buffer[x].split(' ').join("");
-			var n = parseInt(buffer[x]);
-			if(n === NaN || n < 2 || n > maxAddr){
-				console.log(n);
-				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
-				return -1;
-			}					
-		}
+			
+			if (buffer[x][0]=='0' && buffer[x][1]=='x') {
+				//do nothing
+			}
+			else {
+				var n = parseInt(buffer[x]);
+				if(n === NaN || n < 2 || n > maxAddr){
+					console.log(n);
+					$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
+					return -1;
+				}					
+			}
+		}	
 		var keyJSON = JSON.stringify(buffer);
 		cloud_key_value = keyJSON;		
 
@@ -2112,13 +2190,19 @@ var defaultMsgDisplayTimer = 1500;
 		var buffer = cloud_key_value.split(",");
 		for(x in buffer){
 			buffer[x] = buffer[x].split(' ').join("");
-			var n = parseInt(buffer[x]);
-			if(n === NaN || n < 2 || n > maxAddr){
-				console.log(n);
-				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
-				return -1;
-			}					
-		}
+			
+			if (buffer[x][0]=='0' && buffer[x][1]=='x') {
+				//do nothing
+			}
+			else {
+				var n = parseInt(buffer[x]);
+				if(n === NaN || n < 2 || n > maxAddr){
+					console.log(n);
+					$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
+					return -1;
+				}					
+			}
+		}	
 		var keyJSON = JSON.stringify(buffer);
 		cloud_key_value = keyJSON;		
 
@@ -2475,13 +2559,19 @@ var defaultMsgDisplayTimer = 1500;
 		var buffer = cloud_key_value.split(",");
 		for(x in buffer){
 			buffer[x] = buffer[x].split(' ').join("");
-			var n = parseInt(buffer[x]);
-			if(n === NaN || n < 2 || n > maxAddr){
-				console.log(n);
-				$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
-				return -1;
-			}					
-		}
+			
+			if (buffer[x][0]=='0' && buffer[x][1]=='x') {
+				//do nothing
+			}
+			else {
+				var n = parseInt(buffer[x]);
+				if(n === NaN || n < 2 || n > maxAddr){
+					console.log(n);
+					$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
+					return -1;
+				}					
+			}
+		}	
 		var keyJSON = JSON.stringify(buffer);
 		cloud_key_value = keyJSON;		
 
@@ -2546,6 +2636,57 @@ var defaultMsgDisplayTimer = 1500;
 	    	},defaultMsgDisplayTimer);
         });
   	});	
+  	
+//==================================
+//	Cloud NodeRed source list
+//==================================
+	$('#td_edit_cloudNodeRed_source_list').hide();
+	$('#td_cloudNodeRed_source_list_submit').hide();
+
+	$('#btn_edit_cloudNodeRed_source_list').click(function(){
+		$('#td_edit_cloudNodeRed_source_list').show();
+		$('#td_cloudNodeRed_source_list_submit').show();
+	});
+
+	$('#btn_cloudNodeRed_source_list_submit').click(function(){
+		var cloud_key_value = $('#cloudNodeRed_source_list_input').val();
+		var cloud_key_name = "nodered_key";
+		var cloud_key = "source_list";
+
+		cloud_key_value = String(cloud_key_value);
+		var buffer = cloud_key_value.split(",");
+		for(x in buffer){
+			buffer[x] = buffer[x].split(' ').join("");
+			
+			if (buffer[x][0]=='0' && buffer[x][1]=='x') {
+				//do nothing
+			}
+			else {
+				var n = parseInt(buffer[x]);
+				if(n === NaN || n < 2 || n > maxAddr){
+					console.log(n);
+					$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
+					return -1;
+				}					
+			}
+		}	
+		var keyJSON = JSON.stringify(buffer);
+		cloud_key_value = keyJSON;		
+
+	    $.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
+			$('#cloud_msg').html(data);
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		},defaultMsgDisplayTimer);
+		});
+	    	
+		if(cloud_key_value != ''){
+			$('#td_cloudNodeRed_source_list_value').html(cloud_key_value);
+			$('#td_edit_cloudNodeRed_source_list').hide();
+			$('#td_cloudNodeRed_source_list_submit').hide();
+		}
+	});  	  	
 
 //+++++++++++++++++++++++++++++++++++++
 // CLOUD TTN
@@ -2592,6 +2733,108 @@ var defaultMsgDisplayTimer = 1500;
 	    	},defaultMsgDisplayTimer);
         });
   	});	
+  	
+//==================================
+//	Cloud TTN source list
+//==================================
+	$('#td_edit_cloudTTN_source_list').hide();
+	$('#td_cloudTTN_source_list_submit').hide();
+
+	$('#btn_edit_cloudTTN_source_list').click(function(){
+		$('#td_edit_cloudTTN_source_list').show();
+		$('#td_cloudTTN_source_list_submit').show();
+	});
+
+	$('#btn_cloudTTN_source_list_submit').click(function(){
+		var cloud_key_value = $('#cloudTTN_source_list_input').val();
+		var cloud_key_name = "ttn_key";
+		var cloud_key = "source_list";
+
+		cloud_key_value = String(cloud_key_value);
+		var buffer = cloud_key_value.split(",");
+		for(x in buffer){
+			buffer[x] = buffer[x].split(' ').join("");
+			
+			if (buffer[x][0]=='0' && buffer[x][1]=='x') {
+				//do nothing
+			}
+			else {
+				var n = parseInt(buffer[x]);
+				if(n === NaN || n < 2 || n > maxAddr){
+					console.log(n);
+					$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
+					return -1;
+				}					
+			}
+		}	
+		var keyJSON = JSON.stringify(buffer);
+		cloud_key_value = keyJSON;		
+
+	    $.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
+			$('#cloud_msg').html(data);
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		},defaultMsgDisplayTimer);
+		});
+	    	
+		if(cloud_key_value != ''){
+			$('#td_cloudTTN_source_list_value').html(cloud_key_value);
+			$('#td_edit_cloudTTN_source_list').hide();
+			$('#td_cloudTTN_source_list_submit').hide();
+		}
+	});
+	
+//==================================
+//	Cloud ChirpStack source list
+//==================================
+	$('#td_edit_cloudchirpstack_source_list').hide();
+	$('#td_cloudchirpstack_source_list_submit').hide();
+
+	$('#btn_edit_cloudchirpstack_source_list').click(function(){
+		$('#td_edit_cloudchirpstack_source_list').show();
+		$('#td_cloudchirpstack_source_list_submit').show();
+	});
+
+	$('#btn_cloudchirpstack_source_list_submit').click(function(){
+		var cloud_key_value = $('#cloudchirpstack_source_list_input').val();
+		var cloud_key_name = "chirpstack_key";
+		var cloud_key = "source_list";
+
+		cloud_key_value = String(cloud_key_value);
+		var buffer = cloud_key_value.split(",");
+		for(x in buffer){
+			buffer[x] = buffer[x].split(' ').join("");
+			
+			if (buffer[x][0]=='0' && buffer[x][1]=='x') {
+				//do nothing
+			}
+			else {
+				var n = parseInt(buffer[x]);
+				if(n === NaN || n < 2 || n > maxAddr){
+					console.log(n);
+					$('#cloud_msg').html("Error on range of sensor, must be beetween 2 and "+maxAddr);
+					return -1;
+				}					
+			}
+		}	
+		var keyJSON = JSON.stringify(buffer);
+		cloud_key_value = keyJSON;		
+
+	    $.get("process.php", {clouds_list : cloud_key_name, clouds_key : cloud_key, clouds_key_value : keyJSON}, function(data){	
+			$('#cloud_msg').html(data);
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		},defaultMsgDisplayTimer);
+		});
+	    	
+		if(cloud_key_value != ''){
+			$('#td_cloudchirpstack_source_list_value').html(cloud_key_value);
+			$('#td_edit_cloudchirpstack_source_list').hide();
+			$('#td_cloudchirpstack_source_list_submit').hide();
+		}
+	});  		
 	
 //End of main block
 });

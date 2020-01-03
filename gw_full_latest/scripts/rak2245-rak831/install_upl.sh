@@ -18,15 +18,20 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 				echo "copy util_pkt_logger_formatter.py in /home/pi/lora_gateway"
 				cp util_pkt_logger_formatter.py /home/pi/lora_gateway
 				echo "copy start_upl_pprocessing_gw.sh in /home/pi/lora_gateway"
-				cp start_upl_pprocessing_gw.sh /home/pi/lora_gateway			
-				echo "renaming original util_pkt_logger.c into util_pkt_logger_original.c"
-				sudo mv /opt/ttn-gateway/lora_gateway/util_pkt_logger/src/util_pkt_logger.c /opt/ttn-gateway/lora_gateway/util_pkt_logger/src/util_pkt_logger_original.c 
-				echo "copy util_pkt_logger.c in /opt/ttn-gateway/lora_gateway/util_pkt_logger/src"
-				sudo cp util_pkt_logger.c /opt/ttn-gateway/lora_gateway/util_pkt_logger/src
-				echo "recompiling util_pkt_logger..."
-				cd /opt/ttn-gateway/lora_gateway/util_pkt_logger
-				sudo make
+				cp start_upl_pprocessing_gw.sh /home/pi/lora_gateway
 				
+				is_modified_version=`grep Pham /opt/ttn-gateway/lora_gateway/util_pkt_logger/src/util_pkt_logger.c`
+				
+				if [ "$is_modified_version" = "" ]
+					then							
+						echo "renaming original util_pkt_logger.c into util_pkt_logger_original.c"
+						sudo mv /opt/ttn-gateway/lora_gateway/util_pkt_logger/src/util_pkt_logger.c /opt/ttn-gateway/lora_gateway/util_pkt_logger/src/util_pkt_logger_original.c 
+						echo "copy util_pkt_logger.c in /opt/ttn-gateway/lora_gateway/util_pkt_logger/src"
+						sudo cp util_pkt_logger.c /opt/ttn-gateway/lora_gateway/util_pkt_logger/src
+						echo "recompiling util_pkt_logger..."
+						cd /opt/ttn-gateway/lora_gateway/util_pkt_logger
+						sudo make
+				fi
 				echo
 				echo "Disabling original ttn-gateway service"
 				sudo systemctl disable ttn-gateway.service

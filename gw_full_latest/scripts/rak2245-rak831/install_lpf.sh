@@ -18,15 +18,20 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 				echo "copy lora_pkt_fwd_formatter.py in /home/pi/lora_gateway"
 				cp lora_pkt_fwd_formatter.py /home/pi/lora_gateway
 				echo "copy start_lpf_pprocessing_gw.sh in /home/pi/lora_gateway"
-				cp start_lpf_pprocessing_gw.sh /home/pi/lora_gateway			
-				echo "renaming original lora_pkt_fwd.c into lora_pkt_fwd_original.c"
-				sudo mv /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/src/lora_pkt_fwd.c /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/src/lora_pkt_fwd_original.c 
-				echo "copy lora_pkt_fwd.c in /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/src"
-				sudo cp lora_pkt_fwd.c /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/src
-				echo "recompiling lora_pkt_fwd...."
-				cd /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd
-				sudo make
+				cp start_lpf_pprocessing_gw.sh /home/pi/lora_gateway
 				
+				is_modified_version=`grep DISABLE_DATA_UPLINK_UDP /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/src/lora_pkt_fwd.c`
+				
+				if [ "$is_modified_version" = "" ]
+					then							
+						echo "renaming original lora_pkt_fwd.c into lora_pkt_fwd_original.c"
+						sudo mv /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/src/lora_pkt_fwd.c /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/src/lora_pkt_fwd_original.c 
+						echo "copy lora_pkt_fwd.c in /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/src"
+						sudo cp lora_pkt_fwd.c /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/src
+						echo "recompiling lora_pkt_fwd...."
+						cd /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd
+						sudo make
+				fi
 				echo
 				echo "Disabling original ttn-gateway service"
 				sudo systemctl disable ttn-gateway.service

@@ -62,11 +62,23 @@ If you are using an SX1301-based concentrator hat as explained in [README.md](ht
 
 	> ./enable_chirpstack.sh
 	
-then reboot.
+then reboot. Enabling ChirpStack will start the ChirpStack services (and also configure them to be started on boot) and also set in `/opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json` "server_address" with "127.0.0.1" to use the local ChirpStack Network Server.
 
 To disable ChirpStack, go into `scripts/chirpstack` folder and run	
 
 	> ./disable_chirpstack.sh
 	
+Disabling ChirpStack stops the ChirpStack services also set in `/opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json` "server_address" with "router.eu.thethings.network" to use the TTN Network Server.
+	
+Note
+----
 
+The SD card image has already both the SX1301-based concentrator and ChirpStack installed. If you are using our SD card image, just run:
+
+	> cd scripts/rak2245-rak831
+	> ./install_lpf.sh
+	> cd ../chirpstack/
+	> ./enable_chirpstack.sh
+	
+	
 Enjoy! C. Pham

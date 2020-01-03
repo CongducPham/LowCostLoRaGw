@@ -288,6 +288,25 @@ if (isset($_GET["status"]) && (! empty($_GET["status"]))) {
 	}
 }
 
+//+++++++++++++++++++++++++++++++++++++
+// NETWORK SERVER
+//+++++++++++++++++++++++++++++++++++++
+
+/*************************
+ * Setting ChirpStack status
+ *************************/
+if (isset($_GET["chirpstack_status"]) && (! empty($_GET["chirpstack_status"]))) {
+    
+    $chirpstack_status = htmlspecialchars($_GET["chirpstack_status"]);
+	$output = chirpstack_status($chirpstack_status);
+	
+	if($output == 0){
+		echo '<p><center><font color="green">ChirpStack is active</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">ChirpStack is inactive</font></center></p>';	
+	}
+}
 
 //+++++++++++++++++++++++++++++++++++++
 // DOWNLINK REQUEST
@@ -1072,6 +1091,7 @@ if (isset($_GET["visibility"]) && (! empty($_GET["visibility"]))) {
 // 	-cloudMQTT
 // 	-cloudNodeRed
 //	-CloudTTN
+//  -CloudChirpStack
 //+++++++++++++++++++++++++++++++++++++ 
 if (
 	isset($_GET["cloud_status"]) && (! empty($_GET["cloud_status"])) &&
@@ -1126,7 +1146,10 @@ if(
 				break;
 			case "ttn_key":
 				echo '<p><center><font color="green">Cloud TTN updated</font></center></p>';
-				break;								
+				break;
+			case "chirpstack_key":
+				echo '<p><center><font color="green">Cloud ChirpStack updated</font></center></p>';
+				break;												
 			default :
 				echo '<p><center><font color="green">Cloud updated</font></center></p>';
 		}	
@@ -1147,7 +1170,10 @@ if(
 				break;
 			case "ttn_key":
 				echo '<p><center><font color="red">Failed to update cloud TTN</font></center></p>';	
-				break;				
+				break;
+			case "chirpstack_key":
+				echo '<p><center><font color="red">Failed to update cloud ChirpStack</font></center></p>';	
+				break;								
 			default :
 				echo '<p><center><font color="red">Failed to update cloud</font></center></p>';
 		}

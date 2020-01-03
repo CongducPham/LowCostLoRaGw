@@ -30,6 +30,9 @@ require 'header.php';
                         <li>
                             <a href="gateway_update.php"><i class="fa fa-upload"></i> Gateway Update</a>
                         </li>
+                        <li>
+                            <a href="system.php"><i class="fa fa-linux"></i> System</a>
+                        </li>                        
                     </ul>
                 </div>
                 <!-- /.sidebar-collapse -->

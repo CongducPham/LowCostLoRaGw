@@ -1088,7 +1088,7 @@ while True:
 				
 				#probably our modified Libelium header where the destination (i.e. 1) is the gateway
 				#dissect our modified Libelium format
-				#TODO: check also for broadcast address, i.e. 0?
+				#TODO: check also for broadcast address, i.e. 0, caution, currently it can be conflicting with LoRaWAN join request
 				if ord(ch)==1:			
 					dst=ord(ch)
 					ptype=ord(getSingleChar())
@@ -1114,7 +1114,7 @@ while True:
 				#the main MType is unconfirmed data up b010 or confirmed data up b100
 				#and packet format is as follows, payload starts at byte 9
 				#MHDR[1] | DevAddr[4] | FCtrl[1] | FCnt[2] | FPort[1] | EncryptedPayload | MIC[4]
-				if ord(ch) & 0x40 == 0x40 or ord(ch) & 0x80 == 0x80 or ord(ch) & 0x00 == 0x00:
+				if ord(ch) & 0x40 == 0x40 or ord(ch) & 0x80 == 0x80 or ord(ch) == 0x00:
 					#Do the LoRaWAN decoding
 					print "LoRaWAN?"
 					

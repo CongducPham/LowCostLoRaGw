@@ -97,7 +97,7 @@
 			</tr>
 			
 			<tr>
-			<td>organization name</td>
+			<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Use a short name with no space, e.g. UPPA">organization name</a></td>
 			<td id="organization_value"><?php echo $key_clouds['organization_name']; ?></td>
 			<td align="right"><button id="btn_edit_organization" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
 			<td id="td_edit_organization">
@@ -112,7 +112,7 @@
 			</tr>
 			
 			<tr>
-			<td>service tree</td>
+			<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Use a short service tree with no space. Must begin with '-', e.g. -OFFICE1-TESTS">service tree</a></td>
 			<td id="service_tree_value"><?php echo $key_clouds['service_tree']; ?></td>
 			<td align="right"><button id="btn_edit_service_tree" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
 			<td id="td_edit_service_tree">
@@ -126,7 +126,7 @@
 			</tr>
 
 			<tr>
-			<td>username</td>
+			<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Create it on WAZIUP dashboard, only letters and numbers.">username</a></td>
 			<td id="username_value"><?php echo $key_clouds['username']; ?></td>
 			<td align="right"><button id="btn_edit_username" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
 			<td id="td_edit_username">
@@ -140,7 +140,7 @@
 			</tr>
 
 			<tr>
-			<td>password</td>
+			<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Create it on WAZIUP dashboard, only letters and numbers.">password</a></td>
 			<td id="password_value"><?php echo $key_clouds['password']; ?></td>
 			<td align="right"><button id="btn_edit_password" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
 			<td id="td_edit_password">
@@ -154,7 +154,7 @@
 			</tr>
 						
 			<tr>
-				<td>source list</td>
+				<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Indicate a list of accepted device addresses, e.g. 6,7,0x01020304">source list</a></td>
 				<td id="td_waziup_source_list_value">
 					<?php 
 						$array = $key_clouds['waziup_source_list'];
@@ -179,12 +179,11 @@
 				<td id="td_edit_waziup_source_list">
 					<div id="div_edit_waziup_source_list" class="form-group">
 						<label>Add a sensor to your list</label>
-						<input id="waziup_source_list_input" class="form-control" placeholder="e.g. 6,7,8" type="text"
+						<input id="waziup_source_list_input" class="form-control" placeholder="e.g. 6,7,0x01020304" type="text"
 						value="<?php 
 							$array = $key_clouds['waziup_source_list'];
 							$size = count($key_clouds['waziup_source_list']);
 							$i = 0;
-							if($size == 0) echo "Empty";
 							foreach( $array as $cel){
 								if(($size-1) == $i){
 									echo $cel;

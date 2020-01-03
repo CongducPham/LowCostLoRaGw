@@ -183,7 +183,7 @@
 					</td>
 				</tr>
 				<tr>
-					<td>source list</td>
+					<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Indicate a list of accepted device addresses, e.g. 6,7,0x01020304">source list</a></td>
 					<td id="td_cloudMQTT_source_list_value">
 						<?php 
 							$array = $key_clouds['mqtt_source_list'];
@@ -208,12 +208,11 @@
 					<td id="td_edit_cloudMQTT_source_list">
 						<div id ="div_cloudMQTT_source_list" class="form-group">
 							<label>Add a sensor to your list</label>
-							<input id="cloudMQTT_source_list_input" class="form-control" placeholder="e.g. 6,7,8" type="text" 
+							<input id="cloudMQTT_source_list_input" class="form-control" placeholder="e.g. 6,7,0x01020304" type="text" 
 							value="<?php 
 								$array = $key_clouds['mqtt_source_list'];
 								$size = count($key_clouds['mqtt_source_list']);
 								$i = 0;
-								if($size == 0) echo "Empty";
 								foreach( $array as &$cel){
 									if(($size -1) == $i ){
 										echo $cel ;							

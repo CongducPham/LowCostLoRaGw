@@ -80,7 +80,7 @@ require 'header.php';
                             </ul>
 							</br>
             				<p>&nbsp;&nbsp;&nbsp;&nbsp;When enabling a new cloud, you need to reboot for changes to take effect.</p>
-            				<p>&nbsp;&nbsp;&nbsp;&nbsp;It is possible to change a cloud parameter at run-time although it is recommended to reboot.</p>
+            				<p>&nbsp;&nbsp;&nbsp;&nbsp;It is possible to change a cloud parameter at run-time although it is recommended to reboot.</p>            				
                             
                             <!-- Tab panes -->
                             <div class="tab-content">
@@ -192,7 +192,7 @@ require 'header.php';
    										   	</tr>
 											
 											<tr>
-												<td>source list</td>
+												<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Indicate a list of accepted device addresses, e.g. 6,7,0x01020304">source list</a></td>
 												<td id="td_thingspeak_source_list_value">
 													<?php 
 														$array = $key_clouds['thingspeak_source_list'];
@@ -217,12 +217,11 @@ require 'header.php';
 												<td id="td_edit_thingspeak_source_list">
 													<div id="div_edit_thingspeak_source_list" class="form-group">
 														<label>Add a sensor to your list</label>
-														<input id="thingspeak_source_list_input" class="form-control" placeholder="Write source addresses" type="text"
+														<input id="thingspeak_source_list_input" class="form-control" placeholder="e.g. 6,7,0x01020304" type="text"
 														value="<?php 
 															$array = $key_clouds['thingspeak_source_list'];
 															$size = count($key_clouds['thingspeak_source_list']);
 															$i = 0;
-															if($size == 0) echo "Empty";
 															foreach( $array as $cel){
 																if(($size-1) == $i){
 																	echo $cel;

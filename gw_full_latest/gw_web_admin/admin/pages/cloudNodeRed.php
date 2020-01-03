@@ -68,6 +68,56 @@
 					<button id="btn_cloudNodeRed_status_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
 				</td>
 			   </tr>
+			   
+				<tr>
+					<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Indicate a list of accepted device addresses, e.g. 6,7,0x01020304">source list</a></td>
+					<td id="td_cloudNodeRed_source_list_value">
+						<?php 
+							$array = $key_clouds['nodered_source_list'];
+							$size = count($key_clouds['nodered_source_list']);
+							$i = 0;
+							if($size == 0) echo "Empty";
+							foreach( $array as $cel){
+								if(($size-1) == $i){
+									echo $cel;
+								}else{
+									echo $cel . ",";
+								}
+								$i++;
+							}
+						?>
+					</td>
+					<td align="right">
+						<button id="btn_edit_cloudNodeRed_source_list" type="button" class="btn btn-primary">
+							<span class="fa fa-edit"></span>
+						</button>
+					</td>
+					<td id="td_edit_cloudNodeRed_source_list">
+						<div id="div_edit_cloudNodeRed_source_list" class="form-group">
+							<label>Add a sensor to your list</label>
+							<input id="cloudNodeRed_source_list_input" class="form-control" placeholder="e.g. 6,7,0x01020304" type="text"
+							value="<?php 
+								$array = $key_clouds['nodered_source_list'];
+								$size = count($key_clouds['nodered_source_list']);
+								$i = 0;
+								foreach( $array as $cel){
+									if(($size-1) == $i){
+										echo $cel;
+									}else{
+										echo $cel . ",";
+									}
+									$i++;
+								}
+							?>" autofocus>
+						</div>
+					</td>
+					<td id="td_cloudNodeRed_source_list_submit" align="right">
+						<button id="btn_cloudNodeRed_source_list_submit" type="submit" class="btn btn-primary">
+							Submit
+							<span class="fa fa-arrow-right"></span>
+						</button>
+					</td>
+				</tr>			   
 
 			 </tbody>
 			</table>

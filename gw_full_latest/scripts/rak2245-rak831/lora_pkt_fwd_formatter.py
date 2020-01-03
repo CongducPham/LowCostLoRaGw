@@ -135,7 +135,7 @@ while 1:
 			#here we parse the stat json line to get the GPS position given by lora_pkt_fwd
 			#we use the GPS coordinates and replace them in our gateway_conf.json file			
 			if ls[0]=='JSON up' and "stat" in ls[1]:
-				print l
+				#print l
 				
 				try:
 					l_json=json.loads(l[9:])
