@@ -44,6 +44,65 @@ then
 	fi	
 fi	
 
+
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+# gateway lorawan conf
+#//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+if [ "$1" = "gw_lorawan_conf" ]
+then
+	###################################
+	# configure gateway for LoRaWAN
+	###################################
+
+	#For example to update channel number: radio_conf => ch => value
+	#jq '.radio_conf.ch = 12' gateway_conf.json > "$tmp" && mv "$tmp" gateway_conf.json
+	tmp=$(mktemp)
+
+	#set LoRa mode to 11
+	jq '.'"radio_conf"'.'"mode"' = '11' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+	#set raw format to true
+	jq '.'"gateway_conf"'.'"raw"' = 'true' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+	#set aes_lorawan to false
+	jq '.'"gateway_conf"'.'"aes_lorawan"' = 'false' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+	
+	status_interval=`jq ".gateway_conf.status" /home/pi/lora_gateway/gateway_conf.json`
+	
+	if [ $status_interval == 0 ]
+	then
+		#set status to 600s(5min)
+		jq '.'"gateway_conf"'.'"status"' = '600' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+	fi
+	
+	#enable TTN settings if needed
+	if [ $(($2 & 1)) == 1 ]
+	then
+		jq '.lorawan_encrypted_clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudTTN.py") .'enabled' = 'true'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
+		#set ttn_status to true
+		jq '.'"status_conf"'.'"ttn_status"' = 'true' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json		
+	else
+		jq '.lorawan_encrypted_clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudTTN.py") .'enabled' = 'false'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
+		#set ttn_status to false
+		jq '.'"status_conf"'.'"ttn_status"' = 'false' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json	
+	fi
+
+	#enable ChirpStack settings if needed
+	if [ $(($2 & 2)) == 2 ]
+	then
+		jq '.lorawan_encrypted_clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudChirpStack.py") .'enabled' = 'true'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
+		#set cs_status to true
+		jq '.'"status_conf"'.'"cs_status"' = 'true' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json	
+	else
+		jq '.lorawan_encrypted_clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudChirpStack.py") .'enabled' = 'false'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
+		#set cs_status to false
+		jq '.'"status_conf"'.'"cs_status"' = 'false' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json		
+	fi
+		
+	sudo chown -R pi:pi /home/pi/lora_gateway/
+	sudo chmod +r /home/pi/lora_gateway/gateway_conf.json
+	sudo chmod +r /home/pi/lora_gateway/clouds.json
+fi
+
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
 # gateway conf gateway
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +161,9 @@ then
 	if [ $# == 3 ] 
 	then
 		jq '.lorawan_encrypted_clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudChirpStack.py") .'$2' = '$3'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
+		jq '.'"status_conf"'.'"cs_status"' = '$3' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
 		sudo chown -R pi:pi /home/pi/lora_gateway/
+		sudo chmod +r /home/pi/lora_gateway/gateway_conf.json
 		sudo chmod +r /home/pi/lora_gateway/clouds.json
 	fi
 fi
@@ -465,7 +526,9 @@ then
 	if [ $# == 3 ] 
 	then
 		jq '.lorawan_encrypted_clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudTTN.py") .'$2' = '$3'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
+		jq '.'"status_conf"'.'"ttn_status"' = '$3' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
 		sudo chown -R pi:pi /home/pi/lora_gateway/
+		sudo chmod +r /home/pi/lora_gateway/gateway_conf.json
 		sudo chmod +r /home/pi/lora_gateway/clouds.json
 	fi
 fi

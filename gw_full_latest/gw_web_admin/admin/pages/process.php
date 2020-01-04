@@ -113,6 +113,29 @@ if (isset($_GET["paboost"]) && (! empty($_GET["paboost"]))) {
 //+++++++++++++++++++++++++++++++++++++   
 
 /*************************
+ * Configuring for LoRaWAN
+ *************************/
+if(isset($_POST['gw_lorawan_conf_ttn_checkbox']) || isset($_POST['gw_lorawan_conf_chirpstack_checkbox'])) {
+
+	$selection = 0;
+
+	if ($_POST['gw_lorawan_conf_ttn_checkbox'] == 'true')
+		$selection = $selection + 1; 
+
+	if ($_POST['gw_lorawan_conf_chirpstack_checkbox'] == 'true')
+		$selection = $selection + 2; 
+
+	$output = gw_lorawan_conf($selection);
+
+	if($output == 0){
+		echo '<p><center><font color="green">Gateway has been configured for LoRaWAN</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to configure gateway for LoRaWAN</font></center></p>';	
+	}
+}
+
+/*************************
  * Setting gateway ID
  *************************/
 if (isset($_GET["gateway_ID"])) {

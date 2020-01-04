@@ -30,6 +30,9 @@ function sx1301_download_file($filename_url){
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh download_sx1301_conf ".$filename_url);
 }
 
+function gw_lorawan_conf($selection){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh gw_lorawan_conf ".$selection);
+}
 function gw_new_install(){
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh install_gw");
 }

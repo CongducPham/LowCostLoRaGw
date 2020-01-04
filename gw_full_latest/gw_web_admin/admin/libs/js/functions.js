@@ -248,6 +248,37 @@ $('.my_tooltip').tooltip({html: true})
 //+++++++++++++++++++++++++++++++++++++   
 
 //==================================
+// LoRaWAN config
+//==================================
+
+	$('#btn_gw_lorawan_conf').click(function() {
+      // Confirm
+		var response = confirm('Do you want to configure gateway for LoRaWAN mode?');
+		if (response == true){ // OK clicked
+			msg = '<p><center><font color="green">Configuring for LoRaWAN mode.</font></center></p>';
+			$('#gw_config_msg').html(msg);
+	    	setTimeout(function() {
+  				$('#gw_config_msg').html("");				
+	     	},defaultMsgDisplayTimer);
+
+        	/* Serialize the submitted form control values to be sent to the web server with the request */
+        	var formValues = $('#gw_lorawan_conf_form').serialize();
+        
+			$.post("process.php", formValues, function (res) { 
+	    		$('#gw_config_msg').html(res);
+	    		//erase message after 5 seconds
+	    		setTimeout(function() {
+  					$('#gw_config_msg').html("");
+  					window.location.reload();  					
+	     		},defaultMsgDisplayTimer);
+	 		});
+		}
+		else{ 
+			// Cancel clicked
+		}
+    });
+        
+//==================================
 // Setting Gateway ID
 //==================================
     $('#td_edit_gw_id').hide();

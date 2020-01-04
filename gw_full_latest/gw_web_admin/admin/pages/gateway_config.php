@@ -295,12 +295,21 @@ require 'header.php';
                                 <!-- tab-pane -->
                                 
                                 <div class="tab-pane fade" id="gw_conf-pills">
+                                	<div class="col-md-10 col-md-offset-0">
+                                	
+									<form id="gw_lorawan_conf_form" role="form">
+										<fieldset>
+											<a href="#" class="my_tooltip" data-toggle="tooltip" title="set mode to 11, raw format to true, aes_lorawan to false, status interval to 600s (5min) if interval is 0 and enable/disable LoRaWAN cloud as selected"><button  id="btn_gw_lorawan_conf" type="button" class="btn btn-primary">Configure for LoRaWAN</button></a>
+											<input type="checkbox" name="gw_lorawan_conf_ttn_checkbox" value="true" <?php if (get_cloud_status($lorawan_encrypted_clouds, "python CloudTTN.py")) echo "checked";?>>TTN cloud</input>
+											<input type="checkbox" name="gw_lorawan_conf_chirpstack_checkbox" value="true" <?php if (get_cloud_status($lorawan_encrypted_clouds, "python CloudChirpStack.py")) echo "checked";?>>ChirpStack cloud</input>
+										</fieldset>
+									</form>
+                             
                                     </br>
                                     <!-- <h4>Gateway settings</h4></br> -->
                                     <div id="gw_msg"></div>
                                     <!-- Tab panes -->
-                
-                                    <div class="col-md-10 col-md-offset-0">
+
                                       <div class="table-responsive">
 										<table class="table table-striped table-bordered table-hover">
    										  <thead>

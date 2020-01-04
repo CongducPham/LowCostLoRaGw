@@ -120,13 +120,13 @@
 			"name":"TheThingsNetwork cloud",
 			"script":"python CloudTTN.py",
 			"type":"lorawan",			
-			"enabled":true			
+			"enabled":false			
 		},
 		{	
 			"name":"ChirpStack network server",
 			"script":"python CloudChirpStack.py",
 			"type":"lorawan",			
-			"enabled":true			
+			"enabled":false
 		},			
 		{	
 			"name":"NodeRed flow",
