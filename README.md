@@ -7,7 +7,8 @@ Low-cost LoRa IoT framework developed in the EU H2020 WAZIUP/WAZIHUB projects
 Quick start
 -----------
 
-- **The current SD card image has everything you need!** [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.iso.zip)
+- **The current SD card image (Debian Buster) has everything you need!** [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip)
+- **NEW** Includes support of the open-source ChirpStack LoRaWAN Network Server, see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/chirpstack/README.md)
 - **NEW** Support of multi-channel RPI SX1301 LoRaWAN gateway: benefit from the open, versatile, multi-cloud Low-cost LoRa IoT framework with the flexibility and scalability of a multi-channel LoRaWAN gateway, see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak2245-rak831/README.md)
 - We have a new online [Arduino-Sensor-LoRa tutorial](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/tuto/index.html) and here is the direct link to the [LoRa part](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/tuto/sensors/lora_sensor/Arduino_lora_demo.html)
 - Read the [Low-cost-LoRa-device leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-device-leaflet.pdf)
@@ -53,7 +54,11 @@ Tutorial materials
 
 Also consult the following web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
 
-3 tutorial videos on YouTube: video of all the steps to build the whole framework from scratch:
+1 online tutorial
+
+- [Arduino-Sensor-LoRa tutorial](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/tuto/index.html)
+
+3 tutorial videos on YouTube: video of all the steps to build the whole framework from scratch
 
 - [Build your low-cost, long-range IoT device with WAZIUP](https://www.youtube.com/watch?v=YsKbJeeav_M)
 - [Extreme low-cost & low-power LoRa IoT for real-world deployment](https://www.youtube.com/watch?v=2_VQpcCwdd8)
@@ -77,6 +82,8 @@ Look also at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.
 
 Main features of gateway
 ------------------------
+- **NEW** Includes support of the open-source ChirpStack LoRaWAN Network Server
+	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/chirpstack/README.md)
 - **NEW** Support of multi-channel RPI SX1301 LoRaWAN gateway
 	- benefit from the open, versatile, multi-cloud Low-cost LoRa IoT framework with the flexibility and scalability of a multi-channel LoRaWAN gateway
 	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak2245-rak831/README.md)
@@ -142,29 +149,29 @@ Installing the latest gateway version
 
 The full, latest distribution of the low-cost gateway is available in the `gw_full_latest` folder of the github repository: https://github.com/CongducPham/LowCostLoRaGw. It contains all the gateway control and post-processing software. 
 
-However, the **simplest and recommended way** to install a new gateway is to use [our zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.iso.zip) based on the Jessie Raspbian OS and perform a new install of the gateway from this image. In this way you don't need to install the various additional packages that are required (as explained in an additional [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-manual-install.md) describing all manual installation steps if you want to install from scratch). Once you have burnt the SD image on a 8GB (minimum) SD card, insert it in your Raspberry and power it.
+However, the **simplest and recommended way** to install a new gateway is to use [our zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip) based on the Buster Raspbian OS and perform a new install of the gateway from this image. In this way you don't need to install the various additional packages that are required (as explained in an additional [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-manual-install.md) describing all manual installation steps if you want to install from scratch). Once you have burnt the SD image on a 8GB (minimum) SD card, insert it in your Raspberry and power it.
 
-The distribution supports Raspberry 1B+, RPI2, RPI3B/B3+, RPI0 and RPI0W. **For RPI1, RPI0 and RPI0W you need to run `make lora_gateway` as the default version is built for RPI2&RPI3**. There is out-of-the-box WiFi support for RPI3B/3B+ and RPI0W. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles.
+The distribution supports all RPI models including the last RPI4. There is out-of-the-box WiFi support for RPI4B/3B/3B+ and RPI0W. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles.
 
 
 Get our SD card image
 ---------------------
 
-Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-jessie-WAZIUP-demo.iso.zip). The current image has everything you need including:
+Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip). The current image has everything you need including:
 
-- support for RPI3B+ as well (including the WiFi)
-- `remot3.it` tools for remote access
+- support for all RPI models including the last RPI4 as well. We however recommend the 3B version unless you need to run other applications on the RPI otherwise both 3B+/4 are much more power consuming and heats a lot more.
+- pre-installed open-source ChirpStack LoRaWAN Network Server
+- pre-installed Semtech's `lora_pkt_fwd` for multi-channel gteway
+- pre-installed `remot3.it` and `anydesk` tools for remote access
 - the simple gateway web admin interface for easy configuration and management
-- `mosquitto-clients` package installed to have `mosquitto_pub` and `mosquitto_sub` commands (v1.5)
-- Node-Red v0.18.6, Node.js v9.11.1 and `npm` upgraded with `node-red-contrib-thingspeak42` installed
+- `mosquitto-clients` package installed to have `mosquitto_pub` and `mosquitto_sub` commands (v1.5.7)
+- Node-Red v1.0.3, Node.js v10.15.2 and `npm` 5.8.0 with `node-red-contrib-thingspeak42` installed
 - a ready-to-use Node-Red flow to show how received data can be uploaded to MQTT brokers and ThingSpeak
-- MongoDB v3.0.9
-
-The image should work on RPI0 to RPI3B/3B+. For RPI3B+, we performed an update with `rpi-update` on Jessie. Then we followed the procedures in [this link](https://www.linuxquestions.org/questions/slackware-arm-108/raspberry-pi-3-b-wifi-nic-not-found-4175627137/) to copy over the drivers for the 3B+ WiFi radios. The image has already all these features and should work on all RPI models. We however recommend the 3B version unless you need to run other applications on the RPI otherwise the last 3B+ is much more power consuming and heats a lot more.
+- MongoDB v3.0.14
 
 Simply unzip the file and burn the ISO file to an SD card. Use an SD card of a minimum of 8GB. Take also a class 10 (it is more than recommended!). If you have bigger SD card, e.g. 16GB, then after boot, use `raspi-config` (see [tutorial here](https://www.raspberrypi.org/documentation/configuration/raspi-config.md)) to resize the partition in order to use the extra space available (you will need to reboot but `raspi-config` will ask you for that). You can use `df -h` to verify that you have more space after reboot.  
 
-You can look at various tutorials on how to burn an image to an SD card. There is one [here from raspberrypi.org](https://www.raspberrypi.org/documentation/installation/installing-images/) and [here from elinux.org](http://elinux.org/RPi_Easy_SD_Card_Setup). We use a Mac to do so and [this is our preferred solution](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md). The [Linux version](https://www.raspberrypi.org/documentation/installation/installing-images/linux.md) is not very different. The `Etcher` tool is also very nice and you don't even need to unzip the SD card image. We also use that solution extensively.
+You can look at various tutorials on how to burn an image to an SD card. There is one [here from raspberrypi.org](https://www.raspberrypi.org/documentation/installation/installing-images/) and [here from elinux.org](http://elinux.org/RPi_Easy_SD_Card_Setup). We use a Mac to do so and [this is our preferred solution](https://www.raspberrypi.org/documentation/installation/installing-images/mac.md). The [Linux version](https://www.raspberrypi.org/documentation/installation/installing-images/linux.md) is not very different. The `Balena Etcher` tool is also very nice and you don't even need to unzip the SD card image. We also use that solution extensively.
 
 When booting from the provided SD card image
 ============================================ 
