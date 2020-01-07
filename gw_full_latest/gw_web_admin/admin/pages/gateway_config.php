@@ -301,7 +301,14 @@ require 'header.php';
 										<fieldset>
 											<a href="#" class="my_tooltip" data-toggle="tooltip" title="set mode to 11, raw format to true, aes_lorawan to false, status interval to 600s (5min) if interval is 0 and enable/disable LoRaWAN cloud as selected"><button  id="btn_gw_lorawan_conf" type="button" class="btn btn-primary">Configure for LoRaWAN</button></a>
 											<input type="checkbox" name="gw_lorawan_conf_ttn_checkbox" value="true" <?php if (get_cloud_status($lorawan_encrypted_clouds, "python CloudTTN.py")) echo "checked";?>>TTN cloud</input>
-											<input type="checkbox" name="gw_lorawan_conf_chirpstack_checkbox" value="true" <?php if (get_cloud_status($lorawan_encrypted_clouds, "python CloudChirpStack.py")) echo "checked";?>>ChirpStack cloud</input>
+											<?php
+											if (is_file("/lib/systemd/system/chirpstack-network-server.service")) {
+												echo '<input type="checkbox" name="gw_lorawan_conf_chirpstack_checkbox" value="true" ';
+												if (get_cloud_status($lorawan_encrypted_clouds, "python CloudChirpStack.py")) 
+													echo 'checked';
+												echo '>ChirpStack cloud</input>';
+											}
+											?>
 										</fieldset>
 									</form>
                              
@@ -774,11 +781,16 @@ require 'header.php';
     									 </thead>
 										<tbody>
    										   <tr>
-											<?php 
-												ob_start();
-												system("systemctl is-active chirpstack-network-server.service | grep inactive");
-												$chirpstack_not_active=ob_get_contents(); 
-												ob_clean();
+											<?php
+												if (is_file("/lib/systemd/system/chirpstack-network-server.service")) { 
+													ob_start();
+													system("systemctl is-active chirpstack-network-server.service | grep inactive");
+													$chirpstack_not_active=ob_get_contents(); 
+													ob_clean();
+												}
+												else
+													$chirpstack_not_active="unknown";
+														
 												if (get_cloud_status($lorawan_encrypted_clouds, "python CloudChirpStack.py"))
 													$cloud_chirpstack_enabled=true;
 												else
