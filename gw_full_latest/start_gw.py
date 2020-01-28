@@ -88,7 +88,7 @@ def start_config_from_json() :
 		pass
 	
 	try:			
-		if gateway_json_array["gateway_conf"]["downlink"]==0 :
+		if gateway_json_array["gateway_conf"]["downlink"]==-1 :
 			call_string_cpp += " --ndl"	
 	except KeyError:
 		pass

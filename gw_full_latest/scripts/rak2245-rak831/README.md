@@ -152,7 +152,7 @@ and will translate them into the format accepted by our post-processing stage.
 Downlink messages
 -----------------
 
-As only UDP uplink data and uplink stats are disabled in the modified version of `lora_pkt_fwd` and replaced by LoRaWAN cloud scripts, all the other features, and especially the downlink (including join procedure) feature and GPS position, are preserved.
+As only UDP uplink data and uplink stats are disabled in the modified version of `lora_pkt_fwd` and replaced by LoRaWAN cloud scripts, all the other features, and especially the downlink (including join procedure for OTAA) feature and GPS position, are preserved.
 
 GPS position
 ------------

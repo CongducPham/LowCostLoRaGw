@@ -25,7 +25,7 @@ except ImportError:
 	lorawan_server="router.eu.thethings.network"
 	lorawan_port=1700
 
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 
 PUSH_DATA = 0
 PUSH_ACK = 1
@@ -98,7 +98,7 @@ class TTN_stats:
     def _push_data(self, data):
         token = os.urandom(2)
         packet = bytearray([PROTOCOL_VERSION]) + token + bytearray([PUSH_DATA]) + binascii.unhexlify(self.id) + data
-        print ''.join('{:02x}'.format(x) for x in packet)
+        #print ''.join('{:02x}'.format(x) for x in packet)
         self._log('ttn_stats: Try to send UDP packet: {}', packet)
         try:
 	        self.sock.sendto(packet, self.server_ip)

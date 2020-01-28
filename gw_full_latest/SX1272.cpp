@@ -30,6 +30,9 @@
 #include <math.h>
 
 /*  CHANGE LOGS by C. Pham
+ *  Jan 20th, 2020
+ *		- add IQ inversion
+ *		- add raw format in transmission
  *	April 26th, 2019
  *		- rewrote setSF() and setBW() to better handle LowDataRateOptimize
  *	August 28th, 2018
@@ -137,6 +140,7 @@ SX1272::SX1272()
     // added by C. Pham
     _defaultSyncWord=0x12;
     _rawFormat=false;
+    _rawFormat_send=false;
     _extendedIFS=false;
     _RSSIonSend=true;
     // disabled by default
@@ -3151,9 +3155,7 @@ int8_t SX1272::setPacketLength()
     uint16_t length;
 
     // added by C. Pham
-    // if gateway is in rawFormat mode for packet reception, it will also send in rawFormat
-    // unless we switch it back to normal format just for transmission, e.g. for downlink transmission
-    if (_rawFormat)
+    if (_rawFormat_send)
         length = _payloadlength;
     else
         length = _payloadlength + OFFSET_PAYLOADLENGTH;
@@ -3224,53 +3226,16 @@ int8_t SX1272::setPacketLength(uint8_t l)
 }
 
 /*
- Function: Gets the node address in the module.
- Returns: Integer that determines if there has been any error
-   state = 2  --> The command has not been executed
-   state = 1  --> There has been an error while executing the command
-   state = 0  --> The command has been executed with no errors
+ Function: Gets the node address 
 */
 uint8_t SX1272::getNodeAddress()
 {
-    byte st0 = 0;
-    uint8_t state = 2;
-
-#if (SX1272_debug_mode > 1)
-    printf("\n");
-    printf("Starting 'getNodeAddress'\n");
-#endif
-
-    if( _modem == LORA )
-    { // LoRa mode
-        st0 = readRegister(REG_OP_MODE);	// Save the previous status
-        // Allowing access to FSK registers while in LoRa standby mode
-        writeRegister(REG_OP_MODE, LORA_STANDBY_FSK_REGS_MODE);
-    }
-
-    // Saving node address
-    _nodeAddress = readRegister(REG_NODE_ADRS);
-    state = 1;
-
-    if( _modem == LORA )
-    {
-        writeRegister(REG_OP_MODE, st0);		// Getting back to previous status
-    }
-
-    state = 0;
-#if (SX1272_debug_mode > 1)
-    printf("## Node address configured is ");
-    printf("%d", _nodeAddress);
-    printf(" ##\n");
-    printf("\n");
-#endif
-    return state;
+    return _nodeAddress;
 }
 
 /*
  Function: Sets the node address in the module.
  Returns: Integer that determines if there has been any error
-   state = 2  --> The command has not been executed
-   state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
    state = -1 --> Forbidden command for this protocol
  Parameters:
@@ -3278,9 +3243,7 @@ uint8_t SX1272::getNodeAddress()
 */
 int8_t SX1272::setNodeAddress(uint8_t addr)
 {
-    byte st0;
-    byte value;
-    uint8_t state = 2;
+    uint8_t state = 0;
 
 #if (SX1272_debug_mode > 1)
     printf("\n");
@@ -3299,42 +3262,6 @@ int8_t SX1272::setNodeAddress(uint8_t addr)
     {
         // Saving node address
         _nodeAddress = addr;
-        st0 = readRegister(REG_OP_MODE);	  // Save the previous status
-
-        if( _modem == LORA )
-        { // Allowing access to FSK registers while in LoRa standby mode
-            writeRegister(REG_OP_MODE, LORA_STANDBY_FSK_REGS_MODE);
-        }
-        else
-        { //Set FSK Standby mode to write in registers
-            writeRegister(REG_OP_MODE, FSK_STANDBY_MODE);
-        }
-
-        // Storing node and broadcast address
-        writeRegister(REG_NODE_ADRS, addr);
-        writeRegister(REG_BROADCAST_ADRS, BROADCAST_0);
-
-        value = readRegister(REG_NODE_ADRS);
-        writeRegister(REG_OP_MODE, st0);		// Getting back to previous status
-
-        if( value == _nodeAddress )
-        {
-            state = 0;
-#if (SX1272_debug_mode > 1)
-            printf("## Node address ");
-            printf("%d", addr);
-            printf(" has been successfully set ##\n");
-            printf("\n");
-#endif
-        }
-        else
-        {
-            state = 1;
-#if (SX1272_debug_mode > 1)
-            printf("** There has been an error while setting address ##\n");
-            printf("\n");
-#endif
-        }
     }
     return state;
 }
@@ -4277,8 +4204,8 @@ uint8_t SX1272::receivePacketTimeoutACK(uint16_t wait)
     {
         state_f = 1;
     }
-    return state_f; 
     */
+    return 0; 
 }
 
 /*
@@ -4384,11 +4311,15 @@ boolean	SX1272::availableData(uint16_t wait)
         } // end while (millis)
 
         if( bitRead(value, 4) == 1 )
-        { // header received
+        { // header received        
 #if (SX1272_debug_mode > 0)
             printf("## Valid Header received in LoRa mode ##\n");
 #endif
+		    // added by C. Pham
+    		_starttime=millis();
+    		
             _hreceived = true;
+                
 #ifdef W_NET_KEY
             // actually, need to wait until 3 bytes have been received
             //while( (header < 3) && (millis() - previous < (unsigned long)wait) )
@@ -5341,7 +5272,7 @@ uint8_t SX1272::setPacket(uint8_t dest, char *payload)
     if (_limitToA) {
         uint16_t length16 = (uint16_t)strlen(payload);
 
-        if (!_rawFormat)
+        if (!_rawFormat_send)
             length16 = length16 + OFFSET_PAYLOADLENGTH;
 
         if (getRemainingToA() - getToA(length16) < 0) {
@@ -5412,11 +5343,16 @@ uint8_t SX1272::setPacket(uint8_t dest, char *payload)
         writeRegister(REG_FIFO, packet_sent.netkey[0]);
         writeRegister(REG_FIFO, packet_sent.netkey[1]);
 #endif
-        writeRegister(REG_FIFO, packet_sent.dst); 		// Writing the destination in FIFO
         // added by C. Pham
-        writeRegister(REG_FIFO, packet_sent.type); 		// Writing the packet type in FIFO
-        writeRegister(REG_FIFO, packet_sent.src);		// Writing the source in FIFO
-        writeRegister(REG_FIFO, packet_sent.packnum);	// Writing the packet number in FIFO
+        // we can skip the header for instance when we want to generate
+        // at a higher layer a LoRaWAN packet
+        if (!_rawFormat_send) {
+            writeRegister(REG_FIFO, packet_sent.dst); 		// Writing the destination in FIFO
+            // added by C. Pham
+            writeRegister(REG_FIFO, packet_sent.type); 		// Writing the packet type in FIFO
+            writeRegister(REG_FIFO, packet_sent.src);		// Writing the source in FIFO
+            writeRegister(REG_FIFO, packet_sent.packnum);	// Writing the packet number in FIFO
+        }
         // commented by C. Pham
         //writeRegister(REG_FIFO, packet_sent.length); 	// Writing the packet length in FIFO
         for(unsigned int i = 0; i < _payloadlength; i++)
@@ -5483,7 +5419,7 @@ uint8_t SX1272::setPacket(uint8_t dest, uint8_t *payload)
         // sendPacketTimeout(uint8_t dest, uint8_t *payload, uint16_t length16)
         uint16_t length16 = _payloadlength;
 
-        if (!_rawFormat)
+        if (!_rawFormat_send)
             length16 = length16 + OFFSET_PAYLOADLENGTH;
 
         if (getRemainingToA() - getToA(length16) < 0) {
@@ -5553,11 +5489,16 @@ uint8_t SX1272::setPacket(uint8_t dest, uint8_t *payload)
         writeRegister(REG_FIFO, packet_sent.netkey[0]);
         writeRegister(REG_FIFO, packet_sent.netkey[1]);
 #endif
-        writeRegister(REG_FIFO, packet_sent.dst); 		// Writing the destination in FIFO
         // added by C. Pham
-        writeRegister(REG_FIFO, packet_sent.type); 		// Writing the packet type in FIFO
-        writeRegister(REG_FIFO, packet_sent.src);		// Writing the source in FIFO
-        writeRegister(REG_FIFO, packet_sent.packnum);	// Writing the packet number in FIFO
+        // we can skip the header for instance when we want to generate
+        // at a higher layer a LoRaWAN packet
+        if (!_rawFormat_send) {
+            writeRegister(REG_FIFO, packet_sent.dst); 		// Writing the destination in FIFO
+            // added by C. Pham
+            writeRegister(REG_FIFO, packet_sent.type); 		// Writing the packet type in FIFO
+            writeRegister(REG_FIFO, packet_sent.src);		// Writing the source in FIFO
+            writeRegister(REG_FIFO, packet_sent.packnum);	// Writing the packet number in FIFO
+        }
         // commented by C. Pham
         //writeRegister(REG_FIFO, packet_sent.length); 	// Writing the packet length in FIFO
         for(unsigned int i = 0; i < _payloadlength; i++)
@@ -7414,6 +7355,64 @@ long SX1272::removeToA(uint16_t toa) {
     }
 
     return _remainingToA;
+}
+
+/*
+ Function: Sets I/Q mode
+ Returns: Integer that determines if there has been any error
+   state = 2  --> The command has not been executed
+   state = 1  --> There has been an error while executing the command
+   state = 0  --> The command has been executed with no errors
+*/
+int8_t	SX1272::invertIQ(bool invert)
+{
+    byte st0;
+    int8_t state = 2;
+    byte config1;
+    byte config2;
+    
+#if (SX1272_debug_mode > 1)
+    printf("\n");
+    printf("Starting 'invertIQ'\n");
+#endif
+
+    st0 = readRegister(REG_OP_MODE);		// Save the previous status
+
+    writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);		// Set Standby mode to write in registers
+
+	
+	// According to Semtech AN1200.23 Rev.2 June 2015
+	if (invert) {
+		//writeRegister(REG_INVERT_IQ, readRegister(REG_INVERT_IQ)|(1<<6));
+ 		writeRegister(REG_INVERT_IQ, 0x67);
+ 		writeRegister(REG_INVERT_IQ2, 0x19);
+	}
+	else {
+		//writeRegister(REG_INVERT_IQ, readRegister(REG_INVERT_IQ) & 0B10111111);
+		writeRegister(REG_INVERT_IQ, 0x27);
+		writeRegister(REG_INVERT_IQ2, 0x1D);
+	}
+
+	config1=readRegister(REG_INVERT_IQ);
+	config2=readRegister(REG_INVERT_IQ2);
+	
+	//check I/Q setting
+    if ( (invert && (config1==0x67) && (config2==0x19) ) || 
+    	 (!invert && (config1==0x27) && (config2==0x1D)) ) {
+        state=0;
+#if (SX1272_debug_mode > 1)
+        printf("## I/Q mode has been successfully set ##\n");
+#endif
+    }
+    else {
+        state=1;
+#if (SX1272_debug_mode > 1)
+        printf("** There has been an error while configuring I/Q mode **\n");
+#endif
+    }
+
+    writeRegister(REG_OP_MODE,st0);	// Getting back to previous status
+    return state;
 }
 
 

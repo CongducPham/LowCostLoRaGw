@@ -230,7 +230,9 @@ void setup() {
     // Reset the MAC state. Session and pending data transfers will be discarded.
     LMIC_reset();
     
-    //LMIC_setClockError(MAX_CLOCK_ERROR * 2 / 100);    
+    // Let LMIC compensate for +/- 10% clock error
+    // we take 10% error to better handle downlink messages
+    LMIC_setClockError(MAX_CLOCK_ERROR * 10 / 100);    
 
     // Set static session parameters. Instead of dynamically establishing a session
     // by joining the network, precomputed session parameters are be provided.
@@ -251,8 +253,9 @@ void setup() {
     // Disable link check validation
     LMIC_setLinkCheckMode(0);
 
+    //Seems that it is not true anymore    
     // TTN uses SF9 for its RX2 window.
-    LMIC.dn2Dr = DR_SF9;
+    //LMIC.dn2Dr = DR_SF9;
 
     //added by C. Pham
     //uncomment to only have the first frequency when sending to our low-cost gateway

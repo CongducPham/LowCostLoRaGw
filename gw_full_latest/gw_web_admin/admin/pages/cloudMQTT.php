@@ -43,7 +43,7 @@
 						<?php 
 							ob_start(); 
 							$server=$key_clouds['mqtt_server'];
-							system("wget -q --spider $server", $retval);
+							system("wget -q --tries=3 --spider $server", $retval);
 							$msg=ob_get_contents(); 
 							ob_clean();
 							if ($retval == 0) {

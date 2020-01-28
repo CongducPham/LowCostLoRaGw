@@ -152,7 +152,7 @@ fi
 
 #check if the gateway is an access point
 #if yes, then enable IP forwarding to give internet connectivity to connected devices, e.g. smartphone, tablets,...
-pid = `pgrep hostapd`
+pid=`pgrep hostapd`
 
 if [ "$pid" != "" ]
 then
@@ -232,6 +232,26 @@ else
 	echo "svn could not get version info from github, mark as $git_version."
 	rm -rf /home/pi/git-VERSION-tmp.txt
 fi	
+############################################
+
+###
+### LoRaWAN downlink from a network server for a single-channel gateway
+############################################
+
+#try to find whether LoRaWAN downlink is used or not
+downlink=`jq ".gateway_conf.downlink" gateway_conf.json`
+downlink_lorawan=`jq ".gateway_conf.downlink_lorawan" gateway_conf.json`
+lora_mode=`jq ".radio_conf.mode" gateway_conf.json`
+ 
+if [ $lora_mode -eq 11 ] && [ "$downlink_lorawan" = "true" ] && [ $downlink -ge 0 ]
+then
+	if grep start_upl /etc/rc.local>/dev/null || grep start_lpf /etc/rc.local>/dev/null: ; then
+		echo "Multi-channel concentrator configuration detected, not using single-channel downlink mechanism"
+	else
+		echo "Downlink message will be pulled from LoRaWAN Network Server for single-channel gateway"
+		python /home/pi/lora_gateway/scripts/lorawan_stats/downlink_lorawan.py & 
+	fi
+fi
 ############################################
 
 ###

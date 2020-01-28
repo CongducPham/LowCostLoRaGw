@@ -16,8 +16,21 @@ process_gw_conf_json($radio_conf, $gw_conf, $alert_conf);
 $clouds = null; $encrypted_clouds= null; $lorawan_encrypted_clouds = null;
 process_clouds_json($clouds, $encrypted_clouds, $lorawan_encrypted_clouds);
 
+$key_clouds = process_key_clouds();
+
 $maxAddr = 255;
 $low_level_status_interval = 11;
+
+if (is_file("/lib/systemd/system/chirpstack-network-server.service")) { 
+	ob_start();
+	system("systemctl is-active chirpstack-network-server.service | grep inactive");
+	$chirpstack_not_active=ob_get_contents(); 
+	ob_clean();
+}
+else
+	$chirpstack_not_active="unknown";
+	
+$is_sx1301=exec('egrep "start_[ul]p[lf]_pprocessing_gw.sh" /etc/rc.local');	
 
 require 'header.php';
 ?>
@@ -88,9 +101,7 @@ require 'header.php';
                             <div class="tab-content">
                             	<div class="tab-pane fade in active" id="radio_conf-pills">
 
-										<?php 
-											$is_sx1301=exec('egrep "start_[ul]p[lf]_pprocessing_gw.sh" /etc/rc.local');
-									
+										<?php 									
 											if ($is_sx1301=='')
 											{
 												echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;Radio configuration file is for single channel radio</p>';
@@ -190,7 +201,7 @@ require 'header.php';
                                             		<select id="mode_select" class="form-control">
                                                 		<option>-1</option> <option selected>1</option> <option>2</option> <option>3</option> <option>4</option>
                                                 		<option>5</option> <option>6</option> <option>7</option> <option>8</option>
-                                                		<option>9</option> <option>10</option> <option>11</option>
+                                                		<option>9</option> <option>10</option>
                                            			</select>
                                         		</div>
                                         	</td> 
@@ -283,7 +294,7 @@ require 'header.php';
    										   
 										</tbody>
     								  </table>
-    								  <p><b>Use mode=11 to indicate LoRaWAN mode</b></p>
+    								  <p><b>Mode=11 will indicate LoRaWAN mode. Use "Configure for LoRaWAN" feature in Gateway tab to set for LoRaWAN mode.</b></p>
     								  <p>For single-channel gateways, the default LoRaWAN mode means SF12BW125 and <a href="#" class="my_tooltip" data-toggle="tooltip" title="LoRaWAN defines a sync word of 0x34 for a public LoRaWAN networks. A typical LoRaWAN device will therefore use this sync word value.">sync word</a> 0x34 . In this mode you can change the Spreading Factor SF.</p>
     								  <p>Change frequency for a single-channel gateway if needed. Leave frequency as -1 to use <a href="#" class="my_tooltip" data-toggle="tooltip" title="865.2MHz for BAND868, 913.88MHz for BAND900 and 433.3 for BAND433">default values</a> (for LoRaWAN mode: 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433).</p>
     								  <p>PA_BOOST is required for some radio modules such as inAir9B, RFM92W, RFM95W, NiceRF LoRa1276. After changing the PA_BOOST settings, run <b>Gateway Update/Basic config</b> to recompile the low-level gateway program.</p> 
@@ -299,11 +310,11 @@ require 'header.php';
                                 	
 									<form id="gw_lorawan_conf_form" role="form">
 										<fieldset>
-											<a href="#" class="my_tooltip" data-toggle="tooltip" title="set mode to 11, raw format to true, aes_lorawan to false, status interval to 600s (5min) if interval is 0 and enable/disable LoRaWAN cloud as selected"><button  id="btn_gw_lorawan_conf" type="button" class="btn btn-primary">Configure for LoRaWAN</button></a>
-											<input type="checkbox" name="gw_lorawan_conf_ttn_checkbox" value="true" <?php if (get_cloud_status($lorawan_encrypted_clouds, "python CloudTTN.py")) echo "checked";?>>TTN cloud</input>
+											<a href="#" class="my_tooltip" data-toggle="tooltip" title="set mode to 11, raw format to true, aes_lorawan to false, status interval to 600s (5min) if interval is 0, disable non-LoRaWAN downlink timer, enable downlink process for LoRaWAN and enable/disable LoRaWAN cloud as selected"><button  id="btn_gw_lorawan_conf" type="button" class="btn btn-primary">Configure for LoRaWAN</button></a>
+											<input type="checkbox" id="gw_lorawan_conf_ttn_checkbox" name="gw_lorawan_conf_ttn_checkbox" value="true" <?php if (get_cloud_status($lorawan_encrypted_clouds, "python CloudTTN.py")) echo "checked";?>>TTN cloud</input>
 											<?php
 											if (is_file("/lib/systemd/system/chirpstack-network-server.service")) {
-												echo '<input type="checkbox" name="gw_lorawan_conf_chirpstack_checkbox" value="true" ';
+												echo '<input type="checkbox" id="gw_lorawan_conf_chirpstack_checkbox" name="gw_lorawan_conf_chirpstack_checkbox" value="true" ';
 												if (get_cloud_status($lorawan_encrypted_clouds, "python CloudChirpStack.py")) 
 													echo 'checked';
 												echo '>ChirpStack cloud</input>';
@@ -311,7 +322,39 @@ require 'header.php';
 											?>
 										</fieldset>
 									</form>
-                             
+									
+									<?php
+										if (get_cloud_status($lorawan_encrypted_clouds, "python CloudChirpStack.py") or get_cloud_status($lorawan_encrypted_clouds, "python CloudTTN.py"))
+											$cloud_lorawan_enabled=true;
+										else
+											$cloud_lorawan_enabled=false;
+											
+    								 	if ($cloud_lorawan_enabled) {
+											if ($is_sx1301=='') {
+												echo '<p><font color="green">You have a single-channel gateway. </font>';
+
+												if ($radio_conf['mode']==11)
+													echo '<font color="green">Radio mode is for LoRaWAN. You can have <a href="#" class="my_tooltip" data-toggle="tooltip" title="Join-request for OTAA must use LoRa uplink setting.">limited</a> LoRaWAN support.</font></p>';
+												else
+													echo '<font color="orange">Radio mode is not for LoRaWAN. You can configure for <a href="#" class="my_tooltip" data-toggle="tooltip" title="Join-request for OTAA must use LoRa uplink setting.">limited</a> LoRaWAN support</font></p>';     								 				
+											}
+											else {
+												echo '<p><font color="green">You have a multi-channel gateway. </font>';
+												if ($radio_conf['mode']==11)
+													echo '<font color="green">Radio mode is for LoRaWAN. You can have <a href="#" class="my_tooltip" data-toggle="tooltip" title="All downlink messages will be handled by Semtech lora_pkt_fwd">full</a> LoRaWAN support.</font></p>';
+												else
+													echo '<font color="orange">Radio mode is not for LoRaWAN. You can configure for <a href="#" class="my_tooltip" data-toggle="tooltip" title="All downlink messages will be handled by Semtech lora_pkt_fwd">full</a> LoRaWAN support.</font></p>';
+											}
+																								
+										if (get_cloud_status($lorawan_encrypted_clouds, "python CloudChirpStack.py") and $chirpstack_not_active!='')
+											echo '<p><font color="orange">You are pushing to ChirpStack but there is no local ChirpStack service. Be sure to have a remote ChirpStack Network Server available.</font></p>';
+										}
+										else {
+											echo '<p><font color="orange">You have no LoRaWAN cloud enabled.</font></p>'; 
+										}								
+													
+									?>				
+													                             
                                     </br>
                                     <!-- <h4>Gateway settings</h4></br> -->
                                     <div id="gw_msg"></div>
@@ -713,9 +756,15 @@ require 'header.php';
    										   </tr>
    										      										   
    										   <tr>
-    									    <td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Specifying a value different from 0 triggers the downlink checking process at both post-processing and lora_gateway level. Only for non-LoRaWAN single-channel gateways.">downlink</a></td>
+    									    <td><a href="#" class="my_tooltip" data-toggle="tooltip" title="For non-LoRaWAN downlink, specifying a value greater than 0 triggers the downlink checking process at both post-processing and lora_gateway level. Should be set to 0 for LoRaWAN downlink. Use -1 to disable downlink at gateway.">downlink</a></td>
     										<td id="downlink_value">
-    											<?php echo $gw_conf['downlink'];?>
+    											<?php 
+    												echo $gw_conf['downlink'];
+    								    			if ($radio_conf['mode']==11) {
+    								    				if ($gw_conf['downlink']!=0)
+    								    					echo '<font color="red"> [For LoRaWAN mode, set to 0]</font>';	
+    								    			}										
+    											?>
     										</td>
     										<td align="right"><button id="btn_edit_downlink" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
    										   	<td id="td_edit_downlink">
@@ -732,7 +781,13 @@ require 'header.php';
 
     									    <td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Specifying a value different from 0 will periodically trigger the post-processing_status script that handles periodic tasks.">status</a></td>
     										<td id="status_value">
-    											<?php echo $gw_conf['status'];?>
+    											<?php 
+    												echo $gw_conf['status'];
+    								    			if ($radio_conf['mode']==11) {
+    								    				if ($gw_conf['status']==0)
+    								    					echo '<font color="red"> [For LoRaWAN mode, set to 600 for instance]</font>';	
+    								    			}										
+    											?>
     										</td>
     										<td align="right"><button id="btn_edit_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
    										   	<td id="td_edit_status">
@@ -749,8 +804,8 @@ require 'header.php';
    										      										       										   							   										   
 										 </tbody>
     								    </table>
-    								    <p>For LoRaWAN, if the gateway ID is 0000B827EBEFC4A6, then use B827EB<b>FFFF</b>EFC4A6 the register the gateway EUI on LoRaWAN network server platform such as TheThingsNetwork (TTN) for instance.</p>
-    								    <p>For LoRaWAN mode, set raw format to true and aes_lorawan to false to upload the encrypted LoRaWAN packet to the network server.</p>    								    
+    								    <p>For LoRaWAN, if the gateway ID is 0000B827EBEFC4A6, then use B827EB<b>FFFF</b>EFC4A6 to register the gateway EUI on LoRaWAN network server platform such as TheThingsNetwork (TTN) for instance.</p>
+    								    <p>For LoRaWAN mode, set raw format to true and aes_lorawan to false to upload the encrypted LoRaWAN packet to the Network Server.</p>    								    
     							      </div>
     							    </div>
     							
@@ -781,16 +836,7 @@ require 'header.php';
     									 </thead>
 										<tbody>
    										   <tr>
-											<?php
-												if (is_file("/lib/systemd/system/chirpstack-network-server.service")) { 
-													ob_start();
-													system("systemctl is-active chirpstack-network-server.service | grep inactive");
-													$chirpstack_not_active=ob_get_contents(); 
-													ob_clean();
-												}
-												else
-													$chirpstack_not_active="unknown";
-														
+											<?php														
 												if (get_cloud_status($lorawan_encrypted_clouds, "python CloudChirpStack.py"))
 													$cloud_chirpstack_enabled=true;
 												else
@@ -817,6 +863,32 @@ require 'header.php';
 											</td>   										   
    										   </tr>
 
+											<tr>
+												<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Use 127.0.0.1 for local ChirpStack server.">ChirpStack Server</a></td>
+												<td id="td_cloudchirpstack_lorawan_server_value">
+													<?php 
+														echo $key_clouds['chirpstack_lorawan_server'];
+													?>
+												</td> 
+												<td align="right">
+													<button id="btn_edit_cloudchirpstack_lorawan_server" type="button" class="btn btn-primary">
+														<span class="fa fa-edit" ></span>
+													</button>
+												</td>
+												<td id="td_edit_cloudchirpstack_lorawan_server">
+													<div id ="div_cloudchirpstack_lorawan_server" class="form-group">
+														<label>ChirpStack server</label>
+														<input id="cloudchirpstack_lorawan_server_input" class="form-control" placeholder="e.g. 127.0.0.1" type="text" value="" ></input>
+													</div>
+												</td>
+												<td id="td_cloudchirpstack_lorawan_server_submit" align="right">
+													<button id="btn_cloudchirpstack_lorawan_server_submit" type="submit" class="btn btn-primary">
+													Submit
+														<span class="fa fa-arrow-right"></span>
+													</button>
+												</td>
+											</tr>
+											
 											<tr>
 												<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Indicate a list of accepted device addresses, e.g. 6,7,0x01020304">source list</a></td>
 												<td id="td_cloudchirpstack_source_list_value">
@@ -873,14 +945,19 @@ require 'header.php';
     								 	if ($chirpstack_not_active=='') {
     								 		if ($cloud_chirpstack_enabled) {
     								 			if ($is_sx1301=='') {
-    								 				echo '<p><font color="orange">You have a single channel gateway. Only <a href="#" class="my_tooltip" data-toggle="tooltip" title="All uplink LoRaWAN messages will use CloudChirpStack.py. LoRaWAN downlink messages are not handled.">limited</a> (uplink) LoRaWAN support.</font></p>';
+    								 				echo '<p><font color="green">You have a single-channel gateway. ChirpStack is active and CloudChirpStack.py is enabled.</font></p>';
+
+    								 				if ($radio_conf['mode']==11)
+    								 					echo '<p><font color="green">Radio mode is for LoRaWAN. You can have <a href="#" class="my_tooltip" data-toggle="tooltip" title="All uplink LoRaWAN messages will use CloudChirpStack.py. Join-request for OTAA must use LoRa uplink setting.">limited</a> LoRaWAN support.</font></p>';
+    								 				else
+    								 					echo '<p><font color="orange">Radio mode is not for LoRaWAN. You have <a href="#" class="my_tooltip" data-toggle="tooltip" title="All uplink LoRaWAN-like messages can be uploaded to a LoRaWAN network server. LoRaWAN downlink messages are not handled.">only uplink</a> LoRaWAN-like support.</font></p>';     								 				
     								 			}
     								 			else {
     								 				echo '<p><font color="green">You have a multi-channel gateway. ChirpStack is active and CloudChirpStack.py is enabled.</font></p>';
     								 				if ($radio_conf['mode']==11)
-    								 					echo '<p><font color="green">Radio mode is for LoRaWAN. You can have <a href="#" class="my_tooltip" data-toggle="tooltip" title="All uplink messages will use CloudChirpStack.py. All downlink messages will be handled bt the Semtech lora_pkt_fwd so both ABP and OTAA mode are available">full</a> LoRaWAN support.</font></p>';
+    								 					echo '<p><font color="green">Radio mode is for LoRaWAN. You can have <a href="#" class="my_tooltip" data-toggle="tooltip" title="All uplink messages will use CloudChirpStack.py. All downlink messages will be handled by Semtech lora_pkt_fwd">full</a> LoRaWAN support.</font></p>';
     								 				else
-    								 					echo '<p><font color="orange">Radio mode is for not for LoRaWAN. You have <a href="#" class="my_tooltip" data-toggle="tooltip" title="All uplink LoRaWAN-like messages can be uploaded to a LoRaWAN network server. LoRaWAN downlink messages are not handled.">limited</a> (uplink) LoRaWAN support.</font></p>'; 
+    								 					echo '<p><font color="orange">Radio mode is not for LoRaWAN. You have <a href="#" class="my_tooltip" data-toggle="tooltip" title="All uplink LoRaWAN-like messages can be uploaded to a LoRaWAN network server. LoRaWAN downlink messages are not handled.">only uplink</a> LoRaWAN-like support.</font></p>'; 
     								 			}
     								 		}
     								 		else {

@@ -137,7 +137,7 @@ require 'header.php';
 												<?php 
 													ob_start(); 
 													$server="https://api.thingspeak.com";
-													system("wget -q --spider $server", $retval);
+													system("wget -q --tries=3 --spider $server", $retval);
 													$msg=ob_get_contents(); 
 													ob_clean();
 													if ($retval == 0) {

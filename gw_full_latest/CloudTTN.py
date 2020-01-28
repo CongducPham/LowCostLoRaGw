@@ -51,7 +51,7 @@ try:
 except AttributeError:
 	key_LoRaWAN.lorawan_port=1700
 			
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 
 PUSH_DATA = 0
 PUSH_ACK = 1
@@ -186,6 +186,8 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	SNR=arr[5]
 	RSSI=arr[6]
 
+	#if lora packet is received with an SX1301 concentrator, then the packet-formatter will pass the tmst field after the date information, separated by '*'
+	#i.e. "2019-03-25T18:46:00.528+01:00*29641444"
 	tmst=tdata.count('*')
 	
 	if (tmst != 0):

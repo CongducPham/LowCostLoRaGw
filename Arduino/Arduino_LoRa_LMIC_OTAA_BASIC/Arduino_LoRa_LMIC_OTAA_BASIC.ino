@@ -29,9 +29,23 @@
  *
  *******************************************************************************/
 
+/*******************************************************************************
+ * 
+ * modified by C. Pham for support of single-channel gateway
+ * Last update Jan 22nd, 2020
+ *
+ *******************************************************************************/
+ 
 #include <lmic.h>
 #include <hal/hal.h>
 #include <SPI.h>
+
+//uncomment if you are doing OTAA with a single-channel gateway
+//this will only enable the first mandatory channel 0 (e.g. EU 868.1MHz)
+//#define OTAA_SCG
+
+// Define the data rate (SF) to use
+int dr = DR_SF12;
 
 // This EUI must be in little-endian format, so least-significant-byte
 // first. When copying an EUI from ttnctl output, this means to reverse
@@ -111,6 +125,42 @@ void onEvent (ev_t ev) {
             break;
         case EV_JOINED:
             Serial.println(F("EV_JOINED"));
+            
+            Serial.print("netid: ");
+            Serial.println(LMIC.netid, DEC);
+            Serial.print("devaddr: ");
+            Serial.println(LMIC.devaddr, HEX);
+            
+            Serial.print("artKey: ");
+            for (int i=0; i<sizeof(LMIC.artKey); i++) {
+              if (i != 0)
+                Serial.print("-");
+              if (LMIC.artKey[i]<16)
+                Serial.print("0");  
+              Serial.print(LMIC.artKey[i], HEX);
+            }
+            Serial.println("");
+            Serial.print("nwkKey: ");
+            for (int i=0; i<sizeof(LMIC.nwkKey); i++) {
+              if (i != 0)
+                Serial.print("-");
+              if (LMIC.nwkKey[i]<16)
+                Serial.print("0");                
+              Serial.print(LMIC.nwkKey[i], HEX);
+            }
+            Serial.println(""); 
+
+            #ifdef OTAA_SCG
+            //needed for OTAA with SCG
+            // Ignore the channels from the Join Accept
+            for (int i=1; i<9; i++) { // For EU; for US use i<71
+              if(i != 0) {
+                LMIC_disableChannel(i);
+              }
+            }            
+            LMIC_setDrTxpow(dr, 14);
+            #endif
+                        
             // Disable link check validation (automatically enabled
             // during join, but not supported by TTN at this time).
             LMIC_setLinkCheckMode(0);
@@ -184,23 +234,57 @@ void setup() {
     // we take 10% error to better handle downlink messages
     LMIC_setClockError(MAX_CLOCK_ERROR * 10 / 100);
 
+    #if defined(CFG_eu868)
+    // Set up the channels used by the Things Network, which corresponds
+    // to the defaults of most gateways. Without this, only three base
+    // channels from the LoRaWAN specification are used, which certainly
+    // works, so it is good for debugging, but can overload those
+    // frequencies, so be sure to configure the full frequency range of
+    // your network here (unless your network autoconfigures them).
+    // Setting up channels should happen after LMIC_setSession, as that
+    // configures the minimal channel set.
+    // NA-US channels 0-71 are configured automatically
+
+    LMIC_setupChannel(0, 868100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band   
+    LMIC_setupChannel(1, 868300000, DR_RANGE_MAP(DR_SF12, DR_SF7), BAND_CENTI);      // g-band
+    LMIC_setupChannel(2, 868500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(3, 867100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(4, 867300000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(5, 867500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(6, 867700000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(7, 867900000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(8, 868800000, DR_RANGE_MAP(DR_FSK,  DR_FSK),  BAND_MILLI);      // g2-band
+    
+    // TTN defines an additional channel at 869.525Mhz using SF9 for class B
+    // devices' ping slots. LMIC does not have an easy way to define set this
+    // frequency and support for class B is spotty and untested, so this
+    // frequency is not configured here.
+    #elif defined(CFG_us915)
+    // NA-US channels 0-71 are configured automatically
+    // but only one group of 8 should (a subband) should be active
+    // TTN recommends the second sub band, 1 in a zero based count.
+    // https://github.com/TheThingsNetwork/gateway-conf/blob/master/US-global_conf.json
+    LMIC_selectSubBand(1);
+    #endif
+    
     //Seems that it is not true anymore
     // TTN uses SF9 for its RX2 window.
     //LMIC.dn2Dr = DR_SF9;
 
     //added by C. Pham
     //uncomment to only have the first frequency when sending to our low-cost gateway
+    //needed for OTAA with SCG    
     //Disable all channels, except for the 0 
     //FOR TESTING ONLY!
     
-    //for (int i=1; i<9; i++) { // For EU; for US use i<71
-    //  if(i != 0) {
-    //    LMIC_disableChannel(i);
-    //  }
-    //}    
+    for (int i=1; i<9; i++) { // For EU; for US use i<71
+      if(i != 0) {
+        LMIC_disableChannel(i);
+      }
+    }    
 
-    // Set data rate and transmit power for uplink (note: txpow seems to be ignored by the library)
-    LMIC_setDrTxpow(DR_SF12,14);
+    // Set data rate (SF) and transmit power for uplink
+    LMIC_setDrTxpow(dr, 14);
     
     // Start job (sending automatically starts OTAA too)
     do_send(&sendjob);

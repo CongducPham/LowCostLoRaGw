@@ -283,6 +283,57 @@ _verbose_downlink=False
 if _gw_downlink > 3600:
 	_verbose_downlink=True
 
+def check_downlink_for_device(src_addr):
+			#here we check for pending downlink message that need to be sent back to the end-device
+			#
+			for downlink_request in pending_downlink_requests:
+				request_json=json.loads(downlink_request)
+				if (request_json["dst"]==0) or (src_addr == request_json["dst"]):
+					print "post downlink: receive from %d with pending request" % src_addr
+					if (request_json["dst"]==0):
+						print "in broadcast mode"
+					else:
+						print "in unicast mode"	
+					print "post downlink: downlink data is \"%s\"" % request_json["data"]
+					print "post downlink: generate "+_gw_downlink_file+" from entry"
+					print downlink_request.replace('\n','')
+					
+					#generate the MIC corresponding to the clear data and the destination device address
+					#it is possible to have a broadcast address but since the only device that is listening 
+					#is the one that has sent a packet, there is little interest in doing so
+					#so currently, we use the sending device's address to compute the MIC
+					
+					MIC=loraWAN_get_MIC(src_addr,request_json["data"])
+					#add the 4 byte MIC information into the json line
+					request_json['MIC0']=hex(MIC[0])
+					request_json['MIC1']=hex(MIC[1])
+					request_json['MIC2']=hex(MIC[2])
+					request_json['MIC3']=hex(MIC[3])
+					
+					downlink_json=[]
+					downlink_json.append(request_json)
+					
+					f = open(os.path.expanduser(_gw_downlink_file),"a")
+					
+					print "post downlink: write"
+					for downlink_json_line in downlink_json:
+						#print downlink_json_line
+						print json.dumps(downlink_json_line)
+						f.write(json.dumps(downlink_json_line)+'\n')
+					
+					f.close()
+					
+					pending_downlink_requests.remove(downlink_request)
+					
+					#update downlink-post-queued.txt
+					f = open(os.path.expanduser(_post_downlink_queued_file),"w")
+					for downlink_request in pending_downlink_requests:
+						f.write("%s" % downlink_request)
+					#TODO: should we write all pending request for this node
+					#or only the first one that we found?
+					#currently, we do only the first one					
+					break;
+					
 def check_downlink():
 
 	# - post_processing_gw.py checks and uses downlink/downlink_post.txt as input
@@ -313,7 +364,7 @@ def check_downlink():
 				line_json=json.loads(line)
 				print line_json
 				
-				if line_json["status"]=="send_request":
+				if line_json["status"]=="send_request" and 'dst' in line_json:
 					pending_downlink_requests.append(line)		
 	
 		#print pending_downlink_request
@@ -346,6 +397,8 @@ def downlink_target():
 		sys.stdout.flush()	
 		global _gw_downlink
 		time.sleep(_gw_downlink)
+		
+		
 		
 #------------------------------------------------------------
 #for doing periodic status/tasks
@@ -855,54 +908,9 @@ while True:
 			short_info_2="SNR=%d RSSI=%d" % (SNR,RSSI)
 			
 			#here we check for pending downlink message that need to be sent back to the end-device
-			#
-			for downlink_request in pending_downlink_requests:
-				request_json=json.loads(downlink_request)
-				if (request_json["dst"]==0) or (src == request_json["dst"]):
-					print "post downlink: receive from %d with pending request" % src
-					if (request_json["dst"]==0):
-						print "in broadcast mode"
-					else:
-						print "in unicast mode"	
-					print "post downlink: downlink data is \"%s\"" % request_json["data"]
-					print "post downlink: generate "+_gw_downlink_file+" from entry"
-					print downlink_request.replace('\n','')
-					
-					#generate the MIC corresponding to the clear data and the destination device address
-					#it is possible to have a broadcast address but since the only device that is listening 
-					#is the one that has sent a packet, there is little interest in doing so
-					#so currently, we use the sending device's address to compute the MIC
-					
-					MIC=loraWAN_get_MIC(src,request_json["data"])
-					#add the 4 byte MIC information into the json line
-					request_json['MIC0']=hex(MIC[0])
-					request_json['MIC1']=hex(MIC[1])
-					request_json['MIC2']=hex(MIC[2])
-					request_json['MIC3']=hex(MIC[3])
-					
-					downlink_json=[]
-					downlink_json.append(request_json)
-					
-					f = open(os.path.expanduser(_gw_downlink_file),"a")
-					
-					print "post downlink: write"
-					for downlink_json_line in downlink_json:
-						#print downlink_json_line
-						print json.dumps(downlink_json_line)
-						f.write(json.dumps(downlink_json_line)+'\n')
-					
-					f.close()
-					
-					pending_downlink_requests.remove(downlink_request)
-					
-					#update downlink-post-queued.txt
-					f = open(os.path.expanduser(_post_downlink_queued_file),"w")
-					for downlink_request in pending_downlink_requests:
-						f.write("%s" % downlink_request)
-					#TODO: should we write all pending request for this node
-					#or only the first one that we found?
-					#currently, we do only the first one					
-					break;
+			#if we know the device address
+			if (_rawFormat==0):
+				check_downlink_for_device(src)
 	
 		if (ch=='r'):		
 			rdata = sys.stdin.readline()
@@ -927,6 +935,7 @@ while True:
 			if (tmst != 0):
 				tdata_tmp=tdata.split('*')[0]
 				tmst=tdata.split('*')[1]
+				tmst='*'+tmst
 				tdata=tdata_tmp
 			else:
 				tmst=''
@@ -1100,8 +1109,12 @@ while True:
 					datalen=datalen-HEADER_SIZE
 					pdata="%d,%d,%d,%d,%d,%d,%d" % (dst,ptype,src,seq,datalen,SNR,RSSI)
 					print "update ctrl pkt info (^p): "+pdata
-					print "+++ rxlora[%d]. dst=%d type=0x%.2X src=%d seq=%d len=%d SNR=%d RSSIpkt=%d BW=%d CR=4/%d SF=%d" % (rfq,dst,ptype,src,seq,datalen,SNR,RSSI,bw,cr,sf)				
-				
+					print "+++ rxlora[%d]. dst=%d type=0x%.2X src=%d seq=%d len=%d SNR=%d RSSIpkt=%d BW=%d CR=4/%d SF=%d" % (rfq,dst,ptype,src,seq,datalen,SNR,RSSI,bw,cr,sf)
+					
+					#here we check for pending downlink message that need to be sent back to the end-device
+					#once we know the device address
+					check_downlink_for_device(src)
+								
 				#LoRaWAN uses the MHDR(1B)
 				#----------------------------
 				#| 7  6  5 | 4  3  2 | 1  0 |
@@ -1126,7 +1139,7 @@ while True:
 						lorapkt.append(ord(lorapktstr[i]))
 						
 					#you can uncomment/comment this display if you want
-					print [hex(x) for x in lorapkt]
+					#print [hex(x) for x in lorapkt]
 					
 					datalen=datalen-LORAWAN_HEADER_SIZE
 					
@@ -1146,7 +1159,7 @@ while True:
 					pdata="%d,%d,%d,%d,%d,%d,%d" % (256,ord(ch),src,seq,datalen,SNR,RSSI)
 					
 					lorapktstr_b64=base64.b64encode(lorapktstr)
-					print "--> FYI base64 of LoRaWAN frame w/MIC: "+lorapktstr_b64
+					#print "--> FYI base64 of LoRaWAN frame w/MIC: "+lorapktstr_b64
 					
 					print "--> number of LoRaWAN enabled clouds is %d" % len(_cloud_for_lorawan_encrypted_data)
 					
@@ -1163,7 +1176,7 @@ while True:
 								cloud_script=_cloud_for_lorawan_encrypted_data[cloud_index]
 								print "uploading with "+cloud_script
 								sys.stdout.flush()
-								cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+"*"+tmst+"\""+" \""+_gwid.replace('\n','')+"\""
+								cmd_arg=cloud_script+" \""+lorapktstr_b64.replace('\n','')+"\""+" \""+pdata.replace('\n','')+"\""+" \""+rdata.replace('\n','')+"\""+" \""+tdata.replace('\n','')+tmst+"\""+" \""+_gwid.replace('\n','')+"\""
 							except UnicodeDecodeError, ude:
 								print ude
 							else:

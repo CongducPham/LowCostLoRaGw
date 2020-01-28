@@ -95,7 +95,13 @@
 			"script":"python CloudTTN.py",
 			"type":"lorawan",			
 			"enabled":false			
-		},	
+		},
+		{	
+			"name":"ChirpStack network server",
+			"script":"python CloudChirpStack.py",
+			"type":"lorawan",			
+			"enabled":false
+		},				
 		{	
 			"name":"NodeRed flow",
 			"script":"python CloudNodeRed.py",

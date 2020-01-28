@@ -30,9 +30,10 @@ key_data = {'thingspeak_channel_key':key_ThingSpeak._def_thingspeak_channel_key,
 		'nodered_sensor_name':key_NodeRed.sensor_name,
 		'nodered_source_list':key_NodeRed.source_list,
 		'nointernet_source_list':key_NoInternet.source_list,
-		#'ttn_server':key_TTN.lorawan_server,
+		#'ttn_lorawan_server':key_TTN.lorawan_server,
 		#'ttn_port':key_TTN.lorawan_port,		
 		'ttn_source_list':key_TTN.source_list,
+		'chirpstack_lorawan_server':key_ChirpStack.lorawan_server,
 		'chirpstack_source_list':key_ChirpStack.source_list
 		}
 print json.dumps(key_data)

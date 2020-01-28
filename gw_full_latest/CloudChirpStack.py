@@ -52,7 +52,7 @@ try:
 except AttributeError:
 	key_LoRaWAN.lorawan_port=1700
 			
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 
 PUSH_DATA = 0
 PUSH_ACK = 1
@@ -138,13 +138,13 @@ class LoRaWAN:
         #packet = self._make_node_packet(rx_data, tdata, 0, self.sf, self.bw, rssi, snr)
         packet=json.dumps(RX_PK)
         self._push_data(packet)
-        self._log('Cloud%s: Received packet: {}' % netserv, packet)
+        #self._log('Cloud%s: Received packet: {}' % netserv, packet)
 
     def _push_data(self, data):
         token = os.urandom(2)
         packet = bytearray([PROTOCOL_VERSION]) + token + bytearray([PUSH_DATA]) + binascii.unhexlify(self.id) + data
-        print ''.join('{:02x}'.format(x) for x in packet)
-        self._log('Cloud%s: Try to forward packet: {}' % netserv, packet)
+        #print ''.join('{:02x}'.format(x) for x in packet)
+        #self._log('Cloud%s: Try to forward packet: {}' % netserv, packet)
         try:
 	        self.sock.sendto(packet, self.server_ip)
 	        self.sock.close()

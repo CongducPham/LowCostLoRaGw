@@ -42,7 +42,7 @@
 				<?php 
 					ob_start(); 
 					$server=$key_clouds['waziup_server'];
-					system("wget -q --spider $server/devices", $retval);
+					system("wget -q --tries=3 --spider $server/devices", $retval);
 					$msg=ob_get_contents(); 
 					ob_clean();
 					if ($retval == 0) {

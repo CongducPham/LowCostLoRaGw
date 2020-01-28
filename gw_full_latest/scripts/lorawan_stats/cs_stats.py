@@ -1,3 +1,25 @@
+#-------------------------------------------------------------------------------
+# Part of this Python script is taken from the Pycom NanoGateway
+# https://github.com/pycom/pycom-libraries/tree/master/examples/lorawan-nano-gateway
+#
+# Adapted by Congduc.Pham@univ-pau.fr
+#
+# This file is part of the low-cost LoRa gateway developped at University of Pau
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with the program.  If not, see <http://www.gnu.org/licenses/>.
+#-------------------------------------------------------------------------------
+
 import errno
 import binascii
 import json
@@ -27,7 +49,7 @@ except ImportError:
 	lorawan_server="127.0.0.1"
 	lorawan_port=1700
 	
-PROTOCOL_VERSION = 1
+PROTOCOL_VERSION = 2
 
 PUSH_DATA = 0
 PUSH_ACK = 1
@@ -100,7 +122,7 @@ class CS_stats:
     def _push_data(self, data):
         token = os.urandom(2)
         packet = bytearray([PROTOCOL_VERSION]) + token + bytearray([PUSH_DATA]) + binascii.unhexlify(self.id) + data
-        print ''.join('{:02x}'.format(x) for x in packet)
+        #print ''.join('{:02x}'.format(x) for x in packet)
         self._log('cs_stats: Try to send UDP packet: {}', packet)
         try:
 	        self.sock.sendto(packet, self.server_ip)

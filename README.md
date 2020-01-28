@@ -8,6 +8,7 @@ Quick start
 -----------
 
 - **The current SD card image (Debian Buster) has everything you need!** [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip)
+- **NEW** The single-channel gateway now also provides LoRaWAN downlink and OTAA features, see updated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
 - **NEW** Includes support of the open-source ChirpStack LoRaWAN Network Server, see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/chirpstack/README.md)
 - **NEW** Support of multi-channel RPI SX1301 LoRaWAN gateway: benefit from the open, versatile, multi-cloud Low-cost LoRa IoT framework with the flexibility and scalability of a multi-channel LoRaWAN gateway, see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak2245-rak831/README.md)
 - We have a new online [Arduino-Sensor-LoRa tutorial](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/tuto/index.html) and here is the direct link to the [LoRa part](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/tuto/sensors/lora_sensor/Arduino_lora_demo.html)

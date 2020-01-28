@@ -252,29 +252,44 @@ $('.my_tooltip').tooltip({html: true})
 //==================================
 
 	$('#btn_gw_lorawan_conf').click(function() {
-      // Confirm
-		var response = confirm('Do you want to configure gateway for LoRaWAN mode?');
-		if (response == true){ // OK clicked
-			msg = '<p><center><font color="green">Configuring for LoRaWAN mode.</font></center></p>';
-			$('#gw_config_msg').html(msg);
-	    	setTimeout(function() {
-  				$('#gw_config_msg').html("");				
-	     	},defaultMsgDisplayTimer);
+		//only if at least one check box (LoRaWAN cloud) is checked
+		if (document.getElementById('gw_lorawan_conf_chirpstack_checkbox').checked || document.getElementById('gw_lorawan_conf_ttn_checkbox').checked) {
+			// Confirm
+			var response = confirm('Do you want to configure gateway for LoRaWAN mode? You have to reboot for changes to take effect.');
+			if (response == true){ // OK clicked
+				msg = '<p><center><font color="green">Configuring for LoRaWAN mode.</font></center></p>';
+				$('#gw_config_msg').html(msg);
+				setTimeout(function() {
+					$('#gw_config_msg').html("");				
+				},defaultMsgDisplayTimer);
 
-        	/* Serialize the submitted form control values to be sent to the web server with the request */
-        	var formValues = $('#gw_lorawan_conf_form').serialize();
-        
-			$.post("process.php", formValues, function (res) { 
-	    		$('#gw_config_msg').html(res);
-	    		//erase message after 5 seconds
-	    		setTimeout(function() {
-  					$('#gw_config_msg').html("");
-  					window.location.reload();  					
-	     		},defaultMsgDisplayTimer);
-	 		});
+				/* Serialize the submitted form control values to be sent to the web server with the request */
+				var formValues = $('#gw_lorawan_conf_form').serialize();
+		
+				$.post("process.php", formValues, function (res) { 
+					$('#gw_config_msg').html(res);
+					//erase message after 5 seconds
+					setTimeout(function() {
+						$('#gw_config_msg').html("");
+						window.location.reload();  					
+					},defaultMsgDisplayTimer);
+				});
+			}
+			else{ 
+				// Cancel clicked$
+				setTimeout(function() {
+					$('#gw_config_msg').html("");
+					window.location.reload();  					
+				},defaultMsgDisplayTimer);
+			}
 		}
-		else{ 
-			// Cancel clicked
+		else {
+			msg = '<p><center><font color="red">You need to activate at least one LoRaWAN cloud.</font></center></p>';
+			$('#gw_config_msg').html(msg);
+			setTimeout(function() {
+				$('#gw_config_msg').html("");
+				window.location.reload();				
+			},defaultMsgDisplayTimer);		
 		}
     });
         
@@ -649,6 +664,7 @@ $('.my_tooltip').tooltip({html: true})
             //erase message after 5 seconds
 	   		setTimeout(function() {
   				$('#gw_config_msg').html("");
+  				window.location.reload();  				
 	     	},defaultMsgDisplayTimer);
         });
 
@@ -677,6 +693,7 @@ $('.my_tooltip').tooltip({html: true})
             //erase message after 5 seconds
 	   		setTimeout(function() {
   				$('#gw_config_msg').html("");
+  				window.location.reload();  				
 	     	},defaultMsgDisplayTimer);
         });
 
@@ -2815,7 +2832,38 @@ $('.my_tooltip').tooltip({html: true})
 			$('#td_cloudTTN_source_list_submit').hide();
 		}
 	});
-	
+
+
+//==================================
+//	Cloud ChirpStack server
+//==================================
+	$('#td_edit_cloudchirpstack_lorawan_server').hide();
+	$('#td_cloudchirpstack_lorawan_server_submit').hide();
+
+	$('#btn_edit_cloudchirpstack_lorawan_server').click(function(){
+		$('#td_edit_cloudchirpstack_lorawan_server').show();
+		$('#td_cloudchirpstack_lorawan_server_submit').show();
+	});
+
+ 	$('#btn_cloudchirpstack_lorawan_server_submit').click(function(){
+		var cloud_key_value = $('#cloudchirpstack_lorawan_server_input').val();
+		var cloud_key_name = "chirpstack_key";
+		var cloud_key = "lorawan_server";
+	    $.get("process.php", {clouds_key_name:cloud_key_name, clouds_key:cloud_key, clouds_key_value:cloud_key_value}, function(data){	
+			$('#cloud_msg').html(data);
+	    	//erase message after 5 seconds
+	   		setTimeout(function() {
+  				$('#cloud_msg').html("");
+	   		},defaultMsgDisplayTimer);
+		});
+	    	
+		if(cloud_key_value != ''){
+			$('#td_cloudchirpstack_lorawan_server_value').html(cloud_key_value );
+			$('#td_edit_cloudchirpstack_lorawan_server').hide();
+			$('#td_cloudchirpstack_lorawan_server_submit').hide();
+		}	
+	});
+		
 //==================================
 //	Cloud ChirpStack source list
 //==================================

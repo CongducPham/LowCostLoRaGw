@@ -72,17 +72,26 @@ then
 		#set status to 600s(5min)
 		jq '.'"gateway_conf"'.'"status"' = '600' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
 	fi
-	
+
+	#disable non-LoRaWAN downlink mechanism
+	jq '.'"gateway_conf"'.'"downlink"' = '0' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+	#set downlink_lorawan to true
+	jq '.'"gateway_conf"'.'"downlink_lorawan"' = 'true' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+
+	lorawan_server="127.0.0.1"
+			
 	#enable TTN settings if needed
 	if [ $(($2 & 1)) == 1 ]
 	then
 		jq '.lorawan_encrypted_clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudTTN.py") .'enabled' = 'true'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
 		#set ttn_status to true
-		jq '.'"status_conf"'.'"ttn_status"' = 'true' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json		
+		jq '.'"status_conf"'.'"ttn_status"' = 'true' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+		#read lorawan_server from key_TTN.py
+		lorawan_server=`grep "lorawan_server" /home/pi/lora_gateway/key_TTN.py | cut -d '=' -f 2 | tr -d '"'`
 	else
 		jq '.lorawan_encrypted_clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudTTN.py") .'enabled' = 'false'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
 		#set ttn_status to false
-		jq '.'"status_conf"'.'"ttn_status"' = 'false' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json	
+		jq '.'"status_conf"'.'"ttn_status"' = 'false' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
 	fi
 
 	#enable ChirpStack settings if needed
@@ -90,16 +99,22 @@ then
 	then
 		jq '.lorawan_encrypted_clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudChirpStack.py") .'enabled' = 'true'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
 		#set cs_status to true
-		jq '.'"status_conf"'.'"cs_status"' = 'true' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json	
+		jq '.'"status_conf"'.'"cs_status"' = 'true' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+		#read lorawan_server from key_ChirpStack.py
+		lorawan_server=`grep "lorawan_server" /home/pi/lora_gateway/key_ChirpStack.py | cut -d '=' -f 2 | tr -d '"'`		
 	else
 		jq '.lorawan_encrypted_clouds=([.lorawan_encrypted_clouds[]  | select(.script == "python CloudChirpStack.py") .'enabled' = 'false'])' /home/pi/lora_gateway/clouds.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/clouds.json
 		#set cs_status to false
-		jq '.'"status_conf"'.'"cs_status"' = 'false' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json		
+		jq '.'"status_conf"'.'"cs_status"' = 'false' ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
 	fi
-		
+
+	#give priority to lorawan_server from key_ChirpStack.py if it is enabled
+	jq '.'"gateway_conf"'.'"downlink_network_server"' = "'$lorawan_server'" ' /home/pi/lora_gateway/gateway_conf.json > "$tmp" && mv "$tmp" /home/pi/lora_gateway/gateway_conf.json
+			
 	sudo chown -R pi:pi /home/pi/lora_gateway/
 	sudo chmod +r /home/pi/lora_gateway/gateway_conf.json
 	sudo chmod +r /home/pi/lora_gateway/clouds.json
+	
 fi
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -542,7 +557,10 @@ fi
 
 if [ "$1" = "chirpstack_key" ]
 then
-	if [ "$2" = "source_list" ]
+	if [ "$2" = "lorawan_server" ]
+	then
+		sudo sed -i 's/^lorawan_server.*/lorawan_server=\"'"$3"'\"/g'''  /home/pi/lora_gateway/key_ChirpStack.py
+	elif [ "$2" = "source_list" ]
 	then
 		sudo sed -i 's/^source_list.*/source_list='"$3"'/g'''  /home/pi/lora_gateway/key_ChirpStack.py
 	fi

@@ -1,6 +1,17 @@
 Change logs
 ===========
 
+Jan 27th, 2020
+--------------
+- v2.0 `lora_gateway.cpp`
+	* add LoRaWAN data downlink transmission from downlink messages from LoRaWAN Network Server
+- `scripts/start_gw.sh`	
+	* `gateway_conf.json:"gateway_conf":"downlink_lorawan" : true` enables periodic PULL_DATA on Network Server to get downlink messages
+		- `scripts/lorawan_stats/downlink_lorawan.py` will be launched by `scripts/start_gw.sh` to issue PULL_DATA and handle PULL_RESP
+		- `gateway_conf.json:"gateway_conf":"downlink_network_server" indicates a LoRaWAN Network Server for `downlink_lorawan.py` 
+		- more details in the dedicated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md) that has been updated	
+	* remove old and unused code and only targets RPI-based gateway
+	
 Dec 24th, 2019
 --------------
 - when using a RAK831/2245 SX1301-based hat with our `lora_pkt_fwd_formatter.py` formatter script to provide multi-channel support using a modified version of Semtech's `lora_pkt_fwd`, we tested that a LoRaWAN device (commercial or LMIC-based) is fully supported (uplink, downlink, in both ABP and OTAA mode).

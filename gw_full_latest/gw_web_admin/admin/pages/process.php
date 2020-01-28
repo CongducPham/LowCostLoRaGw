@@ -1140,6 +1140,7 @@ if (
 // 	-cloudMQTT
 // 	-cloudNodeRed
 //	-CloudTTN
+//	Ex: cloud_key_name = "mqtt_key"; cloud_key = "MQTT_server"; clouds_key_value = "test.mosquitto.org";
 //+++++++++++++++++++++++++++++++++++++ 
 
 if(
@@ -1203,6 +1204,14 @@ if(
 	}
 }
 
+//+++++++++++++++++++++++++++++++++++++ 
+// source list of other clouds
+// 	-cloudGpsFile
+// 	-cloudMQTT
+// 	-cloudNodeRed
+//	-CloudTTN
+//  -CloudChirpStack
+//+++++++++++++++++++++++++++++++++++++
 
 if(
 	isset($_GET["clouds_list"]) && (! empty($_GET["clouds_list"])) &&

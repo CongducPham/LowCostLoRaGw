@@ -79,7 +79,7 @@
 						echo $date;
 						
 						ob_start(); 
-						system("wget -q --spider http://www.google.com", $retval);
+						system("wget -q --tries=3 --spider http://www.google.com", $retval);
 						$msg=ob_get_contents(); 
 						ob_clean();
 						if ($retval == 0) {

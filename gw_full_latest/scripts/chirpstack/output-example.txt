@@ -1,0 +1,428 @@
+SX1301(lora_pkt_fwd-no uplink)+lora_pkt_fwd_formatter.py+CloudChirpStack.py+ChirpStack
+======================================================================================
+
+EU frequency plan. 8 multi-SF LoRa channels.
+
+data from 0x26041F24, LMIC ABP. Gateway output:
+-----------------------------------------------
+
+	raw output from low-level gateway. post_processing_gw will handle packet format
+	post_processing_gw.py found an alert_conf section
+	Parsing cloud declarations
+	[u'python CloudThingSpeak.py']
+	Parsed all cloud declarations
+	post_processing_gw.py got cloud list: 
+	[u'python CloudThingSpeak.py']
+	Parsing cloud declarations
+	Parsed all cloud declarations
+	post_processing_gw.py got encrypted cloud list: 
+	[]
+	Parsing cloud declarations
+	[u'python CloudChirpStack.py']
+	Parsed all cloud declarations
+	post_processing_gw.py got LoRaWAN encrypted cloud list: 
+	[u'python CloudChirpStack.py']
+	Starting thread to perform periodic gw status/tasks
+	2020-01-17 10:29:24.279694
+	post status: gw ON
+	post status: executing periodic tasks
+	post status: start running
+	cs_stats: gw id B827EBFFFFCE23C2
+	cs_stats: Opening UDP socket to 127.0.0.1 (127.0.0.1) port 1700...
+	cs_stats: Try to send UDP packet: ???'????#?{"stat": {"rxok": 0, "txnb": 0, "ackr": 0, "dwnb": 0, "alti": 0, "time": "2020-01-17 10:29:24 GMT", "rxnb": 0, "rxfw": 0, "lati": 43.314106, "long": -0.363887}}
+	post status: exiting
+	Starting thread to perform fast statistics tasks
+
+	Current working directory: /home/pi/lora_gateway
+	INFO: [main] concentrator started, packet can now be received
+
+	**--> concentrator receives LoRa packet which is passed through lora_pkt_fwd_formatter.py and injected into post_processing_gw.py
+
+	JSON up: {"rxpk":[{"tmst":83718140,"time":"2020-01-17T09:30:47.0Z","chan":0,"rfch":1,"freq":868.100000,"stat":1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","lsnr":10.0,"rssi":-37,"size":28,"data":"QCQfBCaAAAABMHpb8pE1UwwjMG/l7IoiMC8T+A=="}]}
+	2020-01-17T10:30:47.865923
+	rcv ctrl pkt info (^p): 0,0,0,0,28,10,-37
+	splitted in:  [0, 0, 0, 0, 28, 10, -37]
+	rawFormat(len=28 SNR=10 RSSI=-37)
+	rcv ctrl radio info (^r): 125,5,12,868100
+	splitted in:  [125, 5, 12, 868100]
+	(BW=125 CR=5 SF=12)
+	rcv timestamp (^t): 2020-01-17T09:30:47.0*83718140
+
+	adding time zone info
+	new rcv timestamp (^t): 2020-01-17T09:30:47.0+01:00
+	got first framing byte
+	--> got LoRa data prefix
+	raw format from LoRa gateway
+	LoRaWAN?
+	['0x40', '0x24', '0x1f', '0x4', '0x26', '0x80', '0x0', '0x0', '0x1', '0x30', '0x7a', '0x5b', '0xf2', '0x91', '0x35', '0x53', '0xc', '0x23', '0x30', '0x6f', '0xe5', '0xec', '0x8a', '0x22', '0x30', '0x2f', '0x13', '0xf8']
+	update ctrl pkt info (^p): 256,64,0x26041F24,0,15,10,-37
+	+++ rxlora[868100]. lorawan type=0x40 src=0x26041F24 seq=0 len=15 SNR=10 RSSIpkt=-37 BW=125 CR=4/5 SF=12
+	--> FYI base64 of LoRaWAN frame w/MIC: QCQfBCaAAAABMHpb8pE1UwwjMG/l7IoiMC8T+A==
+	--> number of LoRaWAN enabled clouds is 1
+	--> LoRaWAN encrypted cloud[0]
+
+	**--> data is pushed to ChirpStack LoRaWAN Network Server with CloudChirspStack.py
+
+	uploading with python CloudChirpStack.py
+	python CloudChirpStack.py "QCQfBCaAAAABMHpb8pE1UwwjMG/l7IoiMC8T+A==" "256,64,637804324,0,15,10,-37" "125,5,12,868100" "2020-01-17T09:30:47.0+01:00*83718140" "0000B827EBCE23C2"
+	CloudChirpStack: gw id: B827EBFFFFCE23C2
+	CloudChirpStack: Opening UDP socket to 127.0.0.1 (127.0.0.1) port 1700...
+	CloudChirpStack: Try to forward packet: ???'????#?{"rxpk": [{"stat": 1, "chan": 0, "datr": "SF12BW125", "tmst": 83718140, "codr": "4/5", "lsnr": 10, "freq": 868.1, "data": "QCQfBCaAAAABMHpb8pE1UwwjMG/l7IoiMC8T+A==", "size": 15, "modu": "LORA", "rfch": 0, "time": "2020-01-17T09:30:47Z", "rssi": -37}]}
+	CloudChirpStack: Received packet: {"rxpk": [{"stat": 1, "chan": 0, "datr": "SF12BW125", "tmst": 83718140, "codr": "4/5", "lsnr": 10, "freq": 868.1, "data": "QCQfBCaAAAABMHpb8pE1UwwjMG/l7IoiMC8T+A==", "size": 15, "modu": "LORA", "rfch": 0, "time": "2020-01-17T09:30:47Z", "rssi": -37}]}
+	--> LoRaWAN encrypted cloud end
+	--> DATA encrypted: local AES LoRaWAN not activated
+
+**--> concentrator receives downlink message through a PULL_RESP from Network Server and sends downlink data back to device
+
+	INFO: [down] PULL_RESP received  - token[33:217] :)
+	JSON down: {"txpk":{"imme":false,"rfch":0,"powe":14,"ant":0,"brd":0,"tmst":84718140,"freq":868.1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","ipol":true,"size":20,"data":"YCQfBCYCKgAIAQHw2HcfqKgKvWk="}}
+	INFO: tx_start_delay=1495 (1495.500000) - (1497, bw_delay=1.500000, notch_delay=0.000000)
+	lora_pkt_fwd_formatter: GPS(10.00000,20.00000)
+
+data from LMIC OTAA. Gateway output:
+------------------------------------
+
+	**--> concentrator receives LoRa packet which is passed through lora_pkt_fwd_formatter.py and injected into post_processing_gw.py
+
+	JSON up: {"rxpk":[{"tmst":362369675,"time":"2020-01-17T09:35:26.0Z","chan":2,"rfch":1,"freq":868.500000,"stat":1,"modu":"LORA","datr":"SF7BW125","codr":"4/5","lsnr":8.5,"rssi":-39,"size":23,"data":"AHyaAdB+1bNwsqjUyJAaiwA7oWtsk5E="}]}
+	2020-01-17T10:35:26.497335
+	rcv ctrl pkt info (^p): 0,0,0,3,23,8,-39
+	splitted in:  [0, 0, 0, 3, 23, 8, -39]
+	rawFormat(len=23 SNR=8 RSSI=-39)
+	rcv ctrl radio info (^r): 125,5,7,868500
+	splitted in:  [125, 5, 7, 868500]
+	(BW=125 CR=5 SF=7)
+	rcv timestamp (^t): 2020-01-17T09:35:26.0*362369675
+
+	adding time zone info
+	new rcv timestamp (^t): 2020-01-17T09:35:26.0+01:00
+	got first framing byte
+	--> got LoRa data prefix
+	raw format from LoRa gateway
+	LoRaWAN?
+	['0x0', '0x7c', '0x9a', '0x1', '0xd0', '0x7e', '0xd5', '0xb3', '0x70', '0xb2', '0xa8', '0xd4', '0xc8', '0x90', '0x1a', '0x8b', '0x0', '0x3b', '0xa1', '0x6b', '0x6c', '0x93', '0x91']
+	update ctrl pkt info (^p): 256,0,0xD0019A7C,46037,10,8,-39
+	+++ rxlora[868500]. lorawan type=0x00 src=0xD0019A7C seq=46037 len=10 SNR=8 RSSIpkt=-39 BW=125 CR=4/5 SF=7
+	--> FYI base64 of LoRaWAN frame w/MIC: AHyaAdB+1bNwsqjUyJAaiwA7oWtsk5E=
+	--> number of LoRaWAN enabled clouds is 1
+	--> LoRaWAN encrypted cloud[0]
+
+	**--> data is pushed to ChirpStack LoRaWAN Network Server with CloudChirspStack.py
+	**--> it is normally a join-request
+
+	uploading with python CloudChirpStack.py
+	python CloudChirpStack.py "AHyaAdB+1bNwsqjUyJAaiwA7oWtsk5E=" "256,0,3489766012,46037,10,8,-39" "125,5,7,868500" "2020-01-17T09:35:26.0+01:00*362369675" "0000B827EBCE23C2"
+	CloudChirpStack: gw id: B827EBFFFFCE23C2
+	CloudChirpStack: Opening UDP socket to 127.0.0.1 (127.0.0.1) port 1700...
+	CloudChirpStack: Try to forward packet: ?l?'????#?{"rxpk": [{"stat": 1, "chan": 0, "datr": "SF7BW125", "tmst": 362369675, "codr": "4/5", "lsnr": 8, "freq": 868.5, "data": "AHyaAdB+1bNwsqjUyJAaiwA7oWtsk5E=", "size": 10, "modu": "LORA", "rfch": 0, "time": "2020-01-17T09:35:26Z", "rssi": -39}]}
+	CloudChirpStack: Received packet: {"rxpk": [{"stat": 1, "chan": 0, "datr": "SF7BW125", "tmst": 362369675, "codr": "4/5", "lsnr": 8, "freq": 868.5, "data": "AHyaAdB+1bNwsqjUyJAaiwA7oWtsk5E=", "size": 10, "modu": "LORA", "rfch": 0, "time": "2020-01-17T09:35:26Z", "rssi": -39}]}
+	--> LoRaWAN encrypted cloud end
+	--> DATA encrypted: local AES LoRaWAN not activated
+
+	**--> concentrator receives downlink message through a PULL_RESP from Network Server and sends downlink data back to device
+	**--> it is normally a join-accept
+
+	INFO: [down] PULL_RESP received  - token[228:8] :)
+	JSON down: {"txpk":{"imme":false,"rfch":0,"powe":14,"ant":0,"brd":0,"tmst":367369675,"freq":868.5,"modu":"LORA","datr":"SF7BW125","codr":"4/5","ipol":true,"size":17,"data":"II+xLNuK+4G57pP00iaBUEU="}}
+	INFO: tx_start_delay=1495 (1495.500000) - (1497, bw_delay=1.500000, notch_delay=0.000000)
+
+	**--> concentrator receives LoRa packet which is passed through lora_pkt_fwd_formatter.py and injected into post_processing_gw.py
+	**--> it is now the first data packet from the newly activated device, see the device's address which is now 0x017685E4
+
+	JSON up: {"rxpk":[{"tmst":367539083,"time":"2020-01-17T09:35:31.0Z","chan":0,"rfch":1,"freq":868.100000,"stat":1,"modu":"LORA","datr":"SF7BW125","codr":"4/5","lsnr":10.0,"rssi":-39,"size":26,"data":"QOSFdgGAAAAB4tU57LapbH2XMCt8+1y/Hc8="}]}
+	2020-01-17T10:35:31.668824
+	rcv ctrl pkt info (^p): 0,0,0,4,26,10,-39
+	splitted in:  [0, 0, 0, 4, 26, 10, -39]
+	rawFormat(len=26 SNR=10 RSSI=-39)
+	rcv ctrl radio info (^r): 125,5,7,868100
+	splitted in:  [125, 5, 7, 868100]
+	(BW=125 CR=5 SF=7)
+	rcv timestamp (^t): 2020-01-17T09:35:31.0*367539083
+
+	adding time zone info
+	new rcv timestamp (^t): 2020-01-17T09:35:31.0+01:00
+	got first framing byte
+	--> got LoRa data prefix
+	raw format from LoRa gateway
+	LoRaWAN?
+	['0x40', '0xe4', '0x85', '0x76', '0x1', '0x80', '0x0', '0x0', '0x1', '0xe2', '0xd5', '0x39', '0xec', '0xb6', '0xa9', '0x6c', '0x7d', '0x97', '0x30', '0x2b', '0x7c', '0xfb', '0x5c', '0xbf', '0x1d', '0xcf']
+	update ctrl pkt info (^p): 256,64,0x017685E4,0,13,10,-39
+	+++ rxlora[868100]. lorawan type=0x40 src=0x017685E4 seq=0 len=13 SNR=10 RSSIpkt=-39 BW=125 CR=4/5 SF=7
+	--> FYI base64 of LoRaWAN frame w/MIC: QOSFdgGAAAAB4tU57LapbH2XMCt8+1y/Hc8=
+	--> number of LoRaWAN enabled clouds is 1
+	--> LoRaWAN encrypted cloud[0]
+	uploading with python CloudChirpStack.py
+	python CloudChirpStack.py "QOSFdgGAAAAB4tU57LapbH2XMCt8+1y/Hc8=" "256,64,24544740,0,13,10,-39" "125,5,7,868100" "2020-01-17T09:35:31.0+01:00*367539083" "0000B827EBCE23C2"
+	CloudChirpStack: gw id: B827EBFFFFCE23C2
+	CloudChirpStack: Opening UDP socket to 127.0.0.1 (127.0.0.1) port 1700...
+	CloudChirpStack: Try to forward packet: ??'????#?{"rxpk": [{"stat": 1, "chan": 0, "datr": "SF7BW125", "tmst": 367539083, "codr": "4/5", "lsnr": 10, "freq": 868.1, "data": "QOSFdgGAAAAB4tU57LapbH2XMCt8+1y/Hc8=", "size": 13, "modu": "LORA", "rfch": 0, "time": "2020-01-17T09:35:31Z", "rssi": -39}]}
+	CloudChirpStack: Received packet: {"rxpk": [{"stat": 1, "chan": 0, "datr": "SF7BW125", "tmst": 367539083, "codr": "4/5", "lsnr": 10, "freq": 868.1, "data": "QOSFdgGAAAAB4tU57LapbH2XMCt8+1y/Hc8=", "size": 13, "modu": "LORA", "rfch": 0, "time": "2020-01-17T09:35:31Z", "rssi": -39}]}
+	--> LoRaWAN encrypted cloud end
+	--> DATA encrypted: local AES LoRaWAN not activated
+
+
+single-channel gateway (lora_gateway)+CloudChirpStack.py+ChirpStack
+===================================================================
+
+reception on 868.1MHz, SF12BW125
+
+data from 0x26041F24, LMIC ABP. Gateway output:
+-----------------------------------------------
+
+	raw output from low-level gateway. post_processing_gw will handle packet format
+	post_processing_gw.py found an alert_conf section
+	Parsing cloud declarations
+	[u'python CloudThingSpeak.py']
+	Parsed all cloud declarations
+	post_processing_gw.py got cloud list: 
+	[u'python CloudThingSpeak.py']
+	Parsing cloud declarations
+	Parsed all cloud declarations
+	post_processing_gw.py got encrypted cloud list: 
+	[]
+	Parsing cloud declarations
+	[u'python CloudChirpStack.py']
+	Parsed all cloud declarations
+	post_processing_gw.py got LoRaWAN encrypted cloud list: 
+	[u'python CloudChirpStack.py']
+	Starting thread to perform periodic gw status/tasks
+	2020-01-21 09:37:51.309005
+	post status: gw ON
+	post status: executing periodic tasks
+	post status: start running
+	cs_stats: gw id B827EBFFFFCE23C2
+	cs_stats: Opening UDP socket to 127.0.0.1 (127.0.0.1) port 1700...
+	cs_stats: Try to send UDP packet: ???'????#?{"stat": {"rxok": 0, "txnb": 0, "ackr": 0, "dwnb": 0, "alti": 0, "time": "2020-01-21 09:37:51 GMT", "rxnb": 0, "rxfw": 0, "lati": 10.0, "long": 20.0}}
+	post status: exiting
+	Starting thread to perform fast statistics tasks
+
+	Current working directory: /home/pi/lora_gateway
+	SX1276 detected, starting.
+	SX1276 LF/HF calibration
+	...
+	**********Power ON: state 0
+	LoRa CR 5: state 0
+	LoRa SF 12: state 0
+	LoRa BW 125: state 0
+	Configuring for LoRaWAN
+	Set frequency to 868.1MHz: state 0
+	Use PA_BOOST amplifier line
+	Set LoRa power dBm to 14
+	Power: state 0
+	Get Preamble Length: state 0
+	Preamble Length: 8
+	LoRa addr 1: state 0
+	Raw format, not assuming any header in reception
+	SX1272/76 configured as LR-BS. Waiting RF input for transparent RF-serial bridge
+	Default sync word: 0x12
+	Set sync word to 0x34
+	LoRa sync word: state 0
+	Low-level gateway has downlink support
+	2020-01-21T17:33:08.861087
+	Low-level gw status ON 
+
+	**--> single-channel lora_gateway receives LoRa packet which is injected into post_processing_gw.py
+	
+	--- rxlora. dst=0 type=0x00 src=0 seq=0 len=28 SNR=7 RSSIpkt=-19 BW=125 CR=4/5 SF=12
+	2020-01-21T17:33:27.741324
+	rcv ctrl pkt info (^p): 0,0,0,0,28,7,-19
+	splitted in:  [0, 0, 0, 0, 28, 7, -19]
+	rawFormat(len=28 SNR=7 RSSI=-19)
+	rcv ctrl radio info (^r): 125,5,12,868100
+	splitted in:  [125, 5, 12, 868100]
+	(BW=125 CR=5 SF=12)
+	rcv timestamp (^t): 2020-01-21T17:33:27.740034*4155747970
+
+	**--> note the timestamp of packet reception (us): 4155747970
+	
+	adding time zone info
+	new rcv timestamp (^t): 2020-01-21T17:33:27.740034+01:00
+	got first framing byte
+	--> got LoRa data prefix
+	raw format from LoRa gateway
+	LoRaWAN?
+	update ctrl pkt info (^p): 256,64,0x26041F24,0,15,7,-19
+	+++ rxlora[868100]. lorawan type=0x40 src=0x26041F24 seq=0 len=15 SNR=7 RSSIpkt=-19 BW=125 CR=4/5 SF=12
+	--> number of LoRaWAN enabled clouds is 1
+	--> LoRaWAN encrypted cloud[0]
+	
+	**--> data is pushed to ChirpStack LoRaWAN Network Server with CloudChirspStack.py
+	
+	uploading with python CloudChirpStack.py
+	python CloudChirpStack.py "QCQfBCaAAAABMHpb8pE1UwwjMG/l7IoiMC8T+A==" "256,64,637804324,0,15,7,-19" "125,5,12,868100" "2020-01-21T17:33:27.740034+01:00*4155747970" "0000B827EBCE23C2"
+	CloudChirpStack: gw id: B827EBFFFFCE23C2
+	CloudChirpStack: Opening UDP socket to 127.0.0.1 (127.0.0.1) port 1700...
+	--> LoRaWAN encrypted cloud end
+	--> DATA encrypted: local AES LoRaWAN not activated
+
+	**--> downlink message is received through a PULL_RESP from Network Server by downlink_lorawan.py script (running in background) and written to downlink.txt
+	**--> single-channel lora_gateway reads downlink.txt, waits and send downlink data back to the device targeting either RX1 or RX2 depending on timestamp in downlink message
+	
+	-----------------------------------------------------
+	Check for downlink requests 2020-01-21T17:33:28.439246
+	Read downlink: 204
+	Downlink entry: {"txpk":{"imme":false,"rfch":0,"powe":14,"ant":0,"brd":0,"tmst":4156747970,"freq":868.1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","ipol":true,"size":25,"data":"YCQfBCYC9QAIAQF+eOi0BvnZlM6hkIt/wA=="}}
+	
+	**--> note the timestamp for downlink data transmission (us): 44156747970. This is 1s after timestamp of packet reception (us): 4155747970
+	
+	Process downlink request
+	LoRaWAN downlink request
+	
+	**--> 1s means RX1
+	
+	Target RX1
+	Packet sent, state 0
+	-----------------------------------------------------
+
+At an LMIC device in ABP mode, with debug output activated to give more details, you can see the reception of downlink data (`helloworld`)
+
+	Starting
+	RXMODE_RSSI
+	354: engineUpdate, opmode=0x808
+	414: Uplink data pending
+	460: Considering band 0, which is available at 345
+	1170: Considering band 3, which is available at 0
+	1990: No channel found in band 3
+	2518: Considering band 0, which is available at 345
+	3372: No channel found in band 0
+	3899: Considering band 1, which is available at 345
+	4752: Airtime available at 345 (channel duty limit)
+	5588: Ready for uplink
+	6770: Updating info for TX at 413, airtime will be 102919. Setting available time for band 1 to 207159296
+	7762: TXMODE, freq=868100000, len=28, SF=12, BW=125, CR=4/5, IH=0
+	Packet queued
+	FREQ=868100000
+	110088: irq: dio: 0x0 flags: 0x8
+	110170: Scheduled job 0x254, cb 0x184a ASAP
+	110306: Running job 0x254, cb 0x184a, deadline 0
+	111113: Scheduled job 0x254, cb 0x185d at 163245
+	163249: Running job 0x254, cb 0x185d, deadline 163245
+	163412: RXMODE_SINGLE, freq=868100000, SF=12, BW=125, CR=4/5, IH=0
+	275799: irq: dio: 0x0 flags: 0x40
+	275905: Scheduled job 0x254, cb 0x1865 ASAP
+	276033: Running job 0x254, cb 0x1865, deadline 0
+	277621: Received downlink, window=RX1, port=1, ack=0
+	277720[4443]: EV_TXCOMPLETE (includes waiting for RX windows)
+	Received 
+	10
+	 bytes of payload
+	68656C6C6F776F726C64279591: Scheduled job 0x208, cb 0x1b68 at 19029586
+	280416: engineUpdate, opmode=0x800
+	
+reception on 868.1MHz, SF12BW125
+
+data from LMIC OTAA
+-------------------
+
+OTAA with a single-channel gateway needs to fix the join frequency and datarate to the one used by uplink packets (and matching those of the single-channel gateway). Therefore you need to use our slightly modified LMIC stack (the one that includes the low-power mode) and uncomment in `lmic/config.h` the `#define LMIC_SCG` statement. This will avoid LMIC to use SF7 for join-request and will use the same datarate than for uplinks (the one set with `LMIC_setDrTxpow(DR_SF12, 14);` for instance). 
+
+Gateway output
+
+	Current working directory: /home/pi/lora_gateway
+	SX1276 detected, starting.
+	SX1276 LF/HF calibration
+	...
+	**********Power ON: state 0
+	LoRa CR 5: state 0
+	LoRa SF 12: state 0
+	LoRa BW 125: state 0
+	Configuring for LoRaWAN
+	Set frequency to 868.1MHz: state 0
+	Use PA_BOOST amplifier line
+	Set LoRa power dBm to 14
+	Power: state 0
+	Get Preamble Length: state 0
+	Preamble Length: 8
+	LoRa addr 1: state 0
+	Raw format, not assuming any header in reception
+	SX1272/76 configured as LR-BS. Waiting RF input for transparent RF-serial bridge
+	Default sync word: 0x12
+	Set sync word to 0x34
+	LoRa sync word: state 0
+	Low-level gateway has downlink support
+	2020-01-22T15:01:32.362913
+	Low-level gw status ON
+
+	**--> single-channel lora_gateway receives LoRa packet which is injected into post_processing_gw.py
+	**--> it is normally a join-request
+	
+	--- rxlora. dst=0 type=0x00 src=0 seq=0 len=23 SNR=10 RSSIpkt=-21 BW=125 CR=4/5 SF=12
+	2020-01-22T15:01:51.165045
+	rcv ctrl pkt info (^p): 0,0,0,0,23,10,-21
+	splitted in:  [0, 0, 0, 0, 23, 10, -21]
+	rawFormat(len=23 SNR=10 RSSI=-21)
+	rcv ctrl radio info (^r): 125,5,12,868100
+	splitted in:  [125, 5, 12, 868100]
+	(BW=125 CR=5 SF=12)
+	rcv timestamp (^t): 2020-01-22T15:01:51.163516*4149760124
+
+	adding time zone info
+	new rcv timestamp (^t): 2020-01-22T15:01:51.163516+01:00
+	got first framing byte
+	--> got LoRa data prefix
+	raw format from LoRa gateway
+	LoRaWAN?
+	update ctrl pkt info (^p): 256,0,0xD0019A7C,46037,10,10,-21
+	+++ rxlora[868100]. lorawan type=0x00 src=0xD0019A7C seq=46037 len=10 SNR=10 RSSIpkt=-21 BW=125 CR=4/5 SF=12
+	--> number of LoRaWAN enabled clouds is 1
+	--> LoRaWAN encrypted cloud[0]
+	
+	**--> the join-request is pushed to ChirpStack LoRaWAN Network Server with CloudChirspStack.py
+		
+	uploading with python CloudChirpStack.py
+	python CloudChirpStack.py "AHyaAdB+1bNwsqjUyJAaiwAXoHP6x4o=" "256,0,3489766012,46037,10,10,-21" "125,5,12,868100" "2020-01-22T15:01:51.163516+01:00*4149760124" "0000B827EBCE23C2"
+	CloudChirpStack: gw id: B827EBFFFFCE23C2
+	CloudChirpStack: Opening UDP socket to 127.0.0.1 (127.0.0.1) port 1700...
+	--> LoRaWAN encrypted cloud end
+	--> DATA encrypted: local AES LoRaWAN not activated
+
+	**--> downlink message is received through a PULL_RESP from Network Server by downlink_lorawan.py script (running in background) and written to downlink.txt
+	**--> single-channel lora_gateway reads downlink.txt, waits and send downlink data back to the device targeting either RX1 or RX2 depending on timestamp in downlink message	
+	**--> it is normally a join-request
+	
+	-----------------------------------------------------
+	Check for downlink requests 2020-01-22T15:01:51.863006
+	Read downlink: 192
+	Process downlink request
+	LoRaWAN downlink request
+	Target RX1
+	Packet sent, state 0
+	-----------------------------------------------------
+	
+	**--> single-channel lora_gateway receives LoRa packet which is injected into post_processing_gw.py
+	**--> it is now the first data packet from the newly activated device, see the device's address which is now 0x005C8ADC
+	
+	--- rxlora. dst=0 type=0x00 src=0 seq=0 len=26 SNR=9 RSSIpkt=-24 BW=125 CR=4/5 SF=12
+	2020-01-22T15:01:59.334796
+	rcv ctrl pkt info (^p): 0,0,0,0,26,9,-24
+	splitted in:  [0, 0, 0, 0, 26, 9, -24]
+	rawFormat(len=26 SNR=9 RSSI=-24)
+	rcv ctrl radio info (^r): 125,5,12,868100
+	splitted in:  [125, 5, 12, 868100]
+	(BW=125 CR=5 SF=12)
+	rcv timestamp (^t): 2020-01-22T15:01:59.333712*4157930320
+
+	adding time zone info
+	new rcv timestamp (^t): 2020-01-22T15:01:59.333712+01:00
+	got first framing byte
+	--> got LoRa data prefix
+	raw format from LoRa gateway
+	LoRaWAN?
+	update ctrl pkt info (^p): 256,64,0x005C8ADC,0,13,9,-24
+	+++ rxlora[868100]. lorawan type=0x40 src=0x005C8ADC seq=0 len=13 SNR=9 RSSIpkt=-24 BW=125 CR=4/5 SF=12
+	--> number of LoRaWAN enabled clouds is 1
+	--> LoRaWAN encrypted cloud[0]
+	uploading with python CloudChirpStack.py
+	python CloudChirpStack.py "QNyKXACAAAABOoNDLqQpr03fViE93BHetKY=" "256,64,6064860,0,13,9,-24" "125,5,12,868100" "2020-01-22T15:01:59.333712+01:00*4157930320" "0000B827EBCE23C2"
+	CloudChirpStack: gw id: B827EBFFFFCE23C2
+	CloudChirpStack: Opening UDP socket to 127.0.0.1 (127.0.0.1) port 1700...
+	--> LoRaWAN encrypted cloud end
+	--> DATA encrypted: local AES LoRaWAN not activated
+
+	**--> after reception of the data packet from the newly activated device, the single-channel lora_gateway check for any downlink but there is no
+	
+	-----------------------------------------------------
+	Check for downlink requests 2020-01-22T15:02:00.033007
+	NO NEW DOWNLINK ENTRY
+
+	
