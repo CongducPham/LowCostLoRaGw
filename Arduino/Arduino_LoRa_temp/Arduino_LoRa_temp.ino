@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: May 21th, 2019 by C. Pham
+ * last update: Nov 29th, 2019 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -28,11 +28,14 @@
 // add here some specific board define statements if you want to implement user-defined specific settings
 // A/ LoRa radio node from IoTMCU: https://www.tindie.com/products/IOTMCU/lora-radio-node-v10/
 //#define IOTMCU_LORA_RADIO_NODE
+// uncomment if you are sure you have an ESP8266 board and that it is not detected
+//#define ESP8266
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
+//#include "SX1272light2Baddr.h"
 #include "my_temp_sensor_code.h"
 
 /********************************************************************
@@ -67,7 +70,7 @@
 //#define WITH_LSC
 //If you want to upload on TTN without LoRaWAN you have to provide the 4 bytes DevAddr and uncomment #define EXTDEVADDR
 //#define EXTDEVADDR
-//Use native LoRaWAN packet format to send to LoRaWAN gateway
+//Use native LoRaWAN packet format to send to LoRaWAN gateway - beware it does not mean you device is a full LoRaWAN device
 //#define LORAWAN
 //uncomment to use a customized frequency. TTN plan includes 868.1/868.3/868.5/867.1/867.3/867.5/867.7/867.9 for LoRa
 //#define MY_FREQUENCY 868.1
@@ -123,13 +126,6 @@ uint8_t node_addr=6;
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE SPREADING FACTOR ONLY FOR LORAWAN MODE
-#ifdef LORAWAN
-int SF=12;
-#endif
-//////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
 unsigned int idlePeriodInMin = 10;
 ///////////////////////////////////////////////////////////////////
@@ -146,52 +142,14 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 // ENCRYPTION CONFIGURATION AND KEYS FOR LORAWAN
 #ifdef WITH_AES
 #include "local_lorawan.h"
-
-///////////////////////////////////////////////////////////////////
-//For TTN, use specify ABP mode on the TTN device setting
-
-///////////////////////////////////////////////////////////////////
-//ENTER HERE your App Session Key from the TTN device info (same order, i.e. msb)
-unsigned char AppSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-///////////////////////////////////////////////////////////////////
-
-//this is the default as LoRaWAN example
-//unsigned char AppSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
-
-///////////////////////////////////////////////////////////////////
-//ENTER HERE your Network Session Key from the TTN device info (same order, i.e. msb)
-unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-///////////////////////////////////////////////////////////////////
-
-//this is the default as LoRaWAN example
-//unsigned char NwkSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
-
-///////////////////////////////////////////////////////////////////
-// LORAWAN OR EXTENDED DEVICE ADDRESS FOR LORAWAN CLOUD
-#if defined LORAWAN || defined EXTDEVADDR
-///////////////////////////////////////////////////////////////////
-//ENTER HERE your Device Address from the TTN device info (same order, i.e. msb). Example for 0x12345678
-unsigned char DevAddr[4] = { 0x12, 0x34, 0x56, 0x78 };
-///////////////////////////////////////////////////////////////////
-
-#else
-///////////////////////////////////////////////////////////////////
-// DO NOT CHANGE HERE
-unsigned char DevAddr[4] = { 0x00, 0x00, 0x00, node_addr };
-///////////////////////////////////////////////////////////////////
-#endif
 #endif
 
 ///////////////////////////////////////////////////////////////////
 // ENCRYPTION CONFIGURATION AND KEYS FOR LSC ENCRYPTION METHOD
 #ifdef WITH_LSC
 #include "local_lsc.h"
-
-///////////////////////////////////////////////////////////////////
-//Enter here your LSC encryption key
-uint8_t LSC_Nonce[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
-///////////////////////////////////////////////////////////////////
 #endif
+
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -295,6 +253,9 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #include <Snooze.h>
 SnoozeTimer timer;
 SnoozeBlock sleep_config(timer);
+#elif defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined ESP8266
+#define LOW_POWER_PERIOD 60
+//we will use the deepSleep feature, so no additional library
 #else // for all other boards based on ATMega168, ATMega328P, ATMega32U4, ATMega2560, ATMega256RFR2, ATSAMD21G18A
 #define LOW_POWER_PERIOD 8
 // you need the LowPower library from RocketScream
@@ -337,8 +298,8 @@ sx1272config my_sx1272config;
 
 #ifdef WITH_RCVW
 
-// will wait for 5s before opening the rcv window
-#define DELAY_BEFORE_RCVW 5000
+// will wait for 1s before opening the rcv window
+#define DELAY_BEFORE_RCVW 1000
 
 //this function is provided to parse the downlink command which is assumed to be in the format /@A6#
 //
@@ -604,6 +565,12 @@ void setup()
   PRINT_VALUE("%d", e);
   PRINTLN;
 
+  // Invert I/Q
+  //e = sx1272.invertIQ(false);
+  //PRINT_CSTSTR("%s","Inverting I/Q: state ");
+  //PRINT_VALUE("%d", e);
+  //PRINTLN;
+  
 #ifdef WITH_LSC
   //need to initialize the LSC encoder
   //each time you want to change the session key, you need to call this function  
@@ -676,7 +643,7 @@ void loop(void)
       PRINTLN;
 
       //for testing
-      //temp = 22.5;
+      temp = 22.5;
       
 #if defined WITH_APPKEY && not defined LORAWAN
       app_key_offset = sizeof(my_appKey);
@@ -757,7 +724,7 @@ void loop(void)
       pl=local_lsc_create_pkt(message, pl, app_key_offset, p_type, node_addr);
 #endif
       
-      //sx1272.CarrierSense();
+      sx1272.CarrierSense();
 
       startSend=millis();
       
@@ -788,6 +755,7 @@ void loop(void)
 
 #ifdef LORAWAN
       // switch back to normal behavior
+      // as local_aes_lorawan_create_pkt() set raw format to true for LoRaWAN mode
       sx1272._rawFormat=false;
 #endif
           
@@ -797,6 +765,10 @@ void loop(void)
       EEPROM.put(0, my_sx1272config);
 #endif
 
+      PRINT_CSTSTR("%s","End send: ");
+      PRINT_VALUE("%ld", endSend);
+      PRINTLN;
+      
       PRINT_CSTSTR("%s","LoRa pkt size ");
       PRINT_VALUE("%d", pl);
       PRINTLN;
@@ -817,13 +789,15 @@ void loop(void)
       PRINT_VALUE("%d", e);
       PRINTLN;
 
-#ifdef WITH_RCVW
-      PRINT_CSTSTR("%s","Wait for ");
-      PRINT_VALUE("%d", DELAY_BEFORE_RCVW-1000);
-      PRINTLN;
-      //wait a bit
-      delay(DELAY_BEFORE_RCVW-1000);
+#if defined WITH_RCVW && !defined LORAWAN
 
+      PRINT_CSTSTR("%s","Wait for ");
+      PRINT_VALUE("%d", (endSend+DELAY_BEFORE_RCVW) - millis());
+      PRINTLN;
+      
+      while (millis()-endSend < DELAY_BEFORE_RCVW)
+        ;
+      
       PRINT_CSTSTR("%s","Wait for incoming packet\n");
       // wait for incoming packets
       e = sx1272.receivePacketTimeout(10000);

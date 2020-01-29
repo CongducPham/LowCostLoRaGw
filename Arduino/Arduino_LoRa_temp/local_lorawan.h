@@ -12,12 +12,10 @@
 
 #define AES_SHOWB64
 #ifdef AES_SHOWB64
-#include <Base64.h> 
+#include "Base64.h" 
 #endif
 
-extern unsigned char AppSkey[16];
-extern unsigned char NwkSkey[16];
-extern unsigned char DevAddr[4];
+extern uint8_t node_addr;
 
 int local_lorawan_init(uint8_t SF);
 uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_key_offset, bool is_lorawan);
