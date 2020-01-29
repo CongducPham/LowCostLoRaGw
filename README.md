@@ -53,8 +53,6 @@ You can easily make them produced on many online PCB manufacturers. Usually, you
 Tutorial materials
 ------------------
 
-Also consult the following web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html
-
 1 online tutorial
 
 - [Arduino-Sensor-LoRa tutorial](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/tuto/index.html)
@@ -81,43 +79,36 @@ Go to [https://github.com/CongducPham/tutorials](https://github.com/CongducPham/
 
 Look also at our [FAQ](https://github.com/CongducPham/tutorials/blob/master/FAQ.pdf)!
 
+Also consult the following web page: http://cpham.perso.univ-pau.fr/LORA/RPIgateway.html.
+
 Main features of gateway
 ------------------------
-- **NEW** Includes support of the open-source ChirpStack LoRaWAN Network Server
+- **NEW** The single-channel gateway now also provides LoRaWAN downlink and OTAA features
+	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
+- **NEW** Integration and easy configuration of the open-source ChirpStack Network Server as local Network Server
 	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/chirpstack/README.md)
 - **NEW** Support of multi-channel RPI SX1301 LoRaWAN gateway
 	- benefit from the open, versatile, multi-cloud Low-cost LoRa IoT framework with the flexibility and scalability of a multi-channel LoRaWAN gateway
 	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak2245-rak831/README.md)
-- **NEW** better support of LoRaWAN and connection to TTN platform
+- support of LoRaWAN and connection to LoRaWAN cloud (e.g. TTN platform)
 	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-TTN.md) for TTN support and configuration
 	- see this [section](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino#lorawan-example-and-support) for the device side
-	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md) for updated info on LoRaWAN
-- **NEW** remote access to your gateway from anywhere with `remot3.it`
+	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md) for updated info on LoRaWAN and data AES encryption
+- simple, flexible and generic cloud management approach
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
+	- look at the provided cloud script examples to see how IoT clouds such as TTN, ThingSpeak, GroveStreams, MQTT,... are supported
+	- a cloud script can be used to generalize the upload of data using SMS, ftp, file, MQTT, Node-Red flow,...		
+- remote access to your gateway from anywhere: `remot3.it`, `ngrok`
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-remote-access-remot3it.md)
-- remote access to your gateway from anywhere with `ngrok`
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-remote-access-ngrok.md)
 - a simple, user-friendly web admin interface to configure and update your gateway
 	- open a browser and go to http://`gw_ip_address`/admin
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/gw_web_admin/README.md)
 	- [Tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf)
 	- `raspap-webgui` from https://github.com/billz/raspap-webgui has been integrated and can be accessed at http://`gw_ip_address`/raspap-webgui. When the gateway is configured as a WiFi client, `raspap-webgui` is especially useful to dynamically discover and configure additional WiFi networks. Read this [section](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest#make-your-gateway-a-wifi-client) prior to use `raspap-webgui`.	
-- simple, flexible and generic cloud management approach
-	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md)
-	- look at the provided cloud script examples to see how IoT clouds such as TTN, ThingSpeak, GroveStreams, MQTT,... are supported
-	- a cloud script can be used to generalize the upload of data using SMS, ftp, file, MQTT, Node-Red flow,...
-- encryption and native LoRaWAN frame format
-	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md)
-	- gateway can receive LoRaWAN packets from LoRaWAN devices (including Arduino LMIC based device)
-	- low-level gateway can provide raw output for `post_processing_gw.py` to handle LoRaWAN packets and push to TTN using `CloudTTN.py` for instance
-- downlink features: to send from gateway to end-device
-	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md) 	 	
-- an alert mail can be sent to a list of contact email addresses to notify when gateway is starting and when the radio module has been reset
-- periodic status report to monitor whether the post-processing stage of the gateway is up or not
-- support for an embedded DHT22 temperature/humidity sensor to monitor the condition inside the gateway case
-- there is a NoSQL MongoDB support and received data can be saved in the local database if this feature is activated. See [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md#support-of-mongodb-as-a-cloud-declaration) for more information on the local MongoDB structure.
+- a NoSQL MongoDB database stores received data for local/edge processing. See [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md#support-of-mongodb-as-a-cloud-declaration) for more information on the local MongoDB structure.
 - the gateway acts as the WiFi access-point. The SSID is WAZIUP_PI_GW_XXXXXXXXXX where XXXXXXXXXX is the last 6 hex bytes of gateway ID: WAZIUP_PI_GW_B827EB27F90F for instance. It has IP address 192.168.200.1 and will lease IP addresses in the range of 192.168.200.100 and 192.168.200.120. 
 - there is an Apache web server with basic PHP forms to visualize graphically the received data of the MongoDB with any web browser. Just connect to http://192.168.200.1 with a web browser (could be from a smartphone) to get the graphic visualization of the data stored in the gateway's MongoDB database.
-- there is the support of Bluetooth connection. A simple Android App running on Android smartphone displays the data stored in the gateway's MongoDB database.
 - by default, incoming data are uploaded to our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794)
 - works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
 
