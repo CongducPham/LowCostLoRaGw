@@ -6,7 +6,12 @@ For downlink support, there are no changes in the way the gateway (`lora_gateway
 
 - create a `downlink` folder in your `lora_gateway` folder, **ALL** downlink related files will be stored in this `downlink` folder
 - the `lora_gateway` program will check for a `downlink.txt` file after each LoRa packet reception. This behavior can be disable with `--ndl` option
-- after each LoRa packet reception, `lora_gateway` program will wait for `DELAY_DNWFILE` before checking for `downlink/downlink.txt` file (typically set to 700ms)
+- `lora_gateway` checks 3 times for `downlink.txt after a packet reception at t_r (to work with Network Server sending PULL_RESP in just-in-time mode) 
+	- first, after a delay of `DELAY_DNWFILE`  (typically set to 700ms) to target RX1. There is no reception possible
+	- second, after t_r+DELAY_DNWFILE+DELAY_RX2 (additional delay of 1000ms, no reception possible) to target RX2
+	- last, after t_r+DELAY_DNWFILE+DELAY_RX2+RCV_TIMEOUT_JACC2 (radio in reception mode for 3500ms) to target either RX1 or RX2 for join-accept
+		* if a new packet is received during these 3500ms then it has priority
+		* in which case `lora_gateway` then starts a new cycle of downlink checking attempts for this new message 
 - `downlink/downlink.txt` should contain ONLY one line in JSON format:
 	- non-LoRaWAN downlink: e.g. `{"status":"send_request","dst":3,"data":"hello"}`
 	- LoRaWAN downlink: e.g. `{"txpk":{""imme":false,"rfch":0,"powe":14,"ant":0,"brd":0,"tmst":1580280908,"freq":868.1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","ipol":true,"size":19,"data":"YCEXASYHKAAFANKthAgBt6sC6g=="}}`	

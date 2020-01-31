@@ -47,8 +47,9 @@ It is **recommended** to first answer `N` when prompted for `run gateway at boot
 	> cd /home/pi/lora_gateway
 	> sudo ./start_lpf_pprocessing_gw.sh
 	
-You should see something like:	
-
+You should see something like:
+	
+	Copying configuration file *.json from /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/
 	Writing 0000B827EBDA09D7
 	Done
 	Creating /home/pi/lora_gateway/gateway_id.md5 file
@@ -64,7 +65,7 @@ You should see something like:
 	INFO: [main] concentrator started, packet can now be received
 	...
 
-As you can see, the radio concentrator might not start at the first attempt therefore there can several retries until the concentrator starts. There are by default a maximum of 10 retries and each retry will be separated by an increasing amount of time until a maximum is reached. We observed that 2 to 6 retries can be necessary.		
+`/opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json` is always the configuration file that will be copied into `/home/pi/lora_gateway`. Then `/home/pi/lora_gateway/global_conf.json` will modified according to local settings, e.g. gateway id, network server address,... As you can see, the radio concentrator might not start at the first attempt therefore there can several retries until the concentrator starts. There are by default a maximum of 10 retries and each retry will be separated by an increasing amount of time until a maximum is reached. We observed that 2 to 6 retries can be necessary.		
 
 Once the concentrator has started, take your favorite Arduino LoRaWAN device using either Arduino LMIC library (see [our code example](https://github.com/CongducPham/LMIC_low_power/tree/master/Arduino_LoRa_LMIC_ABP_temp)) or our LoRa communication library (see our [`Arduino_LoRa_temp` code template](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_temp)) with LoRaWAN mode to test the gateway. You should see packets received by the gateway and data uploaded to your TTN console as well (using the `CloudTTN.py` script).
 
@@ -111,7 +112,7 @@ The gateway using the modified version of `lora_pkt_fwd` on top of our post-proc
 	
 Note that we are not launching the gateway with a system service (using `systemctl enable|start` for instance) because we use pipe redirection to pass information from one stage to another, therefore several processes linked together need to be launched.
 
-The first line starts all side modules (for instance launching Node-Red if needed, setting up the 3G connection if needed,...) needed by the low-cost LoRa IoT framework except for the single channel gateway (i.e. `sudo ./lora_gateway | python ./post_processing_gw.py`). In this way, every new functionality added to the low-cost LoRa IoT framework is also available. The second line actually launch the `start_lpf_pprocessing_gw.sh` shell script to start `lora_pkt_fwd` with the processing stage to benefit from the multi-channel radio support, i.e:
+The `start_gw.sh` script run with the first line starts all side modules (for instance launching Node-Red if needed, setting up the 3G connection if needed,...) needed by the low-cost LoRa IoT framework except for the single-channel gateway low-level program. In this way, every new functionality added to the low-cost LoRa IoT framework is also available. The second line actually launch the `start_lpf_pprocessing_gw.sh` shell script to start the modified Semtech's `lora_pkt_fwd` with our post-processing stage to benefit from the multi-channel radio support, i.e:
 
 	> sudo /opt/ttn_gateway/packet_forwarder/lora_pkt_fwd/lora_pkt_fwd | python ./lora_pkt_fwd_formatter.py | python ./post_processing_gw.py
 
@@ -152,7 +153,7 @@ and will translate them into the format accepted by our post-processing stage.
 Downlink messages
 -----------------
 
-As only UDP uplink data and uplink stats are disabled in the modified version of `lora_pkt_fwd` and replaced by LoRaWAN cloud scripts, all the other features, and especially the downlink (including join procedure for OTAA) feature and GPS position, are preserved.
+As only UDP uplink packet (including join-request) and uplink stats are disabled in the modified version of `lora_pkt_fwd` and replaced by LoRaWAN cloud scripts, all the other features, and especially the downlink (including join-accept for OTAA) feature and GPS position, are preserved.
 
 GPS position
 ------------
@@ -192,6 +193,7 @@ It is **recommended** to answer `N` when prompted for `run gateway at boot Y/N` 
 	
 You should see something like:
 
+	Copying configuration file *.json from /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/
 	Writing 0000B827EBDA09D7
 	Done
 	Creating /home/pi/lora_gateway/gateway_id.md5 file
@@ -249,7 +251,7 @@ You should see something like:
 	loragw_pkt_logger: INFO: concentrator started, packet can now be received
 	...
 
-We have the same mechanism where `start_upl_pprocessing_gw.sh` tries to launch `util_pkt_logger` and then checks whether the process is running or not. If you run:
+`/opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json` is always the configuration file that will be copied into `/home/pi/lora_gateway`. Then `/home/pi/lora_gateway/global_conf.json` will modified according to local settings, e.g. gateway id. We have the same mechanism than previously where `start_upl_pprocessing_gw.sh` tries to launch `util_pkt_logger` and then checks whether the process is running or not. If you run:
 
 	> ps aux
 	

@@ -156,10 +156,13 @@ $('.my_tooltip').tooltip({html: true})
     
     $('#band_freq_select').on('change', function() {	
     	band = $('#band_freq_select').val();
-    	
+
     	if(band == ''){
     		//alert("Please select one frequency band!");
     		$('#freq_select').html("");
+    	}    	
+    	else if(band == '-1'){
+    		$('#freq_select').html("<option selected>-1</option>");
     	}
     	else if(band == "433MHz"){
     		$('#freq_select').html("<option>433.3</option><option>433.6</option><option>433.9</option><option>434.3</option>");
@@ -189,12 +192,13 @@ $('.my_tooltip').tooltip({html: true})
 				//erase message after 5 seconds
 				setTimeout(function() {
 					$('#gw_config_msg').html("");
+					window.location.reload();
 				},defaultMsgDisplayTimer);
 			});
 	
-		if(freq != '' && band != ''){
-			$('#freq_value').html(freq);
-		}
+		//if(freq != '' && band != ''){
+		//	$('#freq_value').html(freq);
+		//}
 	
 		$('#td_edit_freq').hide();
 		$('#freq_submit').hide();

@@ -236,7 +236,7 @@ require 'header.php';
    										    	<div class="form-group">
                                             		<label>ISM Band </label>
                                             		<select id="band_freq_select" class="form-control">
-                                                		<option></option> <option>433MHz</option> <option>868MHz</option> <option>915MHz</option> 
+                                                		<option></option> <option>-1</option> <option>433MHz</option> <option>868MHz</option> <option>915MHz</option> 
                                            			</select>
                                            			
                                            			<label>Frequency</label>

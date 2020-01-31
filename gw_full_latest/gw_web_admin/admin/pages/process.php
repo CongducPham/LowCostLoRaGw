@@ -80,7 +80,7 @@ if (isset($_GET["band"]) && isset($_GET["freq"])) {
 	if (empty($freq) || empty($band)) {
 		echo '<p><center><font color="red">Please fill all fields</font></center></p>';
 	}
-	else{
+	else{			
 		$output = update_gw_conf("radio_conf","freq", $freq);
 	
 		if($output == 0){

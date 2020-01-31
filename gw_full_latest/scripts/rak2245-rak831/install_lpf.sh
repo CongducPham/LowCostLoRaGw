@@ -4,7 +4,7 @@ echo "Installing lora_pkt_fwd_formatter for RAK831/RAK2245 gateway"
 echo "---------------------------------------------------------------"
 echo "Normally you should have installed the RAK831/2245 related software from RAK"
 echo "We provide an install_rak_lora.sh script that performs a light installation that it is recommended to use"
-echo "Continue (y/n)"
+echo "Continue with installing lora_pkt_fwd_formatter (y/n)"
 read input
 
 if [ "$input" = "y" ] || [ "$input" = "Y" ]
@@ -36,14 +36,14 @@ if [ "$input" = "y" ] || [ "$input" = "Y" ]
 				echo "Disabling original ttn-gateway service"
 				sudo systemctl disable ttn-gateway.service
 				
-				echo "Copying global_conf.json"
+				echo "Copying global_conf.json into /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/"
 				cd $SCRIPT_DIR
 				sudo cp global_conf-ttn.json /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json				
 
 				echo				
-				echo "*************************************"
-				echo "*** configure gateway for TTN Y/N ***"
-				echo "*************************************"
+				echo "*******************************************************************"
+				echo "*** configure gateway for LoRaWAN Network Server (e.g. TTN) Y/N ***"
+				echo "*******************************************************************"
 				read input
 
 				if [ "$input" = "y" ] || [ "$input" = "Y" ]

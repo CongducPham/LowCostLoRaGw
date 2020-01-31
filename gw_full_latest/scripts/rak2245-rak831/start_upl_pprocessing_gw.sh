@@ -10,7 +10,9 @@ else
 fi
 
 cd /home/pi/lora_gateway
+echo "Copying configuration file *.json from /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/"
 cp /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/*.json .
+#this is for the web admin interface
 cp /opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/*.json /var/www/html/admin/log
 sudo chown -R pi:www-data /var/www/html/admin/log
 

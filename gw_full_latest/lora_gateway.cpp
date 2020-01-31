@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                2.0
+ *  Version:                2.1
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -35,6 +35,13 @@
 */
 
 /*  Change logs
+ *  Jan, 29th, 2020. v2.1
+ *        lora_gateway now checks 3 times for downlink.txt after a packet reception at t_r (to work with Network Server sending PULL_RESP in just-in-time mode)
+ *			- first, after t_r+DELAY_DNWFILE (delay of 700ms, no reception possible) to target RX1
+ *			- second, after t_r+DELAY_DNWFILE+DELAY_RX2 (additional delay of 1000ms, no reception possible) to target RX2
+ *			- last, after t_r+DELAY_DNWFILE+DELAY_RX2+RCV_TIMEOUT_JACC2 (radio in reception mode for 3500ms) to target either RX1 or RX2 for join-accept
+ *				* if a new packet is received during these 3500ms then it has priority
+ *				* lora_gateway then starts a new cycle of downlink attempts   
  *  Jan, 20th, 2020. v2.0
  *        add LoRaWAN downlink from LoRaWAN Network Server
  *			- can use RX1 (same datarate than uplink) or RX2 (869.525MHz and SF12BW125) depending on downlink timestamp
@@ -272,6 +279,11 @@ using namespace rapidjson;
 using namespace std;
 
 bool enableDownlinkCheck=true;
+bool checkForLateDownlinkRX2=false;
+bool checkForLateDownlinkJACC2=false;
+
+#define DELAY_RX2   	  1000
+#define RCV_TIMEOUT_JACC2 3500 
 
 //#define INCLUDE_MIC_IN_DOWNLINK
 
@@ -337,6 +349,7 @@ uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_433,CH_01_433,CH_02_433,CH_03_4
 bool radioON=false;
 bool RSSIonSend=true;
 uint8_t loraMode=LORAMODE;
+uint16_t rcv_timeout=MAX_TIMEOUT;
 uint32_t loraChannel=loraChannelArray[loraChannelIndex];
 uint8_t loraAddr=LORA_ADDR;
 int status_counter=0;
@@ -452,6 +465,7 @@ void startConfig() {
 #endif 
 	}
 	else {
+      e = sx1272.setChannel(loraChannel);
       PRINT_CSTSTR("%s","^$Frequency ");
       PRINT_VALUE("%f", optFQ);
       PRINT_CSTSTR("%s",": state ");	
@@ -757,7 +771,8 @@ int CarrierSense(bool onlyOnce=false) {
 void loop(void)
 { 
     int i=0, e;
-    char print_buf[100];    
+    char print_buf[100];
+    uint32_t current_time_tmst;    
 
     /////////////////////////////////////////////////////////////////// 
     // START OF PERIODIC TASKS
@@ -767,7 +782,7 @@ void loop(void)
     /////////////////////////////////////////////////////////////////// 
     // THE MAIN PACKET RECEPTION LOOP
     //
-    if (radioON) {
+    if (radioON && !checkForLateDownlinkRX2) {
         
 		e=1;
 
@@ -778,14 +793,28 @@ void loop(void)
 			status_counter=0;
 		} 
 
-		//TODO remove downlink.txt that may have been received late?
-		e = sx1272.receivePacketTimeout(MAX_TIMEOUT);
+		e = sx1272.receivePacketTimeout(rcv_timeout);
 
-		rcv_time_tmst=getGwDateTime();
-		rcv_time_ms=millis();
+		if (e==0) {
+			//get timestamps only when we actually receive something
+			rcv_time_tmst=getGwDateTime();
+			rcv_time_ms=millis();
+			
+			//we actually received something when we were "waiting" for a late downlink
+			//we give prioroty to the latest reception
+			if (rcv_timeout!=MAX_TIMEOUT) {
+				//remove any downlink.txt file that may have been generated late because it was not for the new packet reception
+				remove("downlink/downlink.txt");
+				//set back to normal reception mode
+				checkForLateDownlinkJACC2=false;
+				rcv_timeout=MAX_TIMEOUT;
+			}
+		}
 		
 		status_counter++;
 		
+		//e=0 : packet reception
+		//e=3 : no packet reception
 		if (e!=0 && e!=3) {
 			PRINT_CSTSTR("%s","^$Receive error ");
 			PRINT_VALUE("%d", e);
@@ -813,7 +842,7 @@ void loop(void)
 			FLUSHOUTPUT;
 		}
 
-		if (!e && sx1272._requestACK_indicator) {
+		if (e==0 && sx1272._requestACK_indicator) {
 		 	PRINT_CSTSTR("%s","^$ACK requested by ");
 		 	PRINT_VALUE("%d", sx1272.packet_received.src);
 		 	PRINTLN;
@@ -823,7 +852,7 @@ void loop(void)
 		/////////////////////////////////////////////////////////////////// 
 		// LoRa reception       
     
-		if (!e) {
+		if (e==0) {
 
 #ifdef DEBUG_DOWNLINK_TIMING
 		 	//this is the time (millis()) at which the packet has been completely received at the radio module
@@ -918,7 +947,7 @@ void loop(void)
       	}  
 	}  
   
-  	if (receivedFromLoRa) {
+  	if (receivedFromLoRa || checkForLateDownlinkRX2 || checkForLateDownlinkJACC2) {
     
 #ifdef DOWNLINK
     	// handle downlink request
@@ -941,14 +970,20 @@ void loop(void)
 			//this is the time (millis()) at which we start checking downlink requests
 			printf("^$downlink check: %lu\n", millis());	
 #endif
-    		
-    		getGwDateTime();   	
+    		//to set time_str 
+    		current_time_tmst=getGwDateTime();   	
     
     		// use rapidjson to parse all lines
     		// if there is a downlink.txt file then read all lines in memory for
     		// further processing
-    		printf("^$-----------------------------------------------------\n");
-    		printf("^$Check for downlink requests %s\n", time_str);
+    		if (checkForLateDownlinkRX2)
+    			printf("^$----delayRX2-----------------------------------------\n");
+    		else if (checkForLateDownlinkJACC2)	
+    			printf("^$----retryJACC2---------------------------------------\n");
+    		else	
+    			printf("^$-----------------------------------------------------\n");
+    			
+    		printf("^$Check for downlink requests %s*%lu\n", time_str, current_time_tmst);
     		
     		FILE *fp = fopen("downlink/downlink.txt","r");
     		
@@ -981,13 +1016,40 @@ void loop(void)
 				sprintf(tmp_c, "mv downlink/downlink.txt downlink/downlink-backup-%s.txt", time_buffer);
 				system(tmp_c);
 #else
-				system("rm downlink/downlink.txt");
-#endif				
+				remove("downlink/downlink.txt");
+#endif
+
+    			//it was already a retry
+    			if (checkForLateDownlinkRX2 || checkForLateDownlinkJACC2) {
+    				checkForLateDownlinkRX2=false;
+    				checkForLateDownlinkJACC2=false;
+    				rcv_timeout=MAX_TIMEOUT;
+    			}						
     		}
     		else {
     			hasDownlinkEntry=false;
     			printf("^$NO NEW DOWNLINK ENTRY\n");
-			FLUSHOUTPUT;
+    			
+    			if (checkForLateDownlinkRX2) {
+					checkForLateDownlinkRX2=false;
+					// retry later, last retry
+					checkForLateDownlinkJACC2=true;
+					//will however wait for new incoming messages but for a shorter time
+					rcv_timeout=RCV_TIMEOUT_JACC2;	    			
+    			}
+    			else {
+					//it was already the last retry for late downlink
+    				if (checkForLateDownlinkJACC2) {
+    					checkForLateDownlinkJACC2=false;
+    					rcv_timeout=MAX_TIMEOUT;
+    				}
+    				else { 
+    					// retry later, for RX2
+    					delay(DELAY_RX2);
+    					checkForLateDownlinkRX2=true;
+    				}
+    			}
+				FLUSHOUTPUT;
     		}	   		
     	}
 
@@ -1056,8 +1118,6 @@ void loop(void)
 								
 						//uncomment to test for RX2
 						//rx_wait_delay+=DELAY_EXTDNW2*1000;
-				
-						//TODO, detect if the downlink message is too much in the past (i.e. downlink message has been generated too late)
 
 						bool useRX2=false;
 				
@@ -1092,10 +1152,6 @@ void loop(void)
 						}
 						else
 							printf("^$Target RX1\n");
-
-						//RX window for join-request?
-						//if (rx_wait_delay > DELAY_DNW1)
-						//	rx_wait_delay+=800000UL;
 					
 						//wait until it is the (approximate) right time to send the downlink data
 						//downlink data can use DELAY_DNW1 or DELAY_DNW2
@@ -1237,7 +1293,8 @@ void loop(void)
 		}	
 		
 		//remove any downlink.txt file that may have been generated late and will therefore be out-dated
-		remove("downlink/downlink.txt");
+		if (!checkForLateDownlinkRX2 && !checkForLateDownlinkJACC2)
+			remove("downlink/downlink.txt");
 #endif
 	}
 } 
