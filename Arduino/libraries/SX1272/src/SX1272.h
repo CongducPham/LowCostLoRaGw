@@ -56,7 +56,7 @@
 //it is not mandatory to wire this pin
 //we take pin 4 as it is available on many boards
 #define SX1272_WRST
-#define SX1272_RST  8
+#define SX1272_RST  4
 
 #if defined ARDUINO_AVR_FEATHER32U4 || defined ARDUINO_SAMD_FEATHER_M0
 // on the Adafruit Feather, the RFM95W is embeded and CS pin is normally on pin 8
@@ -166,7 +166,9 @@
 #define        REG_PACKET_CONFIG2	  			0x31
 #define        REG_DETECT_OPTIMIZE              0x31
 #define        REG_PAYLOAD_LENGTH_FSK			0x32
-#define        REG_NODE_ADRS	  				0x33
+// added by C. Pham
+#define        REG_INVERT_IQ	  				0x33
+#define        REG_INVERT_IQ2	  				0x3B
 #define        REG_BROADCAST_ADRS	 		 	0x34
 #define        REG_FIFO_THRESH	  				0x35
 #define        REG_SEQ_CONFIG1	  				0x36
@@ -741,8 +743,7 @@ public:
 
 	//! It gets the node address of the mote.
   	/*!
-  	It stores in global '_nodeAddress' variable the node address
-	\return '0' on success, '1' otherwise
+  	returns '_nodeAddress' variable the node address
 	 */
 	uint8_t getNodeAddress();
 
@@ -750,7 +751,7 @@ public:
   	/*!
   	It stores in global '_nodeAddress' variable the node address
   	\param uint8_t addr : address value to set as node address.
-	\return '0' on success, '1' otherwise
+	\return '0' on success, '-1' otherwise
 	 */
 	int8_t setNodeAddress(uint8_t addr);
 
@@ -1199,6 +1200,7 @@ public:
     long getRemainingToA();
     long removeToA(uint16_t toa);
     int8_t setFreqHopOn();
+    int8_t invertIQ(bool invert);
     void setCSPin(uint8_t cs);
 
     // SX1272 or SX1276?
@@ -1218,6 +1220,7 @@ public:
     bool _freqHopOn;
     uint8_t _hopPeriod;
     bool _rawFormat;
+    bool _rawFormat_send;
     int8_t _rcv_snr_in_ack;
     bool _needPABOOST;
     uint8_t _rawSNR;
