@@ -21,9 +21,7 @@
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE SPREADING FACTOR ONLY FOR LORAWAN MODE
-#ifdef LORAWAN
-int SF=12;
-#endif
+uint8_t lorawanSF=12;
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -46,21 +44,6 @@ unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x
 //unsigned char NwkSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
 
 ///////////////////////////////////////////////////////////////////
-// LORAWAN OR EXTENDED DEVICE ADDRESS FOR LORAWAN CLOUD
-#if defined LORAWAN || defined EXTDEVADDR
-///////////////////////////////////////////////////////////////////
-//ENTER HERE your Device Address from the TTN device info (same order, i.e. msb). Example for 0x12345678
-unsigned char DevAddr[4] = { 0x12, 0x34, 0x56, 0x78 };
-///////////////////////////////////////////////////////////////////
-
-#else
-///////////////////////////////////////////////////////////////////
-// DO NOT CHANGE HERE
-unsigned char DevAddr[4] = { 0x00, 0x00, 0x00, node_addr };
-///////////////////////////////////////////////////////////////////
-#endif
-
-///////////////////////////////////////////////////////////////////
 // DO NOT CHANGE HERE
 uint16_t Frame_Counter_Up = 0x0000;
 // we use the same convention than for LoRaWAN as we will use the same AES convention
@@ -70,7 +53,7 @@ unsigned char Direction = 0x00;
 
 ///////////////////////////////////////////////////////////////////
 
-int local_lorawan_init(uint8_t SF) {
+int local_lorawan_init() {
 
   int e;
 
@@ -80,9 +63,9 @@ int local_lorawan_init(uint8_t SF) {
   PRINTLN; 
   
   //we can also change the SF value for LoRaWAN
-  e = sx1272.setSF(SF);
+  e = sx1272.setSF(lorawanSFSF);
   PRINT_CSTSTR("%s","Set SF to ");
-  PRINT_VALUE("%d", SF);    
+  PRINT_VALUE("%d", lorawanSFSF);    
   PRINT_CSTSTR("%s",": state ");
   PRINT_VALUE("%d", e);
   PRINTLN;  
@@ -225,7 +208,7 @@ uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_k
       if (is_lorawan) {
           PRINT_CSTSTR("%s","end-device uses native LoRaWAN packet format\n");
           // indicate to SX1272 lib that raw mode at transmission is required to avoid our own packet header
-          sx1272._rawFormat=true;
+          sx1272._rawFormat_send=true;
       }
       else {
           PRINT_CSTSTR("%s","end-device uses encapsulated LoRaWAN packet format only for encryption\n");

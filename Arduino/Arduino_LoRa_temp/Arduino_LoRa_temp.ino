@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Nov 29th, 2019 by C. Pham
+ * last update: Feb 3rd, 2020 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -72,8 +72,6 @@
 //#define EXTDEVADDR
 //Use native LoRaWAN packet format to send to LoRaWAN gateway - beware it does not mean you device is a full LoRaWAN device
 //#define LORAWAN
-//uncomment to use a customized frequency. TTN plan includes 868.1/868.3/868.5/867.1/867.3/867.5/867.7/867.9 for LoRa
-//#define MY_FREQUENCY 868.1
 //when sending to a LoRaWAN gateway (e.g. running util_pkt_logger) but with no native LoRaWAN format, just to set the correct sync word. DO NOT use if LORAWAN is uncommented
 //#define USE_LORAWAN_SW
 //#define WITH_ACK
@@ -142,6 +140,21 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 // ENCRYPTION CONFIGURATION AND KEYS FOR LORAWAN
 #ifdef WITH_AES
 #include "local_lorawan.h"
+#endif
+
+///////////////////////////////////////////////////////////////////
+// LORAWAN OR EXTENDED DEVICE ADDRESS FOR LORAWAN CLOUD
+#if defined LORAWAN || defined EXTDEVADDR
+///////////////////////////////////////////////////////////////////
+//ENTER HERE your Device Address from the TTN device info (same order, i.e. msb). Example for 0x12345678
+unsigned char DevAddr[4] = { 0x12, 0x34, 0x56, 0x78 };
+///////////////////////////////////////////////////////////////////
+
+#else
+///////////////////////////////////////////////////////////////////
+// DO NOT CHANGE HERE
+unsigned char DevAddr[4] = { 0x00, 0x00, 0x00, node_addr };
+///////////////////////////////////////////////////////////////////
 #endif
 
 ///////////////////////////////////////////////////////////////////
@@ -756,7 +769,7 @@ void loop(void)
 #ifdef LORAWAN
       // switch back to normal behavior
       // as local_aes_lorawan_create_pkt() set raw format to true for LoRaWAN mode
-      sx1272._rawFormat=false;
+      sx1272._rawFormat_send=false;
 #endif
           
 #ifdef WITH_EEPROM

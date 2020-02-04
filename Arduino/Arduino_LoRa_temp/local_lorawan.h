@@ -16,8 +16,9 @@
 #endif
 
 extern uint8_t node_addr;
+extern unsigned char DevAddr[4];
 
-int local_lorawan_init(uint8_t SF);
+int local_lorawan_init();
 uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_key_offset, bool is_lorawan);
 
 #endif
