@@ -142,8 +142,8 @@ class LoRaWAN:
     def _push_data(self, data):
         token = os.urandom(2)
         packet = bytearray([PROTOCOL_VERSION]) + token + bytearray([PUSH_DATA]) + binascii.unhexlify(self.id) + data
-        print ''.join('{:02x}'.format(x) for x in packet)
-        self._log('Cloud%s: Try to forward packet: {}' % netserv, packet)
+        #print ''.join('{:02x}'.format(x) for x in packet)
+        #self._log('Cloud%s: Try to forward packet: {}' % netserv, packet)
         try:
 	        self.sock.sendto(packet, self.server_ip)
 	        self.sock.close()

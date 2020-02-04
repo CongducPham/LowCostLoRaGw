@@ -429,7 +429,7 @@ def send_data(data, entity, nomenclatures, tdata):
 					
 		print "CloudWAZIUP: will issue requests with"
 		print 'url: '+WAZIUP_url
-		print 'headers: '+json.dumps(WAZIUP_headers)
+		#print 'headers: '+json.dumps(WAZIUP_headers)
 		print 'data: '+WAZIUP_data
 		
 		try:

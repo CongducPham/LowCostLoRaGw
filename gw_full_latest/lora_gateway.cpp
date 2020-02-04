@@ -230,10 +230,8 @@ extern int optind, opterr, optopt;
 
 // IMPORTANT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
-// please uncomment only 1 choice
-#ifndef BAND868
-#define BAND868
-#endif
+// it is better to use radio.makefile to indicate the default frequency band
+//#define BAND868
 //#define BAND900
 //#define BAND433
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -285,6 +283,7 @@ bool checkForLateDownlinkJACC2=false;
 #define DELAY_RX2   	  1000
 #define RCV_TIMEOUT_JACC2 3500 
 
+//only for non-LoRaWAN downlink
 //#define INCLUDE_MIC_IN_DOWNLINK
 
 int xtoi(const char *hexstring);
@@ -415,7 +414,6 @@ void startConfig() {
       SIFS_cad_number=6;
     else 
       SIFS_cad_number=3;
-      
   }
   else {
     
@@ -433,7 +431,6 @@ void startConfig() {
       SIFS_cad_number=6;
     else 
       SIFS_cad_number=3;
-
   }
   
   // Select frequency channel
@@ -441,8 +438,6 @@ void startConfig() {
   // LoRaWAN
   if (loraMode==11) {
   	PRINT_CSTSTR("%s","^$Configuring for LoRaWAN\n");
-    // if we start with mode 11, then switch to 868.1MHz for LoRaWAN test
-    // Note: if you change to mode 11 later using command /@M11# for instance, you have to use /@C18# to change to the correct channel
     
     if (optFQ<0.0) {
 #ifdef BAND868

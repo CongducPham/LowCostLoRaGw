@@ -31,8 +31,8 @@
 
 /*******************************************************************************
  * 
- * modified by C. Pham for support of single-channel gateway
- * Last update Jan 22nd, 2020
+ * modified by C. Pham for support of single-channel gateway and 433MHz band
+ * Last update Feb 4th, 2020
  *
  *******************************************************************************/
  
@@ -41,8 +41,8 @@
 #include <SPI.h>
 
 //uncomment if you are doing OTAA with a single-channel gateway
-//this will only enable the first mandatory channel 0 (e.g. EU 868.1MHz)
-//#define OTAA_SCG
+//this will only enable the first mandatory channel 0 (e.g. EU868 868.1MHz; EU433 433.175MHz)
+#define OTAA_SCG
 
 // Define the data rate (SF) to use
 int dr = DR_SF12;
@@ -234,7 +234,20 @@ void setup() {
     // we take 10% error to better handle downlink messages
     LMIC_setClockError(MAX_CLOCK_ERROR * 10 / 100);
 
-    #if defined(CFG_eu868)
+    #if defined(CFG_eu433)
+    //experimental only
+    // use RAK's 433 band https://github.com/RAKWireless/rak_common_for_gateway/blob/master/lora/rak2245/global_conf/global_conf.eu_433.json
+    LMIC_setupChannel(0, 433175000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(1, 433375000, DR_RANGE_MAP(DR_SF12, DR_SF7B), BAND_CENTI);      // g-band
+    LMIC_setupChannel(2, 433575000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(3, 433975000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(4, 434175000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(5, 434375000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(6, 434575000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(7, 434775000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
+    LMIC_setupChannel(8, 434675000, DR_RANGE_MAP(DR_FSK,  DR_FSK),  BAND_MILLI);      // g2-band    
+    
+    #elif defined(CFG_eu868)
     // Set up the channels used by the Things Network, which corresponds
     // to the defaults of most gateways. Without this, only three base
     // channels from the LoRaWAN specification are used, which certainly
