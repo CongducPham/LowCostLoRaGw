@@ -128,9 +128,13 @@ This generic multi-sensors example drives 5 types of temperature and humidity se
 
 We also use a regular Arduino Pro Mini or Arduino Nano with an I2C 0.96inch OLED display (such as [this one]( https://fr.aliexpress.com/item/1pcs-0-96-blue-0-96-inch-OLED-module-New-128X64-OLED-LCD-LED-Display-Module/32643950109.html?spm=a2g0s.9042311.0.0.LbMu7r)). You can connect SDA and SCL to pin A4 and A5 respectively. Of course, connect your LoRa module as usual. For range test prior to deploying the sensor nodes, it is recommended to build the Ping-Pong tester with the case that you will use for your final end-devices because the impact of the case on transmission quality is important (see [this antenna presentation](https://www.youtube.com/watch?v=AhFy4-kForA&feature=youtu.be) from our colleague Fabien Ferrero). On the left part you can see an Arduino Nano using the Modtronix inAir9 radio module with the external antenna. On the right part, it is an Arduino Pro Mini with the integrated antenna provided by a simple PCB (see the `Arduino_LoRa_GPS` description).
 
-![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/pingpong_1.png)
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/pingpong_1.jpg)
 
-**`Arduino_LoRa_InteractiveDevice`** is a tool that turns an Arduino board to an interactive device where a user can interactively enter data to be sent to the gateway. There are also many parameters that can dynamically be configured. This example can serve for test and debug purposes as well.
+**`Arduino_LoRa_InteractiveDevice`** is a tool that turns an Arduino board to an interactive device where a user can interactively enter data to be sent to a receiver/gateway using the Arduino Serial Monitor tool. Pure LoRa and LoRaWAN packet can be interactively sent. There are many parameters that can dynamically be configured: frequency, SF, encryption. We use this sketch extensively for test and debug purposes as it can be compiled/or configured to serve as a periodic sender and to perform continuous CAD.
+
+**`Arduino_LoRa_Gateway`** is now mainly used to build a simple Arduino-based gateway (for test purposes for instance). WARNING: the non-Arduino code is still here but it is not maintained anymore. Starting from Jan, 20th, 2020, the `lora_gateway.cpp` for RaspberryPI-based gateway is developed independently (https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest). When using the Arduino Serial Monitor tool, command can be interactively entered to dynamically configure the simple gateway. We extensively use this sketch, along with `Arduino_LoRa_InteractiveDevice` test and debug purposes.
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/cad-test.jpg)
 
 **`Arduino_LoRa_ucamII`** is the image IoT sensor device for multimedia sensing. Read [this specific page](http://cpham.perso.univ-pau.fr/WSN-MODEL/tool-html/imagesensor.html) and this [specific tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-ImageIoT-step-by-step.pdf) for more informations on how to build and run the image sensor.
 

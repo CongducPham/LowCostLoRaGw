@@ -1,7 +1,7 @@
 /* 
  *  LoRa low-level gateway to receive and send command
  *
- *  Copyright (C) 2015-2019 Congduc Pham
+ *  Copyright (C) 2015-2020 Congduc Pham
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                1.9
+ *  Version:                1.9b
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -25,12 +25,16 @@
  *    - command starts with /@ and ends with #
  *  
  *  LoRa parameters
- *    - /@M1#: set LoRa mode 1
+ *    - /@M1#: set LoRa mode 1, use mode 11 for SF12BW125 and sync word of 0x34
  *    - /@C12#: use channel 12 (868MHz)
+ *    - /@F43317500#: set frequency to 433.175MHz    
  *    - /@SF8#: set SF to 8
  *    - /@PL/H/M/x/X#: set power to Low, High or Max; extreme (PA_BOOST at +14dBm), eXtreme (PA_BOOST at +20dBm)
  *    - /@W34#: set sync word to 0x34
- *    - /@ON# or /@OFF#: power on/off the LoRa module
+ *    - /@ON# or /@OFF#: power on/off the LoRa module, /@ON# can be used to reset the radio module
+ *    - /@RAW#: toggle raw mode
+ *    - /@HEX#: toggle HEX output mode
+ *    - /@LW#: toggle LoRaWAN mode, i.e. raw mode and sync word of 0x34
  * 
  *  CAD, DIFS/SIFS mechanism, RSSI checking, extended IFS
  *    - /@CAD# performs an SIFS CAD, i.e. 3 or 6 CAD depending on the LoRa mode
@@ -72,6 +76,14 @@
 */
 
 /*  Change logs
+ *  Feb, 6th, 2020. v1.9b 
+ *        Arduino_LoRa_Gateway is now mainly used for simple Arduino-based gateway (for test purposes for instance)
+ *        WARNING: the non-Arduino code is still here but it is not maintained anymore
+ *        Add /@F command to set frequency: /@F43317500# for instance for 433.175MHz  
+ *        Add /@RAW# to toggle raw mode (in reception)
+ *        Add /@HEX# to toggle hex output mode (for debugging for instance)
+ *  Nov, 22nd, 2919. v1.9a 
+ *      handle getopt issue on newer Linux distrib, compile with -DGETOPT_ISSUE
  *	March 23rd, 2019. v1.9
  *		  improve suport for LoRaWAN
  *		  the radio info string has a frequency information, e.g. 125,5,12,868100
@@ -241,11 +253,20 @@
 #define MAX_DBM 14
 #endif
 
+#ifndef LORA_PREAMBLE_LENGTH
+#define LORA_PREAMBLE_LENGTH 8
+#endif
+
 #ifndef ARDUINO
 #include <stdio.h>
-#include <getopt.h>
 #include <stdlib.h>
 #include <unistd.h>
+#ifdef GETOPT_ISSUE
+int getopt (int argc, char * const argv[], const char *optstring);
+extern char *optarg;
+extern int optind, opterr, optopt;
+#endif
+#include <getopt.h>
 #include <termios.h> 
 #include <signal.h>
 #include <sys/time.h>
@@ -450,6 +471,8 @@ bool  optRAW=false;
 double optFQ=-1.0;
 uint8_t optSW=0x12;
 bool  optHEX=false;
+
+boolean lorawan=false;
 ///////////////////////////////////////////////////////////////////
 
 #if defined ARDUINO && defined SHOW_FREEMEMORY && not defined __MK20DX256__ && not defined __MKL26Z64__ && not defined  __SAMD21G18A__ && not defined _VARIANT_ARDUINO_DUE_X_
@@ -649,9 +672,9 @@ void startConfig() {
   PRINT_VALUE("%d", sx1272._preamblelength);
   PRINTLN;
 
-  if (sx1272._preamblelength != 8) {
-      PRINT_CSTSTR("%s","^$Bad Preamble Length: set back to 8");
-      sx1272.setPreambleLength(8);
+  if (sx1272._preamblelength != LORA_PREAMBLE_LENGTH) {
+      PRINT_CSTSTR("%s","^$Bad Preamble Length: set back to default\n");
+      sx1272.setPreambleLength(LORA_PREAMBLE_LENGTH);
       e = sx1272.getPreambleLength();
       PRINT_CSTSTR("%s","^$Get Preamble Length: state ");
       PRINT_VALUE("%d", e);
@@ -893,7 +916,7 @@ int CarrierSense(bool onlyOnce=false) {
 void loop(void)
 { 
   int i=0, e;
-  int cmdValue;
+  long cmdValue;
   
 /////////////////////////////////////////////////////////////////// 
 // ONLY FOR TESTING CAD
@@ -1229,7 +1252,7 @@ void loop(void)
          //
          FLUSHOUTPUT;
          
-         for ( ; a<tmp_length; a++,b++) {
+         for ( ; a<tmp_length; a++) {
          	
 			  if (optHEX) {
 			  	if ((uint8_t)sx1272.packet_received.data[a]<16)
@@ -1240,8 +1263,10 @@ void loop(void)
 			  else
 			  	PRINT_STR("%c",(char)sx1272.packet_received.data[a]);
 
-           if (b<MAX_CMD_LENGTH)
+           if (b<MAX_CMD_LENGTH) {
               cmd[b]=(char)sx1272.packet_received.data[a];
+              b++;
+           }
          }
          
          // strlen(cmd) will be correct as only the payload is copied
@@ -1436,6 +1461,8 @@ void loop(void)
                       
                   loraChannelIndex=loraChannelIndex-STARTING_CHANNEL;  
                   loraChannel=loraChannelArray[loraChannelIndex];
+
+                  optFQ=(double)loraChannel/RH_LORA_FCONVERT/1000000.0;
                   
                   PRINT_CSTSTR("%s","^$Set LoRa channel to ");
                   PRINT_VALUE("%d",cmdValue);
@@ -1445,10 +1472,7 @@ void loop(void)
                   e = sx1272.setChannel(loraChannel);
                   PRINT_CSTSTR("%s","^$Setting Channel: state ");
                   PRINT_VALUE("%d",e);  
-                  PRINTLN;
-                  PRINT_CSTSTR("%s","Time: ");
-                  PRINT_VALUE("%d",sx1272._stoptime-sx1272._starttime);  
-                  PRINTLN;                  
+                  PRINTLN;                
               }              
             break;
 
@@ -1501,10 +1525,10 @@ void loop(void)
                  PRINT_CSTSTR("%s","Invalid command. ON or OFF accepted.\n");          
             break;            
 
-#ifdef LORA_LAS
+
             // act as an LR-BS if IS_RCV_GATEWAY or an end-device if IS_SEND_GATEWAY
             case 'L': 
-             
+#ifdef LORA_LAS             
               if (cmd[i+1]=='A' && cmd[i+2]=='S') {
                 
                 if (cmd[i+3]=='S')
@@ -1527,8 +1551,89 @@ void loop(void)
                   loraLAS.sendInit(LAS_INIT_RESTART); 
                 }
               }
-            break;         
 #endif
+
+              if (cmd[i+1]=='W') {
+                lorawan = !lorawan;
+
+                if (lorawan) {
+                  PRINT_CSTSTR("%s","LORAWAN FORMAT ON (RAW MODE)\n");
+                  // indicate to SX1272 lib that raw mode at reception is required
+                  sx1272._rawFormat=true;
+                  PRINT_CSTSTR("%s","SYNC WORD 0x34\n");
+                  e = sx1272.setSyncWord(0x34);
+                  PRINT_CSTSTR("%s","state ");
+                  PRINT_VALUE("%d",e);  
+                  PRINTLN; 
+                                
+                  PRINT_CSTSTR("%s","CONSIDER SETTING SF12BW125 AND SYNC WORD 0x34 BY USING MODE 11: /@M11#\n");
+                  PRINT_CSTSTR("%s","CONSIDER SETTING CHANNEL to 18 for EU868 (868.1MHz): /@C18#\n");
+                  PRINT_CSTSTR("%s","OR USING /@F868100#\n");
+                }
+                else {
+                  PRINT_CSTSTR("%s","LORAWAN FORMAT OFF (RAW MODE DISABLED)\n"); 
+                  sx1272._rawFormat=false;
+                  PRINT_CSTSTR("%s","SYNC WORD 0x12\n");
+                  e = sx1272.setSyncWord(0x12);
+                  PRINT_CSTSTR("%s","state ");
+                  PRINT_VALUE("%d",e);  
+                  PRINTLN;                  
+                }
+              }
+            break;
+
+            // set the frequency 
+            // "F433175#"
+            case 'F':    
+              i++;
+              cmdValue=getCmdValue(i);
+
+              loraChannel=cmdValue*1000.0*RH_LORA_FCONVERT;
+              optFQ=cmdValue/1000.0;
+              
+              // Select frequency channel
+              e = sx1272.setChannel(loraChannel);
+                                
+              PRINT_CSTSTR("%s","Set frequency to ");
+              PRINT_VALUE("%d",cmdValue);              
+              PRINTLN;   
+
+              PRINT_CSTSTR("%s","state ");
+              PRINT_VALUE("%d",e);  
+              PRINTLN;                             
+            break; 
+
+            // toggle raw mode
+            // "RAW"
+            case 'R':
+
+              if (cmd[i+1]=='A' && cmd[i+2]=='W') {
+
+                sx1272._rawFormat = !sx1272._rawFormat;
+
+                if (sx1272._rawFormat)
+                  PRINT_CSTSTR("%s","RAW MODE ON\n");
+                else
+                  PRINT_CSTSTR("%s","RAW MODE OFF\n");                
+              }                           
+            break; 
+
+            // toggle hex output mode
+            // "HEX"
+            case 'H':
+
+              if (cmd[i+1]=='E' && cmd[i+2]=='X') {
+
+                optHEX = !optHEX;
+                
+                if (optHEX)
+                  PRINT_CSTSTR("%s","HEX MODE ON\n");
+                else
+                  PRINT_CSTSTR("%s","HEX MODE OFF\n");                
+              }                           
+            break; 
+            
+                        
             default:
 
               PRINT_CSTSTR("%s","Unrecognized cmd\n");       

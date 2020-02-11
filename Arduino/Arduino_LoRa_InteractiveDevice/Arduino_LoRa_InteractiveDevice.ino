@@ -1,7 +1,7 @@
 /* 
  *  LoRa interactive device to receive and send command
  *
- *  Copyright (C) 2015-2019 Congduc Pham
+ *  Copyright (C) 2015-2020 Congduc Pham
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
  *
  ***************************************************************************** 
  * 
- *  Version:                1.8a
+ *  Version:                1.9
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -28,12 +28,13 @@
  *  LoRa parameters
  *    - /@M1#: set LoRa mode 1
  *    - /@C12#: use channel 12 (868MHz)
+ *    - /@F43317500#: set frequency to 433.175MHz
  *    - /@SF8#: set SF to 8
  *    - /@PL/H/M/x/X#: set power to Low, High or Max; extreme (PA_BOOST at +14dBm), eXtreme (PA_BOOST at +20dBm)
  *    - /@DBM10#: set power output to 10dBm. Check #define PABOOST for appropriate compilation
  *    - /@A9#: set node addr to 9
  *    - /@W34#: set sync word to 0x34
- *    - /@ON# or /@OFF#: power on/off the LoRa module
+ *    - /@ON# or /@OFF#: power on/off the LoRa module, /@ON# can be used to reset the radio module
  *
  *  Use of ACK
  *    - /@ACK#hello w/ack : sends the message and request an ACK
@@ -41,7 +42,9 @@
  *    - /@ACKOFF# disables ACK
  * 
  *  CAD, DIFS/SIFS mechanism, RSSI checking, extended IFS
+ *    - /@CS0#, /@CS1# or /@CS2# or /@CS3# choose Carrier Sense method
  *    - /@CAD# performs an SIFS CAD, i.e. 3 or 6 CAD depending on the LoRa mode
+ *    - /@CAD*# launch continous CAD mode, exit with return
  *    - /@CADON3# uses 3 CAD when sending data (normally SIFS is 3 or 6 CAD, DIFS=3SIFS)
  *    - /@CADOFF# disables CAD (IFS) when sending data
  *    - /@RSSI# toggles checking of RSSI before transmission and after CAD
@@ -60,12 +63,13 @@
  *      - /@D58#hello: send hello to node 56, destination addr is only for this message
  *      - /@D4#/@C1#Q30#: send the command string /@C1#Q30# to node 4
  *    - the S command sends a string of arbitrary size
- *      - /@S50# sends a 50B user payload packet filled with '#'. The real size is 55B with the Libelium header 
+ *      - /@S50# sends a 50B user payload packet filled with '#'. The real size is 54B with the 4-byte header
  *
  *  if compiled with WITH_AES
  *    - add LoRaWAN-like AES encyption, with MIC which provide reliable bad data rejection mechanisms
  *      - /@AES# toggles AES ON and OFF
- *      - /@LW# toggles pure LoRaWAN format, without underlying data header
+ *      - /@LW# set AES ON and toggles pure LoRaWAN format (raw mode), without underlying data header
+ *      - if you want to use raw mode, use /@LW# then /@AES# to disable AES while keeping raw mode
  *      
  *  if compiled with LORA_LAS
  *    - add LAS support
@@ -87,6 +91,9 @@
 */
 
 /*  Change logs
+ *  Feb, 6th, 2020. v1.9 
+ *        Continous CAD mode can be started interactively. Use /@CAD*# command. Press return to exit continous CAD mode
+ *        Add /@F command to set frequency: /@F43317500# for instance for 433.175MHz
  *  Feb, 1st, 2019. v1.8a 
  *        Add support of a small OLED screen in both CAD_TEST and PERIODIC_SENDER mode
  *  June, 29th, 2017. v1.8
@@ -195,6 +202,7 @@
 #include <SPI.h>
 // Include the SX1272 
 #include "SX1272.h"
+//#include "SX1272light.h"
 
 /********************************************************************
  _____              __ _                       _   _             
@@ -244,14 +252,18 @@
 // CHANGE HERE FOR VARIOUS BEHAVIORS
 /////////////////////////////////////////////////////////////////// 
 //#define SHOW_FREEMEMORY
+//when uncommenting PERIODIC_SENDER, the device only does continous periodic sending
+//#define PERIODIC_SENDER 2000
+//start in continous Cad mode
 //#define CAD_TEST
-//#define PERIODIC_SENDER 35000
+//#define RCV_WND
 //#define LORA_LAS
 //#define WITH_SEND_LED
 #define WITH_AES
 //#define WITH_APPKEY
 //new small OLED screen, mostly based on SSD1306 
 //#define OLED
+//#define OLED_GND234
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -386,8 +398,8 @@ LASDevice loraLAS(LORA_ADDR,LAS_DEFAULT_ALPHA,DEFAULT_DEST_ADDR);
 //
 int dest_addr=DEFAULT_DEST_ADDR;
 
-char cmd[260]="****************";
-char sprintf_buf[100];
+char cmd[260]="**********";
+char sprintf_buf[80];
 uint32_t msg_sn=0;
 
 // number of retries to unlock remote configuration feature
@@ -410,34 +422,46 @@ uint8_t SIFS_cad_number;
 uint8_t send_cad_number=9;
 uint8_t SIFS_value[11]={0, 183, 94, 44, 47, 23, 24, 12, 12, 7, 4};
 uint8_t CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
-uint8_t carrier_sense_method=2;
+uint8_t carrier_sense_method=0;
 bool RSSIonSend=false;
 
 unsigned int inter_pkt_time=0;
 unsigned int random_inter_pkt_time=0;
 unsigned long next_periodic_sendtime=0L;
 
-// packet size for periodic sending
+// default packet size for periodic sending
 //uint8_t MSS=40;
 uint8_t MSS=220;
+
+//leds
+#define SX1272_led_cad 9
+#define SX1272_led_nocad 7
+#define SX1272_led_rcv 8
 
 #ifdef WITH_AES
 #include "AES-128_V10.h"
 #include "Encrypt_V31.h"
 
-unsigned char AppSkey[16] = {
-  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C
-};
+///////////////////////////////////////////////////////////////////
+//ENTER HERE your App Session Key from the TTN device info (same order, i.e. msb)
+//unsigned char AppSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+///////////////////////////////////////////////////////////////////
 
-unsigned char NwkSkey[16] = {
-  0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6,
-  0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3D
-};
+//this is the default as LoRaWAN example
+unsigned char AppSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
 
-unsigned char DevAddr[4] = {
-  0x01, 0x02, 0x03, LORA_ADDR
-};
+///////////////////////////////////////////////////////////////////
+//ENTER HERE your Network Session Key from the TTN device info (same order, i.e. msb)
+//unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+///////////////////////////////////////////////////////////////////
+
+//this is the default as LoRaWAN example
+unsigned char NwkSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
+
+//ENTER HERE your Device Address from the TTN device info (same order, i.e. msb). Example for 0x12345678
+unsigned char DevAddr[4] = { 0x12, 0x34, 0x56, 0x78 };
+///////////////////////////////////////////////////////////////////
+
 
 uint16_t Frame_Counter_Up = 0x0000;
 // we use the same convention than for LoRaWAN as we will use the same AES convention
@@ -461,7 +485,7 @@ int freeMemory () {
 
 long getCmdValue(int &i, char* strBuff=NULL) {
         
-        char seqStr[7]="******";
+        char seqStr[10]="******";
 
         int j=0;
         // character '#' will indicate end of cmd value
@@ -574,9 +598,7 @@ void startConfig() {
   PRINTLN;
   
   // Set the node address and print the result
-  //e = sx1272.setNodeAddress(loraAddr);
-  sx1272._nodeAddress=loraAddr;
-  e=0;
+  e = sx1272.setNodeAddress(loraAddr);
   PRINT_CSTSTR("%s","^$LoRa addr ");
   PRINT_VALUE("%d", loraAddr);
   PRINT_CSTSTR("%s",": state ");
@@ -984,6 +1006,136 @@ void CarrierSense3() {
   }
 }
 
+void ContinousCad() 
+{
+  bool CadDetected=false;
+  unsigned long firstDetected, lastDetected=0;
+  int e;
+
+  PRINT_CSTSTR("%s","Start CAD test mode\n");
+  PRINT_CSTSTR("%s","SF: ");
+  PRINT_VALUE("%d", sx1272._spreadingFactor);
+  PRINTLN;
+  
+#ifdef OLED
+  u8x8.clearDisplay();  
+  u8x8.drawString(0, 0, "CAD TEST");
+  sprintf(oled_msg,"LoRa mode %d", loraMode );
+  u8x8.drawString(0, 1, oled_msg); 
+#endif 
+
+  pinMode(SX1272_led_cad, OUTPUT);
+  pinMode(SX1272_led_nocad, OUTPUT);
+  digitalWrite(SX1272_led_nocad, HIGH);
+  
+  while (!Serial.available()) {
+      
+      startDoCad=millis();
+      // for energy testing, use 100
+      //e = sx1272.doCAD(100);      
+      e = sx1272.doCAD(1);
+      endDoCad=millis();
+
+      if (e && !CadDetected) {
+        digitalWrite(SX1272_led_cad, HIGH);
+        digitalWrite(SX1272_led_nocad, LOW);        
+        PRINT_CSTSTR("%s","###########################\n");
+        PRINT_CSTSTR("%s","no activity for (ms): ");
+        PRINT_VALUE("%ld", endDoCad-lastDetected);  
+        PRINTLN;
+        PRINT_CSTSTR("%s","SF: ");
+        PRINT_VALUE("%d", sx1272._spreadingFactor);
+        PRINTLN;        
+        PRINT_CSTSTR("%s","###########################\n");                
+        firstDetected=endDoCad;
+        CadDetected=true;
+#ifdef OLED
+        u8x8.clearLine(0);
+        sprintf(oled_msg,"#### SF%d ###", sx1272._spreadingFactor);  
+        u8x8.drawString(0, 0, oled_msg);
+        u8x8.clearLine(1);
+        sprintf(oled_msg,"%ld", endDoCad-lastDetected);
+        u8x8.drawString(0, 1, oled_msg);        
+        u8x8.drawString(0, 2, "#############");  
+#endif            
+      }
+
+      if (!e && CadDetected)  {
+        digitalWrite(SX1272_led_cad, LOW);
+        digitalWrite(SX1272_led_nocad, HIGH);        
+        PRINT_CSTSTR("%s","+++++++++++++++++++++++++++\n");
+        PRINT_CSTSTR("%s","time (ms): ");
+        PRINT_VALUE("%ld", endDoCad);
+        PRINTLN;
+        PRINT_CSTSTR("%s","duration (ms): ");
+        PRINT_VALUE("%ld", endDoCad-firstDetected);  
+        PRINTLN;
+        PRINT_CSTSTR("%s","current RSSI: ");             
+        PRINT_VALUE("%d", sx1272._RSSI);
+        PRINTLN;
+        lastDetected=endDoCad;        
+        CadDetected=false;
+#ifdef OLED
+        u8x8.clearLine(6);
+        sprintf(oled_msg,"time %ld", endDoCad);
+        u8x8.drawString(0, 6, oled_msg);
+        u8x8.clearLine(7);        
+        sprintf(oled_msg,"duration %d", endDoCad-firstDetected);
+        u8x8.drawString(0, 7, oled_msg);
+#endif          
+      }       
+        
+      if (e) {
+        PRINT_VALUE("%ld", endDoCad);
+        PRINT_CSTSTR("%s"," + ");
+        PRINT_VALUE("%d", sx1272._RSSI);
+        PRINT_CSTSTR("%s"," ");
+        PRINT_VALUE("%ld", endDoCad-startDoCad);
+        PRINTLN;
+#ifdef OLED
+        u8x8.clearLine(3);  
+        sprintf(oled_msg,"%ld", endDoCad);
+        u8x8.drawString(0, 3, oled_msg);
+        
+        u8x8.clearLine(4);
+        sprintf(oled_msg,"%d", sx1272._RSSI);
+        u8x8.drawString(0, 4, oled_msg);        
+        
+        u8x8.clearLine(5);
+        sprintf(oled_msg,"%d", endDoCad-startDoCad);
+        u8x8.drawString(0, 5, oled_msg);         
+#endif          
+      }
+
+      // for energy testing, use 12000
+      //delay(12000);
+      // you can also use 100ms to test CAD frequency impact
+      delay(50);      
+      //delay(200);      
+  }
+
+  Serial.flush();
+
+  digitalWrite(SX1272_led_nocad, LOW);
+  digitalWrite(SX1272_led_cad, LOW);
+  
+  PRINT_CSTSTR("%s","Exit CAD test mode\n");
+#ifdef PERIODIC_SENDER
+  inter_pkt_time=PERIODIC_SENDER;
+  PRINT_CSTSTR("%s","Periodic sender ON");
+  PRINTLN;
+#ifdef OLED
+  u8x8.clearDisplay();
+    
+  u8x8.drawString(0, 0, "PERIODIC SEND");
+  sprintf(oled_msg,"LoRa mode %d", loraMode );
+  u8x8.drawString(0, 1, oled_msg);  
+  sprintf(oled_msg,"period=%d", inter_pkt_time);
+  u8x8.drawString(0, 2, oled_msg);  
+#endif    
+#endif 
+}
+
 /*****************************
  _____      _               
 /  ___|    | |              
@@ -1111,15 +1263,6 @@ void setup()
   u8x8.setFont(u8x8_font_chroma48medium8_r);  
 #endif
 
-#ifdef CAD_TEST
-  PRINT_CSTSTR("%s","Do CAD test\n");
-#ifdef OLED  
-  u8x8.drawString(0, 0, "CAD TEST");
-  sprintf(oled_msg,"LoRa mode %d", loraMode );
-  u8x8.drawString(0, 1, oled_msg);  
-#endif   
-#endif 
-
 #ifdef PERIODIC_SENDER
   inter_pkt_time=PERIODIC_SENDER;
   PRINT_CSTSTR("%s","Periodic sender ON");
@@ -1131,6 +1274,14 @@ void setup()
   sprintf(oled_msg,"period=%d", inter_pkt_time);
   u8x8.drawString(0, 2, oled_msg);  
 #endif    
+#endif
+
+#ifdef RCV_WND
+  pinMode(SX1272_led_rcv, OUTPUT);
+#endif 
+
+#ifdef CAD_TEST
+  ContinousCad();
 #endif
 }
 
@@ -1148,102 +1299,11 @@ void setup()
 void loop(void)
 { 
   int i=0, e;
-  int cmdValue;
+  long cmdValue;
   uint8_t app_key_offset=0;
-    
-/////////////////////////////////////////////////////////////////// 
-// ONLY FOR TESTING CAD
-#ifdef CAD_TEST
-  uint8_t SX1272_led_cad=4;
-  
-  bool CadDetected=false;
-  unsigned long firstDetected, lastDetected=0;
-
-  pinMode(SX1272_led_cad, OUTPUT);
-  
-  while (1) {
-  
-      startDoCad=millis();
-      // for energy testing, use 100
-      //e = sx1272.doCAD(100);      
-      e = sx1272.doCAD(1);
-      endDoCad=millis();
-
-      if (e && !CadDetected) {
-        digitalWrite(SX1272_led_cad, HIGH);        
-        PRINT_CSTSTR("%s","###########################\n");
-        PRINT_CSTSTR("%s","no activity for (ms): ");
-        PRINT_VALUE("%ld", endDoCad-lastDetected);  
-        PRINTLN;
-        PRINT_CSTSTR("%s","###########################\n");                
-        firstDetected=endDoCad;
-        CadDetected=true;
-#ifdef OLED  
-        u8x8.drawString(0, 0, "#########");
-        u8x8.clearLine(1);
-        sprintf(oled_msg,"%ld", endDoCad-lastDetected);
-        u8x8.drawString(0, 1, oled_msg);        
-        u8x8.drawString(0, 2, "#########");  
-#endif            
-      }
-
-      if (!e && CadDetected)  {
-        digitalWrite(SX1272_led_cad, LOW);        
-        PRINT_CSTSTR("%s","+++++++++++++++++++++++++++\n");
-        PRINT_CSTSTR("%s","time (ms): ");
-        PRINT_VALUE("%ld", endDoCad);
-        PRINTLN;
-        PRINT_CSTSTR("%s","duration (ms): ");
-        PRINT_VALUE("%ld", endDoCad-firstDetected);  
-        PRINTLN;
-        PRINT_CSTSTR("%s","current RSSI: ");             
-        PRINT_VALUE("%d", sx1272._RSSI);
-        PRINTLN;
-        lastDetected=endDoCad;        
-        CadDetected=false;
-#ifdef OLED
-        u8x8.clearLine(3);  
-        u8x8.drawString(0, 3, "+++++++++");
-        u8x8.clearLine(4);
-        sprintf(oled_msg,"%ld", endDoCad);
-        u8x8.drawString(0, 4, oled_msg);
-        u8x8.clearLine(5);        
-        sprintf(oled_msg,"%ld", endDoCad-firstDetected);
-        u8x8.drawString(0, 5, oled_msg);
-#endif          
-      }       
-        
-      if (e) {
-        PRINT_VALUE("%ld", endDoCad);
-        PRINT_CSTSTR("%s"," 1 ");
-        PRINT_VALUE("%d", sx1272._RSSI);
-        PRINT_CSTSTR("%s"," ");
-        PRINT_VALUE("%ld", endDoCad-startDoCad);
-        PRINTLN;
-#ifdef OLED
-        u8x8.clearLine(3);  
-        sprintf(oled_msg,"%ld", endDoCad);
-        u8x8.drawString(0, 3, oled_msg);
-        
-        u8x8.clearLine(4);
-        sprintf(oled_msg,"%d", sx1272._RSSI);
-        u8x8.drawString(0, 4, oled_msg);        
-        
-        u8x8.clearLine(5);
-        sprintf(oled_msg,"%d", endDoCad-startDoCad);
-        u8x8.drawString(0, 5, oled_msg);         
-#endif          
-      }
-
-      // for energy testing, use 12000
-      //delay(12000);
-      // you can also use 100ms to test CAD frequency impact
-      //delay(100);      
-      delay(200);      
-  }
-#endif
-// ONLY FOR TESTING CAD
-///END/////////////////////////////////////////////////////////////
+  // buffer to store the message to be transmitted
+  unsigned char LORAWAN_Data[256];
+  uint8_t LORAWAN_Package_Length=9;
 
 /////////////////////////////////////////////////////////////////// 
 // START OF PERIODIC TASKS
@@ -1290,14 +1350,14 @@ void loop(void)
           PRINT_VALUE("%ld",millis());  
           PRINTLN;
           
-          sprintf(cmd, "msg%3d***", msg_sn++);
-          for (i=strlen(cmd); i<MSS; i++)
-            cmd[i]='*';
+          sprintf((char*)LORAWAN_Data, "msg%3d***", msg_sn++);
+          for (i=strlen((char*)LORAWAN_Data); i<MSS; i++)
+            LORAWAN_Data[i]='*';
           
-          cmd[i]='\0';
+          LORAWAN_Data[i]='\0';
           
           PRINT_CSTSTR("%s","Sending : ");
-          PRINT_STR("%s",cmd);  
+          PRINT_STR("%s", (char*)LORAWAN_Data);  
           PRINTLN;
 
           if (carrier_sense_method==0)
@@ -1313,7 +1373,9 @@ void loop(void)
               CarrierSense3();              
 #ifdef OLED
           u8x8.clearLine(5);
-          sprintf(oled_msg,"Sending %d Bytes", strlen(cmd));
+          u8x8.clearLine(6);
+          u8x8.clearLine(7);
+          sprintf(oled_msg,"Sending %d Bytes", strlen((char*)LORAWAN_Data));
           u8x8.drawString(0, 5, oled_msg);
 #endif
   
@@ -1322,16 +1384,15 @@ void loop(void)
           PRINTLN;
 
           PRINT_CSTSTR("%s","Payload size is ");  
-          PRINT_VALUE("%d",strlen(cmd));
+          PRINT_VALUE("%d",strlen((char*)LORAWAN_Data));
           PRINTLN;
           
-          uint32_t toa = sx1272.getToA(strlen(cmd)+(full_lorawan?0:OFFSET_PAYLOADLENGTH));      
+          uint32_t toa = sx1272.getToA(strlen((char*)LORAWAN_Data)+(full_lorawan?0:OFFSET_PAYLOADLENGTH));      
           PRINT_CSTSTR("%s","ToA w/4B header is ");
           PRINT_VALUE("%d",toa);
           PRINTLN;
 #ifdef OLED
-          u8x8.clearLine(6);
-          sprintf(oled_msg,"ToA : ", toa);
+          sprintf(oled_msg,"ToA : %ld", toa);
           u8x8.drawString(0, 6, oled_msg);
 #endif               
                     
@@ -1340,7 +1401,7 @@ void loop(void)
 #ifdef WITH_SEND_LED
           digitalWrite(SEND_LED, HIGH);
 #endif       
-          e = sx1272.sendPacketTimeout(dest_addr, (uint8_t*)cmd, strlen(cmd), 10000);
+          e = sx1272.sendPacketTimeout(dest_addr, (uint8_t*)LORAWAN_Data, strlen((char*)LORAWAN_Data));
           
 #ifdef WITH_SEND_LED
           digitalWrite(SEND_LED, LOW);
@@ -1355,7 +1416,7 @@ void loop(void)
 #ifdef OLED
           u8x8.clearLine(5);          
           u8x8.clearLine(7);
-          sprintf(oled_msg,"Sending state: ", e);
+          sprintf(oled_msg,"state: %d", e);
           u8x8.drawString(0, 7, oled_msg);
 #endif 
 
@@ -1378,14 +1439,18 @@ void loop(void)
       // the end-device should also open a receiving window to receive 
       // INIT & UPDT messages
       e=1;
-#ifndef CAD_TEST        
+#ifdef RCV_WND        
       // open a receive window
-      uint16_t w_timer=1000;
+      uint16_t w_timer=10000;
+
+      PRINT_CSTSTR("%s","*");
       
       if (loraMode==1)
-        w_timer=2500;
-        
-      e = sx1272.receivePacketTimeout(w_timer);
+        w_timer=10000;
+  
+      e = sx1272.receivePacketTimeout(MAX_TIMEOUT);
+
+      PRINT_VALUE("%d",e);
 #endif 
 ///////////////////////////////////////////////////////////////////
 
@@ -1395,6 +1460,8 @@ void loop(void)
       if (!e) {
          int a=0, b=0;
          uint8_t tmp_length;
+
+         digitalWrite(SX1272_led_rcv, HIGH);
 
          receivedFromLoRa=true;
          sx1272.getSNR();
@@ -1457,17 +1524,29 @@ void loop(void)
          else
            PRINT_CSTSTR("%s","No LAS header. Write raw data\n");
 #endif
-         for ( ; a<tmp_length; a++,b++) {
+         for ( ; a<tmp_length; a++) {
            PRINT_STR("%c",(char)sx1272.packet_received.data[a]);
-           
-           cmd[b]=(char)sx1272.packet_received.data[a];
+
+           if (b<sizeof(cmd)-1) {
+              cmd[b]=(char)sx1272.packet_received.data[a];
+              b++;
+           }
          }
          
          // strlen(cmd) will be correct as only the payload is copied
          cmd[b]='\0';    
          PRINTLN;
-         FLUSHOUTPUT;         
-      }  
+         FLUSHOUTPUT;
+
+#ifdef OLED
+         u8x8.clearDisplay();
+         u8x8.drawString(0, 0, "rcv:");        
+         u8x8.drawString(0, 1, cmd);
+#endif 
+         delay(1000);
+         
+         digitalWrite(SX1272_led_rcv, LOW);
+      }
   }  
 
 /////////////////////////////////////////////////////////////////// 
@@ -1483,15 +1562,14 @@ void loop(void)
     
     if (cmd[i]=='/' && cmd[i+1]=='@') {
 
-      PRINT_CSTSTR("%s","^$Parsing command\n");      
+      PRINT_CSTSTR("%s","Parsing command\n");      
       i=i+2;
       
-      PRINT_CSTSTR("%s","^$");
       PRINT_STR("%s",cmd);
       PRINTLN;
       
       if ( (receivedFromLoRa && cmd[i]!='U' && !unlocked) || !unlocked_try) {
-        PRINT_CSTSTR("%s","^$Remote config locked\n");
+        PRINT_CSTSTR("%s","Remote config locked\n");
         // just assign an unknown command
         cmd[i]='*';  
       }
@@ -1504,12 +1582,12 @@ void loop(void)
                   cmdValue=getCmdValue(i);
 
                   if (cmdValue > 0 && cmdValue < 15) {
-                      PRINT_CSTSTR("%s","^$set power dBm: ");
+                      PRINT_CSTSTR("%s","Set power dBm: ");
                       PRINT_VALUE("%d",cmdValue);  
                       PRINTLN;                    
                       // Set power dBm
                       e = sx1272.setPowerDBM((uint8_t)cmdValue);
-                      PRINT_CSTSTR("%s","^$set power dBm: state ");
+                      PRINT_CSTSTR("%s","state ");
                       PRINT_VALUE("%d",e);  
                       PRINTLN;   
                   }                                
@@ -1530,14 +1608,14 @@ void loop(void)
                   if (i==strlen(cmd)) {
                       // set dest addr permanently       
                       dest_addr=cmdValue; 
-                      PRINT_CSTSTR("%s","Set LoRa dest addr to ");
+                      PRINT_CSTSTR("%s","Set dest addr to ");
                       PRINT_VALUE("%d",dest_addr); 
                       PRINTLN;                
                   }
                   else {
                       // only for the following ASCII command
                       forTmpDestAddr=cmdValue;
-                      PRINT_CSTSTR("%s","Set LoRa dest addr FOR THIS ASCII STRING to ");
+                      PRINT_CSTSTR("%s","Set dest addr FOR THIS ASCII STRING to ");
                       PRINT_VALUE("%d",forTmpDestAddr);
                       PRINTLN;    
                       sendCmd=true;               
@@ -1598,7 +1676,7 @@ void loop(void)
             case 'R': 
 #ifdef LORA_LAS             
               if (cmd[i+1]=='E' && cmd[i+2]=='G') {
-                  PRINT_CSTSTR("%s","^$Send LAS REG msg\n");
+                  PRINT_CSTSTR("%s","Send LAS REG msg\n");
                   loraLAS.sendReg();
               }
 #endif              
@@ -1637,15 +1715,15 @@ void loop(void)
                   unlocked=!unlocked;
                   
                   if (unlocked)
-                    PRINT_CSTSTR("%s","^$Unlocked\n");
+                    PRINT_CSTSTR("%s","Unlocked\n");
                   else
-                    PRINT_CSTSTR("%s","^$Locked\n");
+                    PRINT_CSTSTR("%s","Locked\n");
                 }
                 else
                   unlocked_try--;
                   
                 if (unlocked_try==0)
-                  PRINT_CSTSTR("%s","^$Bad pin\n");
+                  PRINT_CSTSTR("%s","Bad pin\n");
               }
             break;
 
@@ -1656,12 +1734,12 @@ void loop(void)
                   cmdValue=getCmdValue(i);
 
                   if (cmdValue > 5 && cmdValue < 13) {
-                      PRINT_CSTSTR("%s","^$set SF: ");
+                      PRINT_CSTSTR("%s","Set SF to ");
                       PRINT_VALUE("%d",cmdValue);  
                       PRINTLN;                    
                       // Set spreading factor
                       e = sx1272.setSF(cmdValue);
-                      PRINT_CSTSTR("%s","^$set SF: state ");
+                      PRINT_CSTSTR("%s","state ");
                       PRINT_VALUE("%d",e);  
                       PRINTLN;   
                   }
@@ -1696,12 +1774,12 @@ void loop(void)
               // set dest addr        
               loraMode=cmdValue; 
               
-              PRINT_CSTSTR("%s","^$Set LoRa mode to ");
+              PRINT_CSTSTR("%s","Set LoRa mode to ");
               PRINT_VALUE("%d",loraMode);
               PRINTLN;
               // Set transmission mode and print the result
               e = sx1272.setMode(loraMode);
-              PRINT_CSTSTR("%s","^$LoRa mode: state ");
+              PRINT_CSTSTR("%s","state ");
               PRINT_VALUE("%d",e);  
               PRINTLN;              
 
@@ -1732,12 +1810,12 @@ void loop(void)
               if (cmdValue <= 0)
                       cmdValue = 0x12;
               
-              PRINT_CSTSTR("%s","^$Set sync word to 0x");
+              PRINT_CSTSTR("%s","Set sync word to 0x");
               PRINT_HEX("%X", cmdValue);
               PRINTLN;
 
               e = sx1272.setSyncWord(cmdValue);
-              PRINT_CSTSTR("%s","^$LoRa sync word: state ");
+              PRINT_CSTSTR("%s","state ");
               PRINT_VALUE("%d",e);  
               PRINTLN;                
             break;
@@ -1766,33 +1844,38 @@ void loop(void)
                        break;
                   }
                   
-                  startDoCad=millis();
-                  e = sx1272.doCAD(SIFS_cad_number);                  
-                  endDoCad=millis();
+                  if (cmd[i+3]=='*') {
+                    ContinousCad();   
+                  }
+                  else {
+                    startDoCad=millis();
+                    e = sx1272.doCAD(SIFS_cad_number);                  
+                    endDoCad=millis();
 
-                  PRINT_CSTSTR("%s","--> SIFS duration ");
-                  PRINT_VALUE("%ld",endDoCad-startDoCad);
-                  PRINTLN; 
+                    PRINT_CSTSTR("%s","--> SIFS duration ");
+                    PRINT_VALUE("%ld",endDoCad-startDoCad);
+                    PRINTLN; 
                     
-                  if (!e) 
-                      PRINT_CSTSTR("%s","OK");
-                  else
-                      PRINT_CSTSTR("%s","###");
-                    
-                  PRINTLN;
+                    if (!e) 
+                        PRINT_CSTSTR("%s","OK");
+                    else
+                        PRINT_CSTSTR("%s","###");
+                      
+                    PRINTLN;
+                  }
               }
               else if (cmd[i+1]=='S') {
                   i=i+2;
                   cmdValue=getCmdValue(i);
 
                   if (cmdValue > 3) {
-                    PRINT_CSTSTR("%s","^$Carrier Sense method must be 0, 1, 2 or 3.\n");
+                    PRINT_CSTSTR("%s","CS method must be 0, 1, 2 or 3.\n");
                     cmdValue=2;    
                   }
 
                   carrier_sense_method=cmdValue;
 
-                  PRINT_CSTSTR("%s","^$Selected carrier Sense method is ");  
+                  PRINT_CSTSTR("%s","CS method is ");  
                   PRINT_VALUE("%d",carrier_sense_method);
                   PRINTLN;
               }
@@ -1808,18 +1891,15 @@ void loop(void)
                   loraChannelIndex=loraChannelIndex-STARTING_CHANNEL;  
                   loraChannel=loraChannelArray[loraChannelIndex];
                   
-                  PRINT_CSTSTR("%s","^$Set LoRa channel to ");
+                  PRINT_CSTSTR("%s","Set LoRa channel to ");
                   PRINT_VALUE("%d",cmdValue);
                   PRINTLN;
                   
                   // Select frequency channel
                   e = sx1272.setChannel(loraChannel);
-                  PRINT_CSTSTR("%s","^$Setting Channel: state ");
+                  PRINT_CSTSTR("%s","state ");
                   PRINT_VALUE("%d",e);  
-                  PRINTLN;
-                  PRINT_CSTSTR("%s","Time: ");
-                  PRINT_VALUE("%d",sx1272._stoptime-sx1272._starttime);  
-                  PRINTLN;                  
+                  PRINTLN;                
               }              
             break;
 
@@ -1828,12 +1908,12 @@ void loop(void)
               if (cmd[i+1]=='L' || cmd[i+1]=='H' || cmd[i+1]=='M' || cmd[i+1]=='x' || cmd[i+1]=='X' ) {
                 char loraPower=cmd[i+1];
 
-                PRINT_CSTSTR("%s","^$Set LoRa Power to ");
+                PRINT_CSTSTR("%s","Set LoRa Power to ");
                 PRINT_VALUE("%c",loraPower);  
                 PRINTLN;                
                  
                 e = sx1272.setPower(loraPower);
-                PRINT_CSTSTR("%s","^$Setting Power: state ");
+                PRINT_CSTSTR("%s","state ");
                 PRINT_VALUE("%d",e);  
                 PRINTLN; 
               }
@@ -1855,12 +1935,12 @@ void loop(void)
 
                   if (cmd[i+3]=='O' && cmd[i+4]=='N') {
                     withAck=true;
-                    PRINT_CSTSTR("%s","^$ACK enabled\n");
+                    PRINT_CSTSTR("%s","ACK enabled\n");
                   }
                   
                   if (cmd[i+3]=='O' && cmd[i+4]=='F' && cmd[i+5]=='F') {
                     withAck=false;    
-                    PRINT_CSTSTR("%s","^$ACK disabled\n");              
+                    PRINT_CSTSTR("%s","ACK disabled\n");              
                   }
                 }
               }
@@ -1889,12 +1969,12 @@ void loop(void)
                 // set node addr        
                 loraAddr=cmdValue; 
                 
-                PRINT_CSTSTR("%s","^$Set LoRa node addr to ");
+                PRINT_CSTSTR("%s","Set node addr to ");
                 PRINT_VALUE("%d",loraAddr);  
                 PRINTLN;
                 // Set the node address and print the result
                 e = sx1272.setNodeAddress(loraAddr);
-                PRINT_CSTSTR("%s","^$Setting LoRa node addr: state ");
+                PRINT_CSTSTR("%s","state ");
                 PRINT_VALUE("%d",e);     
                 PRINTLN;            
               }     
@@ -1904,11 +1984,11 @@ void loop(void)
 
               if (cmd[i+1]=='N') {
                 
-                  PRINT_CSTSTR("%s","^$Setting LoRa module to ON");
+                  PRINT_CSTSTR("%s","LoRa module ON");
                   
                   // Power ON the module
                   e = sx1272.ON();
-                  PRINT_CSTSTR("%s","^$Setting power ON: state ");
+                  PRINT_CSTSTR("%s","Power ON: state ");
                   PRINT_VALUE("%d",e);     
                   PRINTLN;
                   
@@ -1921,14 +2001,14 @@ void loop(void)
               }
               else
                if (cmd[i+1]=='F' && cmd[i+2]=='F') {
-                PRINT_CSTSTR("%s","^$Setting LoRa module to OFF\n");
+                PRINT_CSTSTR("%s","LoRa module OFF\n");
                 
                 // Power OFF the module
                 sx1272.OFF(); 
                 radioON=false;             
                }
                else
-                 PRINT_CSTSTR("%s","Invalid command. ON or OFF accepted.\n");          
+                 PRINT_CSTSTR("%s","only ON/OFF accepted.\n");          
             break;            
 
 
@@ -1957,24 +2037,46 @@ void loop(void)
                 full_lorawan = !full_lorawan;
 
                 if (full_lorawan) {
-                  PRINT_CSTSTR("%s","NATIVE LORAWAN FORMAT ON\n");
+                  PRINT_CSTSTR("%s","LORAWAN FORMAT ON (RAW MODE)\n");
                   // indicate to SX1272 lib that raw mode at transmission is required to avoid our own packet header
-                  sx1272._rawFormat=true;
+                  sx1272._rawFormat_send=true;
+                  PRINT_CSTSTR("%s","AES IS ON\n");
                   with_aes=true;
-                  PRINT_CSTSTR("%s","FOR SENDING TO A LORAWAN GW, YOU HAVE TO:\n");
-                  PRINT_CSTSTR("%s","SET TO MODE 11: /@M11#\n");
-                  PRINT_CSTSTR("%s","SET CHANNEL to 18: /@C18#\n");
-                  PRINT_CSTSTR("%s","SET SYNC WORD to 0x34: /@W34#\n");
+                  PRINT_CSTSTR("%s","TO SEND TO A LORAWAN GW:\n");
+                  PRINT_CSTSTR("%s","SET TO SF12BW125 AND SYNC WORD 0x34 BY USING MODE 11: /@M11#\n");
+                  PRINT_CSTSTR("%s","SET CHANNEL to 18 for EU868 (868.1MHz): /@C18#\n");
+                  //this will be done when setting mode 11
+                  //PRINT_CSTSTR("%s","SET SYNC WORD to 0x34: /@W34#\n");
                 }
                 else {
-                  PRINT_CSTSTR("%s","NATIVE LORAWAN FORMAT OFF\n"); 
-                  PRINT_CSTSTR("%s","WARNING: AES IS NOW OFF\n");
-                  sx1272._rawFormat=false;
+                  PRINT_CSTSTR("%s","LORAWAN FORMAT OFF (RAW MODE DISABLED)\n"); 
+                  PRINT_CSTSTR("%s","AES IS OFF\n");
+                  sx1272._rawFormat_send=false;
                   with_aes=false;
                 }
               }
 #endif              
-            break;         
+            break;     
+
+            // set the frequency 
+            // "F433175#"
+            case 'F':    
+              i++;
+              cmdValue=getCmdValue(i);
+
+              loraChannel=cmdValue*1000.0*RH_LORA_FCONVERT;
+ 
+              // Select frequency channel
+              e = sx1272.setChannel(loraChannel);
+                                
+              PRINT_CSTSTR("%s","Set frequency to ");
+              PRINT_VALUE("%d",cmdValue);              
+              PRINTLN;   
+
+              PRINT_CSTSTR("%s","state ");
+              PRINT_VALUE("%d",e);  
+              PRINTLN;                             
+            break;                 
 
             default:
 
@@ -2026,10 +2128,6 @@ void loop(void)
       PRINT_CSTSTR("%s","Packet number ");
       PRINT_VALUE("%d",sx1272._packetNumber);
       PRINTLN;
-
-      // buffer to store the message to be transmitted
-      unsigned char LORAWAN_Data[256];
-      unsigned char LORAWAN_Package_Length=9;
            
       uint8_t p_type=PKT_TYPE_DATA;
 
@@ -2139,10 +2237,10 @@ void loop(void)
           pl = LORAWAN_Package_Length;     
 
           if (full_lorawan) {
-              PRINT_CSTSTR("%s","end-device uses native LoRaWAN packet format\n");
+              PRINT_CSTSTR("%s","native LoRaWAN\n");
           }
           else {
-              PRINT_CSTSTR("%s","end-device uses encapsulated LoRaWAN packet format only for encryption\n");
+              PRINT_CSTSTR("%s","encapsulated LoRaWAN\n");
           }
           
           // we increment Frame_Counter_Up
@@ -2199,20 +2297,23 @@ void loop(void)
 
       if (carrier_sense_method==3)
           CarrierSense3();            
-                    
+
+      if (sx1272._rawFormat_send)
+        PRINT_CSTSTR("%s","raw mode\n");         
+                   
       startSend=millis();
                         
       if (forTmpDestAddr>=0) {
         if (withAck)
-          e = sx1272.sendPacketTimeoutACK(forTmpDestAddr, LORAWAN_Data, pl, 10000);  
+          e = sx1272.sendPacketTimeoutACK(forTmpDestAddr, LORAWAN_Data, pl);  
         else    
-          e = sx1272.sendPacketTimeout(forTmpDestAddr, LORAWAN_Data, pl, 10000);
+          e = sx1272.sendPacketTimeout(forTmpDestAddr, LORAWAN_Data, pl);
       }
       else {
         if (withAck || withTmpAck)   
-          e = sx1272.sendPacketTimeoutACK(dest_addr, LORAWAN_Data, pl, 10000);    
+          e = sx1272.sendPacketTimeoutACK(dest_addr, LORAWAN_Data, pl);    
          else 
-          e = sx1272.sendPacketTimeout(dest_addr, LORAWAN_Data, pl, 10000);
+          e = sx1272.sendPacketTimeout(dest_addr, LORAWAN_Data, pl);
       }
 
 #ifdef WITH_SEND_LED
