@@ -406,7 +406,7 @@ Please refer to the [README-aes_lorawan](https://github.com/CongducPham/LowCostL
 Receive window
 --------------
 
-A receive window can be enabled in `Arduino_LoRa_temp` with the following define statement:
+A non-LoRaWAN receive window can be enabled in `Arduino_LoRa_temp` with the following define statement:
 	
 	#define WITH_RCVW
 	
@@ -423,9 +423,11 @@ LoRaWAN example and support
 
 `Arduino_LoRa_LMIC_ABP_BASIC` is the basic LoRaWAN ABP (Activation By Personalization) example from Thomas Telkamp and Matthijs Kooijman using the LMIC port for Arduino. It sends "Hello from LMIC" using DR_SF12 (i.e. BW125SF12). In order to use `Arduino_LoRa_LMIC_ABP_BASIC`, you need to create a device for instance on TTN to get the device short address (32 bits) and, if you want, both NwkSKey and AppSKey. These information have to be filled in the example code. A nice tutorial can be found on [https://medium.com/kkbankol-events/tutorial-build-a-open-source-smart-city-based-on-lora-7ca76b9a098](https://medium.com/kkbankol-events/tutorial-build-a-open-source-smart-city-based-on-lora-7ca76b9a098). Don't forget to change the DIO0, DIO1, RST and DIO2 setting according to your wiring. If you are using our [ProMini PCB](https://github.com/CongducPham/LowCostLoRaGw#pcbs) then the settings is respectively D2, D3, D4 and D5 when you solder together the corresponding solder pads. Normally you only need DIO0, DIO1 and RST. You can use the `Arduino_LoRa_LMIC_ABP_BASIC` example to send data either to a regular LoRaWAN gateway (which of course works) and more interestingly to our low-cost single channel LoRa gateway that has to be configured as follows:
 
-- set mode to 11 in `gateway_conf.json` to configure for LoRaWAN reception on single channel (868.1MHz)
-- set "raw" to true in `gateway_conf.json` 
-- set "aes_lorawan" to false to upload to a LoRaWAN cloud (for instance TheThingNetwork)
+- set `["radio_conf"]["mode"]` to 11 in `gateway_conf.json` to configure for LoRaWAN reception on single channel (868.1MHz)
+- set `["gateway_conf"]["raw"]` to true in `gateway_conf.json` 
+- set `["gateway_conf"]["aes_lorawan"]` to false to upload to a LoRaWAN cloud (for instance TheThingNetwork or ChirpStack)
+- set `["gateway_conf"]["downlink_lorawan"]` to true to enable periodic PULL_DATA and get PULL_RESP (downlink messages) from Network Server
+- indicate in `["gateway_conf"]["downlink_network_server"]` the address of the Network Server for downlink messages 
 - enable LoRaWAN encrypted cloud in `clouds.json` as explained in [README-TTN](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-TTN.md)
 		
 Normally `Arduino_LoRa_LMIC_ABP_BASIC` use 868.1, 868.3 and 868.5. If you send to the low-cost gateway, you will loose 2 packets. You can disable 868.3 and 868.5 by uncommenting a small portion of code at the end of the `Arduino_LoRa_LMIC_ABP_BASIC` example:
@@ -436,17 +438,17 @@ Normally `Arduino_LoRa_LMIC_ABP_BASIC` use 868.1, 868.3 and 868.5. If you send t
     //Disable all channels, except for the 0 
     //FOR TESTING ONLY!
     
-    //for (int i=1; i<9; i++) { // For EU; for US use i<71
-    //  if(i != 0) {
-    //    LMIC_disableChannel(i);
-    //  }
-    //}
+    for (int i=1; i<9; i++) { // For EU; for US use i<71
+      if(i != 0) {
+        LMIC_disableChannel(i);
+      }
+    }
 ```
 
 If you know what you are doing, you can enable local LoRaWAN AES decryption by:
 
 - setting "aes_lorawan" to true
-- but then, indicate both NwkSKey and AppSKey in `key_LoRaWAN.py`
+- but then, indicate both device's NwkSKey and AppSKey in `key_LoRaWAN.py`
 - these keys can be found on your TTN account if you are using TTN LoRaWAN		
 		
 `Arduino_LoRa_temp` also shows a limited LoRaWAN support using our library (not LMIC, therefore DIO connection are not needed). You need to enable LoRaWAN features with the following define statements:
@@ -454,11 +456,9 @@ If you know what you are doing, you can enable local LoRaWAN AES decryption by:
 	#define AES
 	#define LORAWAN
 
-The setting will be BW125SF12 using frequency 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433. Again, you need to create a device for instance on TTN to get the device short address (32 bits) and, if you want, both NwkSKey and AppSKey. These information have to be filled in the example code. You can use the same device definition for both `Arduino_LoRa_LMIC_ABP_BASIC` and `Arduino_LoRa_temp`. Both examples can send to a regular LoRaWAN gateway and to our low-cost gateway. 
+The default setting will be SF12BW125 using frequency 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433. Again, you need to create a device for instance on TTN to get the device short address (32 bits) and, if you want, both NwkSKey and AppSKey. These information have to be filled in the example code. You can use the same device definition for both `Arduino_LoRa_LMIC_ABP_BASIC` and `Arduino_LoRa_temp`. Both examples can send to a regular LoRaWAN gateway and to our low-cost gateway. 
 
-In both examples, the low-cost gateway can then push received data to TTN platform with the addition of `CloudTTN.py` in the LoRaWAN encrypted cloud section of `clouds.json`. Refer to the [README-aes_lorawan](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md) file for more details on the limited LoRaWAN support.
-
-`Arduino_LoRa_LMIC_OTAA_BASIC` is the basic LoRaWAN OTAA (Over The Air Activation) example from Thomas Telkamp and Matthijs Kooijman using the LMIC port for Arduino. After activation, it sends "Hello, world!" using DR_SF12 (i.e. BW125SF12). This example is for demonstrating the usage of an SX1301-based concentrator hat (e.g. RAK831/2245) with our gateway framework. Please refer to this [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak2245-rak831/README.md) for more details.
+`Arduino_LoRa_LMIC_OTAA_BASIC` is the basic LoRaWAN OTAA (Over The Air Activation) example from Thomas Telkamp and Matthijs Kooijman using the LMIC port for Arduino. After activation, it sends "Hello, world!" using DR_SF12 (i.e. SF12BW125). This example is for demonstrating the OTAA support with both an SX1301-based concentrator hat (e.g. RAK831/2245, [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak2245-rak831/README.md)) and a single-channel configuration ([README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)) with our gateway framework.
 
 Using the RadioHead library for the end-device
 ----------------------------------------------
