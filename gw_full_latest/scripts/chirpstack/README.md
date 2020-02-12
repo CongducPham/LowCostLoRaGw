@@ -14,13 +14,17 @@ The ChirpStack installation procedure for the RPI using Rasbian is described [he
 - log into your Raspberry gateway as user `pi`
 - get the entire `rak_common_for_gateway` repository from their github `https://github.com/RAKWireless/rak_common_for_gateway`
 
+```
 	> cd /home/pi
 	> svn checkout https://github.com/RAKWireless/rak_common_for_gateway
-	
+```	
+
 - install the ChirpStack component
 
+```
 	> cd rak_common_for_gateway/chirpstack
 	> sudo ./install.sh
+```
 	
 After installation you will have the ChirpStack Network Server installed locally (127.0.0.1) which can be accessed from a computer on `http://your_raspberry_ip_address:8080`, for instance `http://192.168.2.5:8080`. Login as `admin` with password `admin`.
 
@@ -62,7 +66,9 @@ If you use the single-channel gateway version, you can just start with:
 
 - go into `scripts/chirpstack` folder and run
 
+```
 	> ./enable_chirpstack.sh
+```
 	
 then reboot. Enabling ChirpStack will start the ChirpStack services (and also configure them to be started on boot) and also set in `/opt/ttn-gateway/packet_forwarder/lora_pkt_fwd/global_conf.json` "server_address" with "127.0.0.1" to use the local ChirpStack Network Server.
 

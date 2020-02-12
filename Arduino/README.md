@@ -458,7 +458,15 @@ If you know what you are doing, you can enable local LoRaWAN AES decryption by:
 
 The default setting will be SF12BW125 using frequency 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433. Again, you need to create a device for instance on TTN to get the device short address (32 bits) and, if you want, both NwkSKey and AppSKey. These information have to be filled in the example code. You can use the same device definition for both `Arduino_LoRa_LMIC_ABP_BASIC` and `Arduino_LoRa_temp`. Both examples can send to a regular LoRaWAN gateway and to our low-cost gateway. 
 
-`Arduino_LoRa_LMIC_OTAA_BASIC` is the basic LoRaWAN OTAA (Over The Air Activation) example from Thomas Telkamp and Matthijs Kooijman using the LMIC port for Arduino. After activation, it sends "Hello, world!" using DR_SF12 (i.e. SF12BW125). This example is for demonstrating the OTAA support with both an SX1301-based concentrator hat (e.g. RAK831/2245, [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak2245-rak831/README.md)) and a single-channel configuration ([README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)) with our gateway framework.
+`Arduino_LoRa_LMIC_OTAA_BASIC` is the basic LoRaWAN OTAA (Over The Air Activation) example from Thomas Telkamp and Matthijs Kooijman using the LMIC port for Arduino. After activation, it sends "Hello, world!" using DR_SF12 (i.e. SF12BW125). This example is for demonstrating the OTAA support with both an SX1301-based multi-channel concentrator hat (e.g. RAK831/2245, [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak2245-rak831/README.md)) and a single-channel configuration with our gateway framework. If you use a single-channel configuration, our slightly modified LMIC distribution already defines `LMIC_SCG` in order to force join-request uplink messages to only use the first LoRaWAN frequency (e.g. 868.1MHz for BAND868). If you have the multi-channel configuration, comment in `lmic/config.h`
+
+```
+	//////////////////
+	//added by C. Pham, only for Single-Channel Gateway
+	//#define LMIC_SCG
+```
+
+Refer to [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md) for more information on LoRaWAN downlink (including OTAA) support with both multi-channel and single-channel configurations.
 
 Using the RadioHead library for the end-device
 ----------------------------------------------
