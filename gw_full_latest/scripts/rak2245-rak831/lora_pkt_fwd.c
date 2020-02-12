@@ -18,8 +18,13 @@ Maintainer: Michael Coracin
 /* added by C. Pham */
 /* by commenting DISABLE_DATA_UPLINK_UDP, you should get the original behavior of lora_pkt_fwd */
 #define DISABLE_DATA_UPLINK_UDP
+
 /* you can still allow stat packet to be sent to network server */
 /* #define ALLOW_STAT_UPLINK_UDP */
+
+/* in order to support 433MHz band, especially for downlink */
+/* of course the concentrator and global_conf.json are supposed to be 433Mhz version */
+/* #define HACK_FOR_BAND433 */
 
 /* -------------------------------------------------------------------------- */
 /* --- DEPENDANCIES --------------------------------------------------------- */
@@ -2384,7 +2389,7 @@ void thread_down(void) {
             if (val != NULL) {
                 txpkt.no_crc = (bool)json_value_get_boolean(val);
             }
-
+			
             /* parse target frequency (mandatory) */
             val = json_object_get_value(txpk_obj,"freq");
             if (val == NULL) {
@@ -2392,8 +2397,25 @@ void thread_down(void) {
                 json_value_free(root_val);
                 continue;
             }
-            txpkt.freq_hz = (uint32_t)((double)(1.0e6) * json_value_get_number(val));
 
+			/* Added by C. Pham */
+			/* here in order to support temporarily the 433MHz band in downlink when the network server does not support it */
+			/* we can replace the provided frequency in RX2 (869.525MHz for EU868 band) by 434.665MHz                       */
+			/* if the mentioned frequency is not 869.525MHz, then it means that RX1 is targeted so it is the same frequency */
+			/* than uplink and therefore should be ok. This rule applies for join-accept from Network Server as well        */	            
+#ifdef HACK_FOR_BAND433
+			/* 869.525 is frequency for downlink in EU868 band for RX2 when the network server is not supporting EU433 band */
+			if (json_value_get_number(val)==(double(869.525)) {
+				/* hard coding the downlink freq for RX2 in EU433 band */
+				txpkt.freq_hz = (uint32_t)((double)(1.0e6) * (double)(434.665));
+				MSG("WARNING: [down] replacing downlink frequency by 434.665MHz for the EU433 band\n");
+			}
+			else
+				/* for all other frequencies it should be OK as it should be the same than uplink */
+				txpkt.freq_hz = (uint32_t)((double)(1.0e6) * json_value_get_number(val));
+#else            
+            txpkt.freq_hz = (uint32_t)((double)(1.0e6) * json_value_get_number(val));
+#endif
             /* parse RF chain used for TX (mandatory) */
             val = json_object_get_value(txpk_obj,"rfch");
             if (val == NULL) {
