@@ -25,18 +25,9 @@ DHT22_Humidity::DHT22_Humidity(char* nomenclature, bool is_analog, bool is_conne
   }
 }
 
-void DHT22_Humidity::update_data(bool stayon)
+void DHT22_Humidity::update_data()
 {
   if (get_is_connected()) {
-  	
-    // if we use a digital pin to power the sensor...
-    if (get_is_low_power())
-    	digitalWrite(get_pin_power(),HIGH);  	
-
-    dht->begin();
-    
-    // wait
-    delay(get_warmup_time());
 
     double h = dht->readHumidity();
 
@@ -56,10 +47,7 @@ void DHT22_Humidity::update_data(bool stayon)
 	  else {
 	  	set_data((double)-1.0);
 	  }
-    */
-    
-    if (get_is_low_power() && !stayon)		
-        digitalWrite(get_pin_power(),LOW);   
+    */ 
   }
   else {
   	// if not connected, set a random value (for testing)  	
@@ -72,10 +60,27 @@ double DHT22_Humidity::get_value()
 {
   uint8_t retry=4;
   Serial.println("hum");
+  
+  // if we use a digital pin to power the sensor...
+  if (get_is_low_power())
+    digitalWrite(get_pin_power(),HIGH);
+
+  dht->begin();
+    
   do { 
-    retry--;
-    update_data(retry);
+
+    // wait
+    delay(get_warmup_time());
+        
+    update_data();
     Serial.println(get_data());
+
+    retry--;
+    
   } while (retry && get_data()==-1.0);
+
+  if (get_is_low_power())    
+    digitalWrite(get_pin_power(),LOW);  
+    
   return get_data();
 }

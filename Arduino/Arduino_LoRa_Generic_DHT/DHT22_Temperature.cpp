@@ -25,18 +25,9 @@ DHT22_Temperature::DHT22_Temperature(char* nomenclature, bool is_analog, bool is
   }
 }
 
-void DHT22_Temperature::update_data(bool stayon)
+void DHT22_Temperature::update_data()
 {
   if (get_is_connected()) {
-  	
-    // if we use a digital pin to power the sensor...
-    if (get_is_low_power())
-    	digitalWrite(get_pin_power(),HIGH);  	
-
-    dht->begin();
-    
-    // wait
-    delay(get_warmup_time());
 
     double t = dht->readTemperature();
 
@@ -56,10 +47,7 @@ void DHT22_Temperature::update_data(bool stayon)
 	  else {
 	  	set_data((double)-1.0);
 	  }
-    */
-    
-    if (get_is_low_power() && !stayon)		
-        digitalWrite(get_pin_power(),LOW);   
+    */ 
   }
   else {
   	// if not connected, set a random value (for testing)  	
@@ -69,13 +57,31 @@ void DHT22_Temperature::update_data(bool stayon)
 
 }
 
-double DHT22_Temperature::get_value(){
+double DHT22_Temperature::get_value()
+{
   uint8_t retry=4;
   Serial.println("temp");
+  
+  // if we use a digital pin to power the sensor...
+  if (get_is_low_power())
+    digitalWrite(get_pin_power(),HIGH);
+
+  dht->begin();
+    
   do { 
-    retry--;
-    update_data(retry);
+
+    // wait
+    delay(get_warmup_time());
+        
+    update_data();
     Serial.println(get_data());
+
+    retry--;
+    
   } while (retry && get_data()==-1.0);
+
+  if (get_is_low_power())    
+    digitalWrite(get_pin_power(),LOW);  
+    
   return get_data();
 }
