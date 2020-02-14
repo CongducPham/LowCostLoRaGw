@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: May 21th, 2019 by C. Pham
+ * last update: Feb 13th, 2020 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -282,7 +282,7 @@ void setup()
   rtc.begin();
 #endif  
 #else
-  digitalWrite(DHT_PIN_POWER,HIGH);
+  digitalWrite(PIN_POWER,HIGH);
 #endif
 
   delay(3000);

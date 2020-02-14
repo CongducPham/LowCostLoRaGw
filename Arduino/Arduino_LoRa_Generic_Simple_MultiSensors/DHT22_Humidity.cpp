@@ -21,11 +21,11 @@ DHT22_Humidity::DHT22_Humidity(char* nomenclature, bool is_analog, bool is_conne
     else
 		digitalWrite(get_pin_power(),HIGH);
 		
-    set_warmup_time(2000);
+    set_warmup_time(2100);
   }
 }
 
-void DHT22_Humidity::update_data()
+void DHT22_Humidity::update_data(bool stayon)
 {
   if (get_is_connected()) {
   	
@@ -56,7 +56,7 @@ void DHT22_Humidity::update_data()
 	  //	set_data((double)-1.0);
 	  //}
 
-    if (get_is_low_power())		
+    if (get_is_low_power() && !stayon)		
         digitalWrite(get_pin_power(),LOW);   
   }
   else {
@@ -67,7 +67,12 @@ void DHT22_Humidity::update_data()
 }
 
 double DHT22_Humidity::get_value()
-{
-  update_data();
+  uint8_t retry=4;
+  Serial.println("temp");
+  do { 
+    retry--;
+    update_data(retry);
+    Serial.println(get_data());
+  } while (retry && get_data()==-1.0);
   return get_data();
 }

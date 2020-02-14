@@ -21,7 +21,7 @@
  * first version of generic sensor
  * nicolas.bertuol@etud.univ-pau.fr
  * 
- * last update: May 21th, 2019 by C. Pham
+ * last update: Feb 13th, 2020 by C. Pham
  */
 
 // IMPORTANT
@@ -260,8 +260,8 @@ sx1272config my_sx1272config;
 
 #ifdef WITH_RCVW
 
-// will wait for 5s before opening the rcv window
-#define DELAY_BEFORE_RCVW 5000
+// will wait for 1s before opening the rcv window
+#define DELAY_BEFORE_RCVW 1000
 
 long getCmdValue(int &i, char* strBuff=NULL) {
   
@@ -678,11 +678,13 @@ void loop(void)
       PRINTLN;
 
 #ifdef WITH_RCVW
+
       PRINT_CSTSTR("%s","Wait for ");
-      PRINT_VALUE("%d", DELAY_BEFORE_RCVW-1000);
+      PRINT_VALUE("%d", (endSend+DELAY_BEFORE_RCVW) - millis());
       PRINTLN;
-      //wait a bit
-      delay(DELAY_BEFORE_RCVW-1000);
+      
+      while (millis()-endSend < DELAY_BEFORE_RCVW)
+        ;
 
       PRINT_CSTSTR("%s","Wait for incoming packet\n");
       // wait for incoming packets

@@ -30,13 +30,18 @@ void sensor_Init() {
 
 double sensor_getValue() {
 
+  uint8_t retry=3;
   dht.begin();
-  delay(2000);
-  
-  //read the raw sensor value
-  //float h = dht.readHumidity();
-  float t = dht.readTemperature();
 
+  do {
+    delay(2000);
+  
+    //read the raw sensor value
+    //float h = dht.readHumidity();
+    float t = dht.readTemperature();
+    retry--;
+  while (retry && isnan(t));
+    
   if (isnan(t)) {
     Serial.println("Failed to read from DHT sensor!");
     return -1;

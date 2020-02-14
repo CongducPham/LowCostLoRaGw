@@ -15,7 +15,7 @@ class DHT22_Humidity : public Sensor {
   public:    
     DHT22_Humidity(char* nomenclature, bool is_analog, bool is_connected, bool is_low_power, uint8_t pin_read, uint8_t pin_power);
     double get_value();
-    void update_data();
+    void update_data(bool stayon=false);
     
   private:
     DHT* dht = NULL;

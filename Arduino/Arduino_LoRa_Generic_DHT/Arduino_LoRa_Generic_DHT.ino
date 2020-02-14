@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: May 21th, 2019 by C. Pham
+last update: Feb 13th, 2020 by C. Pham
  */
 #include <SPI.h> 
 // Include the SX1272
