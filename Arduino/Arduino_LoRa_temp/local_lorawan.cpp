@@ -20,7 +20,7 @@
 #endif
 
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE SPREADING FACTOR ONLY FOR LORAWAN MODE
+// CHANGE HERE THE SPREADING FACTOR - ONLY FOR LORAWAN MODE
 uint8_t lorawanSF=12;
 //////////////////////////////////////////////////////////////////
 
@@ -29,43 +29,45 @@ uint8_t lorawanSF=12;
 
 ///////////////////////////////////////////////////////////////////
 //ENTER HERE your App Session Key from the TTN device info (same order, i.e. msb)
-unsigned char AppSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+//unsigned char AppSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 ///////////////////////////////////////////////////////////////////
 
 //this is the default as LoRaWAN example
-//unsigned char AppSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
+unsigned char AppSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
 
 ///////////////////////////////////////////////////////////////////
 //ENTER HERE your Network Session Key from the TTN device info (same order, i.e. msb)
-unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+//unsigned char NwkSkey[16] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 ///////////////////////////////////////////////////////////////////
 
 //this is the default as LoRaWAN example
-//unsigned char NwkSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
+unsigned char NwkSkey[16] = { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C };
 
 ///////////////////////////////////////////////////////////////////
 // DO NOT CHANGE HERE
 uint16_t Frame_Counter_Up = 0x0000;
-// we use the same convention than for LoRaWAN as we will use the same AES convention
-// See LoRaWAN specifications
+// 0 for uplink, 1 for downlink - See LoRaWAN specifications
 unsigned char Direction = 0x00;
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
+//set to the default LoRa datarate SF12BW125
+//set to first frequency of LoRaWAN: 868.1 for EU868, 923.2 for EU900 and 433.175 for EU433
+//set sync word to LoRaWAN networks, i.e. 0x34
 
-int local_lorawan_init() {
+void local_lorawan_init() {
 
   int e;
 
   e = sx1272.setBW(BW_125);
-  PRINT_CSTSTR("%s","Set BW to 125kHz: state"); 
+  PRINT_CSTSTR("%s","Set BW to 125kHz: state "); 
   PRINT_VALUE("%d", e);
   PRINTLN; 
   
   //we can also change the SF value for LoRaWAN
-  e = sx1272.setSF(lorawanSFSF);
+  e = sx1272.setSF(lorawanSF);
   PRINT_CSTSTR("%s","Set SF to ");
-  PRINT_VALUE("%d", lorawanSFSF);    
+  PRINT_VALUE("%d", lorawanSF);    
   PRINT_CSTSTR("%s",": state ");
   PRINT_VALUE("%d", e);
   PRINTLN;  
@@ -77,12 +79,12 @@ int local_lorawan_init() {
   PRINT_CSTSTR("%s","Set frequency to 868.1MHz: state ");
 #elif defined BAND900
   //hardcoded with the first LoRaWAN frequency
-  uint32_t loraChannel=923.2*1000000.0*RH_LORA_FCONVERT;
+  uint32_t loraChannel=(double)923.2*1000000.0*RH_LORA_FCONVERT;
   e = sx1272.setChannel(loraChannel);
   PRINT_CSTSTR("%s","Set frequency to 923.2MHz: state ");
 #elif defined BAND433
   //hardcoded with the first LoRaWAN frequency
-  uint32_t loraChannel=433.175*1000000.0*RH_LORA_FCONVERT;
+  uint32_t loraChannel=(double)433.175*1000000.0*RH_LORA_FCONVERT;
   e = sx1272.setChannel(loraChannel);
   PRINT_CSTSTR("%s","Set frequency to 433.175MHz: state ");
 #endif 
@@ -94,11 +96,17 @@ int local_lorawan_init() {
   PRINT_CSTSTR("%s","Set sync word to 0x34: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
-  
-  return e;
+
+  PRINT_CSTSTR("%s","Using raw mode for native LoRaWAN ");
+  // set raw format, both in transmission and reception to true for LoRaWAN mode
+  sx1272._rawFormat=true;
+  sx1272._rawFormat_send=true;
 }
 
-uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_key_offset, bool is_lorawan) {
+///////////////////////////////////////////////////////////////////
+//create a LoRaWAN packet meaning that the payload is encrypted
+
+uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_key_offset) {
 
       PRINT_STR("%s",(char*)(message+app_key_offset));
       PRINTLN;
@@ -112,8 +120,9 @@ uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_k
       PRINTLN; 
 
       PRINT_CSTSTR("%s","Encrypting\n");     
-      PRINT_CSTSTR("%s","encrypted payload\n");
       Encrypt_Payload((unsigned char*)message, pl, Frame_Counter_Up, Direction);
+
+      PRINT_CSTSTR("%s","encrypted payload\n");
       //Print encrypted message
       for (int i = 0; i < pl; i++)      
       {
@@ -124,7 +133,7 @@ uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_k
       }
       PRINTLN;   
 
-      // with encryption, we use for the payload a LoRaWAN packet format to reuse available LoRaWAN encryption libraries
+      // with only AES encryption, we still use a LoRaWAN packet format to reuse available LoRaWAN encryption libraries
       //
       unsigned char LORAWAN_Data[80];
       unsigned char LORAWAN_Package_Length;
@@ -138,22 +147,22 @@ uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_k
 
       //Build the Radio Package, LoRaWAN format
       //See LoRaWAN specification
-      LORAWAN_Data[0] = Mac_Header;
+      LORAWAN_Data[OFF_DAT_HDR] = Mac_Header;
     
-      LORAWAN_Data[1] = DevAddr[3];
-      LORAWAN_Data[2] = DevAddr[2];
-      LORAWAN_Data[3] = DevAddr[1];
-      LORAWAN_Data[4] = DevAddr[0];
+      LORAWAN_Data[OFF_DAT_ADDR] = DevAddr[3];
+      LORAWAN_Data[OFF_DAT_ADDR+1] = DevAddr[2];
+      LORAWAN_Data[OFF_DAT_ADDR+2] = DevAddr[1];
+      LORAWAN_Data[OFF_DAT_ADDR+3] = DevAddr[0];
     
-      LORAWAN_Data[5] = Frame_Control;
+      LORAWAN_Data[OFF_DAT_FCT] = Frame_Control;
     
-      LORAWAN_Data[6] = (Frame_Counter_Up & 0x00FF);
-      LORAWAN_Data[7] = ((Frame_Counter_Up >> 8) & 0x00FF);
+      LORAWAN_Data[OFF_DAT_SEQNO] = (Frame_Counter_Up & 0x00FF);
+      LORAWAN_Data[OFF_DAT_SEQNO+1] = ((Frame_Counter_Up >> 8) & 0x00FF);
     
-      LORAWAN_Data[8] = Frame_Port;
+      LORAWAN_Data[OFF_DAT_OPTS] = Frame_Port;
     
       //Set Current package length
-      LORAWAN_Package_Length = 9;
+      LORAWAN_Package_Length = OFF_DAT_OPTS+1;
       
       //Load Data
       for(int i = 0; i < pl; i++)
@@ -205,17 +214,63 @@ uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_k
       PRINTLN;
 #endif      
 
-      if (is_lorawan) {
-          PRINT_CSTSTR("%s","end-device uses native LoRaWAN packet format\n");
-          // indicate to SX1272 lib that raw mode at transmission is required to avoid our own packet header
-          sx1272._rawFormat_send=true;
-      }
-      else {
-          PRINT_CSTSTR("%s","end-device uses encapsulated LoRaWAN packet format only for encryption\n");
-      }
       // in any case, we increment Frame_Counter_Up
       // even if the transmission will not succeed
       Frame_Counter_Up++;
 
       return pl;
+}
+
+///////////////////////////////////////////////////////////////////
+//decode a LoRaWAN downlink packet and check the MIC
+
+int8_t local_aes_lorawan_decode_pkt(uint8_t* message, uint8_t pl) {
+
+      unsigned char MIC[4];
+      
+      //get FCntDn from LoRaWAN downlink packet
+      uint16_t seqno=(uint16_t)((uint16_t)message[OFF_DAT_SEQNO] | ((uint16_t)message[OFF_DAT_SEQNO+1]<<8));
+
+      //end of payload, removing the 4-byte MIC
+      uint8_t pend=pl-4;
+
+      Calculate_MIC(message, MIC, pend, seqno, 1);
+
+      if ((uint8_t)MIC[3]==message[pl-1] &&
+          (uint8_t)MIC[2]==message[pl-2] &&
+          (uint8_t)MIC[1]==message[pl-3] &&
+          (uint8_t)MIC[0]==message[pl-4]) {
+
+          PRINT_CSTSTR("%s","Valid MIC\n");  
+           
+          //start of payload
+          uint8_t poff=OFF_DAT_OPTS+1+(uint8_t)(message[OFF_DAT_FCT] & FCT_OPTLEN);
+          
+          //length of payload
+          int8_t ml=pend-poff;
+    
+          if (ml>0) {
+            PRINT_CSTSTR("%s","Decrypting\n");          
+            Encrypt_Payload((unsigned char*)(message+poff), ml, seqno, 1);
+    
+            PRINT_CSTSTR("%s","clear payload\n"); 
+            //Print decrypted message
+            for (int i = poff; i < poff+ml; i++)      
+            {
+              if (message[i]<16)
+                PRINT_CSTSTR("%s","0");
+              PRINT_HEX("%X", message[i]);         
+              PRINT_CSTSTR("%s"," ");
+            }
+            PRINTLN;
+    
+            return (int8_t)poff;
+          }
+          else
+            PRINT_CSTSTR("%s","No payload\n"); 
+      }
+      else 
+        PRINT_CSTSTR("%s","Bad MIC\n");
+        
+      return -1;              
 }

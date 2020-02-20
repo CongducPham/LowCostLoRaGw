@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: Feb 3rd, 2020 by C. Pham
+ * last update: Feb 20th, 2020 by C. Pham
  * 
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
@@ -35,7 +35,6 @@
 #include <SPI.h> 
 // Include the SX1272
 #include "SX1272.h"
-//#include "SX1272light2Baddr.h"
 #include "my_temp_sensor_code.h"
 
 /********************************************************************
@@ -53,41 +52,62 @@
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
 // 
-// FOR SIMPLY DOING AES ENCRYTION: ENABLE AES
-// FOR TTN WITHOUT LORAWAN: ENABLE WITH_AES & EXTDEVADDR 
-// FOR TTN WITH LORAWAN: ENABLE WITH_AES & LORAWAN
+// FOR UPLINK WITH ONLY AES ENCRYTION: uncomment WITH_AES
+// FOR UPLINK TO LORAWAN CLOUD ENCAPSULATED LORAWAN FORMAT: uncomment WITH_AES & EXTDEVADDR 
+// FOR UPLINK TO LORAWAN CLOUD NATIVE LORAWAN FORMAT: uncomment LORAWAN
+// FOR UPLINK TO LORAWAN CLOUD AND DOWNLINK WITH NATIVE LORAWAN FORMAT: uncomment LORAWAN & WITH_RCVW
+// 
+// more info: https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-aes_lorawan.md
+//
+// DEFAULT CONFIGURATION: LoRaMode 1 (SF12BW125), no encryption, no LoRaWAN, no downlink
 //
 #define WITH_EEPROM
+////////////////////////////
+//add 4-byte AppKey filtering - only for non-LoRaWAN mode
 //#define WITH_APPKEY
+////////////////////////////
+//request an ack from gateway - only for non-LoRaWAN mode
+//#define WITH_ACK
+////////////////////////////
 //if you are low on program memory, comment STRING_LIB to save about 2K
 #define STRING_LIB
+////////////////////////////
 #define LOW_POWER
 #define LOW_POWER_HIBERNATE
 #define SHOW_LOW_POWER_CYCLE
+////////////////////////////
 //Use LoRaWAN AES-like encryption
 //#define WITH_AES
+////////////////////////////
 //Use our Lightweight Stream Cipher (LSC) algorithm
 //#define WITH_LSC
-//If you want to upload on TTN without LoRaWAN you have to provide the 4 bytes DevAddr and uncomment #define EXTDEVADDR
+////////////////////////////
+//If you want to upload to LoRaWAN cloud without pure LoRaWAN format you have to provide a 4 bytes DevAddr and uncomment #define EXTDEVADDR
 //#define EXTDEVADDR
+////////////////////////////
 //Use native LoRaWAN packet format to send to LoRaWAN gateway - beware it does not mean you device is a full LoRaWAN device
 //#define LORAWAN
-//when sending to a LoRaWAN gateway (e.g. running util_pkt_logger) but with no native LoRaWAN format, just to set the correct sync word. DO NOT use if LORAWAN is uncommented
-//#define USE_LORAWAN_SW
-//#define WITH_ACK
-//this will enable a receive window after every transmission
+////////////////////////////
+//this will enable a receive window after every transmission, uncomment it to also have LoRaWAN downlink
 //#define WITH_RCVW
+////////////////////////////
+//when sending to a LoRaWAN gateway (e.g. running util_pkt_logger) but with no native LoRaWAN format
+//just to set the correct sync word. DO NOT use if LORAWAN is uncommented
+//#define USE_LORAWAN_SW
+////////////////////////////
 //force 20dBm, use with caution, test ony
 //#define USE_20DBM
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
-// ADD HERE OTHER PLATFORMS THAT DO NOT SUPPORT EEPROM NOR LOW POWER
-#if defined ARDUINO_SAM_DUE || defined __SAMD21G18A__
+// ADD HERE OTHER PLATFORMS THAT DO NOT SUPPORT EEPROM
+#if defined ARDUINO_SAM_DUE || defined _VARIANT_ARDUINO_DUE_X_ || defined __SAMD21G18A__
 #undef WITH_EEPROM
 #endif
 
-#if defined ARDUINO_SAM_DUE
+///////////////////////////////////////////////////////////////////
+// ADD HERE OTHER PLATFORMS THAT DO NOT SUPPORT LOW POWER LIB
+#if defined ARDUINO_SAM_DUE || defined _VARIANT_ARDUINO_DUE_X_
 #undef LOW_POWER
 #endif
 ///////////////////////////////////////////////////////////////////
@@ -114,12 +134,12 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
 
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE NODE ADDRESS BETWEEN 2 AND 255
+// CHANGE HERE THE NODE ADDRESS BETWEEN 2 AND 255 - NON LORAWAN
 uint8_t node_addr=6;
 //////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE LORA MODE
+// CHANGE HERE THE DEFAULT LORA MODE
 #define LORAMODE  1
 //////////////////////////////////////////////////////////////////
 
@@ -138,6 +158,11 @@ uint8_t my_appKey[4]={5, 6, 7, 8};
 
 ///////////////////////////////////////////////////////////////////
 // ENCRYPTION CONFIGURATION AND KEYS FOR LORAWAN
+#ifdef LORAWAN
+#ifndef WITH_AES
+#define WITH_AES
+#endif
+#endif
 #ifdef WITH_AES
 #include "local_lorawan.h"
 #endif
@@ -282,7 +307,6 @@ SnoozeBlock sleep_config(timer);
 RTCZero rtc;
 #endif
 #endif
-unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
 #endif
 
 unsigned long nextTransmissionTime=0L;
@@ -316,14 +340,14 @@ sx1272config my_sx1272config;
 
 //this function is provided to parse the downlink command which is assumed to be in the format /@A6#
 //
-long getCmdValue(int &i, char* strBuff=NULL) {
+long getCmdValue(int &i, char* cmdstr, char* strBuff=NULL) {
   
-    char seqStr[7]="******";
+     char seqStr[10]="******";
     
     int j=0;
     // character '#' will indicate end of cmd value
-    while ((char)message[i]!='#' && (i < strlen((char*)message)) && j<strlen(seqStr)) {
-            seqStr[j]=(char)message[i];
+    while ((char)cmdstr[i]!='#' && ( i < strlen(cmdstr) && j<strlen(seqStr))) {
+            seqStr[j]=(char)cmdstr[i];
             i++;
             j++;
     }
@@ -521,31 +545,35 @@ void setup()
 #endif
   
 #ifdef LORAWAN
-  local_lorawan_init(SF);
+  local_lorawan_init();
 #else
-
   // Set transmission mode and print the result
   e = sx1272.setMode(loraMode);
   PRINT_CSTSTR("%s","Setting Mode: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
+#endif
   
 #ifdef MY_FREQUENCY
   e = sx1272.setChannel(MY_FREQUENCY*1000000.0*RH_LORA_FCONVERT);
   PRINT_CSTSTR("%s","Setting customized frequency: ");
   PRINT_VALUE("%f", MY_FREQUENCY);
   PRINTLN;
-#else
-  e = sx1272.setChannel(DEFAULT_CHANNEL);  
-#endif  
   PRINT_CSTSTR("%s","Setting frequency: state ");
   PRINT_VALUE("%d", e);
-  PRINTLN;
-  
-#endif
+  PRINTLN;  
+#else
+#ifndef LORAWAN
+  e = sx1272.setChannel(DEFAULT_CHANNEL);
+  PRINT_CSTSTR("%s","Setting default frequency: state ");
+  PRINT_VALUE("%d", e);
+  PRINTLN;  
+#endif  
+#endif  
 
   // enable carrier sense
-  sx1272._enableCarrierSense=true;  
+  sx1272._enableCarrierSense=true; 
+   
 #ifdef LOW_POWER
   // TODO: with low power, when setting the radio module in sleep mode
   // there seem to be some issue with RSSI reading
@@ -577,12 +605,6 @@ void setup()
   PRINT_CSTSTR("%s","Setting node addr: state ");
   PRINT_VALUE("%d", e);
   PRINTLN;
-
-  // Invert I/Q
-  //e = sx1272.invertIQ(false);
-  //PRINT_CSTSTR("%s","Inverting I/Q: state ");
-  //PRINT_VALUE("%d", e);
-  //PRINTLN;
   
 #ifdef WITH_LSC
   //need to initialize the LSC encoder
@@ -717,10 +739,11 @@ void loop(void)
 ///////////////////////////////////
 #ifdef WITH_AES
 #ifdef LORAWAN
-      pl=local_aes_lorawan_create_pkt(message, pl, app_key_offset, true);
+      PRINT_CSTSTR("%s","end-device uses native LoRaWAN packet format\n");
 #else
-      pl=local_aes_lorawan_create_pkt(message, pl, app_key_offset, false);
+      PRINT_CSTSTR("%s","end-device uses encapsulated LoRaWAN packet format only for encryption\n");
 #endif
+      pl=local_aes_lorawan_create_pkt(message, pl, app_key_offset);
 #endif
 
 /********************************** 
@@ -734,6 +757,7 @@ void loop(void)
 //use our Lightweight Stream Cipher (LSC) encrypting
 ////////////////////////////////////////////////////
 #ifdef WITH_LSC
+      PRINT_CSTSTR("%s","end-device uses LSC encryption\n");
       pl=local_lsc_create_pkt(message, pl, app_key_offset, p_type, node_addr);
 #endif
       
@@ -760,17 +784,11 @@ void loop(void)
           PRINT_CSTSTR("%s","Abort"); 
           
       } while (e && n_retry);          
-#else
+#else    
       e = sx1272.sendPacketTimeout(DEFAULT_DEST_ADDR, message, pl);
 #endif
   
       endSend=millis();
-
-#ifdef LORAWAN
-      // switch back to normal behavior
-      // as local_aes_lorawan_create_pkt() set raw format to true for LoRaWAN mode
-      sx1272._rawFormat_send=false;
-#endif
           
 #ifdef WITH_EEPROM
       // save packet number for next packet in case of reboot
@@ -802,32 +820,46 @@ void loop(void)
       PRINT_VALUE("%d", e);
       PRINTLN;
 
-#if defined WITH_RCVW && !defined LORAWAN
+///////////////////////////////////////////////////////////////////
+// DOWNLINK
+// 
+///////////////////////////////////////////////////////////////////
 
+#ifdef WITH_RCVW
+
+      // Invert I/Q
+      //e = sx1272.invertIQ(false);
+      //PRINT_CSTSTR("%s","Inverting I/Q: state ");
+      //PRINT_VALUE("%d", e);
+      //PRINTLN;
+  
       PRINT_CSTSTR("%s","Wait for ");
       PRINT_VALUE("%d", (endSend+DELAY_BEFORE_RCVW) - millis());
       PRINTLN;
-      
+
+      //target 1s which is RX1 for LoRaWAN in most regions
       while (millis()-endSend < DELAY_BEFORE_RCVW)
         ;
       
       PRINT_CSTSTR("%s","Wait for incoming packet\n");
+      
+         
       // wait for incoming packets
-      e = sx1272.receivePacketTimeout(10000);
+      e = sx1272.receivePacketTimeout(2000);
 
       // we have received a downlink message
       //
-      if (!e) {
-         int i=0;
-         int cmdValue;
-         uint8_t tmp_length;
+      if (!e) {  
+        int i=0;
+        long cmdValue;
+        uint8_t tmp_length;
 
-         sx1272.getSNR();
-         sx1272.getRSSIpacket();
+        sx1272.getSNR();
+        sx1272.getRSSIpacket();
          
-         tmp_length=sx1272._payloadlength;
+        tmp_length=sx1272._payloadlength;
 
-         sprintf((char*)message, "^p%d,%d,%d,%d,%d,%d,%d\n",
+        sprintf((char*)message, "^p%d,%d,%d,%d,%d,%d,%d\n",
                    sx1272.packet_received.dst,
                    sx1272.packet_received.type,                   
                    sx1272.packet_received.src,
@@ -836,35 +868,56 @@ void loop(void)
                    sx1272._SNR,
                    sx1272._RSSIpacket);
                                    
-         PRINT_STR("%s",(char*)message);         
-         
-         for ( ; i<tmp_length; i++) {
-           PRINT_STR("%c",(char)sx1272.packet_received.data[i]);
-           
-           message[i]=(char)sx1272.packet_received.data[i];
-         }
-         
-         message[i]=(char)'\0';    
-         PRINTLN;
-         FLUSHOUTPUT;   
+        PRINT_STR("%s",(char*)message);         
 
+        PRINT_CSTSTR("%s","frame hex\n"); 
+        
+        for ( i=0 ; i<tmp_length; i++) {          
+          message[i]=(char)sx1272.packet_received.data[i];
+     
+          if (message[i]<16)
+            PRINT_CSTSTR("%s","0");
+          PRINT_HEX("%X", message[i]);
+          PRINT_CSTSTR("%s"," ");       
+        }
+        PRINTLN;
+        
+#ifdef LORAWAN
+        i=local_aes_lorawan_decode_pkt(message, tmp_length);
+                      
+        //set the null character at the end of the payload in case it is a string
+        message[tmp_length-4]=(char)'\0';       
+#else
+        message[i]=(char)'\0';
+        // in non-LoRaWAN, we try to print the characters
+        PRINT_STR("%s",(char*)message);
         i=0;
+#endif
 
+        PRINTLN;
+        FLUSHOUTPUT;
+       
         // commands have following format /@A6#
         //
-        if (message[i]=='/' && message[i+1]=='@') {
-    
-            PRINT_CSTSTR("%s","Parsing command\n");      
-            i=i+2;   
+        if (i>=0 && message[i]=='/' && message[i+1]=='@') {
 
-            switch ((char)message[i]) {
+            char cmdstr[15];
+            // copy the downlink payload, up to sizeof(cmdstr)
+            strncpy(cmdstr,(char*)(message+i),sizeof(cmdstr)); 
+                
+            PRINT_CSTSTR("%s","Parsing command\n");
+            PRINT_STR("%s", cmdstr);
+            PRINTLN;      
+            i=2;   
+
+            switch ((char)cmdstr[i]) {
 
 #ifndef LORAWAN
                   // set the node's address, /@A10# to set the address to 10 for instance
                   case 'A': 
 
                       i++;
-                      cmdValue=getCmdValue(i);
+                      cmdValue=getCmdValue(i, cmdstr);
                       
                       // cannot set addr greater than 255
                       if (cmdValue > 255)
@@ -899,7 +952,7 @@ void loop(void)
                   case 'I': 
 
                       i++;
-                      cmdValue=getCmdValue(i);
+                      cmdValue=getCmdValue(i, cmdstr);
 
                       // cannot set addr lower than 1 minute
                       if (cmdValue < 1)
@@ -925,10 +978,10 @@ void loop(void)
                   case 'L': 
 
                       i++;
-                      cmdValue=getCmdValue(i);
+                      cmdValue=getCmdValue(i, cmdstr);
                       
                       PRINT_CSTSTR("%s","Toggle LED on pin ");
-                      PRINT_VALUE("%d", cmdValue);
+                      PRINT_VALUE("%ld", cmdValue);
                       PRINTLN;
 
                       // warning, there is no check on the pin number
@@ -959,10 +1012,15 @@ void loop(void)
         }          
       }
       else
-        PRINT_CSTSTR("%s","No packet\n");
+        PRINT_CSTSTR("%s","No downlink\n");
 #endif
 
-#if defined LOW_POWER && not defined _VARIANT_ARDUINO_DUE_X_
+///////////////////////////////////////////////////////////////////
+// LOW-POWER
+// 
+///////////////////////////////////////////////////////////////////
+
+#if defined LOW_POWER
       PRINT_CSTSTR("%s","Switch to power saving mode\n");
 
       e = sx1272.setSleepMode();
@@ -1002,8 +1060,6 @@ void loop(void)
       // by default, LOW_POWER_PERIOD is 60s for those microcontrollers
       timer.setTimer(LOW_POWER_PERIOD*1000);
 #endif
-
-      //nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
       
       while (waiting_t>0) {  
 
@@ -1043,7 +1099,7 @@ void loop(void)
 #ifdef SHOW_LOW_POWER_CYCLE                   
                   PRINT_CSTSTR("%s","D[");
                   PRINT_VALUE("%d", waiting_t);
-                  PRINT_CSTSTR("%s","]");
+                  PRINT_CSTSTR("%s","]\n");
 #endif
             waiting_t = 0;
           }
@@ -1074,39 +1130,6 @@ void loop(void)
           waiting_t = 0;
 #endif                                            
        }
-
-      /*
-      for (uint8_t i=0; i<nCycle; i++) {  
-
-#if defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__         
-          // ATmega328P, ATmega168, ATmega32U4
-          LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
-          
-          //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, 
-          //              SPI_OFF, USART0_OFF, TWI_OFF);
-#elif defined ARDUINO_AVR_MEGA2560
-          // ATmega2560
-          LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
-          
-          //LowPower.idle(SLEEP_8S, ADC_OFF, TIMER5_OFF, TIMER4_OFF, TIMER3_OFF, 
-          //      TIMER2_OFF, TIMER1_OFF, TIMER0_OFF, SPI_OFF, USART3_OFF, 
-          //      USART2_OFF, USART1_OFF, USART0_OFF, TWI_OFF);
-#elif defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
-          // Teensy31/32 & TeensyLC
-#ifdef LOW_POWER_HIBERNATE
-          Snooze.hibernate(sleep_config);
-#else            
-          Snooze.deepSleep(sleep_config);
-#endif  
-#else
-          // use the delay function
-          delay(LOW_POWER_PERIOD*1000);
-#endif                        
-          PRINT_CSTSTR("%s",".");
-          FLUSHOUTPUT
-          delay(10);                        
-      }
-      */
 #endif  
       
 #else
