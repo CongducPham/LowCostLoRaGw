@@ -1957,7 +1957,7 @@ uint8_t	SX1272::setSF(uint8_t spr)
 	*/
 
     writeRegister(REG_OP_MODE, st0);	// Getting back to previous status
-    delay(100);
+    delay(5);
 
     if( isSF(spr) )
     { // Checking available value for _spreadingFactor
@@ -2692,7 +2692,7 @@ int8_t SX1272::setChannel(uint32_t ch)
     // added by C. Pham
     _stoptime=millis();
 
-    delay(100);
+    delay(5);
 
     // storing MSB in freq channel value
     freq3 = (readRegister(REG_FRF_MSB));
@@ -2737,7 +2737,7 @@ int8_t SX1272::setChannel(uint32_t ch)
     */
 
     writeRegister(REG_OP_MODE, st0);	// Getting back to previous status
-    delay(100);
+    delay(5);
     return state;
 }
 
@@ -4311,7 +4311,7 @@ boolean	SX1272::availableData(uint16_t wait)
         } // end while (millis)
 
         if( bitRead(value, 4) == 1 )
-        { // header received        
+        { // header received
 #if (SX1272_debug_mode > 0)
             printf("## Valid Header received in LoRa mode ##\n");
 #endif
@@ -4319,7 +4319,6 @@ boolean	SX1272::availableData(uint16_t wait)
     		_starttime=millis();
     		
             _hreceived = true;
-                
 #ifdef W_NET_KEY
             // actually, need to wait until 3 bytes have been received
             //while( (header < 3) && (millis() - previous < (unsigned long)wait) )
@@ -7380,7 +7379,6 @@ int8_t	SX1272::invertIQ(bool invert)
 
     writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);		// Set Standby mode to write in registers
 
-	
 	// According to Semtech AN1200.23 Rev.2 June 2015
 	if (invert) {
 		//writeRegister(REG_INVERT_IQ, readRegister(REG_INVERT_IQ)|(1<<6));
@@ -7390,7 +7388,7 @@ int8_t	SX1272::invertIQ(bool invert)
 	else {
 		//writeRegister(REG_INVERT_IQ, readRegister(REG_INVERT_IQ) & 0B10111111);
 		writeRegister(REG_INVERT_IQ, 0x27);
-		writeRegister(REG_INVERT_IQ2, 0x1D);
+		writeRegister(REG_INVERT_IQ2, 0x1D);			
 	}
 
 	config1=readRegister(REG_INVERT_IQ);

@@ -2000,7 +2000,7 @@ uint8_t	SX1272::setSF(uint8_t spr)
 	*/
 
     writeRegister(REG_OP_MODE, st0);	// Getting back to previous status
-    delay(100);
+    delay(5);
 
     if( isSF(spr) )
     { // Checking available value for _spreadingFactor
@@ -2747,7 +2747,7 @@ int8_t SX1272::setChannel(uint32_t ch)
     // added by C. Pham
     _stoptime=millis();
 
-    delay(100);
+    delay(5);
 
     // storing MSB in freq channel value
     freq3 = (readRegister(REG_FRF_MSB));
@@ -2792,7 +2792,7 @@ int8_t SX1272::setChannel(uint32_t ch)
     */
 
     writeRegister(REG_OP_MODE, st0);	// Getting back to previous status
-    delay(100);
+    delay(5);
     return state;
 }
 

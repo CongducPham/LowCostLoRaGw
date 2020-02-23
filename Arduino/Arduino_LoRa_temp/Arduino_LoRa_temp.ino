@@ -827,25 +827,71 @@ void loop(void)
 
 #ifdef WITH_RCVW
 
+#ifdef LORAWAN
+      uint8_t rxw_max=2;
       // Invert I/Q
       //e = sx1272.invertIQ(false);
       //PRINT_CSTSTR("%s","Inverting I/Q: state ");
       //PRINT_VALUE("%d", e);
-      //PRINTLN;
-  
-      PRINT_CSTSTR("%s","Wait for ");
-      PRINT_VALUE("%d", (endSend+DELAY_BEFORE_RCVW) - millis());
-      PRINTLN;
+      //PRINTLN;      
+#else
+      uint8_t rxw_max=1;
+#endif
 
-      //target 1s which is RX1 for LoRaWAN in most regions
-      while (millis()-endSend < DELAY_BEFORE_RCVW)
-        ;
-      
-      PRINT_CSTSTR("%s","Wait for incoming packet\n");
-      
-         
-      // wait for incoming packets
-      e = sx1272.receivePacketTimeout(2000);
+      uint8_t rxw=0;
+      //save current freq
+      uint32_t currentFreq=sx1272._channel;
+      //save current SF
+      uint8_t currentSF=sx1272._spreadingFactor;
+                              
+      do {
+          PRINT_CSTSTR("%s","Wait for ");
+          PRINT_VALUE("%d", (endSend+DELAY_BEFORE_RCVW+rxw*1000) - millis());
+          PRINTLN;
+    
+          //target 1s which is RX1 for LoRaWAN in most regions
+          //then target 1s more which is RX2 for LoRaWAN in most regions
+          while (millis()-endSend < DELAY_BEFORE_RCVW+rxw*1000)
+            ;
+          
+          PRINT_CSTSTR("%s","Wait for incoming packet-RX");
+          PRINT_VALUE("%d", rxw+1);
+          PRINTLN;
+            
+          // wait for incoming packets
+          e = sx1272.receivePacketTimeout(650);
+          
+          //we received something in RX1
+          if (!e && rxw==0)
+            rxw=rxw_max;
+          else
+            // try RX2 only if we are in LoRaWAN mode and nothing has been received in RX1
+            if (++rxw<rxw_max) {
+#ifdef BAND868
+              //change freq to 869.525 as we are targeting RX2 window
+              sx1272.setChannel(869.525*1000000.0*RH_LORA_FCONVERT);
+              PRINT_CSTSTR("%s","Set downlink frequency to 869.525MHz\n");
+#elif defined BAND900
+              //TODO?
+#elif defined BAND433
+              //change freq to 434.665 as we are targeting RX2 window
+              sx1272.setChannel(434.665*1000000.0*RH_LORA_FCONVERT);
+              PRINT_CSTSTR("%s","Set downlink frequency to 434.665MHz\n");
+#endif
+              //change to SF12 as we are targeting RX2 window
+              //valid for EU868 and EU433 band
+              sx1272.setSF(12);         
+              PRINT_CSTSTR("%s","Set to SF12\n");              
+            }
+            else {
+              //set back to the reception frequency
+              sx1272.setChannel(currentFreq);
+              PRINT_CSTSTR("%s","Set back frequency\n");  
+              //set back the SF
+              sx1272.setSF(currentSF);
+              PRINT_CSTSTR("%s","Set back SF\n");            
+          }
+      } while (rxw<rxw_max);
 
       // we have received a downlink message
       //
