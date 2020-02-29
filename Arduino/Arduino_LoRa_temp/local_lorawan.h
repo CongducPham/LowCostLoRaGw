@@ -42,6 +42,6 @@ enum {
 
 void local_lorawan_init();
 uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_key_offset);
-int8_t local_aes_lorawan_decode_pkt(uint8_t* message, uint8_t pl);
+int8_t local_lorawan_decode_pkt(uint8_t* message, uint8_t pl);
 
 #endif

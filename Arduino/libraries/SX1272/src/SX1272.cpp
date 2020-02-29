@@ -3272,10 +3272,7 @@ int8_t SX1272::setPacketLength(uint8_t l)
     }
 
     writeRegister(REG_OP_MODE, st0);	// Getting back to previous status
-    // comment by C. Pham
-    // this delay is included in the send delay overhead
-    // TODO: do we really need this delay?
-    delay(250);
+    delay(5);
     return state;
 }
 

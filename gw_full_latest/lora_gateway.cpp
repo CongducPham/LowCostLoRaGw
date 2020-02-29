@@ -36,12 +36,13 @@
 
 /*  Change logs
  *  Jan, 29th, 2020. v2.1
- *        lora_gateway now checks 3 times for downlink.txt after a packet reception at t_r (to work with Network Server sending PULL_RESP in just-in-time mode)
- *			- first, after t_r+DELAY_DNWFILE (delay of 700ms, no reception possible) to target RX1
- *			- second, after t_r+DELAY_DNWFILE+DELAY_RX2 (additional delay of 1000ms, no reception possible) to target RX2
- *			- last, after t_r+DELAY_DNWFILE+DELAY_RX2+RCV_TIMEOUT_JACC2 (radio in reception mode for 3500ms) to target either RX1 or RX2 for join-accept
- *				* if a new packet is received during these 3500ms then it has priority
- *				* lora_gateway then starts a new cycle of downlink attempts   
+ *        lora_gateway in raw mode now checks 4 times for downlink.txt after a packet reception at t_r (to work with Network Server sending PULL_RESP in just-in-time mode)
+ *			- first, after t_r+DELAY_DNWFILE (delay of 900ms, no reception possible) to target RX1
+ *			- second, after t_r+DELAY_DNWFILE+DELAY_EXTDNW2 (additional delay of 1000ms, no reception possible) to target RX2
+ *			- third, after t_r+DELAY_JACC1-DELAY_DNWFILE (radio in reception mode) to target RX1 for join-accept only
+ *				* if a new packet is received during the last wait period then it has priority
+ *				* lora_gateway then starts a new cycle of downlink attempts
+ *			- last, after t_r+DELAY_JACC1+DELAY_EXTDNW2-DELAY_DNWFILE (additional delay of 1000ms, no reception possible) to target RX2 for join-accept only
  *  Jan, 20th, 2020. v2.0
  *        add LoRaWAN downlink from LoRaWAN Network Server
  *			- can use RX1 (same datarate than uplink) or RX2 (869.525MHz and SF12BW125) depending on downlink timestamp
@@ -259,10 +260,10 @@ enum { DELAY_DNW2        =  DELAY_DNW1 +(int)DELAY_EXTDNW2 }; // in millisecs do
 // need to give some time for the post-processing stage to generate a downlink.txt file if any
 // for LoRaWAN, need to give some time to lorawan_downlink.py to get PULL_RESP and generate downlink.txt
 // as the receive window 1 is at 1s after packet transmission at device side, it does not give much margin
-enum { DELAY_DNWFILE     =  700 }; // in millisecs
-enum { MARGIN_DNW        =  180 }; // in millisecs
+enum { DELAY_DNWFILE     =  900 }; // in millisecs
+enum { MARGIN_DNW        =  20 }; // in millisecs
 
-//#define DEBUG_DOWNLINK_TIMING
+#define DEBUG_DOWNLINK_TIMING
 //#define KEEP_DOWNLINK_BACKUP_FILE
 //#define KEEP_DOWNLINK_SENT_FILE
 
@@ -278,10 +279,8 @@ using namespace std;
 
 bool enableDownlinkCheck=true;
 bool checkForLateDownlinkRX2=false;
+bool checkForLateDownlinkJACC1=false;
 bool checkForLateDownlinkJACC2=false;
-
-#define DELAY_RX2   	  1000
-#define RCV_TIMEOUT_JACC2 3500 
 
 //only for non-LoRaWAN downlink
 //#define INCLUDE_MIC_IN_DOWNLINK
@@ -356,7 +355,7 @@ unsigned long startDoCad, endDoCad;
 bool extendedIFS=true;
 uint8_t SIFS_cad_number;
 // set to 0 to disable carrier sense based on CAD
-uint8_t send_cad_number=3;
+uint8_t send_cad_number=0;
 uint8_t SIFS_value[11]={0, 183, 94, 44, 47, 23, 24, 12, 12, 7, 4};
 uint8_t CAD_value[11]={0, 62, 31, 16, 16, 8, 9, 5, 3, 1, 1};
 
@@ -777,7 +776,7 @@ void loop(void)
     /////////////////////////////////////////////////////////////////// 
     // THE MAIN PACKET RECEPTION LOOP
     //
-    if (radioON && !checkForLateDownlinkRX2) {
+    if (radioON && !checkForLateDownlinkRX2 && !checkForLateDownlinkJACC2) {
         
 		e=1;
 
@@ -795,13 +794,13 @@ void loop(void)
 			rcv_time_tmst=getGwDateTime();
 			rcv_time_ms=millis();
 			
-			//we actually received something when we were "waiting" for a late downlink
-			//we give prioroty to the latest reception
+			//we actually received something when we were "waiting" for a JACC1 downlink 
+			//we give priority to the latest reception
 			if (rcv_timeout!=MAX_TIMEOUT) {
 				//remove any downlink.txt file that may have been generated late because it was not for the new packet reception
 				remove("downlink/downlink.txt");
 				//set back to normal reception mode
-				checkForLateDownlinkJACC2=false;
+				checkForLateDownlinkJACC1=false;
 				rcv_timeout=MAX_TIMEOUT;
 			}
 		}
@@ -857,7 +856,9 @@ void loop(void)
 #endif          
          	uint8_t tmp_length;
 
-         	receivedFromLoRa=true;       
+         	receivedFromLoRa=true;
+			//remove any downlink.txt file that may have been generated late and will therefore be out-dated
+			remove("downlink/downlink.txt");         	       
 
 			///////////////////////////////////////////////////////////////////         
 			// provide reception timestamp
@@ -942,7 +943,7 @@ void loop(void)
       	}  
 	}  
   
-  	if (receivedFromLoRa || checkForLateDownlinkRX2 || checkForLateDownlinkJACC2) {
+  	if (receivedFromLoRa || checkForLateDownlinkRX2 || checkForLateDownlinkJACC1 || checkForLateDownlinkJACC2) {
     
 #ifdef DOWNLINK
     	// handle downlink request
@@ -958,6 +959,7 @@ void loop(void)
 
 			//wait until it is the (approximate) right time to check for downlink requests
 			//because the generation of downlink.txt file takes some time
+			//only for RX1, after that, we simply pass
 			while (millis()-rcv_time_ms < DELAY_DNWFILE)
 				;
 
@@ -973,6 +975,8 @@ void loop(void)
     		// further processing
     		if (checkForLateDownlinkRX2)
     			printf("^$----delayRX2-----------------------------------------\n");
+    		else if (checkForLateDownlinkJACC1)	
+    			printf("^$----retryJACC1---------------------------------------\n");    			
     		else if (checkForLateDownlinkJACC2)	
     			printf("^$----retryJACC2---------------------------------------\n");
     		else	
@@ -1014,36 +1018,45 @@ void loop(void)
 				remove("downlink/downlink.txt");
 #endif
 
-    			//it was already a retry
-    			if (checkForLateDownlinkRX2 || checkForLateDownlinkJACC2) {
-    				checkForLateDownlinkRX2=false;
-    				checkForLateDownlinkJACC2=false;
-    				rcv_timeout=MAX_TIMEOUT;
-    			}						
+    			//got a downlink, clear all indicators and back to normal reception for next time
+    			checkForLateDownlinkRX2=false;
+    			checkForLateDownlinkJACC1=false;
+    			checkForLateDownlinkJACC2=false;
+    			rcv_timeout=MAX_TIMEOUT;					
     		}
     		else {
     			hasDownlinkEntry=false;
     			printf("^$NO NEW DOWNLINK ENTRY\n");
-    			
+
     			if (checkForLateDownlinkRX2) {
 					checkForLateDownlinkRX2=false;
 					// retry later, last retry
+					checkForLateDownlinkJACC1=true;
+					//will however wait for new incoming messages up to rcv_time_ms+DELAY_JACC1-(DELAY_DNW1-DELAY_DNWFILE)
+					rcv_timeout=rcv_time_ms+DELAY_JACC1-millis()-(DELAY_DNW1-DELAY_DNWFILE);    			
+    			}
+				else
+				//it was already the last retry for late downlink
+				if (checkForLateDownlinkJACC2) {
+					checkForLateDownlinkJACC2=false;
+					rcv_timeout=MAX_TIMEOUT;
+				}   
+				else
+				if (checkForLateDownlinkJACC1) { 
+					// retry later, for RX2 (join)
+					delay(DELAY_EXTDNW2);
+					checkForLateDownlinkJACC1=false;
 					checkForLateDownlinkJACC2=true;
-					//will however wait for new incoming messages but for a shorter time
-					rcv_timeout=RCV_TIMEOUT_JACC2;	    			
-    			}
-    			else {
-					//it was already the last retry for late downlink
-    				if (checkForLateDownlinkJACC2) {
-    					checkForLateDownlinkJACC2=false;
-    					rcv_timeout=MAX_TIMEOUT;
-    				}
-    				else { 
-    					// retry later, for RX2
-    					delay(DELAY_RX2);
-    					checkForLateDownlinkRX2=true;
-    				}
-    			}
+				}				 			
+				else {
+					//we initiate the entire downlink check only for LoRaWAN, i.e. when raw mode is enabled
+					if (optRAW) { 
+						// retry later, for RX2 (data)
+						delay(DELAY_EXTDNW2);
+						checkForLateDownlinkRX2=true;
+					}
+				}    			
+
 				FLUSHOUTPUT;
     		}	   		
     	}
@@ -1079,17 +1092,44 @@ void loop(void)
 					uint32_t send_time_tmst=document["txpk"]["tmst"].GetUint();
 					//to get the waiting delay
 					uint32_t rx_wait_delay=send_time_tmst-rcv_time_tmst;
-				
+
+					//uncomment to test re-scheduling for RX2
+					//delay(500);	
+					
+					bool go_for_downlink=false;
+									
 					// just in case
 					if (send_time_tmst < rcv_time_tmst)
 						printf("^$WARNING: downlink tmst in the past, abort\n");	
 					else 
-					if (send_time_tmst - rcv_time_tmst > ((uint32_t)DELAY_JACC2+(uint32_t)DELAY_EXTDNW2 )*1000)
+					if (send_time_tmst - rcv_time_tmst > ((uint32_t)DELAY_JACC2+(uint32_t)DELAY_EXTDNW2)*1000)
 						printf("^$WARNING: downlink tmst too much in future, abort\n");	
-					else	
-					if (millis() > rcv_time_ms + rx_wait_delay/1000 - MARGIN_DNW)
-						printf("^$WARNING: too late to send downlink, abort\n");
-					else {												
+					else
+						{
+							uint32_t wmargin;
+							
+							//determine if we have some margin to re-schedule
+							if (rx_wait_delay/1000 == (uint32_t)DELAY_DNW1 || rx_wait_delay/1000 == (uint32_t)DELAY_JACC1)
+								wmargin=(uint32_t)DELAY_EXTDNW2;
+							else
+								wmargin=0;
+							
+							//are we behind scheduled 	
+							if (millis() > rcv_time_ms + rx_wait_delay/1000 - MARGIN_DNW) {
+								//
+								if (wmargin) {
+									rx_wait_delay+=(uint32_t)wmargin*1000;
+									go_for_downlink=true;
+									printf("^$WARNING: too late for RX1, try RX2\n");	
+								}
+								else
+									printf("^$WARNING: too late to send downlink, abort\n");
+							}
+							else
+								go_for_downlink=true;				
+						}
+								
+					if (go_for_downlink) {												
 						uint8_t downlink_payload[256];
 				
 						//invert I/Q
@@ -1112,16 +1152,12 @@ void loop(void)
 						}
 								
 						//uncomment to test for RX2
-						//rx_wait_delay+=DELAY_EXTDNW2*1000;
+						//rx_wait_delay+=(uint32_t)DELAY_EXTDNW2*1000;
 
 						bool useRX2=false;
 				
-						//we could use exact comparison but we are not sure that it is always be exact, so we use intervals
-						if (rx_wait_delay/1000 > DELAY_JACC1)
+						if (rx_wait_delay/1000 == (uint32_t)DELAY_DNW2 || rx_wait_delay/1000 == (uint32_t)DELAY_JACC2)
 							useRX2=true;
-						else
-						if (rx_wait_delay/1000 > DELAY_DNW1 && rx_wait_delay/1000 < DELAY_JACC1)
-							useRX2=true;	
 				
 						// should wait for RX2
 						if (useRX2) {           

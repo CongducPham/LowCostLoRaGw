@@ -838,7 +838,7 @@ void loop(void)
       uint8_t rxw_max=1;
 #endif
 
-      uint8_t rxw=0;
+      uint8_t rxw=1;
       //save current freq
       uint32_t currentFreq=sx1272._channel;
       //save current SF
@@ -846,27 +846,27 @@ void loop(void)
                               
       do {
           PRINT_CSTSTR("%s","Wait for ");
-          PRINT_VALUE("%d", (endSend+DELAY_BEFORE_RCVW+rxw*1000) - millis());
+          PRINT_VALUE("%d", (endSend+rxw*DELAY_BEFORE_RCVW) - millis());
           PRINTLN;
     
           //target 1s which is RX1 for LoRaWAN in most regions
           //then target 1s more which is RX2 for LoRaWAN in most regions
-          while (millis()-endSend < DELAY_BEFORE_RCVW+rxw*1000)
+          while (millis()-endSend < rxw*DELAY_BEFORE_RCVW)
             ;
           
           PRINT_CSTSTR("%s","Wait for incoming packet-RX");
-          PRINT_VALUE("%d", rxw+1);
+          PRINT_VALUE("%d", rxw);
           PRINTLN;
             
           // wait for incoming packets
-          e = sx1272.receivePacketTimeout(650);
+          e = sx1272.receivePacketTimeout(850);
           
           //we received something in RX1
-          if (!e && rxw==0)
-            rxw=rxw_max;
+          if (!e && rxw==1)
+            rxw=rxw_max+1;
           else
             // try RX2 only if we are in LoRaWAN mode and nothing has been received in RX1
-            if (++rxw<rxw_max) {
+            if (++rxw<=rxw_max) {
 #ifdef BAND868
               //change freq to 869.525 as we are targeting RX2 window
               sx1272.setChannel(869.525*1000000.0*RH_LORA_FCONVERT);
@@ -891,7 +891,7 @@ void loop(void)
               sx1272.setSF(currentSF);
               PRINT_CSTSTR("%s","Set back SF\n");            
           }
-      } while (rxw<rxw_max);
+      } while (rxw<=rxw_max);
 
       // we have received a downlink message
       //
