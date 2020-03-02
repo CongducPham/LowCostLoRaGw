@@ -55,7 +55,7 @@ require 'header.php';
                                 </li>
                                 <li><a href="#wificlient-pills" data-toggle="tab">Configure as WiFi client</a>
                                 </li> 
-                                <li><a href="#apmode-pills" data-toggle="tab">Switch back to AP mode</a>
+                                <li><a href="#apmode-pills" data-toggle="tab">Switch to AP mode</a>
                                 </li>
                                 <li><a href="#cellular-pills" data-toggle="tab">Cellular</a>
                                 </li>                                
@@ -68,16 +68,23 @@ require 'header.php';
                             </br>
             				<p>
 								<?php 
-									ob_start();
-									system("pgrep hostapd"); 
-									$hostapd=ob_get_contents(); 
-									ob_clean();
+									$hostapd=exec("pgrep hostapd");
+									$dhcpcd_nohook=exec("grep 'nohook wpa_supplicant' /etc/dhcpcd.conf");
+																	
 									echo '<p>';
-									if ($hostapd=='') {								
-										echo "&nbsp;&nbsp;&nbsp;&nbsp;Gateway is configured as WiFi client. Be sure to have indicated WiFi credentials";
+									if ($dhcpcd_nohook=='') {								
+										echo "&nbsp;&nbsp;&nbsp;&nbsp;Gateway is normally configured as WiFi client. Connected to: ";
+										$connected_wifi=exec("iwgetid | cut -d ':' -f2");
+										if ($connected_wifi=='')
+											echo "N/A";
+										else	
+											echo $connected_wifi;
+										echo ". Use RaspAP to manage WiFi networks.";	
 									}
 									else{
-										echo "&nbsp;&nbsp;&nbsp;&nbsp;Gateway is acting as WiFi Access Point";
+										echo "&nbsp;&nbsp;&nbsp;&nbsp;Gateway is normally acting as WiFi Access Point.";
+										if ($hostapd=='')
+											echo '<font color="red"> hostapd not active, switch to AP mode again and reboot.</font>';
 									}
 									echo '</p>';
 								?>                            
@@ -125,7 +132,7 @@ require 'header.php';
                                 						<div class="form-group">
                                 							<label>SSID</label>
                                 							<input id="wificlient_ssid" class="form-control" placeholder="your_wifi_network" name="wificlient_ssid" type="text" value="" autofocus>
-                                							<p><font color="red">Warning: if a valid WiFi network is not configured you will not be able to connect through the gateway's access point anymore. If that happens, use wired Ethernet to switch back to access point mode. You MUST reboot after submitting the command.</font></p>
+                                							<p><font color="red">Warning: if a valid WiFi network is not configured you will not be able to connect through the gateway's access point anymore. If that happens, use wired Ethernet to switch back to access point mode. After submitting new WiFi, either reboot or switch to WiFi client now.</font></p>
                                 						</div>
                                 						<div class="form-group">
                                 							<label>WPA Passphrase</label>
@@ -133,7 +140,8 @@ require 'header.php';
                                 						</div>
 
                                 						<center>
-                                							<button  type="submit" class="btn btn-primary">Submit</button>
+                                							<button  type="submit" class="btn btn-primary">Submit new WiFi</button>
+                                							<button  id="btn_wificlientnow" type="button" class="btn btn-primary" href="process.php?wificlientnow=true">Switch to WiFi client - now</button>
                                 							<button  id="btn_wificlient_form_reset" type="reset" class="btn btn-primary">Clear</button>
                                 						</center> 
                             						</fieldset>

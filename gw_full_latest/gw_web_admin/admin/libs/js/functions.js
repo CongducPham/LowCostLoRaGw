@@ -1376,11 +1376,27 @@ $('.my_tooltip').tooltip({html: true})
             //erase message after 5 seconds
 	    	setTimeout(function() {
   				$('#system_msg').html("");
+  				window.location.reload();
 	     	},defaultMsgDisplayTimer);
         });
         $('#wificlient_form')[0].reset();
     });
 
+//==================================
+// Setting wifi client now
+//==================================
+
+	$('#btn_wificlientnow').click(function() {
+        $.post($(this).attr('href'), function (res) { 
+	     $('#system_msg').html(res);
+	    //erase message after 5 seconds
+	    setTimeout(function() {
+  			$('#system_msg').html("");
+  			window.location.reload();
+	    },defaultMsgDisplayTimer);
+        });
+    });
+    
 //==================================
 // Setting AP mode
 //==================================
@@ -1390,7 +1406,8 @@ $('.my_tooltip').tooltip({html: true})
 	     $('#system_msg').html(res);
 	    //erase message after 5 seconds
 	    setTimeout(function() {
-  		$('#system_msg').html("");
+  			$('#system_msg').html("");
+  			window.location.reload();
 	    },defaultMsgDisplayTimer);
         });
     });
@@ -1405,6 +1422,7 @@ $('.my_tooltip').tooltip({html: true})
 	    	//erase message after 5 seconds
 	    	setTimeout(function() {
   				$('#system_msg').html("");
+  				window.location.reload();
 	    	},defaultMsgDisplayTimer);
         });
     });

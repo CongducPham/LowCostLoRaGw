@@ -593,10 +593,20 @@ then
 	###################################
 	# configure wifi client
 	###################################
-	cd /home/pi/lora_gateway/scripts
-	./prepare_wifi_client.sh
 	#adding the WiFi network into /etc/wpa_supplicant/wpa_supplicant.conf
 	wpa_passphrase "$2" "$3" | sudo tee -a /etc/wpa_supplicant/wpa_supplicant.conf > /dev/null
+	
+	cd /home/pi/lora_gateway/scripts
+	./prepare_wifi_client.sh	
+fi
+
+if [ "$1" = "wificlientnow" ]
+then
+	###################################
+	# start wifi client now
+	###################################
+	cd /home/pi/lora_gateway/scripts
+	./stop_access_point.sh	
 fi
 
 #//////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -606,7 +616,7 @@ fi
 if [ "$1" = "apmode" ]
 then
 	###################################
-	# configure wifi client
+	# configure wifi AP
 	###################################
 	cd /home/pi/lora_gateway/scripts
 	./prepare_access_point.sh
@@ -615,7 +625,7 @@ fi
 if [ "$1" = "apmodenow" ]
 then
 	###################################
-	# configure wifi client
+	# configure wifi AP now
 	###################################
 	cd /home/pi/lora_gateway/scripts
 	./start_access_point.sh

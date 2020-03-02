@@ -820,6 +820,22 @@ if(isset($_POST['wificlient_ssid']) && isset($_POST['wificlient_wpa_phrasepass']
 }
 
 /*************************
+ * Setting wifi client now
+ *************************/
+
+if (isset($_GET['wificlientnow']) && $_GET['wificlientnow'] == "true"){ 
+    
+	$output = wificlientnow_conf();
+
+	if($output == 0){
+		echo '<p><center><font color="green">Setting to WiFi client now, using a registered WiFi network</font></center></p>';
+	}
+	else{
+		echo '<p><center><font color="red">Failed to set gateway in WiFi client mode</font></center></p>';
+	}
+}
+
+/*************************
  * Setting ap mode
  *************************/
 

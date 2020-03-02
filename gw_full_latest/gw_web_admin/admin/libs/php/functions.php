@@ -66,6 +66,10 @@ function wificlient_conf($wificlient_ssid, $wificlient_wpa_passphrase){
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh wificlient ".escapeshellarg($wificlient_ssid)." ".escapeshellarg($wificlient_wpa_passphrase));
 }
 
+function wificlientnow_conf(){
+	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh wificlientnow");
+}
+
 function apmode_conf(){
 	return shell_exec("sudo /var/www/html/admin/libs/sh/web_shell_script.sh apmode");
 }
