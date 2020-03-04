@@ -1,5 +1,12 @@
 #!/bin/bash
 
+#use minimal config for access point, everything will be handled by dhcpd
+sudo cp /etc/network/interfaces.orig /etc/network/interfaces 
+
+#just in case
+sudo systemctl stop hostapd
+sudo systemctl stop dnsmasq 
+
 sudo systemctl enable hostapd.service
 echo "The access point is now enabled for next reboot."
 #in case information are not in sync

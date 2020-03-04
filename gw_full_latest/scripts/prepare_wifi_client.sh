@@ -1,5 +1,20 @@
 #!/bin/bash
 
+#get back original file
+sudo cp /etc/network/interfaces.orig /etc/network/interfaces
+
+echo "restarting dhcpd"
+sudo service dhcpcd restart
+
+#add wlan0 and eth0 definitions
+echo "auto eth0" | sudo tee -a /etc/network/interfaces > /dev/null
+echo "allow-hotplug eth0" | sudo tee -a /etc/network/interfaces > /dev/null
+echo "iface eth0 inet dhcp" | sudo tee -a /etc/network/interfaces > /dev/null
+echo "auto wlan0" | sudo tee -a /etc/network/interfaces > /dev/null
+echo "allow-hotplug wlan0" | sudo tee -a /etc/network/interfaces > /dev/null
+echo "iface wlan0 inet dhcp" | sudo tee -a /etc/network/interfaces > /dev/null
+echo "wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf" | sudo tee -a /etc/network/interfaces > /dev/null
+
 sudo systemctl disable hostapd.service
 sudo sed -i '/nohook wpa_supplicant/d' /etc/dhcpcd.conf
 sudo sed -i '/interface wlan0/d' /etc/dhcpcd.conf
