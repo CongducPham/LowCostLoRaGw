@@ -51,28 +51,39 @@ sudo sed -i '/www-data/d' /tmp/sudoers.bak
 
 #for raspap-webgui
 #from https://github.com/billz/raspap-webgui
-sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ifdown wlan0" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ifup wlan0" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cat /etc/wpa_supplicant/wpa_supplicant.conf" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/wifidata /etc/wpa_supplicant/wpa_supplicant.conf" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli scan_results" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli scan" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli reconfigure" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/hostapddata /etc/hostapd/hostapd.conf" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/init.d/hostapd start" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/init.d/hostapd stop" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/init.d/dnsmasq start" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/init.d/dnsmasq stop" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/dhcpddata /etc/dnsmasq.conf" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/shutdown -h now" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/reboot" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ip link set wlan0 down" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ip link set wlan0 up" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ip -s a f label wlan0" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /etc/raspap/networking/dhcpcd.conf /etc/dhcpcd.conf" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/raspap/hostapd/enablelog.sh" >> /tmp/sudoers.bak
-sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/raspap/hostapd/disablelog.sh" >> /tmp/sudoers.bak
-
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ifdown" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ifup" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cat /etc/wpa_supplicant/wpa_supplicant.conf" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cat /etc/wpa_supplicant/wpa_supplicant-wlan[0-9].conf" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/wifidata /etc/wpa_supplicant/wpa_supplicant.conf" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/wifidata /etc/wpa_supplicant/wpa_supplicant-wlan[0-9].conf" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli -i wlan[0-9] scan_results" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli -i wlan[0-9] scan" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli -i wlan[0-9] reconfigure" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/wpa_cli -i wlan[0-9] select_network" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/hostapddata /etc/hostapd/hostapd.conf" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/systemctl start hostapd.service" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/systemctl stop hostapd.service" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/systemctl start dnsmasq.service" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/systemctl stop dnsmasq.service" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/systemctl start openvpn-client@client" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/systemctl stop openvpn-client@client" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/ovpnclient.ovpn /etc/openvpn/client/client.conf" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/authdata /etc/openvpn/client/login.conf" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/dnsmasqdata /etc/dnsmasq.conf" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /tmp/dhcpddata /etc/dhcpcd.conf" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/shutdown -h now" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/reboot" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ip link set wlan[0-9] down" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ip link set wlan[0-9] up" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/sbin/ip -s a f label wlan[0-9]" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/bin/cp /etc/raspap/networking/dhcpcd.conf /etc/dhcpcd.conf" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/raspap/hostapd/enablelog.sh" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/raspap/hostapd/disablelog.sh" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/raspap/hostapd/servicestart.sh" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/raspap/lighttpd/configport.sh" >> /tmp/sudoers.bak 
+sudo echo "www-data ALL=(ALL) NOPASSWD:/etc/raspap/openvpn/configauth.sh" >> /tmp/sudoers.bak 
+        
 #for our simple web admin interface
 #only those that are called directly from process.php
 sudo echo ""
