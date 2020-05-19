@@ -29,6 +29,8 @@ import time
 import datetime
 import sys
 
+sys.path.insert(1, '/home/pi/lora_gateway')
+
 try:
 	import key_ChirpStack as key_LoRaWAN
 	try:

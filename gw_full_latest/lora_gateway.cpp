@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  ***************************************************************************** 
- *  Version:                2.1
+ *  Version:                2.1a
  *  Design:                 C. Pham
  *  Implementation:         C. Pham
  *
@@ -35,6 +35,10 @@
 */
 
 /*  Change logs
+ *  May, 19th, 2020. v2.1a
+ *	      uplink and downlink feequency
+ *	        - define LORAWAN_UPFQ, LORAWAN_D2FQ and LORAWAN_D2SF to better adapt the custom frequency plan
+ *          - change these parameters for each band definition (BAND868, BAND900 and BAND433)
  *  Jan, 29th, 2020. v2.1
  *        lora_gateway in raw mode now checks 4 times for downlink.txt after a packet reception at t_r (to work with Network Server sending PULL_RESP in just-in-time mode)
  *			- first, after t_r+DELAY_DNWFILE (delay of 900ms, no reception possible) to target RX1
@@ -289,7 +293,20 @@ int xtoi(const char *hexstring);
 #endif
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+//BAND868 by default
+#if not defined BAND868 && not defined BAND900 && not defined BAND433
+#define BAND868
+#endif 
+
+///////////////////////////////////////////////////////////////////
+// BAND868
 #ifdef BAND868
+
+//first freq of EU863-870
+#define LORAWAN_UPFQ 868.1
+#define LORAWAN_D2FQ 869.525
+#define LORAWAN_D2SF 12
+
 #define MAX_NB_CHANNEL 15
 #define STARTING_CHANNEL 4
 #define ENDING_CHANNEL 18
@@ -301,14 +318,31 @@ uint8_t loraChannelIndex=6;
 uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_04_868,CH_05_868,CH_06_868,CH_07_868,CH_08_868,CH_09_868,
                                             CH_10_868,CH_11_868,CH_12_868,CH_13_868,CH_14_868,CH_15_868,CH_16_868,CH_17_868,CH_18_868};
 
+///////////////////////////////////////////////////////////////////
+// BAND900
 #elif defined BAND900 
+
+//first freq of AS923
+#define LORAWAN_UPFQ 923.2
+#define LORAWAN_D2FQ 923.2
+#define LORAWAN_D2SF 10
+
 #define MAX_NB_CHANNEL 13
 #define STARTING_CHANNEL 0
 #define ENDING_CHANNEL 12
 uint8_t loraChannelIndex=5;
 uint32_t loraChannelArray[MAX_NB_CHANNEL]={CH_00_900,CH_01_900,CH_02_900,CH_03_900,CH_04_900,CH_05_900,CH_06_900,CH_07_900,CH_08_900,
                                             CH_09_900,CH_10_900,CH_11_900,CH_12_900};
+
+///////////////////////////////////////////////////////////////////
+// BAND433
 #elif defined BAND433
+
+//first freq of EU433
+#define LORAWAN_UPFQ 433.175
+#define LORAWAN_D2FQ 434.665
+#define LORAWAN_D2SF 12
+
 #define MAX_NB_CHANNEL 4
 #define STARTING_CHANNEL 0
 #define ENDING_CHANNEL 3
@@ -437,34 +471,23 @@ void startConfig() {
   // LoRaWAN
   if (loraMode==11) {
   	PRINT_CSTSTR("%s","^$Configuring for LoRaWAN\n");
+  	
+  	if (optIIQ)
+    	PRINT_CSTSTR("%s","^$Invert I/Q for downlink\n");  	
     
     if (optFQ<0.0) {
-#ifdef BAND868
-    	e = sx1272.setChannel(CH_18_868);
-    	optFQ=868.1;
-    	loraChannel=optFQ*1000000.0*RH_LORA_FCONVERT;
-    	PRINT_CSTSTR("%s","^$Set frequency to 868.1MHz: state ");
-#elif defined BAND900
-		//hardcoded with the first LoRaWAN frequency
-    	optFQ=923.2;	
+    	optFQ=LORAWAN_UPFQ;	
 		loraChannel=optFQ*1000000.0*RH_LORA_FCONVERT;
-    	e = sx1272.setChannel(loraChannel);
-    	PRINT_CSTSTR("%s","^$Set frequency to 923.2MHz: state ");
-#elif defined BAND433
-		//hardcoded with the first LoRaWAN frequency
-    	optFQ=433.175;	
-		loraChannel=optFQ*1000000.0*RH_LORA_FCONVERT;
-    	e = sx1272.setChannel(loraChannel);
-    	PRINT_CSTSTR("%s","^$Set frequency to 433.175MHz: state ");
-#endif 
+    	e = sx1272.setChannel(loraChannel);    
 	}
 	else {
       e = sx1272.setChannel(loraChannel);
-      PRINT_CSTSTR("%s","^$Frequency ");
-      PRINT_VALUE("%f", optFQ);
-      PRINT_CSTSTR("%s",": state ");	
 	}
-	
+
+	PRINT_CSTSTR("%s","^$Set frequency to ");
+	PRINT_VALUE("%f", optFQ);
+	PRINT_CSTSTR("%s",": state "); 
+			
 	//set raw mode for LoRaWAN
 	//overriding existing configuration
 	optRAW=true;
@@ -476,7 +499,7 @@ void startConfig() {
     e = sx1272.setChannel(loraChannel);
 
     if (optFQ>0.0) {
-      PRINT_CSTSTR("%s","^$Frequency ");
+      PRINT_CSTSTR("%s","^$Set frequency to ");
       PRINT_VALUE("%f", optFQ);
       PRINT_CSTSTR("%s",": state ");      
     }
@@ -562,13 +585,6 @@ void startConfig() {
       // this would be similar to a promiscuous sniffer, but most of real LoRa gateway works this way 
       sx1272._rawFormat=true;
   }
-  
-  if (optIIQ) {
-      PRINT_CSTSTR("%s","^$Invert I/Q\n");  
-      sx1272.invertIQ(true);
-  }  
-  else
-  	  sx1272.invertIQ(false); 
   	    
   // Print a success message
   PRINT_CSTSTR("%s","^$SX1272/76 configured ");
@@ -1012,7 +1028,7 @@ void loop(void)
     			
 #ifdef KEEP_DOWNLINK_BACKUP_FILE 
 				char tmp_c[100];   			
-				sprintf(tmp_c, "mv downlink/downlink.txt downlink/downlink-backup-%s.txt", time_buffer);
+				sprintf(tmp_c, "mv downlink/downlink.txt downlink/downlink-backup-%s.txt", time_str);
 				system(tmp_c);
 #else
 				remove("downlink/downlink.txt");
@@ -1134,9 +1150,11 @@ void loop(void)
 				
 						//invert I/Q
 						//TODO: currently, invert I/Q on the gateway is not working. Why?
-						//e = sx1272.invertIQ(true);
-						//printf("^$Invert I/Q: state %d\n", e);	
-							
+  						if (optIIQ) {
+							e = sx1272.invertIQ(true);
+							printf("^$Invert I/Q: state %d\n", e);	
+						}	
+						
 						//set raw mode in sending
 						sx1272._rawFormat_send=true;
 						//save current freq
@@ -1163,23 +1181,10 @@ void loop(void)
 						if (useRX2) {           
 
 							printf("^$Target RX2\n");
-							//set frequency
-#ifdef BAND868
-							//change freq to 869.525 as we are targeting RX2 window
-							e = sx1272.setChannel(869.525*1000000.0*RH_LORA_FCONVERT);
-							//printf("^$Set downlink frequency to 869.525MHz: state %d\n", e);
-#elif defined BAND900
-							//TODO?
-#elif defined BAND433
-							//change freq to 434.665 as we are targeting RX2 window
-							e = sx1272.setChannel(434.665*1000000.0*RH_LORA_FCONVERT);
-							//printf("^$Set downlink frequency to 434.665MHz: state %d\n", e);
-#endif
-
-							//change to SF12 as we are targeting RX2 window
-							//valid for EU868 and EU433 band
-							e = sx1272.setSF(12);					
-							//printf("^$Set to SF12: state %d\n", e);
+							//set frequency according to RX2 window
+							e = sx1272.setChannel(LORAWAN_D2FQ*1000000.0*RH_LORA_FCONVERT);
+							//change to SF according to RX2 window
+							e = sx1272.setSF(LORAWAN_D2SF);					
 						}
 						else
 							printf("^$Target RX1\n");
@@ -1199,9 +1204,11 @@ void loop(void)
 						printf("^$Packet sent, state %d\n", e);	
 				
 						//remove I/Q inversion
-						e = sx1272.invertIQ(false);
-						printf("^$Normal I/Q: state %d\n", e);	
-				
+  						if (optIIQ) {							
+							e = sx1272.invertIQ(false);
+							printf("^$Normal I/Q: state %d\n", e);	
+						}
+						
 						//remove raw mode in sending
 						sx1272._rawFormat_send=false;
 
