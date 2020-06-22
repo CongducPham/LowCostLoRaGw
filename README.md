@@ -4,6 +4,11 @@ Low-cost LoRa IoT framework developed in the EU H2020 WAZIUP/WAZIHUB projects
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/WAZIUP.png" width="300">
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/wazihub.png" width="300">
 
+News from EU commission
+-----------------------
+
+June 19th, 2020. The low-cost, low-power and long-distance cattle collar developed in the EU H2020 WAZIUP project has been identified by the European Commission's Innovation Radar! See more information at the end of this page.
+
 Quick start
 -----------
 
@@ -546,6 +551,20 @@ Specific development
 Specific developments can be made from the general, public version on github. The framework has been used for instance in Nestlé's WaterSense project and HygieItalia's WISMART project. If you are interested by such customization (advanced and reliable downlink, dynamic and reconfigurable measure interval, PCBs with integrated antennas,...) you can contact me.
 
 <a href="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/wismart.jpg"><img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/wismart.jpg" width="400"></a>
+
+News from EU commission
+-----------------------
+
+June 19th, 2020. The low-cost, low-power and long-distance cattle collar developed in the EU H2020 WAZIUP project has been identified by the European Commission's Innovation Radar. The WAZIUP project which has been coordinated by Abdur Rahim from FBK/CREATE-NET focused on deploying low-cost IoT technologies across Africa. From an original idea of Prof. Congduc Pham from University of Pau, the low-cost, low-power and long-distance cattle collar has further been jointly developed and tested with a team of researchers (Ousmane Dieng, Mamour Diop and Babacar Diop) from University of Gaston Berger (Saint-Louis, Senegal) led by Prof Ousmane Thiaré. Large-scale testing facility has been provided by the CIMEL experimental farm in Saint-Louis, Senegal. The Arduino example of the GPS Cattle Collar is [Arduino_LoRa_Simple_GPS](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino). The dedicated tutorial describing the low-cost, low-power and long-distance cattle collar is [Low-cost-LoRa-Collar.pdf]((https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) 
+
+Related publications:
+
+[1] O. Dieng, B. Diop, O. Thiaré, C. Pham, "[A Study on IoT Solutions for Preventing Cattle Rustling in African Context](http://cpham.perso.univ-pau.fr/Paper/ICC17-Cattle.pdf)". Proceeding of the second International Conference on Internet of Things Data, and Cloud Computing (ICC'17), Cambridge , United Kingdom, 22-23 March 2017.
+
+[2] O. Dieng, C. Pham and O. Thiaré, "[Outdoor Localization and Distance Estimation Based on Dynamic RSSI Measurements in LoRa Networks: Application to Cattle Rustling Prevention](http://cpham.perso.univ-pau.fr/Paper/WIMOB19-1.pdf)", Proceedings of the 15th IEEE WiMob'2019, October 21-23, 2019, Barcelona, Spain.
+
+[3] [Dedicated tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) describing the low-cost, low-power and long-distance cattle collar.
+
 
 Enjoy!
 C. Pham
