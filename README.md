@@ -538,7 +538,7 @@ You should see the following output
 
 If one of the state result is different from 0 then it might be a power/current issue. If the Preamble Length is different from 8 then it can also be a power/current issue but also indicate more important failure of the radio module. Get the "faulty" radio module and connect it to an Arduino board running the interactive end-device sketch. If the Preamble Length is now correct, then retry again with the Raspberry gateway. If the problem on the Raspberry persists, try with another radio module.
 	
-WARNING
+Warning
 =======
 
 - There is currently no control on the transmit time for both gateway and end-device. When using the library to create devices, you have to ensure that the transmit time of your device is not exceeding the legal maximum transmit time defined in the regulation of your country (for instance ETSI define 1% duty-cycle, i.e. 36s/hour).
@@ -553,7 +553,7 @@ Specific developments can be made from the general, public version on github. Th
 <a href="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/wismart.jpg"><img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/wismart.jpg" width="400"></a>
 
 News from EU commission
------------------------
+=======================
 
 June 19th, 2020. The low-cost, low-power and long-distance cattle collar developed in the EU H2020 WAZIUP project has been identified by the European Commission's Innovation Radar. The WAZIUP project which has been coordinated by Abdur Rahim from FBK/CREATE-NET focused on deploying low-cost IoT technologies across Africa. From an original idea of Prof. Congduc Pham from University of Pau, the low-cost, low-power and long-distance cattle collar has further been jointly developed and tested with a team of researchers (Ousmane Dieng, Mamour Diop and Babacar Diop) from University of Gaston Berger (Saint-Louis, Senegal) led by Prof Ousmane Thiaré. Large-scale testing facility has been provided by the CIMEL experimental farm in Saint-Louis, Senegal. The Arduino example of the GPS Cattle Collar is [Arduino_LoRa_Simple_GPS](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino). The dedicated tutorial describing the low-cost, low-power and long-distance cattle collar is [Low-cost-LoRa-Collar.pdf]((https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-Collar.pdf) 
 
