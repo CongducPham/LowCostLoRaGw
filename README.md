@@ -50,9 +50,9 @@ All the PCBs have footprint for an SMA connector or uFl. Both Nano and ProMini P
 
 You can download all the Gerber zipped archive and view them on an [online Gerber viewer](https://www.pcbgogo.com/GerberViewer.html).
 
-- RFM95 breakout zipped Gerber archive, 2 layer board of 29x37mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/RFM95Breakout_2018-10-24.zip)
+- RFM95 breakout zipped Gerber archive, 2 layer board of 29x37mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/RFM95Breakout_2020-08-31.zip)
 - Arduino Nano v2 breakout zipped Gerber archive, 2 layer board of 30x81mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/NanoLoRaBreakout_2019-05-14.zip)
-- Arduino ProMini v2 breakout zipped Gerber archive, 2 layer board of 30x77mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/ProMiniLoRaBreakout_2019-05-13.zip)
+- Arduino ProMini v2 breakout zipped Gerber archive, 2 layer board of 30x77mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/ProMiniLoRaBreakout_2020-08-24.zip)
 
 You can easily make them produced on many online PCB manufacturers. Usually, you just need to provide the zip archive and both size and number of layers are detected. You can dramatically decrease the price by using "panelize" option. As you can see on the pictures, we use 3x2 for the RFM95 breakout and 3x1 for both the Nano and ProMini breakout. For instance, we ordered them from [JLCPCB](https://jlcpcb.com/) and the cost of 10 panels (i.e. 60 RFM breakout or 30 Nano/ProMini breakout) is about $2!
 
