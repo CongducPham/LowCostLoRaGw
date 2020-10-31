@@ -6823,8 +6823,8 @@ uint16_t SX1272::getToA(uint8_t pl) {
     double rs = bw / ( 1 << _spreadingFactor);
     double ts = 1 / rs;
 
-    // must add 4 to the programmed preamble length to get the effective preamble length
-    double tPreamble=((_preamblelength+4)+4.25)*ts;
+    // must add 4.25 to the programmed preamble length to get the effective preamble length
+    double tPreamble=(_preamblelength+4.25)*ts;
 
 #ifdef DEBUG_GETTOA	
     Serial.print(F("SX1272::ts is "));
@@ -6840,7 +6840,7 @@ uint16_t SX1272::getToA(uint8_t pl) {
         DE = 1;
 
     // Symbol length of payload and time
-    double tmp = (8*pl - 4*_spreadingFactor + 28 + 16 - 20*_header) /
+    double tmp = (8*pl - 4*_spreadingFactor + 28 + 16*_CRC - 20*_header) /
             (double)(4*(_spreadingFactor-2*DE) );
 
 #ifdef DEBUG_GETTOA                         
@@ -7541,7 +7541,7 @@ int8_t SX1272::setFreqHopOn() {
    state = 1  --> There has been an error while executing the command
    state = 0  --> The command has been executed with no errors
 */
-int8_t	SX1272::invertIQ(bool invert)
+int8_t	SX1272::invertIQ(uint8_t dir, bool invert)
 {
     byte st0;
     int8_t state = 2;
@@ -7554,18 +7554,32 @@ int8_t	SX1272::invertIQ(bool invert)
 #endif
 
     st0 = readRegister(REG_OP_MODE);		// Save the previous status
+    
+    config1=readRegister(REG_INVERT_IQ);
 
     writeRegister(REG_OP_MODE, LORA_STANDBY_MODE);		// Set Standby mode to write in registers
 	
-	// According to Semtech AN1200.23 Rev.2 June 2015
 	if (invert) {
-		//writeRegister(REG_INVERT_IQ, readRegister(REG_INVERT_IQ)|(1<<6));
- 		writeRegister(REG_INVERT_IQ, 0x67);
+		if (dir==INVERT_IQ_RX) {
+			// invert on RX
+ 			// clear bit 0 related to TX
+ 			config1=config1 & 0xFE;
+ 			// set bit 6 related to RX
+ 			config1=config1 | 0x40;			
+ 			writeRegister(REG_INVERT_IQ, config1);
+ 		}
+ 		else {
+ 			// invert on TX
+ 			// clear bit 6 related to RX
+ 			config1=config1 & 0xBF;
+ 			// dir=0x01 for invert TX
+      writeRegister(REG_INVERT_IQ, config1+dir);
+ 		}
+ 				
  		writeRegister(REG_INVERT_IQ2, 0x19);
 	}
 	else {
-		//writeRegister(REG_INVERT_IQ, readRegister(REG_INVERT_IQ) & 0B10111111);
-		writeRegister(REG_INVERT_IQ, 0x27);
+		writeRegister(REG_INVERT_IQ, readRegister(REG_INVERT_IQ) & 0B10111110);
 		writeRegister(REG_INVERT_IQ2, 0x1D);			
 	}
 
@@ -7573,15 +7587,38 @@ int8_t	SX1272::invertIQ(bool invert)
 	config2=readRegister(REG_INVERT_IQ2);
 	
 	//check I/Q setting
-    if ( (invert && (config1==0x67) && (config2==0x19) ) || 
-    	 (!invert && (config1==0x27) && (config2==0x1D)) ) {
-        state=0;
+	
+	if (invert) {
+		if (dir==INVERT_IQ_RX) {
+			// invert on RX
+ 			// check bit 6 related to RX
+ 			if ( (config1 & 0x40 == 0x40) && (config2==0x19) )
+ 				state=0;
+ 			else 
+ 				state=1;	
+ 		}
+ 		else {
+ 			// invert on TX
+ 			// check bit 0 related to TX
+ 			if ( (config1 & 0x01 == 0x01) && (config2==0x19) )
+ 				state=0;
+ 			else 
+ 				state=1; 				
+ 		}
+	}
+	else {
+		if ( (config1 & 0x41 == 0x41) && (config2==0x1D) )
+			state=0;
+ 		else 
+ 			state=1;			
+	}	
+	
+    if (state==0) {
 #if (SX1272_debug_mode > 1)
         Serial.println(F("## I/Q mode has been successfully set ##"));
 #endif
     }
     else {
-        state=1;
 #if (SX1272_debug_mode > 1)
         Serial.println(F("** There has been an error while configuring I/Q mode **"));
 #endif
