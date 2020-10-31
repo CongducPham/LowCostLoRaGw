@@ -8,9 +8,6 @@
 //#define ESP8266
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//Use native LoRaWAN packet format to send to LoRaWAN gateway - beware it does not mean you device is a full LoRaWAN device
-//#define LORAWAN
-
 /*******************************************************************************************************
   Based from SX12XX example - Stuart Robinson 
 *******************************************************************************************************/
@@ -39,20 +36,13 @@
 
 //LoRa Modem Parameters
 const uint32_t Offset = 0;                      //offset frequency for calibration purposes
-#ifdef LORAWAN
-const uint8_t Bandwidth = LORA_BW_125;          //LoRa bandwidth for LoRaWAN mode, DO NOT CHANGE
-const uint8_t SpreadingFactor = LORA_SF12;      //Change here LoRa spreading factor for LoRaWAN mode
-#else
 const uint8_t Bandwidth = LORA_BW_125;          //LoRa bandwidth
 const uint8_t SpreadingFactor = LORA_SF12;      //LoRa spreading factor
-#endif
 const uint8_t CodeRate = LORA_CR_4_5;           //LoRa coding rate
 const uint8_t Optimisation = LDRO_AUTO;         //low data rate optimisation setting, normally set to auto
 // set to 1 if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
 const uint8_t PA_BOOST = 1;
-// can be set to LORA_IQ_NORMAL or INVERT_IQ_RX or INVERT_IQ_TX
-const uint8_t IQ_Setting = LORA_IQ_NORMAL; 
 /*******************************************************************************************************
   End from SX12XX example - Stuart Robinson 
 *******************************************************************************************************/
@@ -135,22 +125,6 @@ const uint32_t CH_02_433 = 433900000;
 const uint32_t CH_03_433 = 434300000;
 // end
 
-#ifdef LORAWAN
-
-// Select frequency channel
-#ifdef BAND868
-//868.1MHz
-const uint32_t DEFAULT_CHANNEL=CH_18_868;
-#elif defined BAND900
-//hardcoded with the first LoRaWAN frequency
-const uint32_t DEFAULT_CHANNEL=923200000;
-#elif defined BAND433
-//hardcoded with the first LoRaWAN frequency
-const uint32_t DEFAULT_CHANNEL=433175000;*1000000.0*RH_LORA_FCONVERT;
-#endif 
-
-#else //NO LORAWAN
-
 #ifdef BAND868
 #ifdef SENEGAL_REGULATION
 const uint32_t DEFAULT_CHANNEL=CH_04_868;
@@ -165,8 +139,6 @@ const uint32_t DEFAULT_CHANNEL=CH_05_900;
 const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
 
-#endif
-
 #define PKT_TYPE_DATA   0x10
 #define PKT_TYPE_ACK    0x20
 
@@ -178,8 +150,8 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define PKT_FLAG_DATA_WAPPKEY       0x02
 #define PKT_FLAG_DATA_DOWNLINK      0x01
 
-#define SX1272_ERROR_ACK        3
-#define SX1272_ERROR_TOA        4
+#define SX12XX_ERROR_ACK        3
+#define SX12XX_ERROR_TOA        4
 
 #define DEFAULT_DEST_ADDR       1
 

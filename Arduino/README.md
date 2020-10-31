@@ -1,7 +1,7 @@
 Arduino example sketches
 ========================
 
-This folder contains sketches for Arduino (and compatible) boards. The example sketches, in increasing level of complexity, will show how simple, yet effective, low-cost LoRa IoT device can be programmed. For instance, they show how LoRa radio modules are configured and how a device can send sensed data to a gateway. They actually serve as template for future developments. On the Uno, Pro Mini, Mini, Nano, Teensy the mapping is as follows:
+This folder contains sketches for Arduino (and compatible) boards. The example sketches, in increasing level of complexity, will show how simple, yet effective, low-cost LoRa IoT device can be programmed. For instance, they show how LoRa radio modules are configured and how a device can send sensed data to a gateway. They actually serve as template for future developments. On the Uno, Pro Mini, Mini, Nano and Teensy the mapping is as follows:
 
 ```
        Arduino      Radio module
@@ -15,7 +15,19 @@ MISO pin D12----------MISO  (SPI Data out)
 
 On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino and Teensy boards. You can have a look at the [Low-cost-LoRa-IoT-step-by-step](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-outdoor-step-by-step.pdf) tutorial in the tutorial repository (https://github.com/CongducPham/tutorials).
 
-All the examples use by default the so-called LoRa mode 1 (BW125, CR45, SF12) at 865.2 Mhz (`CH_10_868`) to work with the default gateway configuration.
+All the examples use by default the so-called LoRa mode 1 (BW125, CR4/5, SF12) at 865.2 Mhz (`CH_10_868`) to work with the default gateway configuration.
+
+New (use SX12XX library from Stuart Robinson, modified for our framework)
+---
+
+**`Arduino_LoRa_SX12XX_Simple_temp`** is the new version of **`Arduino_LoRa_Simple_temp`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281
+
+**`Arduino_LoRa_SX12XX_temp`** is the new version of **`Arduino_LoRa_temp`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281
+
+These 2 examples can be used as templates to adapt all the legacy examples to the SX12XX library.
+
+Legacy (use SX1272/76 library initially from Libelium, modified for our framework)
+------
 
 **`Arduino_LoRa_Demo_Sensor`** is a very simple demo sketch for training purpose. The main program, i.e. `Arduino_LoRa_Demo_Sensor` can be left unchanged by the students. They just have to add/modify code in `my_demo_sensor_code.h` and `my_demo_sensor_code.cpp` to adapt the code for a given physical sensor. The provided example reads from either an LM35DZ or a TMP36 analog temperature sensor. The sensor is connected on pin A0 and is powered with digital pin 9.
 

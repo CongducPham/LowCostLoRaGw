@@ -18,7 +18,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: October 19th, 2020 by C. Pham
+ * last update: October 31st, 2020 by C. Pham
  * 
  * NEW: LoRa communicain library moved from Libelium's lib to StuartProject's lib
  * https://github.com/StuartsProjects/SX12XX-LoRa
@@ -553,8 +553,6 @@ void setup()
   LT.setDioIrqParams(IRQ_RADIO_ALL, (IRQ_TX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);
 #endif   
 
-//TODO for SX126X and SX128X
-#if defined SX126X || defined SX127X
   if (IQ_Setting==INVERT_IQ_RX) {
     LT.invertIQ(INVERT_IQ_RX,true);
     PRINT_CSTSTR("%s","Invert I/Q on RX\n");
@@ -564,7 +562,6 @@ void setup()
     LT.invertIQ(INVERT_IQ_TX,true);
     PRINT_CSTSTR("%s","Invert I/Q on TX\n");
   }  
-#endif
    
   //***************************************************************************************************
 

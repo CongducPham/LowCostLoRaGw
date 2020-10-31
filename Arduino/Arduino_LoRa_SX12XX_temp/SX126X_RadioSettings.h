@@ -8,9 +8,6 @@
 //#define ESP8266
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//Use native LoRaWAN packet format to send to LoRaWAN gateway - beware it does not mean you device is a full LoRaWAN device
-//#define LORAWAN
-
 /*******************************************************************************************************
   Based from SX12XX example - Stuart Robinson 
 *******************************************************************************************************/
@@ -18,9 +15,9 @@
 //*******  Setup hardware pin definitions here ! ***************
 
 #define NSS 10                                  //select pin on LoRa device
-#define NRESET 9                                //reset pin on LoRa device
-#define RFBUSY 7                                //busy pin on LoRa device 
-#define DIO1 3                                  //DIO1 pin on LoRa device, used for RX and TX done 
+#define NRESET 4                                //reset pin on LoRa device
+#define RFBUSY 5                                //busy pin on LoRa device 
+#define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done 
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1 
 #define DIO3 -1                                 //DIO3 pin on LoRa device, normally not used so set to -1
 #define RX_EN -1                                //pin for RX enable, used on some SX126X devices, set to -1 if not used
@@ -34,7 +31,7 @@
 //LoRa Modem Parameters
 const uint32_t Offset = 0;                      //offset frequency for calibration purposes
 const uint8_t Bandwidth = LORA_BW_125;          //LoRa bandwidth
-const uint8_t SpreadingFactor = LORA_SF7;       //LoRa spreading factor
+const uint8_t SpreadingFactor = LORA_SF12;       //LoRa spreading factor
 const uint8_t CodeRate = LORA_CR_4_5;           //LoRa coding rate
 const uint8_t Optimisation = LDRO_AUTO;         //low data rate optimisation setting, normally set to auto
 
@@ -128,7 +125,7 @@ const uint32_t DEFAULT_CHANNEL=CH_18_868;
 const uint32_t DEFAULT_CHANNEL=923200000;
 #elif defined BAND433
 //hardcoded with the first LoRaWAN frequency
-const uint32_t DEFAULT_CHANNEL=433175000;*1000000.0*RH_LORA_FCONVERT;
+const uint32_t DEFAULT_CHANNEL=433175000;
 #endif 
 
 #else //NO LORAWAN
@@ -160,8 +157,8 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define PKT_FLAG_DATA_WAPPKEY       0x02
 #define PKT_FLAG_DATA_DOWNLINK      0x01
 
-#define SX1272_ERROR_ACK        3
-#define SX1272_ERROR_TOA        4
+#define SX12XX_ERROR_ACK        3
+#define SX12XX_ERROR_TOA        4
 
 #define DEFAULT_DEST_ADDR       1
 

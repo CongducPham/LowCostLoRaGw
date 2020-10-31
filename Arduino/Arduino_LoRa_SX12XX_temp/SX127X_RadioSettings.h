@@ -8,9 +8,6 @@
 //#define ESP8266
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//Use native LoRaWAN packet format to send to LoRaWAN gateway - beware it does not mean you device is a full LoRaWAN device
-//#define LORAWAN
-
 /*******************************************************************************************************
   Based from SX12XX example - Stuart Robinson 
 *******************************************************************************************************/
@@ -146,7 +143,7 @@ const uint32_t DEFAULT_CHANNEL=CH_18_868;
 const uint32_t DEFAULT_CHANNEL=923200000;
 #elif defined BAND433
 //hardcoded with the first LoRaWAN frequency
-const uint32_t DEFAULT_CHANNEL=433175000;*1000000.0*RH_LORA_FCONVERT;
+const uint32_t DEFAULT_CHANNEL=433175000;
 #endif 
 
 #else //NO LORAWAN
@@ -178,8 +175,8 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #define PKT_FLAG_DATA_WAPPKEY       0x02
 #define PKT_FLAG_DATA_DOWNLINK      0x01
 
-#define SX1272_ERROR_ACK        3
-#define SX1272_ERROR_TOA        4
+#define SX12XX_ERROR_ACK        3
+#define SX12XX_ERROR_TOA        4
 
 #define DEFAULT_DEST_ADDR       1
 

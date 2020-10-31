@@ -8,9 +8,6 @@
 //#define ESP8266
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-//Use native LoRaWAN packet format to send to LoRaWAN gateway - beware it does not mean you device is a full LoRaWAN device
-//#define LORAWAN
-
 /*******************************************************************************************************
   Based from SX12XX example - Stuart Robinson 
 *******************************************************************************************************/
@@ -18,10 +15,9 @@
 //*******  Setup hardware pin definitions here ! ***************
 
 #define NSS 10
-#define RFBUSY 7
-#define NRESET 9
-#define LED1 8
-#define DIO1 3
+#define NRESET 4
+#define RFBUSY 5
+#define DIO1 2
 #define DIO2 -1                 //not used 
 #define DIO3 -1                 //not used                      
 #define RX_EN -1                //pin for RX enable, used on some SX1280 devices, set to -1 if not used
@@ -29,11 +25,9 @@
 
 #define LORA_DEVICE DEVICE_SX1280               //we need to define the device we are using 
 
-
 //*******  Setup LoRa Parameters Here ! ***************
 
 //LoRa Modem Parameters
-#define Frequency 2445000000                     //frequency of transmissions
 #define Offset 0                                 //offset frequency for calibration purposes  
 #define Bandwidth LORA_BW_0400                   //LoRa bandwidth
 #define SpreadingFactor LORA_SF7                 //LoRa spreading factor
@@ -45,7 +39,12 @@
 
 #define MAX_DBM 10
 
-const uint32_t DEFAULT_CHANNEL=Frequency;
+// taken from Semtech's LoRa 2.4GHz 3-channel reference design
+const uint32_t CH_00_2400 = 2403000000;
+const uint32_t CH_01_2400 = 2425000000;
+const uint32_t CH_02_2400 = 2479000000;
+
+const uint32_t DEFAULT_CHANNEL=CH_00_2400;
 
 #define PKT_TYPE_DATA   0x10
 #define PKT_TYPE_ACK    0x20
@@ -58,8 +57,8 @@ const uint32_t DEFAULT_CHANNEL=Frequency;
 #define PKT_FLAG_DATA_WAPPKEY       0x02
 #define PKT_FLAG_DATA_DOWNLINK      0x01
 
-#define SX1272_ERROR_ACK        3
-#define SX1272_ERROR_TOA        4
+#define SX12XX_ERROR_ACK        3
+#define SX12XX_ERROR_TOA        4
 
 #define DEFAULT_DEST_ADDR       1
 
