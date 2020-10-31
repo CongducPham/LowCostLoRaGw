@@ -396,6 +396,9 @@ const uint8_t INCORRECT_PACKET_TYPE = 2;
 #define SX1272_ERROR_ACK        3
 #define SX1272_ERROR_TOA        4
 
+#define INVERT_IQ_RX			0x00
+#define INVERT_IQ_TX			0x01
+
 //! Structure :
 /*!
  */
@@ -1200,7 +1203,7 @@ public:
     long getRemainingToA();
     long removeToA(uint16_t toa);
     int8_t setFreqHopOn();
-    int8_t invertIQ(bool invert);
+    int8_t invertIQ(uint8_t dir, bool invert);
     void setCSPin(uint8_t cs);
 
     // SX1272 or SX1276?
