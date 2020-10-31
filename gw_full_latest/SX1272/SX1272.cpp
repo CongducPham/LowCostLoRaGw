@@ -6671,8 +6671,8 @@ uint16_t SX1272::getToA(uint8_t pl) {
     double rs = bw / ( 1 << _spreadingFactor);
     double ts = 1 / rs;
 
-    // must add 4 to the programmed preamble length to get the effective preamble length
-    double tPreamble=((_preamblelength+4)+4.25)*ts;
+    // must add 4.25 to the programmed preamble length to get the effective preamble length
+    double tPreamble=(_preamblelength+4.25)*ts;
 
 #ifdef DEBUG_GETTOA	
     printf("SX1272::ts is ");
@@ -6686,7 +6686,7 @@ uint16_t SX1272::getToA(uint8_t pl) {
         DE = 1;
 
     // Symbol length of payload and time
-    double tmp = (8*pl - 4*_spreadingFactor + 28 + 16 - 20*_header) /
+    double tmp = (8*pl - 4*_spreadingFactor + 28 + 16*_CRC - 20*_header) /
             (double)(4*(_spreadingFactor-2*DE) );
 
 #ifdef DEBUG_GETTOA                         

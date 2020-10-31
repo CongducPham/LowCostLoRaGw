@@ -32,11 +32,7 @@
 
 #include <stdint.h>
 
-#ifdef RASPBERRY2
-#include "arduPi_pi2.h"
-#else
 #include "arduPi.h"
-#endif
 
 #ifndef inttypes_h
 	#include <inttypes.h>

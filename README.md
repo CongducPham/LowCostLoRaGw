@@ -13,6 +13,7 @@ Quick start
 -----------
 
 - **The current SD card image (Debian Buster) has everything you need!** [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip)
+- **NEW** The low-level radio communication library is now the SX12XX LoRa library from Stuart Robinson in order to build both devices and gateways with SX126X, SX127X and SX128X LoRa chip.  This is a major move to provide support of most recent LoRa chips including those for 2.4GHz LoRa. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-SX12XX.md)
 - **NEW** Use the single-channel gateway for limited LoRaWAN (including downlink and OTAA feature) on the 433MHz band
 - **NEW** The single-channel gateway now also provides LoRaWAN downlink and OTAA features, see updated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
 - **NEW** Includes support of the open-source ChirpStack LoRaWAN Network Server, see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/chirpstack/README.md)

@@ -15,8 +15,8 @@
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *
-*  Version 1.5 (For Raspberry Pi Rev2)
-*  Author: Anartz Nuin Jiménez
+*  Version 2.0 (For Raspberry Pi Rev2)
+*  Author: Sergio Martinez
 */
 
 #ifndef arduPi_h
@@ -45,18 +45,21 @@
 #include <limits.h>
 #include <pthread.h>
 #include <poll.h>
+#include "bcm2835.h"
+#include <stdarg.h> //Include forva_start, va_arg and va_end strings functions
 
-//modified by C. Pham to handle both RPI and RPI2
-#ifdef RASPBERRY2
-#define IOBASE   0x3F000000
+#if defined RASPBERRY4
+#define IOBASE   0xFE000000
+#elif defined RASPBERRY2
+#define IOBASE   0x3f000000
 #else
-#define IOBASE   0x20000000
+#define IOBASE   0x20000000 
 #endif
 
-#define GPIO_BASE (IOBASE + 0x200000)
-#define BCM2835_SPI0_BASE (IOBASE + 0x204000)
+#define GPIO_BASE2 (IOBASE + 0x200000)
+#define BCM2835_SPI0_BASE2 (IOBASE + 0x204000)
 
-#define BCM2835_BSC1_BASE		(IOBASE + 0x804000)
+#define BCM2835_BSC1_BASE2		(IOBASE + 0x804000)
 
 // Defines for I2C
 // GPIO register offsets from BCM2835_BSC*_BASE.
@@ -94,39 +97,6 @@
 
 #define BCM2835_BSC_FIFO_SIZE   				16 ///< BSC FIFO size
 #define BCM2835_CORE_CLK_HZ				250000000	///< 250 MHz
-
-/// \brief bcm2835I2CClockDivider
-/// Specifies the divider used to generate the I2C clock from the system clock.
-/// Clock divided is based on nominal base clock rate of 250MHz
-typedef enum
-{
-    BCM2835_I2C_CLOCK_DIVIDER_2500   = 2500,      ///< 2500 = 10us = 100 kHz
-    BCM2835_I2C_CLOCK_DIVIDER_626    = 626,       ///< 622 = 2.504us = 399.3610 kHz
-    BCM2835_I2C_CLOCK_DIVIDER_150    = 150,       ///< 150 = 60ns = 1.666 MHz (default at reset)
-    BCM2835_I2C_CLOCK_DIVIDER_148    = 148,       ///< 148 = 59ns = 1.689 MHz
-} bcm2835I2CClockDivider;
-
-/// \brief bcm2835I2CReasonCodes
-/// Specifies the reason codes for the bcm2835_i2c_write and bcm2835_i2c_read functions.
-typedef enum
-{
-    BCM2835_I2C_REASON_OK   		 = 0x00,      ///< Success
-    BCM2835_I2C_REASON_ERROR_NACK    = 0x01,      ///< Received a NACK
-    BCM2835_I2C_REASON_ERROR_CLKT    = 0x02,      ///< Received Clock Stretch Timeout
-    BCM2835_I2C_REASON_ERROR_DATA    = 0x04,      ///< Not all data is sent / received
-} bcm2835I2CReasonCodes;
-
-typedef enum
-{
-	RPI_V2_GPIO_P1_03     =  2,  ///< Version 2, Pin P1-03
-	RPI_V2_GPIO_P1_05     =  3,  ///< Version 2, Pin P1-05
-}RPiGPIOPin;
-
-
-
-
-
-
 
 #define BSC0_C        *(bsc0.addr + 0x00)
 #define BSC0_S        *(bsc0.addr + 0x01)
@@ -237,7 +207,7 @@ typedef enum
 
 #define BCM2835_GPEDS0                       0x0040 ///< GPIO Pin Event Detect Status 0
 #define BCM2835_GPREN0                       0x004c ///< GPIO Pin Rising Edge Detect Enable 0
-#define BCM2835_GPFEN0                       0x0048 ///< GPIO Pin Falling Edge Detect Enable 0
+
 #define BCM2835_GPHEN0                       0x0064 ///< GPIO Pin High Detect Enable 0
 #define BCM2835_GPLEN0                       0x0070 ///< GPIO Pin Low Detect Enable 0
 
@@ -249,76 +219,36 @@ typedef enum
 
 static int REV = 0;
 
-/// \brief bcm2835SPIBitOrder
-/// Specifies the SPI data bit ordering
-typedef enum
-{
-    LSBFIRST = 0,  ///< LSB First
-    MSBFIRST = 1   ///< MSB First
-}bcm2835SPIBitOrder;
+#define LSBFIRST  0  ///< LSB First
+#define MSBFIRST  1   ///< MSB First
 
-/// \brief bcm2835SPIMode
-/// Specify the SPI data mode
-typedef enum
-{
-    SPI_MODE0 = 0,  ///< CPOL = 0, CPHA = 0
-    SPI_MODE1 = 1,  ///< CPOL = 0, CPHA = 1
-    SPI_MODE2 = 2,  ///< CPOL = 1, CPHA = 0
-    SPI_MODE3 = 3,  ///< CPOL = 1, CPHA = 1
-}bcm2835SPIMode;
+#define SPI_MODE0 0  ///< CPOL = 0, CPHA = 0
+#define SPI_MODE1 1  ///< CPOL = 0, CPHA = 1
+#define SPI_MODE2 2  ///< CPOL = 1, CPHA = 0
+#define SPI_MODE3 3
 
-/// \brief bcm2835SPIChipSelect
-/// Specify the SPI chip select pin(s)
-typedef enum
-{
-    SPI_CS0 = 0,     ///< Chip Select 0
-    SPI_CS1 = 1,     ///< Chip Select 1
-    SPI_CS2 = 2,     ///< Chip Select 2 (ie pins CS1 and CS2 are asserted)
-    SPI_CS_NONE = 3, ///< No CS, control it yourself
-} bcm2835SPIChipSelect;
-
-/// \brief bcm2835SPIClockDivider
-/// Specifies the divider used to generate the SPI clock from the system clock.
-/// Figures below give the divider, clock period and clock frequency.
-typedef enum
-{
-    SPI_CLOCK_DIV65536 = 0,       ///< 65536 = 256us = 4kHz
-    SPI_CLOCK_DIV32768 = 32768,   ///< 32768 = 126us = 8kHz
-    SPI_CLOCK_DIV16384 = 16384,   ///< 16384 = 64us = 15.625kHz
-    SPI_CLOCK_DIV8192  = 8192,    ///< 8192 = 32us = 31.25kHz
-    SPI_CLOCK_DIV4096  = 4096,    ///< 4096 = 16us = 62.5kHz
-    SPI_CLOCK_DIV2048  = 2048,    ///< 2048 = 8us = 125kHz
-    SPI_CLOCK_DIV1024  = 1024,    ///< 1024 = 4us = 250kHz
-    SPI_CLOCK_DIV512   = 512,     ///< 512 = 2us = 500kHz
-    SPI_CLOCK_DIV256   = 256,     ///< 256 = 1us = 1MHz
-    SPI_CLOCK_DIV128   = 128,     ///< 128 = 500ns = = 2MHz
-    SPI_CLOCK_DIV64    = 64,      ///< 64 = 250ns = 4MHz
-    SPI_CLOCK_DIV32    = 32,      ///< 32 = 125ns = 8MHz
-    SPI_CLOCK_DIV16    = 16,      ///< 16 = 50ns = 20MHz
-    SPI_CLOCK_DIV8     = 8,       ///< 8 = 25ns = 40MHz
-    SPI_CLOCK_DIV4     = 4,       ///< 4 = 12.5ns 80MHz
-    SPI_CLOCK_DIV2     = 2,       ///< 2 = 6.25ns = 160MHz
-    SPI_CLOCK_DIV1     = 1,       ///< 0 = 256us = 4kHz
-} bcm2835SPIClockDivider;
-
-typedef enum
-{
-    BCM2835_GPIO_FSEL_INPT  = 0b000,   ///< Input
-    BCM2835_GPIO_FSEL_OUTP  = 0b001,   ///< Output
-    BCM2835_GPIO_FSEL_ALT0  = 0b100,   ///< Alternate function 0
-    BCM2835_GPIO_FSEL_ALT1  = 0b101,   ///< Alternate function 1
-    BCM2835_GPIO_FSEL_ALT2  = 0b110,   ///< Alternate function 2
-    BCM2835_GPIO_FSEL_ALT3  = 0b111,   ///< Alternate function 3
-    BCM2835_GPIO_FSEL_ALT4  = 0b011,   ///< Alternate function 4
-    BCM2835_GPIO_FSEL_ALT5  = 0b010,   ///< Alternate function 5
-    BCM2835_GPIO_FSEL_MASK  = 0b111    ///< Function select bits mask
-} bcm2835FunctionSelect;
-
+#define SPI_CLOCK_DIV65536 0       ///< 65536 = 256us = 4kHz
+#define SPI_CLOCK_DIV32768 32768   ///< 32768 = 126us = 8kHz
+#define SPI_CLOCK_DIV16384 16384   ///< 16384 = 64us = 15.625kHz
+#define SPI_CLOCK_DIV8192 8192    ///< 8192 = 32us = 31.25kHz
+#define SPI_CLOCK_DIV4096 4096    ///< 4096 = 16us = 62.5kHz
+#define SPI_CLOCK_DIV2048 2048    ///< 2048 = 8us = 125kHz
+#define SPI_CLOCK_DIV1024 1024    ///< 1024 = 4us = 250kHz
+#define SPI_CLOCK_DIV512 512     ///< 512 = 2us = 500kHz
+#define SPI_CLOCK_DIV256 256     ///< 256 = 1us = 1MHz
+#define SPI_CLOCK_DIV128 128     ///< 128 = 500ns = = 2MHz
+#define SPI_CLOCK_DIV64 64      ///< 64 = 250ns = 4MHz
+#define SPI_CLOCK_DIV32 32      ///< 32 = 125ns = 8MHz
+#define SPI_CLOCK_DIV16 16      ///< 16 = 50ns = 20MHz
+#define SPI_CLOCK_DIV8 8       ///< 8 = 25ns = 40MHz
+#define SPI_CLOCK_DIV4 4       ///< 4 = 12.5ns 80MHz
+#define SPI_CLOCK_DIV2 2       ///< 2 = 6.25ns = 160MHz
+#define SPI_CLOCK_DIV1 1       ///< 0 = 256us = 4kHz
 
 namespace unistd {
 	//All functions of unistd.h must be called like this: unistd::the_function()
     #include <unistd.h>
-}
+};
 
 
 enum Representation{
@@ -334,13 +264,14 @@ typedef enum {
 	OUTPUT
 }Pinmode;
 
-typedef enum {
+typedef enum
+{
 	LOW = 0,
 	HIGH = 1,
 	RISING = 2,
 	FALLING = 3,
 	BOTH = 4
-}Digivalue;
+} Digivalue;
 
 typedef bool boolean;
 typedef unsigned char byte;
@@ -448,10 +379,12 @@ class SPIPi{
 /* Some useful arduino functions */
 void pinMode(int pin, Pinmode mode);
 void digitalWrite(int pin, int value);
-int digitalRead(int pin);
-int analogRead (int pin);
 void delay(long millis);
 void delayMicroseconds(long micros);
+int digitalRead(int pin);
+int analogRead (int pin);
+
+
 uint8_t shiftIn  (uint8_t dPin, uint8_t cPin, bcm2835SPIBitOrder order);
 void shiftOut (uint8_t dPin, uint8_t cPin, bcm2835SPIBitOrder order, uint8_t val);
 void attachInterrupt(int p,void (*f)(), Digivalue m);
@@ -459,6 +392,13 @@ void detachInterrupt(int p);
 void setup();
 void loop();
 long millis();
+/**************************************************************************
+Added by C. Pham - Oct. 2020
+**************************************************************************/
+long micros();
+/**************************************************************************
+End by C. Pham - Oct. 2020
+**************************************************************************/
 
 /* Helper functions */
 int getBoardRev();
@@ -466,12 +406,12 @@ uint32_t *mapmem(const char *msg, size_t size, int fd, off_t off);
 void setBoardRev(int rev);
 int raspberryPinNumber(int arduinoPin);
 pthread_t *getThreadIdFromPin(int pin);
-uint32_t bcm2835_peri_read(volatile uint32_t* paddr);
-uint32_t bcm2835_peri_read_nb(volatile uint32_t* paddr);
-void bcm2835_peri_write(volatile uint32_t* paddr, uint32_t value);
-void bcm2835_peri_write_nb(volatile uint32_t* paddr, uint32_t value);
-void bcm2835_peri_set_bits(volatile uint32_t* paddr, uint32_t value, uint32_t mask);
-void bcm2835_gpio_fsel(uint8_t pin, uint8_t mode);
+uint32_t ch_peri_read(volatile uint32_t* paddr);
+uint32_t ch_peri_read_nb(volatile uint32_t* paddr);
+void ch_peri_write(volatile uint32_t* paddr, uint32_t value);
+void ch_peri_write_nb(volatile uint32_t* paddr, uint32_t value);
+void ch_peri_set_bits(volatile uint32_t* paddr, uint32_t value, uint32_t mask);
+void ch_gpio_fsel(uint8_t pin, uint8_t mode);
 void * threadFunction(void *args);
 
 extern SerialPi Serial;
