@@ -1,37 +1,11 @@
 /* 
- *  Very simple LoRa gateway to test the new SX127XLT lib on the RPI
- * 
- *	The code also works on an Arduino to build a simple gateway
+ *  Very simple LoRa transmitter to test the new SX127XLT lib on the RPI
  *
  *	Author: Congduc Pham, 2020
- * 
- *  Based on the simple receiver example from SX127XLT lib
+ *
+ *  Based on the simple transmitter example from SX127XLT lib
  */
 
-/* Output example 
-
--------------------------------------
-Packet length: 10
-Destination: 1
-Packet Type: 16
-Source: 8
-SeqNo: 13
-
-\!TC/22.50
-CRC,4560,RSSI,-42dBm,SNR,8dB,Length,10,Packets,1,Errors,0,IRQreg,50
---> Packet is for gateway
--------------------------------------
-
-*/
-
-#ifdef ARDUINO
-#include <SPI.h>
-#define USE_SPI_TRANSACTION          //this is the standard behaviour of library, use SPI Transaction switching
-// please uncomment only 1 choice 
-//#define SX126X
-#define SX127X
-//#define SX128X
-#else
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -40,7 +14,11 @@ CRC,4560,RSSI,-42dBm,SNR,8dB,Length,10,Packets,1,Errors,0,IRQreg,50
 #include <sys/time.h>
 #include <time.h>
 #include <math.h>
-#endif
+
+// please uncomment only 1 choice 
+//#define SX126X
+//#define SX127X
+//#define SX128X
 
 #ifdef SX126X
 #include <SX126XLT.h>
@@ -57,7 +35,7 @@ SX127XLT LT;
 SX128XLT LT;                                         
 #endif
 
-#include "SX12XX_simple_lora_gateway.h"                 //include the setiings file, frequencies, LoRa settings etc   
+#include "SX12XX_simple_lora_transmitter.h"                 //include the setiings file, frequencies, LoRa settings etc   
 
 #ifdef ARDUINO
 	#define PRINTLN                   Serial.println("")
@@ -83,42 +61,25 @@ SX128XLT LT;
 	#define FLUSHOUTPUT               fflush(stdout);
 #endif
 
-uint32_t RXpacketCount;
-uint32_t errors;
+uint8_t TXPacketL;
+uint32_t TXPacketCount, startmS, endmS;
 
-uint8_t RXBUFFER[RXBUFFER_SIZE];                 //create the buffer that received packets are copied into
-
-uint8_t RXPacketL;                               //stores length of packet received
-int8_t  PacketRSSI;                              //stores RSSI of received packet
-int8_t  PacketSNR;                               //stores signal to noise ratio (SNR) of received packet
+uint8_t buff[] = "Hello World 1234567890";
 
 void packet_is_OK()
 {
-  uint16_t IRQStatus, localCRC;
+  uint16_t localCRC;
 
-  IRQStatus = LT.readIrqStatus();                 //read the LoRa device IRQ status register
-
-  RXpacketCount++;
-
-  PRINTLN;
-  LT.printASCIIPacket(RXBUFFER, RXPacketL);       //print the packet as ASCII characters
-	PRINTLN;
-
-  localCRC = LT.CRCCCITT(RXBUFFER, RXPacketL, 0xFFFF);  //calculate the CRC, this is the external CRC calculation of the RXBUFFER
-  PRINT_CSTSTR("CRC,");                       //contents, not the LoRa device internal CRC
-  PRINT_HEX("%X",localCRC);
-  PRINT_CSTSTR(",RSSI,");
-  PRINT_VALUE("%d",PacketRSSI);
-  PRINT_CSTSTR("dBm,SNR,");
-  PRINT_VALUE("%d",PacketSNR);
-  PRINT_CSTSTR("dB,Length,");
-  PRINT_VALUE("%d",RXPacketL);
-  PRINT_CSTSTR(",Packets,");
-  PRINT_VALUE("%d",RXpacketCount);
-  PRINT_CSTSTR(",Errors,");
-  PRINT_VALUE("%d",errors);
-  PRINT_CSTSTR(",IRQreg,");
-  PRINT_HEX("%X",IRQStatus);
+  PRINT_CSTSTR("  BytesSent,");
+  PRINT_VALUE("%d", TXPacketL);                             //print transmitted packet length
+  localCRC = LT.CRCCCITT(buff, TXPacketL, 0xFFFF);
+  PRINT_CSTSTR("  CRC,");
+  PRINT_HEX("%X",localCRC);                         //print CRC of transmitted packet
+  PRINT_CSTSTR("  TransmitTime,");
+  PRINT_VALUE("%ld", endmS - startmS);                       //print transmit time of packet
+  PRINT_CSTSTR("mS");
+  PRINT_CSTSTR("  PacketsSent,");
+  PRINT_VALUE("%d", TXPacketCount);                         //print total of packets sent OK
   PRINTLN;
   FLUSHOUTPUT;
 }
@@ -129,52 +90,27 @@ void packet_is_Error()
   uint16_t IRQStatus;
   IRQStatus = LT.readIrqStatus();                   //read the LoRa device IRQ status register
 
-  if (IRQStatus & IRQ_RX_TIMEOUT)                   //check for an RX timeout
-  {
-  	//here if we don't receive anything, we normally print nothing
-    //PRINT_CSTSTR("RXTimeout");
-  }
-  else
-  {
-    errors++;
-    PRINT_CSTSTR("PacketError");
-    PRINT_CSTSTR(",RSSI,");
-    PRINT_VALUE("%d",PacketRSSI);
-    PRINT_CSTSTR("dBm,SNR,");
-    PRINT_VALUE("%d",PacketSNR);
-    PRINT_CSTSTR("dB,Length,");
-    PRINT_VALUE("%d",LT.readRXPacketL());               //get the device packet length
-    PRINT_CSTSTR(",Packets,");
-    PRINT_VALUE("%d",RXpacketCount);
-    PRINT_CSTSTR(",Errors,");
-    PRINT_VALUE("%d",errors);
-    PRINT_CSTSTR(",IRQreg,");
-    PRINT_HEX("%X",IRQStatus);
-    LT.printIrqStatus();                            //print the names of the IRQ registers set
-    PRINTLN;
-  }
-
+	PRINT_CSTSTR(" SendError");
+	PRINT_CSTSTR("Length,");
+	PRINT_VALUE("%d",TXPacketL);               //get the device packet length
+	PRINT_CSTSTR(",IRQreg,");
+	PRINT_HEX("%X",IRQStatus);
+	LT.printIrqStatus();                            //print the names of the IRQ registers set
+	PRINTLN;
   FLUSHOUTPUT;
 }
 
 void setup() {
 
-  delay(1000);
+  delay(1000); 
   
-#ifdef ARDUINO  
-  Serial.begin(38400);
-#endif  
-
-  SPI.begin();
-
-#ifndef ARDUINO  
+  SPI.begin(); 
   //Set Most significant bit first
   SPI.setBitOrder(MSBFIRST);
   //Divide the clock frequency
   SPI.setClockDivider(SPI_CLOCK_DIV64);
   //Set data mode
   SPI.setDataMode(SPI_MODE0); 
-#endif
 
   //setup hardware pins used by device, then check if device is found
 #ifdef SX126X
@@ -253,11 +189,11 @@ void setup() {
   LT.setHighSensitivity();  //set for maximum gain
 #endif
 #ifdef SX126X
-  //set for IRQ on RX done and timeout on DIO1
-  LT.setDioIrqParams(IRQ_RADIO_ALL, (IRQ_RX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);
+  //set for IRQ on TX done and timeout on DIO1
+  LT.setDioIrqParams(IRQ_RADIO_ALL, (IRQ_TX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);
 #endif
 #ifdef SX127X
-  //set for IRQ on RX done
+  //set for IRQ on TX done
   LT.setDioIrqParams(IRQ_RADIO_ALL, IRQ_RX_DONE, 0, 0);
 #ifdef PABOOST
   LT.setPA_BOOST(true);
@@ -265,10 +201,17 @@ void setup() {
 #endif
 #endif
 #ifdef SX128X
-  LT.setDioIrqParams(IRQ_RADIO_ALL, (IRQ_RX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);
+  LT.setDioIrqParams(IRQ_RADIO_ALL, (IRQ_TX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);
 #endif    
   
   //***************************************************************************************************
+
+	LT.setDevAddr(15);
+	//TX power and ramp time
+	PRINT_CSTSTR("Set LoRa txpower dBm to ");
+	PRINTLN_VALUE("%d", MAX_DBM);  
+	//to test setting txpower before only once	
+	//LT.setTxParams(MAX_DBM, RADIO_RAMP_DEFAULT);            
 
   PRINTLN;
   LT.printModemSettings();                                     //reads and prints the configured LoRa settings, useful check
@@ -297,51 +240,36 @@ void setup() {
 	PRINT_CSTSTR("SX128X - ");
 #endif
 
-  PRINT_CSTSTR("Receiver ready - RXBUFFER_SIZE ");
-  PRINTLN_VALUE("%d",RXBUFFER_SIZE);
-  PRINTLN;
+  PRINTLN_CSTSTR("Transmitter ready");
 }
 
 void loop()
 {
-  RXPacketL = LT.receiveAddressed(RXBUFFER, RXBUFFER_SIZE, 10000, WAIT_RX); //wait for a packet to arrive with 60seconds (60000mS) timeout
 
-  PacketRSSI = LT.readPacketRSSI();              //read the recived RSSI value
-  PacketSNR = LT.readPacketSNR();                //read the received SNR value
+	PRINT_CSTSTR("Sending packet ");
+	PRINTLN_VALUE("%d", TXPacketCount);
+	
+	TXPacketL = sizeof(buff);
+  buff[TXPacketL - 1] = '*';                                   //replace null character at buffer end so its visible on reciver
 
-  if (RXPacketL == 0)                            //if the LT.receive() function detects an error, RXpacketL is 0
+  LT.printASCIIPacket(buff, TXPacketL);                        //print the buffer (the sent packet) as ASCII	
+	
+	startmS=millis();
+	//txpower can be set to -1 if we want to keep the same power setting PROVIDED THAT setTxParams() has been called before
+  if (LT.transmitAddressed(buff, TXPacketL, PKT_TYPE_DATA, DEFAULT_DEST_ADDR, LT.readDevAddr(), 10000, MAX_DBM, WAIT_RX)) 
   {
-    packet_is_Error();
+    endmS = millis();                                          //packet sent, note end time
+    TXPacketCount++;
+    packet_is_OK();
   }
   else
   {
-  	PRINTLN;
-  	PRINTLN_CSTSTR("-------------------------------------");
-  	PRINT_CSTSTR("Packet length: ");
-  	PRINTLN_VALUE("%d", RXPacketL);
-    PRINT_CSTSTR("Destination: ");
-    PRINTLN_VALUE("%d", LT.readRXDestination());
-    PRINT_CSTSTR("Packet Type: ");
-    PRINTLN_VALUE("%d", LT.readRXPacketType());
-    PRINT_CSTSTR("Source: ");
-    PRINTLN_VALUE("%d", LT.readRXSource());
-    PRINT_CSTSTR("SeqNo: ");
-    PRINTLN_VALUE("%d", LT.readRXSeqNo());
-  	PRINT_CSTSTR("RXTimestamp: ");
-  	PRINTLN_VALUE("%d", LT.readRXTimestamp());
-  	PRINT_CSTSTR("RXDoneTimestamp: ");
-  	PRINTLN_VALUE("%d", LT.readRXDoneTimestamp());  	      
-    packet_is_OK();
-    
-    if (LT.readRXDestination()==1)
-    	PRINTLN_CSTSTR("--> Packet is for gateway");
-    
-    PRINTLN_CSTSTR("-------------------------------------");
-    FLUSHOUTPUT;	
+    packet_is_Error();                                 //transmit packet returned 0, there was an error
   }
+  
+  delay(5000);
 }
 
-#ifndef ARDUINO
 int main (int argc, char *argv[]){
 
   setup();
@@ -352,5 +280,4 @@ int main (int argc, char *argv[]){
   
   return (0);
 }
-#endif
 

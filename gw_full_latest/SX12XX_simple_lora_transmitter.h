@@ -2,12 +2,8 @@
 #ifdef SX126X
 //*******  Setup hardware pin definitions here ! ***************
 #define NSS 10                                  //select pin on LoRa device
-#ifdef ARDUINO
-#define NRESET 4                                //reset pin on LoRa device
-#else
 // will be translated into GPIO4 by arduPI
 #define NRESET 6                                //reset pin on LoRa device
-#endif
 #define RFBUSY 5                                //busy pin on LoRa device 
 #define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done 
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1 
@@ -32,12 +28,8 @@ const uint8_t Optimisation = LDRO_AUTO;         //low data rate optimisation set
 #ifdef SX127X
 //*******  Setup hardware pin definitions here ! ***************
 #define NSS 10                                  //select pin on LoRa device
-#ifdef ARDUINO
-#define NRESET 4                                //reset pin on LoRa device
-#else
 // will be translated into GPIO4 by arduPI
 #define NRESET 6                                //reset pin on LoRa device
-#endif
 #define DIO0 2                                  //DIO0 pin on LoRa device, used for RX and TX done 
 #define DIO1 -1                                 //DIO1 pin on LoRa device, normally not used so set to -1 
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1
@@ -53,19 +45,17 @@ const uint8_t SpreadingFactor = LORA_SF12;      //LoRa spreading factor
 const uint8_t CodeRate = LORA_CR_4_5;           //LoRa coding rate
 const uint8_t Optimisation = LDRO_AUTO;         //low data rate optimisation setting, normally set to auto
 
-#define PABOOST                          
+#ifndef PABOOST
+#define PABOOST
+#endif                          
 #endif
 
 ////////////////////////////////////////////////////////////////
 #ifdef SX128X
 //*******  Setup hardware pin definitions here ! ***************
 #define NSS 10
-#ifdef ARDUINO
-#define NRESET 4                                //reset pin on LoRa device
-#else
 // will be translated into GPIO4 by arduPI
 #define NRESET 6                                //reset pin on LoRa device
-#endif
 #define RFBUSY 5
 #define DIO1 2
 #define DIO2 -1                 								//not used 
@@ -84,7 +74,7 @@ uint8_t SpreadingFactor = LORA_SF12;             //LoRa spreading factor
 uint8_t CodeRate = LORA_CR_4_5;                  //LoRa coding rate                         
 #endif
 
-#define RXBUFFER_SIZE 250                        //RX buffer size  
-
-
+#define MAX_DBM									14
+#define PKT_TYPE_DATA   				0x10
+#define DEFAULT_DEST_ADDR       1
 

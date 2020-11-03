@@ -56,7 +56,7 @@ SX1272_lora_gateway: SX1272_lora_gateway.o arduPi.o SX1272/SX1272.o base64.o
 	rm -f lora_gateway
 	ln -s SX1272_lora_gateway ./lora_gateway
 
-#SX127X test gateway 
+#SX12XX test gateway 
 ####################
 SX126X_simple_lora_gateway: SX126X_simple_lora_gateway.o arduPi.o SX12XX/SX126XLT.o base64.o
 	g++ -lrt -lpthread SX126X_simple_lora_gateway.o arduPi.o SX12XX/SX126XLT.o base64.o -o SX126X_simple_lora_gateway
@@ -72,6 +72,23 @@ SX128X_simple_lora_gateway: SX128X_simple_lora_gateway.o arduPi.o SX12XX/SX128XL
 	g++ -lrt -lpthread SX128X_simple_lora_gateway.o arduPi.o SX12XX/SX128XLT.o base64.o -o SX128X_simple_lora_gateway
 	rm -f simple_lora_gateway
 	ln -s SX128X_simple_lora_gateway ./simple_lora_gateway
+	
+#SX12XX transmitter 
+####################
+SX126X_simple_lora_transmitter: SX126X_simple_lora_transmitter.o arduPi.o SX12XX/SX126XLT.o base64.o
+	g++ -lrt -lpthread SX126X_simple_lora_transmitter.o arduPi.o SX12XX/SX126XLT.o base64.o -o SX126X_simple_lora_transmitter
+	rm -f simple_lora_transmitter
+	ln -s SX126X_simple_lora_transmitter ./simple_lora_transmitter
+	
+SX127X_simple_lora_transmitter: SX127X_simple_lora_transmitter.o arduPi.o SX12XX/SX127XLT.o base64.o
+	g++ -lrt -lpthread SX127X_simple_lora_transmitter.o arduPi.o SX12XX/SX127XLT.o base64.o -o SX127X_simple_lora_transmitter
+	rm -f simple_lora_transmitter
+	ln -s SX127X_simple_lora_transmitter ./simple_lora_transmitter
+
+SX128X_simple_lora_transmitter: SX128X_simple_lora_transmitter.o arduPi.o SX12XX/SX128XLT.o base64.o
+	g++ -lrt -lpthread SX128X_simple_lora_transmitter.o arduPi.o SX12XX/SX128XLT.o base64.o -o SX128X_simple_lora_transmitter
+	rm -f simple_lora_transmitter
+	ln -s SX128X_simple_lora_transmitter ./simple_lora_transmitter	
 	
 #SX12XX lora gateway 
 ####################
@@ -111,7 +128,7 @@ SX1272_lora_gateway_pi2: SX1272_lora_gateway.o arduPi_pi2.o SX1272/SX1272.o base
 	rm -f lora_gateway
 	ln -s SX1272_lora_gateway_pi2 ./lora_gateway
 
-#SX127X test gateway 
+#SX12XX test gateway 
 ####################
 SX126X_simple_lora_gateway_pi2: SX126X_simple_lora_gateway.o arduPi_pi2.o SX12XX/SX126XLT.o base64.o
 	g++ -lrt -lpthread SX126X_simple_lora_gateway.o arduPi_pi2.o SX12XX/SX126XLT.o base64.o -o SX126X_simple_lora_gateway_pi2
@@ -128,6 +145,23 @@ SX128X_simple_lora_gateway_pi2: SX128X_simple_lora_gateway.o arduPi_pi2.o SX12XX
 	rm -f simple_lora_gateway
 	ln -s SX128X_simple_lora_gateway_pi2 ./simple_lora_gateway	
 
+#SX12XX transmitter 
+####################
+SX126X_simple_lora_transmitter_pi2: SX126X_simple_lora_transmitter.o arduPi_pi2.o SX12XX/SX126XLT.o base64.o
+	g++ -lrt -lpthread SX126X_simple_lora_transmitter.o arduPi_pi2.o SX12XX/SX126XLT.o base64.o -o SX126X_simple_lora_transmitter_pi2
+	rm -f simple_lora_transmitter
+	ln -s SX126X_simple_lora_transmitter_pi2 ./simple_lora_transmitter
+	
+SX127X_simple_lora_transmitter_pi2: SX127X_simple_lora_transmitter.o arduPi_pi2.o SX12XX/SX127XLT.o base64.o
+	g++ -lrt -lpthread SX127X_simple_lora_transmitter.o arduPi_pi2.o SX12XX/SX127XLT.o base64.o -o SX127X_simple_lora_transmitter_pi2
+	rm -f simple_lora_transmitter
+	ln -s SX127X_simple_lora_transmitter_pi2 ./simple_lora_transmitter
+
+SX128X_simple_lora_transmitter_pi2: SX128X_simple_lora_transmitter.o arduPi_pi2.o SX12XX/SX128XLT.o base64.o
+	g++ -lrt -lpthread SX128X_simple_lora_transmitter.o arduPi_pi2.o SX12XX/SX128XLT.o base64.o -o SX128X_simple_lora_transmitter_pi2
+	rm -f simple_lora_transmitter
+	ln -s SX128X_simple_lora_transmitter_pi2 ./simple_lora_transmitter	
+	
 #SX12XX lora gateway 
 ####################
 SX126X_lora_gateway_pi2: SX126X_lora_gateway.o arduPi_pi2.o SX12XX/SX126XLT.o base64.o
@@ -166,7 +200,7 @@ SX1272_lora_gateway_pi4: SX1272_lora_gateway.o arduPi_pi4.o SX1272/SX1272.o base
 	rm -f lora_gateway
 	ln -s SX1272_lora_gateway_pi4 ./lora_gateway
 
-#SX127X test gateway 
+#SX12XX test gateway 
 ####################
 SX126X_simple_lora_gateway_pi4: SX126X_simple_lora_gateway.o arduPi_pi4.o SX12XX/SX126XLT.o base64.o
 	g++ -lrt -lpthread SX126X_simple_lora_gateway.o arduPi_pi4.o SX12XX/SX126XLT.o base64.o -o SX126X_simple_lora_gateway_pi4
@@ -183,7 +217,23 @@ SX128X_simple_lora_gateway_pi4: SX128X_simple_lora_gateway.o arduPi_pi4.o SX12XX
 	rm -f lora_gateway
 	ln -s SX128X_simple_lora_gateway_pi4 ./simple_lora_gateway	
 		
+#SX12XX transmitter 
+####################
+SX126X_simple_lora_transmitter_pi4: SX126X_simple_lora_transmitter.o arduPi_pi4.o SX12XX/SX126XLT.o base64.o
+	g++ -lrt -lpthread SX126X_simple_lora_transmitter.o arduPi_pi4.o SX12XX/SX126XLT.o base64.o -o SX126X_simple_lora_transmitter_pi4
+	rm -f simple_lora_transmitter
+	ln -s SX126X_simple_lora_transmitter_pi4 ./simple_lora_transmitter
+	
+SX127X_simple_lora_transmitter_pi4: SX127X_simple_lora_transmitter.o arduPi_pi4.o SX12XX/SX127XLT.o base64.o
+	g++ -lrt -lpthread SX127X_simple_lora_transmitter.o arduPi_pi4.o SX12XX/SX127XLT.o base64.o -o SX127X_simple_lora_transmitter_pi4
+	rm -f simple_lora_transmitter
+	ln -s SX127X_simple_lora_transmitter_pi4 ./simple_lora_transmitter
 
+SX128X_simple_lora_transmitter_pi4: SX128X_simple_lora_transmitter.o arduPi_pi4.o SX12XX/SX128XLT.o base64.o
+	g++ -lrt -lpthread SX128X_simple_lora_transmitter.o arduPi_pi4.o SX12XX/SX128XLT.o base64.o -o SX128X_simple_lora_transmitter_pi4
+	rm -f simple_lora_transmitter
+	ln -s SX128X_simple_lora_transmitter_pi4 ./simple_lora_transmitter	
+	
 #SX12XX lora gateway 
 ####################
 SX126X_lora_gateway_pi4: SX126X_lora_gateway.o arduPi_pi4.o SX12XX/SX126XLT.o base64.o
@@ -221,6 +271,15 @@ SX127X_simple_lora_gateway.o: SX12XX_simple_lora_gateway.cpp SX12XX_simple_lora_
 
 SX128X_simple_lora_gateway.o: SX12XX_simple_lora_gateway.cpp SX12XX_simple_lora_gateway.h
 	g++ $(CFLAGS) -I SX12XX -I . -DSX128X -c SX12XX_simple_lora_gateway.cpp -o SX128X_simple_lora_gateway.o
+	
+SX126X_simple_lora_transmitter.o: SX12XX_simple_lora_transmitter.cpp SX12XX_simple_lora_transmitter.h
+	g++ $(CFLAGS) -I SX12XX -I . -DSX126X -c SX12XX_simple_lora_transmitter.cpp -o SX126X_simple_lora_transmitter.o
+	
+SX127X_simple_lora_transmitter.o: SX12XX_simple_lora_transmitter.cpp SX12XX_simple_lora_transmitter.h
+	g++ $(CFLAGS) -I SX12XX -I . -DSX127X -c SX12XX_simple_lora_transmitter.cpp -o SX127X_simple_lora_transmitter.o
+
+SX128X_simple_lora_transmitter.o: SX12XX_simple_lora_transmitter.cpp SX12XX_simple_lora_transmitter.h
+	g++ $(CFLAGS) -I SX12XX -I . -DSX128X -c SX12XX_simple_lora_transmitter.cpp -o SX128X_simple_lora_transmitter.o	
 			
 SX126X_lora_gateway.o: SX12XX_lora_gateway.cpp SX126X_lora_gateway.h radio.makefile raspberry.makefile
 	g++ $(CFLAGS) -I SX12XX -I . -DSX126X -c SX12XX_lora_gateway.cpp -o SX126X_lora_gateway.o
@@ -233,23 +292,32 @@ SX128X_lora_gateway.o: SX12XX_lora_gateway.cpp SX128X_lora_gateway.h radio.makef
 
 ##
 	
-SX126X_simple_lora_gateway_pi2.o: SX12XX_simple_lora_gateway.cpp SX12XX_simple_lora_gateway.h
-	g++ $(CFLAGS) -I SX12XX -I . -DSX126X -DRASPBERRY2 -c SX12XX_simple_lora_gateway.cpp -o SX126X_simple_lora_gateway_pi2.o
+#SX126X_simple_lora_gateway_pi2.o: SX12XX_simple_lora_gateway.cpp SX12XX_simple_lora_gateway.h
+#	g++ $(CFLAGS) -I SX12XX -I . -DSX126X -DRASPBERRY2 -c SX12XX_simple_lora_gateway.cpp -o SX126X_simple_lora_gateway_pi2.o
 	
-SX127X_simple_lora_gateway_pi2.o: SX12XX_simple_lora_gateway.cpp SX12XX_simple_lora_gateway.h
-	g++ $(CFLAGS) -I SX12XX -I . -DSX127X -DRASPBERRY2 -c SX12XX_simple_lora_gateway.cpp -o SX127X_simple_lora_gateway_pi2.o
+#SX127X_simple_lora_gateway_pi2.o: SX12XX_simple_lora_gateway.cpp SX12XX_simple_lora_gateway.h
+#	g++ $(CFLAGS) -I SX12XX -I . -DSX127X -DRASPBERRY2 -c SX12XX_simple_lora_gateway.cpp -o SX127X_simple_lora_gateway_pi2.o
 
-SX128X_simple_lora_gateway_pi2.o: SX12XX_simple_lora_gateway.cpp SX12XX_simple_lora_gateway.h
-	g++ $(CFLAGS) -I SX12XX -I . -DSX128X -DRASPBERRY2 -c SX12XX_simple_lora_gateway.cpp -o SX128X_simple_lora_gateway_pi2.o	
-		
-SX126X_lora_gateway_pi2.o: SX12XX_lora_gateway.cpp SX126X_lora_gateway.h radio.makefile raspberry.makefile
-	g++ $(CFLAGS) -I SX12XX -I . -DSX126X -DRASPBERRY2 -c SX12XX_lora_gateway.cpp -o SX126X_lora_gateway_pi2.o
+#SX128X_simple_lora_gateway_pi2.o: SX12XX_simple_lora_gateway.cpp SX12XX_simple_lora_gateway.h
+#	g++ $(CFLAGS) -I SX12XX -I . -DSX128X -DRASPBERRY2 -c SX12XX_simple_lora_gateway.cpp -o SX128X_simple_lora_gateway_pi2.o	
 
-SX127X_lora_gateway_pi2.o: SX12XX_lora_gateway.cpp SX127X_lora_gateway.h radio.makefile raspberry.makefile
-	g++ $(CFLAGS) -I SX12XX -I . -DSX127X -DRASPBERRY2 -c SX12XX_lora_gateway.cpp -o SX127X_lora_gateway_pi2.o
+#SX126X_simple_lora_transmitter_pi2.o: SX12XX_simple_lora_transmitter.cpp SX12XX_simple_lora_transmitter.h
+#	g++ $(CFLAGS) -I SX12XX -I . -DSX126X -DRASPBERRY2 -c SX12XX_simple_lora_transmitter.cpp -o SX126X_simple_lora_transmitter_pi2.o
 	
-SX128X_lora_gateway_pi2.o: SX12XX_lora_gateway.cpp SX128X_lora_gateway.h radio.makefile raspberry.makefile
-	g++ $(CFLAGS) -I SX12XX -I . -DSX128X -DRASPBERRY2 -c SX12XX_lora_gateway.cpp -o SX128X_lora_gateway_pi2.o
+#SX127X_simple_lora_transmitter_pi2.o: SX12XX_simple_lora_transmitter.cpp SX12XX_simple_lora_transmitter.h
+#	g++ $(CFLAGS) -I SX12XX -I . -DSX127X -DRASPBERRY2 -c SX12XX_simple_lora_transmitter.cpp -o SX127X_simple_lora_transmittery_pi2.o
+
+#SX128X_simple_lora_transmitter_pi2.o: SX12XX_simple_lora_transmitter.cpp SX12XX_simple_lora_transmitter.h
+#	g++ $(CFLAGS) -I SX12XX -I . -DSX128X -DRASPBERRY2 -c SX12XX_simple_lora_transmitter.cpp -o SX128X_simple_lora_transmitter_pi2.o	
+			
+#SX126X_lora_gateway_pi2.o: SX12XX_lora_gateway.cpp SX126X_lora_gateway.h radio.makefile raspberry.makefile
+#	g++ $(CFLAGS) -I SX12XX -I . -DSX126X -DRASPBERRY2 -c SX12XX_lora_gateway.cpp -o SX126X_lora_gateway_pi2.o
+
+#SX127X_lora_gateway_pi2.o: SX12XX_lora_gateway.cpp SX127X_lora_gateway.h radio.makefile raspberry.makefile
+#	g++ $(CFLAGS) -I SX12XX -I . -DSX127X -DRASPBERRY2 -c SX12XX_lora_gateway.cpp -o SX127X_lora_gateway_pi2.o
+	
+#SX128X_lora_gateway_pi2.o: SX12XX_lora_gateway.cpp SX128X_lora_gateway.h radio.makefile raspberry.makefile
+#	g++ $(CFLAGS) -I SX12XX -I . -DSX128X -DRASPBERRY2 -c SX12XX_lora_gateway.cpp -o SX128X_lora_gateway_pi2.o
 		
 ##
 
@@ -279,4 +347,4 @@ base64.o: base64.c base64.h
 
 clean:
 	cd SX1272; rm -rf *.o; cd ../SX12XX; rm -rf *.o; cd ..
-	rm -rf *.o lora_gateway simple_lora_gateway SX1272_lora_gateway SX1272_lora_gateway_pi* SX12?X_lora_gateway SX12?X_lora_gateway_pi* SX12?X_simple_lora_gateway SX12?X_simple_lora_gateway_pi* 
+	rm -rf *.o lora_gateway simple_lora_gateway simple_lora_transmitter SX1272_lora_gateway SX1272_lora_gateway_pi* SX12?X_lora_gateway SX12?X_lora_gateway_pi* SX12?X_simple_lora_gateway SX12?X_simple_lora_gateway_pi* SX12?X_simple_lora_transmitter SX12?X_simple_lora_transmitter_pi*

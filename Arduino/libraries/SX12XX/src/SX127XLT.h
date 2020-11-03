@@ -195,14 +195,17 @@ class SX127XLT
     void CarrierSense1(uint8_t cad_number, bool extendedIFS);
     void CarrierSense2(uint8_t cad_number, bool extendedIFS);
     void CarrierSense3(uint8_t cad_number);
-    uint8_t invertIQ(uint8_t dir, bool invert);
+    uint8_t invertIQ(bool invert);
     void setTXSeqNo(uint8_t seqno);
     uint8_t readTXSeqNo();
     uint8_t readRXSeqNo();
     void setPA_BOOST(bool pa_boost);
     uint32_t readRXTimestamp();
     uint32_t readRXDoneTimestamp();
-    
+    void setDevAddr(uint8_t addr);
+    uint8_t readDevAddr();
+    uint8_t readAckStatus();
+    int8_t readPacketSNRinACK();
     /**************************************************************************
       End by C. Pham - Oct. 2020
     **************************************************************************/
@@ -306,6 +309,9 @@ class SX127XLT
     bool _PA_BOOST;
     uint32_t _RXTimestamp;
     uint32_t _RXDoneTimestamp;
+    uint8_t _DevAddr;
+    uint8_t _AckStatus;
+    int8_t _PacketSNRinACK;
     /**************************************************************************
       End by C. Pham - Oct. 2020
     **************************************************************************/

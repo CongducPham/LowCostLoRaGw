@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: October 31st, 2020 by C. Pham
+ * last update: November 3rd, 2020 by C. Pham
  * 
  * NEW: LoRa communicain library moved from Libelium's lib to StuartProject's lib
  * https://github.com/StuartsProjects/SX12XX-LoRa
@@ -85,7 +85,8 @@
 //#define MY_FREQUENCY 868100000
 //when sending to a LoRaWAN gateway (e.g. running util_pkt_logger) but with no native LoRaWAN format, just to set the correct sync word
 //#define PUBLIC_SYNCWORD
-
+//special behavior to compute ToA for message size from 10 to 250 bytes
+//#define COMPUTE_TOA
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
@@ -147,16 +148,24 @@ uint32_t TXPacketCount=0;
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
 #define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
+#define PRINTLN_CSTSTR(fmt,param) SerialUSB.println(F(param))
 #define PRINT_STR(fmt,param)      SerialUSB.print(param)
+#define PRINTLN_STR(fmt,param)    SerialUSB.println(param)
 #define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
+#define PRINTLN_VALUE(fmt,param)  SerialUSB.println(param)
 #define PRINT_HEX(fmt,param)      SerialUSB.print(param,HEX)
+#define PRINTLN_HEX(fmt,param)    SerialUSB.println(param,HEX)
 #define FLUSHOUTPUT               SerialUSB.flush();
 #else
 #define PRINTLN                   Serial.println("")
 #define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
+#define PRINTLN_CSTSTR(fmt,param) Serial.println(F(param))
 #define PRINT_STR(fmt,param)      Serial.print(param)
+#define PRINTLN_STR(fmt,param)    Serial.println(param)
 #define PRINT_VALUE(fmt,param)    Serial.print(param)
+#define PRINTLN_VALUE(fmt,param)  Serial.println(param)
 #define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
+#define PRINTLN_HEX(fmt,param)    Serial.println(param,HEX)
 #define FLUSHOUTPUT               Serial.flush();
 #endif
 
@@ -342,6 +351,22 @@ void setup()
   PRINT_CSTSTR("%s","ESP32 detected\n");
 #endif
 
+#if defined SX126X || defined SX128X
+#ifdef COMPUTE_TOA
+  PRINTLN;
+  for (int i=10; i<=250; i+=10) {
+    PRINT_VALUE("%d", i);
+    PRINT_CSTSTR("%s","\t");
+    PRINTLN_VALUE("%d", LT.getToA(i));
+  }
+
+  FLUSHOUTPUT;
+  
+  while (1)
+    delay(5000);
+#endif
+#endif
+      
   //start SPI bus communication
   SPI.begin();
 
@@ -401,9 +426,6 @@ void setup()
   LT.setRfFrequency(DEFAULT_CHANNEL, Offset);                   
 #endif
 //run calibration after setting frequency
-#ifdef SX126X
-  if (LT.begin(NSS, NRESET, RFBUSY, DIO1, DIO2, DIO3, RX_EN, TX_EN, SW, LORA_DEVICE))
-#endif
 #ifdef SX127X
   LT.calibrateImage(0);
 #endif
@@ -438,7 +460,7 @@ void setup()
   LT.setDioIrqParams(IRQ_RADIO_ALL, (IRQ_TX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);
 #endif
 #ifdef SX127X
-  //set for IRQ on RX done
+  //set for IRQ on TX done
   LT.setDioIrqParams(IRQ_RADIO_ALL, IRQ_TX_DONE, 0, 0);
   LT.setPA_BOOST(PA_BOOST);
 #endif
@@ -464,10 +486,26 @@ void setup()
   //print contents of device registers, normally 0x900 to 0x9FF 
   LT.printRegisters(0x900, 0x9FF);
 #endif  
-
+    
 /*******************************************************************************************************
   End from SX12XX example - Stuart Robinson 
 *******************************************************************************************************/
+
+#ifdef SX127X
+#ifdef COMPUTE_TOA
+  PRINTLN;
+  for (int i=10; i<=250; i+=10) {
+    PRINT_VALUE("%d", i);
+    PRINT_CSTSTR("%s","\t");
+    PRINTLN_VALUE("%d", LT.getToA(i));
+  }
+
+  FLUSHOUTPUT;
+  
+  while (1)
+    delay(5000);
+#endif
+#endif
 
 #ifdef WITH_EEPROM
 
@@ -501,9 +539,19 @@ void setup()
   PRINT_CSTSTR("%s","node addr: ");
   PRINT_VALUE("%d", node_addr);
   PRINTLN;
+
+#ifdef SX126X
+  PRINT_CSTSTR("%s","SX126X");
+#endif
+#ifdef SX127X
+  PRINT_CSTSTR("%s","SX127X");
+#endif
+#ifdef SX128X
+  PRINT_CSTSTR("%s","SX128X");
+#endif 
     
   // Print a success message
-  PRINT_CSTSTR("%s","SX127X successfully configured\n");
+  PRINT_CSTSTR("%s"," successfully configured\n");
 
   delay(500);
 }
@@ -583,35 +631,29 @@ void loop(void)
       startSend=millis();
       
       LT.CarrierSense();
-   
-      // Send message to the gateway and print the result
-      // with the app key if this feature is enabled
-#ifdef WITH_ACK
-      int n_retry=NB_RETRIES;
-      
-      do {
-        e = sx1272.sendPacketTimeoutACK(DEFAULT_DEST_ADDR, message, pl);
 
-        if (e==3)
-          PRINT_CSTSTR("%s","No ACK");
-        
-        n_retry--;
-        
-        if (n_retry)
-          PRINT_CSTSTR("%s","Retry");
-        else
-          PRINT_CSTSTR("%s","Abort"); 
-          
-      } while (e && n_retry);          
-#else
+      uint8_t p_type=PKT_TYPE_DATA;
+      
+#ifdef WITH_ACK
+      p_type=PKT_TYPE_DATA | PKT_FLAG_ACK_REQ;
+      PRINTLN_CSTSTR("%s","Will request an ACK");         
+#endif
       //will return packet length sent if OK, otherwise 0 if transmit error      
-      if (LT.transmitAddressed(message, pl, PKT_TYPE_DATA, DEFAULT_DEST_ADDR, node_addr, 10000, MAX_DBM, WAIT_TX))
+      if (LT.transmitAddressed(message, pl, p_type, DEFAULT_DEST_ADDR, node_addr, 10000, MAX_DBM, WAIT_TX))
       {
         endSend = millis();                                          
         TXPacketCount++;
         uint16_t localCRC = LT.CRCCCITT(message, pl, 0xFFFF);
         PRINT_CSTSTR("%s","CRC,");
-        PRINT_HEX("%d", localCRC);        
+        PRINT_HEX("%d", localCRC);
+
+        if (LT.readAckStatus()) {
+          PRINTLN;
+          PRINT_CSTSTR("%s","Received ACK from ");
+          PRINTLN_VALUE("%d", LT.readRXSource());
+          PRINT_CSTSTR("%s","SNR of transmitted pkt is ");
+          PRINTLN_VALUE("%d", LT.readPacketSNRinACK());          
+        }
       }
       else
       {
@@ -623,7 +665,7 @@ void loop(void)
         PRINT_HEX("%d", IRQStatus);
         LT.printIrqStatus(); 
       }
-#endif  
+ 
       endSend=millis();
     
 #ifdef WITH_EEPROM

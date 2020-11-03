@@ -35,7 +35,7 @@ const uint8_t SpreadingFactor = LORA_SF12;       //LoRa spreading factor
 const uint8_t CodeRate = LORA_CR_4_5;           //LoRa coding rate
 const uint8_t Optimisation = LDRO_AUTO;         //low data rate optimisation setting, normally set to auto
 
-// can be set to LORA_IQ_NORMAL or INVERT_IQ_RX or INVERT_IQ_TX
+// can be set to LORA_IQ_NORMAL or LORA_IQ_INVERTED
 const uint8_t IQ_Setting = LORA_IQ_NORMAL; 
 
 //for SX1262, SX1268 power range is +22dBm to -9dBm
@@ -145,20 +145,6 @@ const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
 
 #endif
-
-#define PKT_TYPE_DATA   0x10
-#define PKT_TYPE_ACK    0x20
-
-#define PKT_TYPE_MASK   0xF0
-#define PKT_FLAG_MASK   0x0F
-
-#define PKT_FLAG_ACK_REQ            0x08
-#define PKT_FLAG_DATA_ENCRYPTED     0x04
-#define PKT_FLAG_DATA_WAPPKEY       0x02
-#define PKT_FLAG_DATA_DOWNLINK      0x01
-
-#define SX12XX_ERROR_ACK        3
-#define SX12XX_ERROR_TOA        4
 
 #define DEFAULT_DEST_ADDR       1
 

@@ -7379,7 +7379,7 @@ int8_t	SX1272::invertIQ(bool invert)
 	// According to Semtech AN1200.23 Rev.2 June 2015
 	if (invert) {
 		//writeRegister(REG_INVERT_IQ, readRegister(REG_INVERT_IQ)|(1<<6));
- 		writeRegister(REG_INVERT_IQ, 0x67);
+ 		writeRegister(REG_INVERT_IQ, 0x66);
  		writeRegister(REG_INVERT_IQ2, 0x19);
 	}
 	else {

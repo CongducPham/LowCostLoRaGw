@@ -100,6 +100,9 @@
 //this will enable a receive window after every transmission, uncomment it to also have LoRaWAN downlink
 //#define WITH_RCVW
 ////////////////////////////
+//normal behavior is to invert IQ for RX, the normal behavior at gateway is also to invert its IQ setting, only valid with WITH_RCVW
+#define INVERTIQ_ON_RX
+////////////////////////////
 //uncomment to use a customized frequency. TTN plan includes 868.1/868.3/868.5/867.1/867.3/867.5/867.7/867.9 for LoRa
 //#define MY_FREQUENCY 868100000
 //#define MY_FREQUENCY 433170000
@@ -508,9 +511,6 @@ void setup()
   LT.setRfFrequency(DEFAULT_CHANNEL, Offset);                   
 #endif
 //run calibration after setting frequency
-#ifdef SX126X
-  if (LT.begin(NSS, NRESET, RFBUSY, DIO1, DIO2, DIO3, RX_EN, TX_EN, SW, LORA_DEVICE))
-#endif
 #ifdef SX127X
   LT.calibrateImage(0);
 #endif
@@ -553,14 +553,13 @@ void setup()
   LT.setDioIrqParams(IRQ_RADIO_ALL, (IRQ_TX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);
 #endif   
 
-  if (IQ_Setting==INVERT_IQ_RX) {
-    LT.invertIQ(INVERT_IQ_RX,true);
+  if (IQ_Setting==LORA_IQ_INVERTED) {
+    LT.invertIQ(true);
     PRINT_CSTSTR("%s","Invert I/Q on RX\n");
   }
-  
-  if (IQ_Setting==INVERT_IQ_TX) {
-    LT.invertIQ(INVERT_IQ_TX,true);
-    PRINT_CSTSTR("%s","Invert I/Q on TX\n");
+  else {
+    LT.invertIQ(false);
+    PRINT_CSTSTR("%s","Normal I/Q\n");
   }  
    
   //***************************************************************************************************
@@ -663,9 +662,19 @@ void setup()
   //each time you want to change the session key, you need to call this function  
   LSC_session_init();
 #endif
+
+#ifdef SX126X
+  PRINT_CSTSTR("%s","SX126X");
+#endif
+#ifdef SX127X
+  PRINT_CSTSTR("%s","SX127X");
+#endif
+#ifdef SX128X
+  PRINT_CSTSTR("%s","SX128X");
+#endif 
   
   // Print a success message
-  PRINT_CSTSTR("%s","SX127X successfully configured\n");
+  PRINT_CSTSTR("%s"," successfully configured\n");
 
   //printf_begin();
   delay(500);
@@ -816,30 +825,12 @@ void loop(void)
 
       startSend=millis();
 
-#if defined SX126X || defined SX127X
       LT.CarrierSense();
-#endif  
       
-      // Send message to the gateway and print the result
-      // with the app key if this feature is enabled
 #ifdef WITH_ACK
-      int n_retry=NB_RETRIES;
-      
-      do {
-        e = sx1272.sendPacketTimeoutACK(DEFAULT_DEST_ADDR, message, pl);
-
-        if (e==3)
-          PRINT_CSTSTR("%s","No ACK");
-        
-        n_retry--;
-        
-        if (n_retry)
-          PRINT_CSTSTR("%s","Retry");
-        else
-          PRINT_CSTSTR("%s","Abort"); 
-          
-      } while (e && n_retry);          
-#else
+      p_type=PKT_TYPE_DATA | PKT_FLAG_ACK_REQ;
+      PRINTLN_CSTSTR("%s","Will request an ACK");         
+#endif
 
 #ifdef LORAWAN
       //will return packet length sent if OK, otherwise 0 if transmit error
@@ -854,7 +845,15 @@ void loop(void)
         TXPacketCount++;
         uint16_t localCRC = LT.CRCCCITT(message, pl, 0xFFFF);
         PRINT_CSTSTR("%s","CRC,");
-        PRINT_HEX("%d", localCRC);        
+        PRINT_HEX("%d", localCRC);      
+        
+        if (LT.readAckStatus()) {
+          PRINTLN;
+          PRINT_CSTSTR("%s","Received ACK from ");
+          PRINTLN_VALUE("%d", LT.readRXSource());
+          PRINT_CSTSTR("%s","SNR of transmitted pkt is ");
+          PRINTLN_VALUE("%d", LT.readPacketSNRinACK());          
+        }          
       }
       else
       {
@@ -866,7 +865,7 @@ void loop(void)
         PRINT_HEX("%d", IRQStatus);
         LT.printIrqStatus(); 
       }
-#endif
+
       endSend=millis();
           
 #ifdef WITH_EEPROM
@@ -894,15 +893,17 @@ void loop(void)
 
 #ifdef WITH_RCVW
       
-#ifdef LORAWAN
+#ifdef LORAWAN 
       uint8_t rxw_max=2;
-      // Invert I/Q
-      //LT.invertIQ(INVERT_IQ_RX, true);
-      //PRINTLN_CSTSTR("%s","Inverting I/Q on RX");     
 #else
       uint8_t rxw_max=1;
 #endif
 
+#ifdef INVERTIQ_ON_RX
+      // Invert I/Q
+      PRINTLN_CSTSTR("%s","Inverting I/Q for RX");
+      LT.invertIQ(true);
+#endif
       uint8_t rxw=1;
       uint8_t RXPacketL;
                               
@@ -940,7 +941,7 @@ void loop(void)
               PRINT_CSTSTR("%s","Set downlink frequency to 434.665MHz\n");
               LT.setRfFrequency(434655000, Offset);
 #elif defined BAND2400
-              //TODO?              
+              //no changes in 2400 band              
 #endif
               //change to SF12 as we are targeting RX2 window
               //valid for EU868 and EU433 band        
@@ -972,7 +973,12 @@ void loop(void)
 #endif              
           }
       } while (rxw<=rxw_max);
-      
+
+#ifdef INVERTIQ_ON_RX
+      // Invert I/Q
+      PRINTLN_CSTSTR("%s","I/Q back to normal");
+      LT.invertIQ(false);
+#endif      
       // we have received a downlink message
       //
       if (RXPacketL) {  
@@ -982,7 +988,6 @@ void loop(void)
 #ifndef LORAWAN
         char print_buff[50];
 
-         
         sprintf((char*)print_buff, "^p%d,%d,%d,%d,%d,%d,%d\n",        
                    LT.readRXDestination(),
                    LT.readRXPacketType(),                   

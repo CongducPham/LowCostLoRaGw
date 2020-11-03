@@ -284,6 +284,17 @@ const uint8_t REG_INVERTIQ2 = 0x3B;
 #define INVERT_IQ_RX			1
 #define INVERT_IQ_TX			2
 
+#define PKT_TYPE_MASK   0xF0
+#define PKT_FLAG_MASK   0x0F
+
+#define PKT_TYPE_DATA   0x10
+#define PKT_TYPE_ACK    0x20
+
+#define PKT_FLAG_ACK_REQ            0x08
+#define PKT_FLAG_DATA_ENCRYPTED     0x04
+#define PKT_FLAG_DATA_WAPPKEY       0x02
+#define PKT_FLAG_DATA_DOWNLINK      0x01
+
 #define HEADER_SIZE				4
 
 const uint8_t OFFSET_RSSI = 139;

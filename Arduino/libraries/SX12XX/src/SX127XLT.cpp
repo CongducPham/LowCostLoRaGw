@@ -16,6 +16,7 @@
   	- binary constant in form BXXXXXXXX changed to 0bXXXXXXXX
   	- change pow(2,X) to (1 << X)
   	- ...
+  - Add ack transaction with transmitAddressed-receiveAddressed, transmitReliable-receiveReliable - done
   - Add polling mechanism to avoid additional DIO0 connection - done
   	- uncomment #define USE_POLLING  
   - All Serial.print replaced by macros - done
@@ -117,6 +118,8 @@ Modified  by C. Pham - Oct. 2020
 
 //use polling on REG_IRQFLAGS instead of DIO0
 #define USE_POLLING
+//invert IQ in ack transaction
+#define INVERTIQ_ON_ACK
 /**************************************************************************
 End by C. Pham - Oct. 2020
 **************************************************************************/
@@ -126,6 +129,7 @@ End by C. Pham - Oct. 2020
 //#define SX127XDEBUG1               //enable level 1 debug messages
 //#define SX127XDEBUG2               //enable level 2 debug messages
 //#define SX127XDEBUG3               //enable level 3 debug messages
+#define SX127XDEBUGACK               //enable ack transaction debug messages
 //#define DEBUGPHANTOM               //used to set bebuging for Phantom packets
 //#define SX127XDEBUGPINS            //enable pin allocation debug messages
 //#define DEBUGFSKRTTY               //enable for FSKRTTY debugging 
@@ -770,6 +774,9 @@ void SX127XLT::setTxParams(int8_t txPower, uint8_t rampTime)
   PRINTLN_CSTSTR("setTxParams()");
 #endif
 
+	if (txPower < 0)
+		return;
+
   byte RegPaDacReg=(_Device==DEVICE_SX1272)?0x5A:0x4D;
   
   uint8_t param1, param2;
@@ -944,7 +951,6 @@ void SX127XLT::setPacketParams(uint16_t packetParam1, uint8_t  packetParam2, uin
 
   uint8_t preambleMSB, preambleLSB, regdata;
 
-
   //*******************************************************
   //These changes are the same for SX1272 and SX127X
   //PreambleLength reg 0x20, 0x21
@@ -960,10 +966,11 @@ void SX127XLT::setPacketParams(uint16_t packetParam1, uint8_t  packetParam2, uin
 	Modified by C. Pham - Oct. 2020
   **************************************************************************/  
   
-  //if inversion is requested, default is inversion on RX, to set inversion on TX, call explicitly invertIQ(INVERT_IQ_TX, true)
   if (packetParam5==LORA_IQ_INVERTED)
-    invertIQ(INVERT_IQ_RX, true);
-  
+  	invertIQ(true);
+  else	
+  	invertIQ(false);
+  	
   /**************************************************************************
 	End by C. Pham - Oct. 2020
   **************************************************************************/  
@@ -972,12 +979,11 @@ void SX127XLT::setPacketParams(uint16_t packetParam1, uint8_t  packetParam2, uin
    ***************
 
   //IQ mode reg 0x33
+  
   regdata = ( (readRegister(REG_INVERTIQ)) & 0xBF );             //mask off invertIQ bit 6
   writeRegister(REG_INVERTIQ, (regdata + packetParam5));
   */
-  
   //*******************************************************
-
 
   //CRC mode
   _UseCRC = packetParam4;                                       //save CRC status
@@ -2387,11 +2393,6 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
 
   _RXPacketL = readRegister(REG_RXNBBYTES);
 
-  if (_RXPacketL > size)                      //check passed buffer is big enough for packet
-  {
-    _RXPacketL = size;                          //truncate packet if not enough space in passed buffer
-  }
-
 #ifdef USE_SPI_TRANSACTION   //to use SPI_TRANSACTION enable define at beginning of CPP file 
   SPI.beginTransaction(SPISettings(LTspeedMaximum, LTdataOrder, LTdataMode));
 #endif
@@ -2411,6 +2412,11 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
   
   //the header is not passed to the user
   _RXPacketL=_RXPacketL-HEADER_SIZE;
+  
+  if (_RXPacketL > size)                      //check passed buffer is big enough for packet
+  {
+    _RXPacketL = size;                          //truncate packet if not enough space in passed buffer
+  }  
 
   /**************************************************************************
 	End by C. Pham - Oct. 2020
@@ -2435,6 +2441,56 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
 #ifdef USE_SPI_TRANSACTION
   SPI.endTransaction();
 #endif
+
+  /**************************************************************************
+	Added by C. Pham - Oct. 2020
+  **************************************************************************/ 
+  
+  //sender request an ACK
+	if ( (_RXPacketType & PKT_FLAG_ACK_REQ) && (_RXDestination==_DevAddr) ) {
+		uint8_t TXAckPacketL;
+		const uint8_t TXBUFFER_SIZE=3;
+		uint8_t TXBUFFER[TXBUFFER_SIZE];
+		
+#ifdef SX127XDEBUGACK
+  	PRINT_CSTSTR("ACK requested by ");
+  	PRINTLN_VALUE("%d", _RXSource);
+  	PRINTLN_CSTSTR("ACK transmission turnaround safe wait...");
+#endif
+#ifdef INVERTIQ_ON_ACK
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("invert IQ for ack transmission");
+#endif
+		invertIQ(true);
+#endif			
+		delay(100);
+		TXBUFFER[0]=2; //length
+		TXBUFFER[1]=0; //RFU
+		TXBUFFER[2]=readRegister(REG_PKTSNRVALUE); //SNR of received packet
+		
+		uint8_t saveTXSeqNo=_TXSeqNo;
+		_TXSeqNo=_RXSeqNo;
+		// use -1 as txpower to use default setting
+		TXAckPacketL=transmitAddressed(TXBUFFER, 3, PKT_TYPE_ACK, _RXSource, _DevAddr, 10000, -1, WAIT_TX);	
+
+#ifdef SX127XDEBUGACK
+		if (TXAckPacketL)
+  		PRINTLN_CSTSTR("ACK sent");
+  	else	
+  		PRINTLN_CSTSTR("error when sending ACK"); 
+#endif
+#ifdef INVERTIQ_ON_ACK
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("set back IQ to normal");
+#endif
+		invertIQ(false);
+#endif		
+		_TXSeqNo=saveTXSeqNo;
+	}
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/ 	
 
   return _RXPacketL;                           //so we can check for packet having enough buffer space
 }
@@ -2800,12 +2856,85 @@ uint8_t SX127XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
     return 0;
   }
 
+	_AckStatus=0;
+
+	if (txpackettype & PKT_FLAG_ACK_REQ) {
+		uint8_t RXAckPacketL;
+		const uint8_t RXBUFFER_SIZE=3;
+		uint8_t RXBUFFER[RXBUFFER_SIZE];
+
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("transmitAddressed is waiting for an ACK");
+#endif
+#ifdef INVERTIQ_ON_ACK
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("invert IQ for ack reception");
+#endif
+		invertIQ(true);
+#endif
+		delay(10);			
+		//try to receive the ack
+		RXAckPacketL=receiveAddressed(RXBUFFER, RXBUFFER_SIZE, 2000, WAIT_RX);
+
+#ifdef INVERTIQ_ON_ACK
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("set back IQ to normal");
+#endif
+		invertIQ(false);
+#endif
+		
+		if (RXAckPacketL) {
+#ifdef SX127XDEBUGACK
+			PRINT_CSTSTR("received ");
+			PRINT_VALUE("%d", RXAckPacketL);
+			PRINTLN_CSTSTR(" bytes");
+			PRINT_CSTSTR("dest: ");
+			PRINTLN_VALUE("%d", readRXDestination());
+			PRINT_CSTSTR("ptype: ");
+			PRINTLN_VALUE("%d", readRXPacketType());		
+			PRINT_CSTSTR("src: ");
+			PRINTLN_VALUE("%d", readRXSource());
+			PRINT_CSTSTR("seq: ");
+			PRINTLN_VALUE("%d", readRXSeqNo());				 
+#endif		
+			if ( (readRXSource()==(uint8_t)txdestination) && (readRXDestination()==(uint8_t)txsource) && (readRXPacketType()==PKT_TYPE_ACK) && (readRXSeqNo()==(_TXSeqNo-1)) ) {
+				//seems that we got the correct ack
+#ifdef SX127XDEBUGACK
+				PRINTLN_CSTSTR("ACK is for me!");
+#endif		
+				_AckStatus=1;
+				uint8_t value=RXBUFFER[2];
+				
+				if (value & 0x80 ) // The SNR sign bit is 1
+				{
+					// Invert and divide by 4
+					value = ( ( ~value + 1 ) & 0xFF ) >> 2;
+					_PacketSNRinACK = -value;
+				}
+				else
+				{
+					// Divide by 4
+					_PacketSNRinACK = ( value & 0xFF ) >> 2;
+				}				
+			}
+			else {
+#ifdef SX127XDEBUGACK
+				PRINTLN_CSTSTR("not for me!");
+#endif			
+			}
+		}
+		else {
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("received nothing");		 
+#endif			
+		}
+	} 
+	
   /**************************************************************************
 	End by C. Pham - Oct. 2020
   **************************************************************************/
 
   return _TXPacketL;                                                     //no timeout, so TXdone must have been set
-
 }
 
 
@@ -4665,7 +4794,81 @@ uint32_t SX127XLT::transmitReliable(uint8_t *txbuffer, uint8_t size, char txpack
     _IRQmsb = IRQ_TX_TIMEOUT;
     return 0;
   }
+  
+	_AckStatus=0;
 
+	if (txpackettype & PKT_FLAG_ACK_REQ) {
+		uint8_t RXAckPacketL;
+		const uint8_t RXBUFFER_SIZE=3;
+		uint8_t RXBUFFER[RXBUFFER_SIZE];
+
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("transmitReliable is waiting for an ACK");
+#endif
+#ifdef INVERTIQ_ON_ACK
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("invert IQ for ack reception");
+#endif
+		invertIQ(true);
+#endif
+		delay(10);			
+		//try to receive the ack
+		RXAckPacketL=receiveAddressed(RXBUFFER, RXBUFFER_SIZE, 2000, WAIT_RX);
+
+#ifdef INVERTIQ_ON_ACK
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("set back IQ to normal");
+#endif
+		invertIQ(false);
+#endif
+		
+		if (RXAckPacketL) {
+#ifdef SX127XDEBUGACK
+			PRINT_CSTSTR("received ");
+			PRINT_VALUE("%d", RXAckPacketL);
+			PRINTLN_CSTSTR(" bytes");
+			PRINT_CSTSTR("dest: ");
+			PRINTLN_VALUE("%d", readRXDestination());
+			PRINT_CSTSTR("ptype: ");
+			PRINTLN_VALUE("%d", readRXPacketType());		
+			PRINT_CSTSTR("src: ");
+			PRINTLN_VALUE("%d", readRXSource());
+			PRINT_CSTSTR("seq: ");
+			PRINTLN_VALUE("%d", readRXSeqNo());				 
+#endif		
+			if ( (readRXSource()==(uint8_t)txdestination) && (readRXDestination()==(uint8_t)txsource) && (readRXPacketType()==PKT_TYPE_ACK) && (readRXSeqNo()==(_TXSeqNo-1)) ) {
+				//seems that we got the correct ack
+#ifdef SX127XDEBUGACK
+				PRINTLN_CSTSTR("ACK is for me!");
+#endif		
+				_AckStatus=1;
+				uint8_t value=RXBUFFER[2];
+				
+				if (value & 0x80 ) // The SNR sign bit is 1
+				{
+					// Invert and divide by 4
+					value = ( ( ~value + 1 ) & 0xFF ) >> 2;
+					_PacketSNRinACK = -value;
+				}
+				else
+				{
+					// Divide by 4
+					_PacketSNRinACK = ( value & 0xFF ) >> 2;
+				}				
+			}
+			else {
+#ifdef SX127XDEBUGACK
+				PRINTLN_CSTSTR("not for me!");
+#endif			
+			}
+		}
+		else {
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("received nothing");		 
+#endif			
+		}
+	}
+	
   /**************************************************************************
 	End by C. Pham - Oct. 2020
   **************************************************************************/
@@ -4808,12 +5011,6 @@ uint32_t SX127XLT::receiveReliable(uint8_t *rxbuffer, uint8_t size, char packett
 
   _RXPacketL = readRegister(REG_RXNBBYTES);
   
-
-  if (_RXPacketL > size)                      //check passed buffer is big enough for packet
-  {
-    _RXPacketL = size;                        //truncate packet if not enough space in passed buffer
-  }
-
 #ifdef USE_SPI_TRANSACTION   //to use SPI_TRANSACTION enable define at beginning of CPP file 
   SPI.beginTransaction(SPISettings(LTspeedMaximum, LTdataOrder, LTdataMode));
 #endif
@@ -4833,6 +5030,11 @@ uint32_t SX127XLT::receiveReliable(uint8_t *rxbuffer, uint8_t size, char packett
   
   //the header is not passed to the user
   _RXPacketL=_RXPacketL-HEADER_SIZE;
+  
+  if (_RXPacketL > size)                      //check passed buffer is big enough for packet
+  {
+    _RXPacketL = size;                        //truncate packet if not enough space in passed buffer
+  }  
 
   libraryCRC = addCRC(_RXDestination, libraryCRC);  
   libraryCRC = addCRC(_RXPacketType, libraryCRC);
@@ -4868,8 +5070,7 @@ uint32_t SX127XLT::receiveReliable(uint8_t *rxbuffer, uint8_t size, char packett
   SPI.endTransaction();
 #endif
 
-
-if (packettype > 0)
+	if (packettype > 0)
      {
      if (_RXPacketType != packettype)
         {
@@ -4893,6 +5094,56 @@ if (packettype > 0)
         }
      }  
 
+  /**************************************************************************
+	Added by C. Pham - Oct. 2020
+  **************************************************************************/ 
+  
+  //sender request an ACK
+	if ( (_RXPacketType & PKT_FLAG_ACK_REQ) && (_RXDestination==_DevAddr) ) {
+		uint8_t TXAckPacketL;
+		const uint8_t TXBUFFER_SIZE=3;
+		uint8_t TXBUFFER[TXBUFFER_SIZE];
+		
+#ifdef SX127XDEBUGACK
+  	PRINT_CSTSTR("ACK requested by ");
+  	PRINTLN_VALUE("%d", _RXSource);
+  	PRINTLN_CSTSTR("ACK transmission turnaround safe wait...");
+#endif			
+#ifdef INVERTIQ_ON_ACK
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("invert IQ for ack transmission");
+#endif
+		invertIQ(true);
+#endif			
+		delay(100);
+		TXBUFFER[0]=2; //length
+		TXBUFFER[1]=0; //RFU
+		TXBUFFER[2]=readRegister(REG_PKTSNRVALUE); //SNR of received packet
+		
+		uint8_t saveTXSeqNo=_TXSeqNo;
+		_TXSeqNo=_RXSeqNo;
+		// use -1 as txpower to use default setting
+		TXAckPacketL=transmitAddressed(TXBUFFER, 3, PKT_TYPE_ACK, _RXSource, _DevAddr, 10000, -1, WAIT_TX);	
+
+#ifdef SX127XDEBUGACK
+		if (TXAckPacketL)
+  		PRINTLN_CSTSTR("ACK sent");
+  	else	
+  		PRINTLN_CSTSTR("error when sending ACK"); 
+#endif
+#ifdef INVERTIQ_ON_ACK
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("set back IQ to normal");
+#endif
+		invertIQ(false);
+#endif	
+		
+		_TXSeqNo=saveTXSeqNo;
+	}
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/ 	
 
 #ifdef SX127XDEBUG1
   PRINTLN;
@@ -5178,9 +5429,9 @@ int8_t SX127XLT::doCAD(uint8_t counter)
 	return state;
 }
 
-#ifdef SX127XDEBUG1
+#ifdef SX127XDEBUG3
 
-void printDouble( double val, byte precision){
+void printDouble(double val, byte precision){
     // prints val with number of decimal places determine by precision
     // precision is a number from 0 to 6 indicating the desired decimial places
     // example: lcdPrintDouble( 3.1415, 2); // prints 3.14 (two decimal places)
@@ -5228,21 +5479,24 @@ uint16_t SX127XLT::getToA(uint8_t pl) {
   sf=getLoRaSF();
   cr=getLoRaCodingRate()-4;
 
-#ifdef SX127XDEBUG1
+#ifdef SX127XDEBUG3
   PRINT_CSTSTR("BW is ");
   PRINTLN_VALUE("%ld",bw);
 
   PRINT_CSTSTR("SF is ");
   PRINTLN_VALUE("%d",sf);
+  
+  PRINT_CSTSTR("CR is ");
+  PRINTLN_VALUE("%d",cr);  
 #endif
 
   // Symbol rate : time for one symbol (secs)
-  double ts = 1 / (bw / ( 1 << sf));
+  double ts = 1.0 / ((double)bw / ( 1 << sf));
 
   // must add 4.25 to the programmed preamble length to get the effective preamble length
   double tPreamble=(getPreamble()+4.25)*ts;
 
-#ifdef SX127XDEBUG1
+#ifdef SX127XDEBUG3
   PRINT_CSTSTR("ts is ");
   printDouble(ts,6);
   PRINTLN;
@@ -5252,7 +5506,7 @@ uint16_t SX127XLT::getToA(uint8_t pl) {
 #endif
 
   // for low data rate optimization
-  if (bw==125000 && sf==12)
+  if ((ts*1000.0)>16)
       DE=1;
 
   // Symbol length of payload and time
@@ -5263,7 +5517,7 @@ uint16_t SX127XLT::getToA(uint8_t pl) {
 
   double nPayload = 8 + ( ( tmp > 0 ) ? tmp : 0 );
 
-#ifdef SX127XDEBUG1
+#ifdef SX127XDEBUG3
   PRINT_CSTSTR("nPayload is ");
   PRINTLN_VALUE("%d",nPayload);
 #endif
@@ -5276,7 +5530,7 @@ uint16_t SX127XLT::getToA(uint8_t pl) {
 
   //////
 
-#ifdef SX127XDEBUG1
+#ifdef SX127XDEBUG3
   PRINT_CSTSTR("airTime is ");
   PRINTLN_VALUE("%d",airTime);
 #endif
@@ -5632,11 +5886,26 @@ void SX127XLT::CarrierSense3(uint8_t cad_number) {
    
    if invert==false, both RX and TX inversion are cleared, so dir is not used
 */
-uint8_t	SX127XLT::invertIQ(uint8_t dir, bool invert)
+uint8_t	SX127XLT::invertIQ(bool invert)
 {
 #ifdef SX127XDEBUG1
   PRINTLN_CSTSTR("invertIQ()");
 #endif
+
+  if (invert)
+  {
+  	writeRegister(REG_INVERTIQ, 0x66);
+  	writeRegister(REG_INVERTIQ2, 0x19);
+  }
+  else
+  {
+  	writeRegister(REG_INVERTIQ, 0x27);
+  	writeRegister(REG_INVERTIQ2, 0x1D);  
+  }
+  
+  return(0);
+  	
+	/*
   byte st0;
   int8_t state = 2;
   byte config1;
@@ -5716,6 +5985,7 @@ uint8_t	SX127XLT::invertIQ(uint8_t dir, bool invert)
 
   writeRegister(REG_OPMODE,st0);	// Getting back to previous status
   return state;
+  */
 }
 
 void SX127XLT::setTXSeqNo(uint8_t seqno)
@@ -5771,6 +6041,43 @@ uint32_t SX127XLT::readRXDoneTimestamp()
   
   return(_RXDoneTimestamp);
 }
+
+void SX127XLT::setDevAddr(uint8_t addr)
+{
+#ifdef SX127XDEBUG1
+  PRINTLN_CSTSTR("setDevAddr()");
+#endif
+	
+	_DevAddr=addr;
+}
+
+uint8_t SX127XLT::readDevAddr()
+{
+#ifdef SX127XDEBUG1
+  PRINTLN_CSTSTR("readDevAddr()");
+#endif
+
+  return(_DevAddr);
+}
+
+uint8_t SX127XLT::readAckStatus()
+{
+#ifdef SX127XDEBUG1
+  PRINTLN_CSTSTR("readAckStatus()");
+#endif
+
+  return(_AckStatus);
+}
+
+int8_t SX127XLT::readPacketSNRinACK()
+{
+#ifdef SX127XDEBUG1
+  PRINTLN_CSTSTR("readPacketSNRinACK()");
+#endif
+
+  return(_PacketSNRinACK);
+}
+
 
 /**************************************************************************
   End by C. Pham - Oct. 2020

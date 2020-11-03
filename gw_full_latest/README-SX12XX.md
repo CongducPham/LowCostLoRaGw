@@ -3,7 +3,7 @@ Supporting the SX12XX LoRa chip family
 
 In October 2020, we decided to provide support for the whole SX12XX LoRa chip family: SX126X, SX127X and SX128X. SX126X are considered as the next generation LoRa chip in the sub-GHz band while SX128X are targeting the ISM 2.4GHz band to remove some of the tight limitations of sub-GHz band's regulations.
 
-Therefore, we moved from the Libelium's SX1272 library that we have been using and adapting from 2015 to the SX12XX LoRa library written by Stuart Robinson (https://github.com/StuartsProjects/SX12XX-LoRa). Note that we have modified the Stuart Robinson SX12XX library to add our advanced features (CAD, Carrier Sense, PA_BOOST for SX127X, ...) and to adapt it to the framework that we have been using for the low-cost LoRa gateway. The original version from Stuart Robinson has been forked to our github (https://github.com/CongducPham/SX12XX-LoRa) to serve as reference. Our modified version is directly included in the LowCostLoRaGw repository (https://github.com/CongducPham/LowCostLoRaGw), see below.
+Therefore, we moved from the Libelium's SX1272 library that we have been using and adapting from 2015 to the SX12XX LoRa library written by Stuart Robinson (https://github.com/StuartsProjects/SX12XX-LoRa). Note that we have modified the Stuart Robinson SX12XX library to add our advanced features (CAD, Carrier Sense, PA_BOOST for SX127X, ack transactions,...) and to adapt it to the framework that we have been using for the low-cost LoRa gateway. The original version from Stuart Robinson has been forked to our github (https://github.com/CongducPham/SX12XX-LoRa) to serve as reference. Our modified version is directly included in the LowCostLoRaGw repository (https://github.com/CongducPham/LowCostLoRaGw), see below.
 
 What have been modified
 -----------------------
@@ -42,10 +42,6 @@ The objective is to seamlessly support the whole SX12XX family chip with the sam
 
 - for LoRaWAN mode in 2.4GHz, as there is no LoRaWAN specifications for frequency usage, the uplink and the downlink frequency (as well as data rate) are the same, even if RX2 is targeted. By defaut, it is CH_00_2400 = 2403000000Hz.
 
-Notice
-------
-
-- At time of writing, not all our advanced features have been ported to SX128X chips. Especially the computation of the time-on-air. We are working to these issues but there is very little impact on the gateway functionalities.
 	
 Enjoy!
 C. Pham		

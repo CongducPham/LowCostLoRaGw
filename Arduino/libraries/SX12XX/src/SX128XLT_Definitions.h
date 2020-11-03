@@ -394,6 +394,17 @@ const uint16_t RNG_CALIB_1600[] = { 13100,  13160,  13220,  13280,  13340,  1340
 #define INVERT_IQ_RX			1
 #define INVERT_IQ_TX			2
 
+#define PKT_TYPE_MASK   0xF0
+#define PKT_FLAG_MASK   0x0F
+
+#define PKT_TYPE_DATA   0x10
+#define PKT_TYPE_ACK    0x20
+
+#define PKT_FLAG_ACK_REQ            0x08
+#define PKT_FLAG_DATA_ENCRYPTED     0x04
+#define PKT_FLAG_DATA_WAPPKEY       0x02
+#define PKT_FLAG_DATA_DOWNLINK      0x01
+
 #define HEADER_SIZE				4
 
 /**************************************************************************

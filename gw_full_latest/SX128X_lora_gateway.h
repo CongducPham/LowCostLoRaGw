@@ -1,7 +1,8 @@
 //*******  Setup hardware pin definitions here ! ***************
 
 #define NSS 10
-#define NRESET 4
+// will be translated into GPIO4 by arduPI
+#define NRESET 6                                //reset pin on LoRa device
 #define RFBUSY 5
 #define DIO1 2
 #define DIO2 -1                 //not used 

@@ -38,8 +38,9 @@
  *  October 28th, 2020. v2.2 
  *				IMPORTANT. The low-level LoRa communication lib has moved from Libelium-based lib to Stuart Robinson's SX12XX lib.
  *					- https://github.com/StuartsProjects/SX12XX-LoRa
- *					- SX126X, SX127X, and SX128X related files have been ported to run on both Arduino & RPI environment
+ *					- SX126X, SX127X, and SX128X related files have been ported to run on both Arduino & RaspberryPI environment
  *					- currently, the code has been tested for SX127X, still require testing for SX126X and SX128X	
+  *					- for more details see https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-SX12XX.md
  *  May, 19th, 2020. v2.1a
  *	      uplink and downlink feequency
  *	        - define LORAWAN_UPFQ, LORAWAN_D2FQ and LORAWAN_D2SF to better adapt the custom frequency plan
@@ -202,6 +203,8 @@
  *        First version of receive gateway
  */
 
+//LoRa chip version will be defined by makefile
+//
 #ifdef SX126X
 #include <SX126XLT.h>                                          
 #include "SX126X_lora_gateway.h"
@@ -243,6 +246,8 @@ extern int optind, opterr, optopt;
 #define PRINTLN_HEX(fmt,param)		do {printf(fmt,param);printf("\n");} while(0)
 #define FLUSHOUTPUT               fflush(stdout);
 
+//#define DEBUG
+
 #ifdef DEBUG
   #define DEBUGLN                 PRINTLN
   #define DEBUG_CSTSTR(fmt,param) PRINT_CSTSTR(fmt,param)  
@@ -255,7 +260,13 @@ extern int optind, opterr, optopt;
   #define DEBUG_VALUE(fmt,param)  
 #endif
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ADDITIONAL FEATURES
+//
 
+#define PERIODIC_RESET100
+//usually set for LoRaWAN
+#define INVERTIQ_ON_TX
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FOR DOWNLINK FEATURES
 //
@@ -515,12 +526,13 @@ void loraConfig() {
 		}
 	}
 
+#ifdef MY_FREQUENCY
+	DEFAULT_CHANNEL=MY_FREQUENCY;
+#endif
+	
 	//otherwise DEFAULT_CHANNEL is set in SX12XX_lora_gateway.h
 	PRINT_CSTSTR("^$Frequency ");
 	PRINTLN_VALUE("%ld", DEFAULT_CHANNEL);
-
-	PRINT_CSTSTR("^$Set LoRa power dBm to ");
-	PRINTLN_VALUE("%d",(uint8_t)MAX_DBM);  
 
 	PRINT_CSTSTR("^$LoRa addr ");
 	PRINTLN_VALUE("%d", GW_ADDR);
@@ -556,15 +568,8 @@ void loraConfig() {
   //set for LoRa transmissions                              
   LT.setPacketType(PACKET_TYPE_LORA);
   //set the operating frequency                 
-#ifdef MY_FREQUENCY
-  LT.setRfFrequency(MY_FREQUENCY, Offset);
-#else  
   LT.setRfFrequency(DEFAULT_CHANNEL, Offset);                   
-#endif
 //run calibration after setting frequency
-#ifdef SX126X
-  if (LT.begin(NSS, NRESET, RFBUSY, DIO1, DIO2, DIO3, RX_EN, TX_EN, SW, LORA_DEVICE))
-#endif
 #ifdef SX127X
   LT.calibrateImage(0);
 #endif
@@ -595,33 +600,46 @@ void loraConfig() {
   LT.setHighSensitivity();  //set for maximum gain
 #endif
 #ifdef SX126X
-  //set for IRQ on TX done and timeout on DIO1
-  LT.setDioIrqParams(IRQ_RADIO_ALL, (IRQ_TX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);
+  //set for IRQ on RX done and timeout on DIO1
+  LT.setDioIrqParams(IRQ_RADIO_ALL, (IRQ_RX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);
 #endif
 #ifdef SX127X
   //set for IRQ on RX done
-  LT.setDioIrqParams(IRQ_RADIO_ALL, IRQ_TX_DONE, 0, 0);
+  LT.setDioIrqParams(IRQ_RADIO_ALL, IRQ_RX_DONE, 0, 0);
 #ifdef PABOOST
   LT.setPA_BOOST(true);
   PRINTLN_CSTSTR("^$Use PA_BOOST amplifier line");
 #endif
 #endif
 #ifdef SX128X
-  LT.setDioIrqParams(IRQ_RADIO_ALL, (IRQ_TX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);
+  LT.setDioIrqParams(IRQ_RADIO_ALL, (IRQ_RX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);
 #endif  
   
   //***************************************************************************************************
 
+	//the gateway needs to know its address to verify that a packet requesting an ack is for him
+	//this is done in the SX12XX library
+	//
+	LT.setDevAddr(GW_ADDR);
+	//TX power and ramp time
+	//this is required because the gateway can have to transmit ACK messages prior to send any downlink packet
+	//so txpower needs to be set before hand.
+	PRINT_CSTSTR("^$Set LoRa txpower dBm to ");
+	PRINTLN_VALUE("%d",(uint8_t)MAX_DBM); 
+#ifdef SX127X 	
+	LT.setTxParams(MAX_DBM, RADIO_RAMP_DEFAULT);            
+#endif
+#if defined SX126X || defined SX128X
+	LT.setTxParams(MAX_DBM, RAMP_TIME);
+#endif
 	//as the "normal" behavior is to invert I/Q on TX, the option here is only to set invert I/Q on RX
 	//to test inversion with reception when a device has been set to invert I/Q on TX
 	//of course this is only valid if proposed by the radio module which is the case for SX127X
   if (optIIQ) {
 		PRINT_CSTSTR("^$Invert I/Q on RX\n");  
-		LT.invertIQ(INVERT_IQ_RX, true);
+		LT.invertIQ(true);
   }
-  else
-  	LT.invertIQ(INVERT_IQ_RX, false);
-
+	
 #ifdef DEBUG
   PRINTLN;
   //reads and prints the configured LoRa settings, useful check
@@ -678,6 +696,9 @@ void loraConfig() {
 #endif 	    
   // Print a success message
   PRINTLN_CSTSTR("configured as LR-BS. Waiting RF input for transparent RF-serial bridge");
+#ifdef PERIODIC_RESET100
+	PRINTLN_CSTSTR("^$Will safely reset radio module every 100 packet received");
+#endif   
 }
 
 uint32_t getGwDateTime()
@@ -706,11 +727,6 @@ void setup()
   //Set data mode
   SPI.setDataMode(SPI_MODE0); 
 
-  //SPI beginTranscation is normally part of library routines, but if it is disabled in the library
-  //a single instance is needed here, so uncomment the program line below
-  //SPI.beginTransaction(SPISettings(8000000, MSBFIRST, SPI_MODE0));
-
-  //setup hardware pins used by device, then check if device is found
   //setup hardware pins used by device, then check if device is found
 #ifdef SX126X
   if (LT.begin(NSS, NRESET, RFBUSY, DIO1, DIO2, DIO3, RX_EN, TX_EN, SW, LORA_DEVICE))
@@ -734,7 +750,7 @@ void setup()
     }
   }
 
-  loraConfig();
+  loraConfig(); 
 
 #if defined DOWNLINK
   PRINTLN_CSTSTR("^$Low-level gateway has downlink support");
@@ -882,7 +898,7 @@ void packet_is_Error()
 void loop(void) 
 { 
 	int i=0;
-	uint8_t RXPacketL=0;
+	int RXPacketL=0;
 	char print_buf[100];
 	uint32_t current_time_tmst;
 
@@ -905,9 +921,14 @@ void loop(void)
 		
 		if (optRAW)
 			RXPacketL = LT.receive(RXBUFFER, RXBUFFER_SIZE, 10000, WAIT_RX);
-		else	
+		else {	
 			RXPacketL = LT.receiveAddressed(RXBUFFER, RXBUFFER_SIZE, 10000, WAIT_RX);
-
+			
+			//for packet with our header, destination must be GW_ADDR (i.e. 1) otherwise we reject it
+			if (LT.readRXDestination()!=GW_ADDR)
+				RXPacketL=-1;
+		}
+		
 		if (RXPacketL>0) {
 			//get timestamps only when we actually receive something
 			rcv_time_tmst=getGwDateTime();
@@ -931,18 +952,14 @@ void loop(void)
 
 			if (errors>10) {
 				errors=0;
-				PRINTLN_CSTSTR("^$Resetting radio module");
+				PRINTLN_CSTSTR("^$Resetting radio module, too many errors");
+				LT.resetDevice();
 				loraConfig();
 				// to start over
 				status_counter=0;
 			}
 		}
-
-		if (0/*TODO*/) {
-			PRINT_CSTSTR("^$ACK requested by ");
-			PRINTLN_VALUE("%d", LT.readRXSource());      
-		}         
-	
+		
 		FLUSHOUTPUT;
 	
 		/////////////////////////////////////////////////////////////////// 
@@ -958,7 +975,7 @@ void loop(void)
 #endif
 		
 			RXpacketCount++;
-
+			
 			receivedFromLoRa=true;       
 
 			//remove any downlink.txt file that may have been generated late and will therefore be out-dated
@@ -1051,7 +1068,8 @@ void loop(void)
 		
 #ifdef DEBUG_DOWNLINK_TIMING
 		//this is the time (millis()) at which we start waiting for checking downlink requests
-		printf("^$downlink wait: %lu\n", millis());
+		PRINT_CSTSTR("^$downlink wait: ");
+		PRINTLN_VALUE("%lu", millis());
 #endif
     		    	
 		if (enableDownlinkCheck)  {	
@@ -1064,7 +1082,8 @@ void loop(void)
 
 #ifdef DEBUG_DOWNLINK_TIMING
 			//this is the time (millis()) at which we start checking downlink requests
-			printf("^$downlink check: %lu\n", millis());	
+		PRINT_CSTSTR("^$downlink check: ");
+		PRINTLN_VALUE("%lu", millis());
 #endif
 			//to set time_str 
 			current_time_tmst=getGwDateTime();   	
@@ -1073,15 +1092,17 @@ void loop(void)
 			// if there is a downlink.txt file then read all lines in memory for
 			// further processing
 			if (checkForLateDownlinkRX2)
-				printf("^$----delayRX2-----------------------------------------\n");
+				PRINT_CSTSTR("^$----delayRX2-----------------------------------------\n");
 			else if (checkForLateDownlinkJACC1)	
-				printf("^$----retryJACC1---------------------------------------\n");    			
+				PRINT_CSTSTR("^$----retryJACC1---------------------------------------\n");    			
 			else if (checkForLateDownlinkJACC2)	
-				printf("^$----retryJACC2---------------------------------------\n");
+				PRINT_CSTSTR("^$----retryJACC2---------------------------------------\n");
 			else	
-				printf("^$-----------------------------------------------------\n");
+				PRINT_CSTSTR("^$-----------------------------------------------------\n");
 				
-			printf("^$Check for downlink requests %s*%lu\n", time_str, current_time_tmst);
+			PRINT_CSTSTR("^$Check for downlink requests ");
+			PRINT_STR("%s", time_str);
+			PRINTLN_VALUE("%lu", current_time_tmst);
 			
 			FILE *fp = fopen("downlink/downlink.txt","r");
 			
@@ -1099,12 +1120,14 @@ void loop(void)
 				size_t len=0;
 				
 				ssize_t dl_line_size=getline(&downlink_json_entry, &len, fp);
-					
-				printf("^$Read downlink: %lu\n", dl_line_size);
-					
+
+				PRINT_CSTSTR("^$Read downlink: ");
+				PRINTLN_VALUE("%lu", dl_line_size);
+							
 				if (dl_line_size>0) {
 					hasDownlinkEntry=true;
-					//printf("^$Downlink entry: %s", downlink_json_entry);
+					//PRINT_CSTSTR("^$Downlink entry: ");
+					//PRINTLN_STR("%d", downlink_json_entry);
 				}
 				
 				fclose(fp);
@@ -1125,7 +1148,7 @@ void loop(void)
 			}
 			else {
 				hasDownlinkEntry=false;
-				printf("^$NO NEW DOWNLINK ENTRY\n");
+				PRINT_CSTSTR("^$NO NEW DOWNLINK ENTRY\n");
 
 				if (checkForLateDownlinkRX2) {
 					checkForLateDownlinkRX2=false;
@@ -1162,7 +1185,8 @@ void loop(void)
 
 #ifdef DEBUG_DOWNLINK_TIMING
 		//this is the time (millis()) at which we start processing the downlink requests
-		printf("^$downlink process: %lu\n", millis());
+		PRINT_CSTSTR("^$downlink process: ");
+		PRINTLN_VALUE("%lu", millis());
 #endif
         
     if (hasDownlinkEntry) {
@@ -1170,8 +1194,9 @@ void loop(void)
 		  
 			bool is_lorawan_downlink=false;
 		
-			printf("^$Process downlink request\n");
-			//printf("^$Process downlink requests: %s\n",  downlink_json_entry);
+			PRINT_CSTSTR("^$Process downlink request\n");
+			//PRINT_CSTSTR("^$Process downlink requests: ");
+			//PRINTLN_STR("%s", downlink_json_entry);
 		
 			document.Parse(downlink_json_entry);
 					
@@ -1181,11 +1206,12 @@ void loop(void)
 						if (document["txpk"]["modu"].IsString())
 							if (document["txpk"]["modu"]=="LORA") {
 								is_lorawan_downlink=true;    
-								//printf("^$data = %s\n", document["txpk"]["data"].GetString());
+								//PRINT_CSTSTR("^$data = ");
+								//PRINTLN_STR("%s", document["txpk"]["data"].GetString());
 							}
 						
 				if (is_lorawan_downlink) {		
-					printf("^$LoRaWAN downlink request\n");				
+					PRINT_CSTSTR("^$LoRaWAN downlink request\n");				
 
 					//use the tmst field provided by the Network Server in the downlink message
 					uint32_t send_time_tmst=document["txpk"]["tmst"].GetUint();
@@ -1199,10 +1225,10 @@ void loop(void)
 									
 					// just in case
 					if (send_time_tmst < rcv_time_tmst)
-						printf("^$WARNING: downlink tmst in the past, abort\n");	
+						PRINT_CSTSTR("^$WARNING: downlink tmst in the past, abort\n");	
 					else 
 					if (send_time_tmst - rcv_time_tmst > ((uint32_t)DELAY_JACC2+(uint32_t)DELAY_EXTDNW2)*1000)
-						printf("^$WARNING: downlink tmst too much in future, abort\n");	
+						PRINT_CSTSTR("^$WARNING: downlink tmst too much in future, abort\n");	
 					else
 						{
 							uint32_t wmargin;
@@ -1219,28 +1245,23 @@ void loop(void)
 								if (wmargin) {
 									rx_wait_delay+=(uint32_t)wmargin*1000;
 									go_for_downlink=true;
-									printf("^$WARNING: too late for RX1, try RX2\n");	
+									PRINT_CSTSTR("^$WARNING: too late for RX1, try RX2\n");	
 								}
 								else
-									printf("^$WARNING: too late to send downlink, abort\n");
+									PRINT_CSTSTR("^$WARNING: too late to send downlink, abort\n");
 							}
 							else
 								go_for_downlink=true;				
 						}
 								
 					if (go_for_downlink) {												
-						uint8_t downlink_payload[256];
-				
-						//invert I/Q
-						//TODO: currently, invert I/Q on the gateway is not working. Why?
-						//LT.invertIQ(INVERT_IQ_TX,true)
-						//printf("^$Invert I/Q on RX\n",);					
+						uint8_t downlink_payload[256];				
 				
 						//convert base64 data into binary buffer
 						int downlink_size = b64_to_bin(document["txpk"]["data"].GetString(), document["txpk"]["data"].GetStringLength(), downlink_payload, sizeof downlink_payload);
 				
 						if (downlink_size != document["txpk"]["size"].GetInt()) {
-							printf("^$WARNING: mismatch between .size and .data size once converter to binary\n");
+							PRINT_CSTSTR("^$WARNING: mismatch between .size and .data size once converter to binary\n");
 						}
 								
 						//uncomment to test for RX2
@@ -1254,7 +1275,7 @@ void loop(void)
 						// should wait for RX2
 						if (useRX2) {           
 
-							printf("^$Target RX2\n");
+							PRINT_CSTSTR("^$Target RX2\n");
 							//set frequency according to RX2 window
 							LT.setRfFrequency(LORAWAN_D2FQ, Offset);
 							//change to SF according to RX2 window
@@ -1266,7 +1287,7 @@ void loop(void)
 #endif											
 						}
 						else
-							printf("^$Target RX1\n");
+							PRINT_CSTSTR("^$Target RX1\n");
 					
 						//wait until it is the (approximate) right time to send the downlink data
 						//downlink data can use DELAY_DNW1 or DELAY_DNW2
@@ -1276,24 +1297,30 @@ void loop(void)
 			
 						//	send the packet
 #ifdef DEBUG_DOWNLINK_TIMING						
-						printf("^$downlink send: %lu\n", millis());
-#endif	
+						PRINT_CSTSTR("^$downlink send: ");
+						PRINTLN_VALUE("%lu", millis());						
+#endif
+#ifdef INVERTIQ_ON_TX
+						PRINTLN_CSTSTR("^$invert IQ on TX");
+						LT.invertIQ(true);
+#endif
 						//LoRaWAN downlink so no header in communication lib								
 						TXPacketL=LT.transmit((uint8_t*)downlink_payload, downlink_size, 10000, MAX_DBM, WAIT_TX);    
 
+#ifdef INVERTIQ_ON_TX
+						PRINTLN_CSTSTR("^$IQ back normal");
+						LT.invertIQ(false);
+#endif
+
 						if (TXPacketL>0)
-							printf("^$Packet sent\n");
+							PRINTLN_CSTSTR("^$Packet sent");
 						else	
-							printf("^$Send error\n");
-						
-						//TODO: currently, invert I/Q on the gateway is not working. Why?				
-						//LT.invertIQ(INVERT_IQ_TX,false)
-						//printf("^$Normal I/Q\n");	
+							PRINT_CSTSTR("^$Send error\n");
 
 						if (useRX2) {					
 							//set back to the reception frequency
 							LT.setRfFrequency(DEFAULT_CHANNEL, Offset);
-							printf("^$Set back frequency\n");	
+							PRINT_CSTSTR("^$Set back frequency\n");	
 							//set back the SF
 #if defined SX126X || defined SX127X
   						LT.setModulationParams(SpreadingFactor, Bandwidth, CodeRate, Optimisation);
@@ -1301,14 +1328,16 @@ void loop(void)
 #ifdef SX128X
   						LT.setModulationParams(SpreadingFactor, Bandwidth, CodeRate);
 #endif
-							printf("^$Set back SF\n");
+							PRINT_CSTSTR("^$Set back SF\n");
 						}
 					}
 				} 
 				else {			
 					// non-LoRaWAN downlink		    
-					if (document["dst"].IsInt())
-						printf("^$dst = %d\n", document["dst"].GetInt());
+					if (document["dst"].IsInt()) {
+						PRINT_CSTSTR("^$dst = ");
+						PRINTLN_VALUE("%d", document["dst"].GetInt());
+					}
 							
 					// check if it is a valid send request
 					if (document["status"]=="send_request" && document["dst"].IsInt()) {
@@ -1355,24 +1384,34 @@ void loop(void)
 								;
 						
 #ifdef DEBUG_DOWNLINK_TIMING						
-							printf("^$downlink send: %lu\n", millis());
+							PRINT_CSTSTR("^$downlink send: ");
+							PRINTLN_VALUE("%lu", millis());			
+#endif
+#ifdef INVERTIQ_ON_TX
+						PRINTLN_CSTSTR("^$invert IQ on TX");
+						LT.invertIQ(true);
 #endif										
 							TXPacketL=LT.transmitAddressed(pkt_payload, l, p_type, document["dst"].GetInt(), GW_ADDR, 10000, MAX_DBM, WAIT_TX);
+
+#ifdef INVERTIQ_ON_TX
+						PRINTLN_CSTSTR("^$IQ back normal");
+						LT.invertIQ(false);
+#endif
 							
 							if (TXPacketL>0)
-								printf("^$Packet sent\n");
+								PRINT_CSTSTR("^$Packet sent\n");
 							else	
-								printf("^$Send error\n");	
+								PRINT_CSTSTR("^$Send error\n");	
 						}
 						else {
-							printf("^$DELAYED: busy channel\n");	
+							PRINT_CSTSTR("^$DELAYED: busy channel\n");	
 							// here we will retry later because of a busy channel
 						}
 						//set back extendedIFS
 						extendedIFS=true;
 					}
 					else {
-						printf("^$DISCARDING: not valid send_request\n");   	
+						PRINT_CSTSTR("^$DISCARDING: not valid send_request\n");   	
 					}
 				}							
 
@@ -1392,7 +1431,8 @@ void loop(void)
 						document["status"].SetString("sent_fail", document.GetAllocator());
 
 					document.Accept(writer);
-					printf("^$JSON record: %s\n", json_record_buffer.GetString());
+					PRINT_CSTSTR("^$JSON record: ");
+					PRINTLN_STR("%s", json_record_buffer.GetString());
 
 					FILE *fp = fopen("downlink/downlink-sent.txt","a");
 		
@@ -1406,10 +1446,10 @@ void loop(void)
 				if (downlink_json_entry)
 					free(downlink_json_entry);
 				
-				printf("^$-----------------------------------------------------\n");
+				PRINT_CSTSTR("^$-----------------------------------------------------\n");
 			}
 			else { 
-				printf("^$WARNING: not valid JSON format, abort\n");
+				PRINT_CSTSTR("^$WARNING: not valid JSON format, abort\n");
 			}			
 			FLUSHOUTPUT;
 		}	
@@ -1419,6 +1459,16 @@ void loop(void)
 			remove("downlink/downlink.txt");
 #endif
 	} 
+
+#ifdef PERIODIC_RESET100	
+	//test periodic reconfiguration
+	if ( RXpacketCount!=0 && !(RXpacketCount % 100) )
+	{	
+		PRINTLN_CSTSTR("^$****Periodic reset");
+		LT.resetDevice();
+		loraConfig();	
+	}	
+#endif	
 }
 
 int xtoi(const char *hexstring) {

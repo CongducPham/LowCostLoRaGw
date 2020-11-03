@@ -139,20 +139,6 @@ const uint32_t DEFAULT_CHANNEL=CH_05_900;
 const uint32_t DEFAULT_CHANNEL=CH_00_433;
 #endif
 
-#define PKT_TYPE_DATA   0x10
-#define PKT_TYPE_ACK    0x20
-
-#define PKT_TYPE_MASK   0xF0
-#define PKT_FLAG_MASK   0x0F
-
-#define PKT_FLAG_ACK_REQ            0x08
-#define PKT_FLAG_DATA_ENCRYPTED     0x04
-#define PKT_FLAG_DATA_WAPPKEY       0x02
-#define PKT_FLAG_DATA_DOWNLINK      0x01
-
-#define SX12XX_ERROR_ACK        3
-#define SX12XX_ERROR_TOA        4
-
 #define DEFAULT_DEST_ADDR       1
 
 // END
