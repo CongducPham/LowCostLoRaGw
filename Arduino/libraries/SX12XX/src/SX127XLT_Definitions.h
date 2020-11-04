@@ -281,9 +281,6 @@ const uint8_t REG_PADAC = 0x4D;
 
 const uint8_t REG_INVERTIQ2 = 0x3B;
 
-#define INVERT_IQ_RX			1
-#define INVERT_IQ_TX			2
-
 #define PKT_TYPE_MASK   0xF0
 #define PKT_FLAG_MASK   0x0F
 

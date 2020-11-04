@@ -13,11 +13,17 @@ See LICENSE.TXT file included in the library
   CHANGES by C. Pham, October 2020
 
   - Ensure that lib compiles on Raspberry - done
-  - Add ack transaction with transmitAddressed-receiveAddressed	- done  
+  - Add ack transaction with transmitAddressed-receiveAddressed	- done
+  	- in the return ack, the SNR of the received packet at the gateway is included  	
+  	- the sending of the ack and the reception of the ack use inverted IQ
+  	- you can disable IQ inversion in ack transaction by commenting #define INVERTIQ_ON_ACK  
   - Add polling mechanism to avoid additional DIO0 connection - done - to test
   	- uncomment #define USE_POLLING  
+  	- this is the default behavior    	
   - All Serial.print replaced by macros - done
   	- lib can be used on Arduino and on UNIX-based computer such as RaspberryPI
+  - separate management of IQ inversion - done. 
+  	- invertIQ(true) or invertIQ(false)  	
   - add returnBandwidth() function to get the operating bandwidth value: 7800, ..., 125000, 250000, ...	- done
   - add getToA(uint8_t pl) function to get the time-on-air of a pl-byte packet according to current LoRa settings - done - to test
   - change the order of header and add a seq number in the header - done

@@ -391,9 +391,6 @@ const uint16_t RNG_CALIB_1600[] = { 13100,  13160,  13220,  13280,  13340,  1340
   Added by C. Pham - Oct. 2020
 **************************************************************************/
 
-#define INVERT_IQ_RX			1
-#define INVERT_IQ_TX			2
-
 #define PKT_TYPE_MASK   0xF0
 #define PKT_FLAG_MASK   0x0F
 

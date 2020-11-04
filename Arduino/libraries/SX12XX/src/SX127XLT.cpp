@@ -17,18 +17,20 @@
   	- change pow(2,X) to (1 << X)
   	- ...
   - Add ack transaction with transmitAddressed-receiveAddressed, transmitReliable-receiveReliable - done
+  	- in the return ack, the SNR of the received packet at the gateway is included
+  	- the sending of the ack and the reception of the ack use inverted IQ
+  	- you can disable IQ inversion in ack transaction by commenting #define INVERTIQ_ON_ACK    	
   - Add polling mechanism to avoid additional DIO0 connection - done
-  	- uncomment #define USE_POLLING  
+  	- uncomment #define USE_POLLING
+  	- this is the default behavior  
   - All Serial.print replaced by macros - done
   	- lib can be used on Arduino and on UNIX-based computer such as RaspberryPI
-  - specific handling of IQ inversion - done. 
-  	-	Differentiate between INVERT_IQ_RX and INVERT_IQ_TX
-  	- invertIQ(INVERT_IQ_RX, true), invertIQ(INVERT_IQ_TX, true) or invertIQ(whatever, false)
-  - when LORA_IQ_INVERTED is used in setPacketParams() default behavior is INVERT_IQ_RX  - done
+  - separate management of IQ inversion - done. 
+  	- invertIQ(true) or invertIQ(false)
   - change power management in setTXParams() - done.
   	- take into account PA_BOOST
   	- power value is computed differently
-  - PA_BOOST setting can be handled separately with setPA_BOOST(bool pa_boost)  - done
+  - PA_BOOST setting can be handled separately with setPA_BOOST(bool pa_boost) - done
   - add returnBandwidth() function to get the operating bandwidth value: 7800, ..., 125000, 250000, ...	 - done
   - add getToA(uint8_t pl) function to get the time-on-air of a pl-byte packet according to current LoRa settings - done
   - change the order of header and add a seq number in the header  - done
