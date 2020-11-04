@@ -996,7 +996,7 @@ void loop(void)
 				RXPacketL, 
 				PacketSNR,
 				PacketRSSI,
-				LT.returnBandwidth(),
+				LT.returnBandwidth()/1000,
 				LT.getLoRaCodingRate(),
 				LT.getLoRaSF());     
 
@@ -1021,7 +1021,7 @@ void loop(void)
 
 			// ^rbw,cr,sf,fq
 			sprintf(print_buf, "^r%d,%d,%d,%ld\n", 
-				LT.returnBandwidth(),
+				LT.returnBandwidth()/1000,
 				LT.getLoRaCodingRate(),
 				LT.getLoRaSF(),
 				(uint32_t)(DEFAULT_CHANNEL/1000.0));
@@ -1255,7 +1255,7 @@ void loop(void)
 						}
 								
 					if (go_for_downlink) {												
-						uint8_t downlink_payload[256];				
+						uint8_t downlink_payload[256];										
 				
 						//convert base64 data into binary buffer
 						int downlink_size = b64_to_bin(document["txpk"]["data"].GetString(), document["txpk"]["data"].GetStringLength(), downlink_payload, sizeof downlink_payload);
@@ -1263,7 +1263,11 @@ void loop(void)
 						if (downlink_size != document["txpk"]["size"].GetInt()) {
 							PRINT_CSTSTR("^$WARNING: mismatch between .size and .data size once converter to binary\n");
 						}
-								
+
+#ifdef INVERTIQ_ON_TX
+						PRINTLN_CSTSTR("^$invert IQ on TX");
+						LT.invertIQ(true);
+#endif								
 						//uncomment to test for RX2
 						//rx_wait_delay+=(uint32_t)DELAY_EXTDNW2*1000;
 
@@ -1299,10 +1303,6 @@ void loop(void)
 #ifdef DEBUG_DOWNLINK_TIMING						
 						PRINT_CSTSTR("^$downlink send: ");
 						PRINTLN_VALUE("%lu", millis());						
-#endif
-#ifdef INVERTIQ_ON_TX
-						PRINTLN_CSTSTR("^$invert IQ on TX");
-						LT.invertIQ(true);
 #endif
 						//LoRaWAN downlink so no header in communication lib								
 						TXPacketL=LT.transmit((uint8_t*)downlink_payload, downlink_size, 10000, MAX_DBM, WAIT_TX);    
