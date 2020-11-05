@@ -3291,7 +3291,8 @@ uint16_t SX128XLT::getToA(uint8_t pl) {
 #endif
 
   // Symbol rate : time for one symbol (secs)
-  double ts = 1.0 / ((double)bw / ( 1 << sf));
+  //double ts = 1.0 / ((double)bw / ( 1 << sf));
+	double ts = (double)( 1 << sf) / (double)bw;
 
   // must add 4.25 to the programmed preamble length to get the effective preamble length
   // for sf==5 and sf==6, must add 6.25
@@ -3317,7 +3318,7 @@ uint16_t SX128XLT::getToA(uint8_t pl) {
 #endif
 
   // Symbol length of payload and time
-  double tmp = (8*pl - 4*sf + ((sf<7)?0:8) + 16*((savedPacketParam4==LORA_CRC_ON)?1:0) - 20*((savedPacketParam2==LORA_PACKET_VARIABLE_LENGTH)?1:0)) / (double)(4*(sf-2*((sf>10)?1:0)) );
+  double tmp = (8*pl + ((savedPacketParam4==LORA_CRC_ON)?16:0) - 4*sf + ((sf<7)?0:8) + ((savedPacketParam2==LORA_PACKET_VARIABLE_LENGTH)?20:0)) / (double)(4*(sf-2*((sf>10)?1:0)));
 
 	tmp = ( tmp > 0 ) ? tmp : 0;
 	
@@ -3328,7 +3329,7 @@ uint16_t SX128XLT::getToA(uint8_t pl) {
 #ifdef SX128XDEBUG3
   PRINT_CSTSTR("nSymbol_payload is ");
   PRINTLN_VALUE("%d",(uint16_t)nPayload);
-   PRINT_CSTSTR("nSymbol_total is ");
+  PRINT_CSTSTR("nSymbol_total is ");
   PRINTLN_VALUE("%d",(uint16_t)nPayload+(getPreamble()+((sf<7)?6.25:4.25))); 
 #endif
 
