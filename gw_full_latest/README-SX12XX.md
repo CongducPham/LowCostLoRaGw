@@ -3,7 +3,7 @@ Supporting the SX12XX LoRa chip family
 
 In October 2020, we decided to provide support for the whole SX12XX LoRa chip family: SX126X, SX127X and SX128X. SX126X are considered as the next generation LoRa chip in the sub-GHz band while SX128X are targeting the ISM 2.4GHz band to remove some of the tight limitations of sub-GHz band's regulations.
 
-Therefore, we moved from the Libelium's SX1272 library that we have been using and adapting from 2015 to the SX12XX LoRa library written by Stuart Robinson (https://github.com/StuartsProjects/SX12XX-LoRa). Note that we have modified the Stuart Robinson SX12XX library to add our advanced features (CAD, Carrier Sense, PA_BOOST for SX127X, ack transactions,...) and to adapt it to the framework that we have been using for the low-cost LoRa gateway. The original version from Stuart Robinson has been forked to our github (https://github.com/CongducPham/SX12XX-LoRa) to serve as reference. Our modified version is directly included in the LowCostLoRaGw repository (https://github.com/CongducPham/LowCostLoRaGw), see below.
+Therefore, we moved from the Libelium's SX1272 library that we have been using and adapting since 2015 to the SX12XX LoRa library written by Stuart Robinson (https://github.com/StuartsProjects/SX12XX-LoRa). Note that we have modified the Stuart Robinson SX12XX library to add our advanced features (CAD, Carrier Sense, PA_BOOST for SX127X, ack transactions,...) and to adapt it to the framework that we have been using for the low-cost LoRa gateway. The original version from Stuart Robinson has been forked to our github (https://github.com/CongducPham/SX12XX-LoRa) to serve as reference. Our modified version is directly included in the LowCostLoRaGw repository (https://github.com/CongducPham/LowCostLoRaGw), see below.
 
 What have been modified
 -----------------------
@@ -19,16 +19,16 @@ The objective is to seamlessly support the whole SX12XX family chip with the sam
 - folder `SX12XX` contains the modified SX12XX library. Only files related to SX126X, SX127X and SX128X have been modified for our purposes.
 
 - the `makefile` has been updated
-  - you can change the definition of `lora_gateway`, `loragateway_pi2` and `lora_gateway_pi4` targets according to to your radio module (SX126X, SX127X or SX128X) and low-level lib (Libelium 1272/1276 lib or Stuart Robinson's SX12XX lib)
+  - you can change the definition of `lora_gateway`, `lora_gateway_pi2` and `lora_gateway_pi4` targets according to selected radio module (SX126X, SX127X or SX128X) and low-level lib (Libelium 1272/1276 lib or Stuart Robinson's SX12XX lib)
   - default target is for SX127X family using the new SX12XX library: `SX127X_lora_gateway` or `SX127X_lora_gateway_pi2` or `SX127X_lora_gateway_pi4` 
-  	- if you want to keep the old Libelium SX1272 library version, then simply change `lora_gateway`, `loragateway_pi2` and `lora_gateway_pi4` to `SX1272_lora_gateway`, `SX1272_lora_gateway_pi2` and `SX1272_lora_gateway_pi4` respectively
+  	- if you want to keep the old Libelium SX1272 library version, then simply change `lora_gateway`, `lora_gateway_pi2` and `lora_gateway_pi4` targets to `SX1272_lora_gateway`, `SX1272_lora_gateway_pi2` and `SX1272_lora_gateway_pi4` respectively
   - then
     - `make lora_gateway`, or
   	- `make lora_gateway_pi2`, or
     - `make lora_gateway_pi4`, or
-    - simply using the `scripts/compile_lora_gw.sh` script that automatically determines the Raspberry version to call the appropriate target
-  - this is the recommended option with `scripts/compile_lora_gw.sh` because compilation of the low-level LoRa radio bridge will be realized seamlessly as in the previous framework
-  - for testing purposes, you can however compile for a specific target
+    - simply using the `scripts/compile_lora_gw.sh` script that will automatically determine the Raspberry model to compile for the appropriate target
+    - using `scripts/compile_lora_gw.sh` is the recommended option because compilation of the low-level LoRa radio bridge will be realized seamlessly as in the previous framework
+  - for testing purposes, you can however manually compile for a specific target
     - `make SX1272_lora_gateway` or `make SX1272_lora_gateway_pi2` or `make SX1272_lora_gateway_pi2` (Libelium 1272/1276 lib)
     - `make SX126X_lora_gateway` or `make SX126X_lora_gateway_pi2` or `make SX126X_lora_gateway_pi4` (Stuart Robinson's SX12XX lib)	
     - `make SX127X_lora_gateway` or `make SX127X_lora_gateway_pi2` or `make SX127X_lora_gateway_pi4` (Stuart Robinson's SX12XX lib)	
@@ -40,8 +40,11 @@ The objective is to seamlessly support the whole SX12XX family chip with the sam
 
 - you can select the frequency band in `radio.makefile` as it was done previously by indicating `-DBAND868` or `-DBAND900` or `-DBAND433`. There is no `-DBAND2400` in `radio.makefile` because compiling for SX128X target automatically set `-DBAND2400`.
 
-- for LoRaWAN mode in 2.4GHz, as there is no LoRaWAN specifications for frequency usage, the uplink and the downlink frequency (as well as data rate) are the same, even if RX2 is targeted. By defaut, it is CH_00_2400 = 2403000000Hz.
+- for LoRaWAN mode in 2.4GHz, as there is no LoRaWAN specifications for frequency usage, the uplink and the downlink frequency (as well as data rate) are identical, even if RX2 is targeted. By defaut, it is CH_00_2400 = 2403000000Hz.
 
+- `SX12XX_simple_lora_gateway.cpp` is a very simple receiver for testing purposes. You can use `make SX127X_simple_lora_gateway_pi2` to build it for RPI2 using SX127X LoRa chip. Other versions (RPI and RPI4, SX126X and SX128X) are also available, similarly to `SX12XX_lora_gateway.cpp`.
+
+- `SX12XX_simple_lora_transmitter` is a very simple LoRa transmitter for the RPI that can also be used for testing purposes. You can use `make SX127X_simple_lora_transmitter_pi2` to build it for RPI2 using SX127X LoRa chip. Other versions (RPI and RPI4, SX126X and SX128X) are also available, similarly to `SX12XX_simple_lora_gateway.cpp`.
 	
 Enjoy!
 C. Pham		

@@ -135,7 +135,7 @@ SX128XLT::SX128XLT()
   _TXSeqNo = 0;
   _RXSeqNo = 0;
 
-#define RADIO_FAKE_TEST
+//#define RADIO_FAKE_TEST
 #ifdef RADIO_FAKE_TEST 
   savedModParam1 = LORA_SF12;
   savedModParam2 = LORA_BW_0200;
@@ -145,7 +145,7 @@ SX128XLT::SX128XLT()
   savedPacketParam2 = LORA_PACKET_VARIABLE_LENGTH;
   savedPacketParam3 = 255;
   savedPacketParam4 = LORA_CRC_ON;
-  savedPacketParam5 = LORA_IQ_NORMAL; 
+  savedPacketParam5 = LORA_IQ_NORMAL;   
 #endif
   
   /**************************************************************************
