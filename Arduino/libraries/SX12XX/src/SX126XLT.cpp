@@ -2946,13 +2946,6 @@ uint8_t SX126XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
 		delay(10);			
 		//try to receive the ack
 		RXAckPacketL=receiveAddressed(RXBUFFER, RXBUFFER_SIZE, 2000, WAIT_RX);
-
-#ifdef INVERTIQ_ON_ACK
-#ifdef SX126XDEBUGACK
-		PRINTLN_CSTSTR("set back IQ to normal");
-#endif
-		invertIQ(false);
-#endif
 		
 		if (RXAckPacketL) {
 #ifdef SX126XDEBUGACK
@@ -3000,6 +2993,13 @@ uint8_t SX126XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
 #endif			
 		}
 	} 
+
+#ifdef INVERTIQ_ON_ACK
+#ifdef SX126XDEBUGACK
+		PRINTLN_CSTSTR("set back IQ to normal");
+#endif
+		invertIQ(false);
+#endif
 
   /**************************************************************************
 	End by C. Pham - Oct. 2020
@@ -4024,7 +4024,8 @@ int8_t SX126XLT::doCAD(uint8_t counter)
 	//wait for CAD done
 	while ( !(readIrqStatus() & IRQ_CAD_DONE) )
 		;
-  
+
+  //TODO C. Pham. can we use GetRssiInst command to get the RSSI during CAD?
   if (readIrqStatus() & IRQ_CAD_ACTIVITY_DETECTED)
   	return(-1);
   else
@@ -4072,7 +4073,7 @@ uint16_t SX126XLT::getToA(uint8_t pl) {
   PRINTLN_CSTSTR("getToA()");
 #endif
 	
-  uint8_t DE = 0;
+  uint8_t LDRO = 0;
   uint8_t sf;
   uint8_t cr;
   uint32_t airTime = 0;
@@ -4094,7 +4095,8 @@ uint16_t SX126XLT::getToA(uint8_t pl) {
 #endif
 
   // Symbol rate : time for one symbol (secs)
-  double ts = 1.0 / ((double)bw / ( 1 << sf));
+  //double ts = 1.0 / ((double)bw / ( 1 << sf));
+	double ts = (double)( 1 << sf) / (double)bw;
 
   // must add 4.25 to the programmed preamble length to get the effective preamble length
   // for sf==5 and sf==6, must add 6.25
@@ -4111,39 +4113,52 @@ uint16_t SX126XLT::getToA(uint8_t pl) {
 
   // for low data rate optimization
   if ((ts*1000.0)>16)
-      DE=1;
+      LDRO=1;
 
 #ifdef SX126XDEBUG3
   PRINT_CSTSTR("LDRO is ");
-  PRINTLN_VALUE("%d",DE);
+  PRINTLN_VALUE("%d",LDRO);
+  PRINT_CSTSTR("CRC is ");
+  PRINTLN_VALUE("%d",(savedPacketParam4==LORA_CRC_ON)?1:0);  
+  PRINT_CSTSTR("header is ");
+  PRINTLN_VALUE("%d",(savedPacketParam2==LORA_PACKET_VARIABLE_LENGTH)?1:0);     
 #endif
   
   // Symbol length of payload and time
-  double tmp = (8*pl - 4*sf + ((sf<7)?0:8) + 16*savedPacketParam4 - 20*((savedPacketParam2==LORA_PACKET_VARIABLE_LENGTH)?1:0)) /(double)(4*(sf-2*DE) );
+  double tmp = (8*pl + ((savedPacketParam4==LORA_CRC_ON)?16:0) - 4*sf + ((sf<7)?0:8) + ((savedPacketParam2==LORA_PACKET_VARIABLE_LENGTH)?20:0)) / (double)(4*(sf-2*LDRO));
 
+	tmp = ( tmp > 0 ) ? tmp : 0;
+	
   tmp = ceil(tmp)*(cr + 4);
 
-  double nPayload = 8 + ( ( tmp > 0 ) ? tmp : 0 );
+  double nPayload = 8 + tmp;
 
 #ifdef SX126XDEBUG3
-  PRINT_CSTSTR("nPayload is ");
-  PRINTLN_VALUE("%d",nPayload);
+  PRINT_CSTSTR("nSymbol_payload is ");
+  PRINTLN_VALUE("%d",(uint16_t)nPayload);
+   PRINT_CSTSTR("nSymbol_total is ");
+  PRINTLN_VALUE("%d",(uint16_t)nPayload+(getPreamble()+((sf<7)?6.25:4.25))); 
 #endif
 
   double tPayload = nPayload * ts;
-  // Time on air
-  double tOnAir = tPreamble + tPayload;
+  // Time on air in us
+  double tOnAir = (tPreamble + tPayload)*1e6;
+  
+  //in ms
+  airTime = tOnAir / 1000;
+  
   // in us secs
-  airTime = floor( tOnAir * 1e6 + 0.999 );
+  //airTime = floor( tOnAir * 1e6 + 0.999 );
 
   //////
 
 #ifdef SX126XDEBUG3
   PRINT_CSTSTR("airTime is ");
-  PRINTLN_VALUE("%d",airTime);
+  PRINTLN_VALUE("%ld",airTime);
 #endif
+	return(airTime);
   // return in ms
-  return (ceil(airTime/1000)+1);
+  //return (ceil(airTime/1000)+1);
 }
 
 // need to set cad_number to a value > 0

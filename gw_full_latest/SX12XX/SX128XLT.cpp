@@ -2804,13 +2804,6 @@ uint8_t SX128XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
 		delay(10);			
 		//try to receive the ack
 		RXAckPacketL=receiveAddressed(RXBUFFER, RXBUFFER_SIZE, 2000, WAIT_RX);
-
-#ifdef INVERTIQ_ON_ACK
-#ifdef SX128XDEBUGACK
-		PRINTLN_CSTSTR("set back IQ to normal");
-#endif
-		invertIQ(false);
-#endif
 		
 		if (RXAckPacketL) {
 #ifdef SX128XDEBUGACK
@@ -2858,6 +2851,13 @@ uint8_t SX128XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
 #endif			
 		}
 	}   
+
+#ifdef INVERTIQ_ON_ACK
+#ifdef SX128XDEBUGACK
+		PRINTLN_CSTSTR("set back IQ to normal");
+#endif
+		invertIQ(false);
+#endif
 
   /**************************************************************************
 	End by C. Pham - Oct. 2020
@@ -3222,6 +3222,7 @@ int8_t SX128XLT::doCAD(uint8_t counter)
 	while ( !(readIrqStatus() & IRQ_CAD_DONE) )
 		;
   
+  //TODO C. Pham. can we use GetRssiInst command to get the RSSI during CAD?
   if (readIrqStatus() & IRQ_CAD_ACTIVITY_DETECTED)
   	return(-1);
   else

@@ -132,6 +132,7 @@ End by C. Pham - Oct. 2020
 //#define SX127XDEBUG2               //enable level 2 debug messages
 //#define SX127XDEBUG3               //enable level 3 debug messages
 #define SX127XDEBUGACK               //enable ack transaction debug messages
+#define SX127XDEBUGCAD
 //#define DEBUGPHANTOM               //used to set bebuging for Phantom packets
 //#define SX127XDEBUGPINS            //enable pin allocation debug messages
 //#define DEBUGFSKRTTY               //enable for FSKRTTY debugging 
@@ -2877,13 +2878,6 @@ uint8_t SX127XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
 		delay(10);			
 		//try to receive the ack
 		RXAckPacketL=receiveAddressed(RXBUFFER, RXBUFFER_SIZE, 2000, WAIT_RX);
-
-#ifdef INVERTIQ_ON_ACK
-#ifdef SX127XDEBUGACK
-		PRINTLN_CSTSTR("set back IQ to normal");
-#endif
-		invertIQ(false);
-#endif
 		
 		if (RXAckPacketL) {
 #ifdef SX127XDEBUGACK
@@ -2931,6 +2925,13 @@ uint8_t SX127XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
 #endif			
 		}
 	} 
+
+#ifdef INVERTIQ_ON_ACK
+#ifdef SX127XDEBUGACK
+		PRINTLN_CSTSTR("set back IQ to normal");
+#endif
+		invertIQ(false);
+#endif
 	
   /**************************************************************************
 	End by C. Pham - Oct. 2020
@@ -5327,8 +5328,9 @@ int8_t SX127XLT::doCAD(uint8_t counter)
 	unsigned long startRSSI=0;
 
 	// Symbol rate : time for one symbol (usecs)
-  double ts = 1000000.0 / (double)returnBandwidth() / ( 1 << getLoRaSF());
-
+  //double ts = 1000000.0 / (double)returnBandwidth() / ( 1 << getLoRaSF());
+	double ts = 1000000.0*((double)( 1 << getLoRaSF()) / (double)returnBandwidth());
+	
   st0 = readRegister(REG_OPMODE);	// Save the previous status
 
 	save_counter = counter;
@@ -5358,7 +5360,14 @@ int8_t SX127XLT::doCAD(uint8_t counter)
 		{
 				// only one reading per CAD
 				if (micros()-startRSSI > ts+240 && !hasRSSI) {
-            _RSSI = -(OFFSET_RSSI+(_Device == DEVICE_SX1272)?0:18) + readRegister(REG_RSSIVALUE);
+						uint8_t regdata=readRegister(REG_RSSIVALUE);
+            _RSSI = regdata - (OFFSET_RSSI + ((_Device == DEVICE_SX1272)?0:18));
+#ifdef SX127XDEBUGCAD
+						PRINT_CSTSTR("REG_RSSIVALUE: ");
+						PRINTLN_VALUE("%d", regdata);
+						PRINT_CSTSTR("_RSSI: ");
+						PRINTLN_VALUE("%d", _RSSI);						
+#endif              
             rssi_mean += _RSSI;
 						rssi_count++;
 						hasRSSI=true;
@@ -5425,6 +5434,7 @@ int8_t SX127XLT::doCAD(uint8_t counter)
 	PRINTLN_VALUE("%d",endDoCad-startDoCad);
 #endif
 
+	//TODO C. Pham. returned value is actually positive?
   if (activityDetected)
       return _RSSI;
 
@@ -5493,7 +5503,8 @@ uint16_t SX127XLT::getToA(uint8_t pl) {
 #endif
 
   // Symbol rate : time for one symbol (secs)
-  double ts = 1.0 / ((double)bw / ( 1 << sf));
+  //double ts = 1.0 / ((double)bw / ( 1 << sf));
+	double ts = (double)( 1 << sf) / (double)bw;
 
   // must add 4.25 to the programmed preamble length to get the effective preamble length
   double tPreamble=(getPreamble()+4.25)*ts;

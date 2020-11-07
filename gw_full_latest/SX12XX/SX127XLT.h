@@ -303,7 +303,7 @@ class SX127XLT
     /**************************************************************************
       Added by C. Pham - Oct. 2020
     **************************************************************************/
-    int8_t  _RSSI;
+    int16_t  _RSSI;
     uint8_t _TXSeqNo; //sequence number of transmitted packet
     uint8_t _RXSeqNo; //sequence number of received packet
     bool _PA_BOOST;
