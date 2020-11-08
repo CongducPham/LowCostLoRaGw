@@ -191,7 +191,7 @@ class SX127XLT
     uint32_t returnBandwidth();
     int8_t doCAD(uint8_t counter);
     uint16_t getToA(uint8_t pl);
-    void CarrierSense(uint8_t cs=1);
+    void CarrierSense(uint8_t cs=1, bool extendedIFS=false);
     void CarrierSense1(uint8_t cad_number, bool extendedIFS);
     void CarrierSense2(uint8_t cad_number, bool extendedIFS);
     void CarrierSense3(uint8_t cad_number);

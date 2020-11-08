@@ -28,6 +28,8 @@ These 2 examples can be used as templates to adapt all the legacy examples to th
 
 **`Arduino_LoRa_SX12XX_Ping_Pong_LCD`** is the new version of **`Arduino_LoRa_Ping_Pong_LCD`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281
 
+**`Arduino_LoRa_SX12XX_InteractiveDevice`** is the new version of **`Arduino_LoRa_InteractiveDevice`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281
+
 Legacy (use SX1272/76 library initially from Libelium, modified for our framework)
 ------
 

@@ -2992,14 +2992,13 @@ uint8_t SX126XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
 		PRINTLN_CSTSTR("received nothing");		 
 #endif			
 		}
-	} 
-
 #ifdef INVERTIQ_ON_ACK
 #ifdef SX126XDEBUGACK
 		PRINTLN_CSTSTR("set back IQ to normal");
 #endif
 		invertIQ(false);
-#endif
+#endif		
+	} 
 
   /**************************************************************************
 	End by C. Pham - Oct. 2020
@@ -4165,16 +4164,16 @@ uint16_t SX126XLT::getToA(uint8_t pl) {
 // we advise using cad_number=3 for a SIFS and DIFS=3*SIFS
 #define DEFAULT_CAD_NUMBER    3
 
-void SX126XLT::CarrierSense(uint8_t cs) {
+void SX126XLT::CarrierSense(uint8_t cs, bool extendedIFS) {
 #ifdef SX126XDEBUG1
   PRINTLN_CSTSTR("CarrierSense()");
 #endif
   
   if (cs==1)
-    CarrierSense1(DEFAULT_CAD_NUMBER, false);
+    CarrierSense1(DEFAULT_CAD_NUMBER, extendedIFS);
 
   if (cs==2)
-    CarrierSense2(DEFAULT_CAD_NUMBER, false);
+    CarrierSense2(DEFAULT_CAD_NUMBER, extendedIFS);
 
   if (cs==3)
     CarrierSense3(DEFAULT_CAD_NUMBER);
