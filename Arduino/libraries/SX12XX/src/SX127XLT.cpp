@@ -2246,6 +2246,9 @@ uint8_t SX127XLT::receive(uint8_t *rxbuffer, uint8_t size, uint32_t rxtimeout, u
 #endif  
   {
     _IRQmsb = IRQ_RX_TIMEOUT;
+#ifdef SX127XDEBUG1    
+    PRINTLN_CSTSTR("RX timeout");
+#endif     
     return 0;
   }
 
@@ -2349,7 +2352,7 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
   	PRINTLN_CSTSTR("RXDone using polling");
 #endif 
     index = readRegister(REG_IRQFLAGS);
-
+		
     //poll the irq register for ValidHeader, bit 4
     while ((bitRead(index, 4) == 0) && (millis() < endtimeoutmS))
       {
@@ -2357,8 +2360,16 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
         delay(1);        
       }    
 
-    //_RXTimestamp start when a valid header has been received
-    _RXTimestamp=millis();
+		if (bitRead(index, 4)!=0) {
+#ifdef SX127XDEBUG1		
+  		PRINTLN_CSTSTR("Valid header detected");
+#endif
+    	//_RXTimestamp start when a valid header has been received
+    	_RXTimestamp=millis();
+
+			//update endtimeoutmS to avoid timeout at the middle of a packet reception
+			endtimeoutmS = (_RXTimestamp + rxtimeout);
+    }
               
     //poll the irq register for RXDone, bit 6
     while ((bitRead(index, 6) == 0) && (millis() < endtimeoutmS))
@@ -2382,6 +2393,9 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
 #endif  
   {
     _IRQmsb = IRQ_RX_TIMEOUT;
+#ifdef SX127XDEBUG1    
+    PRINTLN_CSTSTR("RX timeout");
+#endif    
     return 0;
   }
 
@@ -2878,7 +2892,7 @@ uint8_t SX127XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
 		delay(10);			
 		//try to receive the ack
 		RXAckPacketL=receiveAddressed(RXBUFFER, RXBUFFER_SIZE, 2000, WAIT_RX);
-
+		
 		if (RXAckPacketL) {
 #ifdef SX127XDEBUGACK
 			PRINT_CSTSTR("received ");
@@ -2924,15 +2938,14 @@ uint8_t SX127XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
 		PRINTLN_CSTSTR("received nothing");		 
 #endif			
 		}
-	} 
-
 #ifdef INVERTIQ_ON_ACK
 #ifdef SX127XDEBUGACK
 		PRINTLN_CSTSTR("set back IQ to normal");
 #endif
 		invertIQ(false);
-#endif
-			
+#endif		
+	} 
+	
   /**************************************************************************
 	End by C. Pham - Oct. 2020
   **************************************************************************/
@@ -4975,8 +4988,16 @@ uint32_t SX127XLT::receiveReliable(uint8_t *rxbuffer, uint8_t size, char packett
         delay(1);        
       }    
 
-		//_RXTimestamp start when a valid header has been received
-  	_RXTimestamp=millis();
+		if (bitRead(index, 4)!=0) {
+#ifdef SX127XDEBUG1		
+  		PRINTLN_CSTSTR("Valid header detected");
+#endif
+    	//_RXTimestamp start when a valid header has been received
+    	_RXTimestamp=millis();
+
+			//update endtimeoutmS to avoid timeout at the middle of a packet reception
+			endtimeoutmS = (_RXTimestamp + rxtimeout);
+    }
             
     //poll the irq register for RXDone, bit 6
     while ((bitRead(index, 6) == 0) && (millis() < endtimeoutmS))
@@ -5000,6 +5021,9 @@ uint32_t SX127XLT::receiveReliable(uint8_t *rxbuffer, uint8_t size, char packett
 #endif  
   {
     _IRQmsb = IRQ_RX_TIMEOUT;
+#ifdef SX127XDEBUG1    
+    PRINTLN_CSTSTR("RX timeout");
+#endif     
     return 0;
   }
 
@@ -5367,7 +5391,7 @@ int8_t SX127XLT::doCAD(uint8_t counter)
 						PRINTLN_VALUE("%d", regdata);
 						PRINT_CSTSTR("_RSSI: ");
 						PRINTLN_VALUE("%d", _RSSI);						
-#endif            
+#endif              
             rssi_mean += _RSSI;
 						rssi_count++;
 						hasRSSI=true;
@@ -5555,16 +5579,16 @@ uint16_t SX127XLT::getToA(uint8_t pl) {
 // we advise using cad_number=3 for a SIFS and DIFS=3*SIFS
 #define DEFAULT_CAD_NUMBER    3
 
-void SX127XLT::CarrierSense(uint8_t cs) {
+void SX127XLT::CarrierSense(uint8_t cs, bool extendedIFS, bool onlyOnce) {
 #ifdef SX127XDEBUG1
   PRINTLN_CSTSTR("CarrierSense()");
 #endif
   
   if (cs==1)
-    CarrierSense1(DEFAULT_CAD_NUMBER, false);
+    CarrierSense1(DEFAULT_CAD_NUMBER, extendedIFS, onlyOnce);
 
   if (cs==2)
-    CarrierSense2(DEFAULT_CAD_NUMBER, false);
+    CarrierSense2(DEFAULT_CAD_NUMBER, extendedIFS);
 
   if (cs==3)
     CarrierSense3(DEFAULT_CAD_NUMBER);
@@ -5572,7 +5596,7 @@ void SX127XLT::CarrierSense(uint8_t cs) {
 
 // need to set cad_number to a value > 0
 // we advise using cad_number=3 for a SIFS and cad_number=9 for a DIFS
-void SX127XLT::CarrierSense1(uint8_t cad_number, bool extendedIFS) {
+void SX127XLT::CarrierSense1(uint8_t cad_number, bool extendedIFS, bool onlyOnce) {
 
   int e;
   uint8_t retries=3;
@@ -5640,6 +5664,10 @@ void SX127XLT::CarrierSense1(uint8_t cad_number, bool extendedIFS) {
         else {
             PRINT_CSTSTR("#1\n");
 
+            // if we have "only once" behavior then exit here to not have retries
+          	if (onlyOnce)
+          		return;  
+          		
             // wait for random number of DIFS
 #ifdef ARDUINO                
             uint8_t w = random(1,8);

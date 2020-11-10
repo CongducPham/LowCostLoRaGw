@@ -479,7 +479,7 @@ with Dropbox uploader:
 ANNEX.A: LoRa mode and predefined channels
 ==========================================
 
-Pre-defined LoRa modes (from initial Libelium `SX1272.h` except mode 11 to indicate LoRaWAN compatibility mode with sync word set to 0x34 instead of 0x12 for all other mode)
+Pre-defined LoRa modes from initial Libelium `SX1272.h`, except mode 11 to indicate LoRaWAN compatibility mode with sync word set to public LoRaWAN sync word (i.e. 0x34 for SX127X and 0x3444 for SX126X) instead of private sync word (i.e. 0x12 for SX127X and 0x1424 for SX126X) for all other mode. For SX128X in LoRa 2.4GHz band, BW 125, 250 and 500 are replaced respectively by BW 203, 406 and 812 while SF remains the same.
 
 | mode | BW | SF |
 |------|----|----|

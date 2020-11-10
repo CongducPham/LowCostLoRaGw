@@ -263,10 +263,11 @@ extern int optind, opterr, optopt;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ADDITIONAL FEATURES
 //
-
+//reconfigure radio module periodically, every 100 pkt received
 #define PERIODIC_RESET100
 //usually set for LoRaWAN
 #define INVERTIQ_ON_TX
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // FOR DOWNLINK FEATURES
 //
@@ -390,7 +391,6 @@ uint8_t loraMode=-1;
 const uint16_t MAX_TIMEOUT = 10000;	
 uint16_t rcv_timeout=MAX_TIMEOUT;
 int status_counter=0;
-bool extendedIFS=true;
 uint8_t SIFS_cad_number;
 // set to 0 to disable carrier sense based on CAD
 uint8_t cad_number=3;
@@ -448,22 +448,50 @@ void loraConfig() {
   if (optBW!=0 || optCR!=0 || optSF!=0) {
 		if (optCR!=0) {
 		
-			PRINT_CSTSTR("^$LoRa CR ");
+			PRINT_CSTSTR("^$LoRa CR4/");
+			if (optCR<5)
+				optCR=optCR+4;
 			PRINTLN_VALUE("%d", optCR);    
 			if (optCR==5)
 				CodeRate = LORA_CR_4_5;
-			if (optCR==6)
+			else if (optCR==6)
 				CodeRate = LORA_CR_4_6;		
-			if (optCR==7)
+			else if (optCR==7)
 				CodeRate = LORA_CR_4_7;				
-			if (optCR==8)
+			else if (optCR==8)
 				CodeRate = LORA_CR_4_8;
+			else {
+				PRINT_CSTSTR("^$Unknown LoRa CR, taking CR4/5\n");
+				CodeRate = LORA_CR_4_5;
+			}	
 		}
 			
 		if (optSF!=0) {
 			PRINT_CSTSTR("^$LoRa SF ");
-			PRINTLN_VALUE("%d", optSF);    
-			SpreadingFactor = optSF;
+			PRINTLN_VALUE("%d", optSF);
+#if defined SX126X || defined SX128X			
+			if (optSF==5)
+				SpreadingFactor = LORA_SF5;
+			else
+#endif			
+			if (optSF==6)
+				SpreadingFactor = LORA_SF6;
+			else if (optSF==7)
+				SpreadingFactor = LORA_SF7;
+			else if (optSF==8)
+				SpreadingFactor = LORA_SF8;
+			else if (optSF==9)
+				SpreadingFactor = LORA_SF9;
+			else if (optSF==10)
+				SpreadingFactor = LORA_SF10;
+			else if (optSF==11)
+				SpreadingFactor = LORA_SF11;
+			else if (optSF==12)
+				SpreadingFactor = LORA_SF12;				
+			else {
+				PRINT_CSTSTR("^$Unknown LoRa SF, taking SF12\n");
+				SpreadingFactor = LORA_SF12;
+			}																	
 		}
 
 		if (optBW!=0) {    
@@ -472,34 +500,42 @@ void loraConfig() {
 #if defined SX126X || defined SX127X			
 			if (optBW==500)
 				Bandwidth = LORA_BW_500;			
-			if (optBW==250)
+			else if (optBW==250)
 				Bandwidth = LORA_BW_250;
-			if (optBW==125)
+			else if (optBW==125)
 				Bandwidth = LORA_BW_125;							    
-			if (optBW==62)
-				Bandwidth = LORA_BW_062;			
-			if (optBW==41)
-				Bandwidth = LORA_BW_041;
-			if (optBW==31)
-				Bandwidth = LORA_BW_031;
-			if (optBW==20)
-				Bandwidth = LORA_BW_020;			
-			if (optBW==15)
-				Bandwidth = LORA_BW_015;
-			if (optBW==10)
-				Bandwidth = LORA_BW_010;
-			if (optBW==7)
-				Bandwidth = LORA_BW_007;							
+			else if (optBW==62)
+				Bandwidth = LORA_BW_062; //actual  62500hz 			
+			else if (optBW==41)
+				Bandwidth = LORA_BW_041; //actual  41670hz
+			else if (optBW==31)
+				Bandwidth = LORA_BW_031; //actual  31250hz
+			else if (optBW==20)
+				Bandwidth = LORA_BW_020; //actual  20830hz			
+			else if (optBW==15)
+				Bandwidth = LORA_BW_015; //actual  15630hz
+			else if (optBW==10)
+				Bandwidth = LORA_BW_010; //actual  10420hz
+			else if (optBW==7)
+				Bandwidth = LORA_BW_007; //actual   7810hz	
+			else {
+				PRINT_CSTSTR("^$Unknown LoRa BW, taking BW125\n");
+				Bandwidth = LORA_BW_125;
+			}												
 #endif
 #ifdef SX128X
-			if (optBW==200)
-				Bandwidth = LORA_BW_0200;			
-			if (optBW==400)
-				Bandwidth = LORA_BW_0400;
-			if (optBW==800)
-				Bandwidth = LORA_BW_0800;							    
-			if (optBW==1600)
-				Bandwidth = LORA_BW_1600;
+			if (optBW==203 || optBW==200)
+				Bandwidth = LORA_BW_0200;	//actually 203125hz		
+			else if (optBW==406 || optBW==400)
+				Bandwidth = LORA_BW_0400; //actually 406250hz
+			else if (optBW==812 || optBW==800)
+				Bandwidth = LORA_BW_0800;	//actually 812500hz						    
+			else if (optBW==1625 || optBW==1600)
+				Bandwidth = LORA_BW_1600; //actually 1625000hz
+			else {
+				PRINT_CSTSTR("^$Unknown LoRa BW, taking BW203\n");
+				Bandwidth = LORA_BW_0200;
+			}							
 #endif				
 		}
 
@@ -519,11 +555,10 @@ void loraConfig() {
     	
 		if (optFQ<0.0) {
 			DEFAULT_CHANNEL=optFQ=LORAWAN_UPFQ;
-
-			//set raw mode for LoRaWAN
-			//overriding existing configuration
-			optRAW=true;
 		}
+		//set raw mode for LoRaWAN
+		//overriding existing configuration
+		optRAW=true;		
 	}
 
 #ifdef MY_FREQUENCY
@@ -639,28 +674,6 @@ void loraConfig() {
 		PRINT_CSTSTR("^$Invert I/Q on RX\n");  
 		LT.invertIQ(true);
   }
-	
-#ifdef DEBUG
-  PRINTLN;
-  //reads and prints the configured LoRa settings, useful check
-  LT.printModemSettings();                                     
-  PRINTLN;
-   //reads and prints the configured operting settings, useful check
-  LT.printOperatingSettings();                                
-  PRINTLN;
-  PRINTLN;
-  //print contents of device registers, normally 0x00 to 0x4F
-#if defined SX126X || defined SX127X  
-  //print contents of device registers, normally 0x00 to 0x4F
-  LT.printRegisters(0x00, 0x4F);
-#endif                       
-#ifdef SX128X
-  //print contents of device registers, normally 0x900 to 0x9FF 
-  LT.printRegisters(0x900, 0x9FF);
-#endif                                
-  PRINTLN;
-  PRINTLN;
-#endif    
 
   // get preamble length
   PRINT_CSTSTR("^$Preamble Length: ");
@@ -684,6 +697,28 @@ void loraConfig() {
   PRINT_CSTSTR("^$Sync word: 0x"); 
   PRINTLN_HEX("%X", LT.getSyncWord());
 #endif  
+
+  //reads and prints the configured LoRa settings, useful check
+  PRINT_CSTSTR("^$");
+  LT.printModemSettings();                                     
+  PRINTLN;
+  //reads and prints the configured operting settings, useful check
+  PRINT_CSTSTR("^$");
+  LT.printOperatingSettings();                                
+  PRINTLN;
+#ifdef DEBUG  
+  //print contents of device registers, normally 0x00 to 0x4F
+#if defined SX126X || defined SX127X  
+  //print contents of device registers, normally 0x00 to 0x4F
+  LT.printRegisters(0x00, 0x4F);
+#endif                       
+#ifdef SX128X
+  //print contents of device registers, normally 0x900 to 0x9FF 
+  LT.printRegisters(0x900, 0x9FF);
+#endif                                
+  PRINTLN;
+  PRINTLN;
+#endif    
 
 #ifdef SX126X
 	PRINT_CSTSTR("^$SX126X ");
@@ -763,103 +798,6 @@ void setup()
   
   FLUSHOUTPUT;
   delay(500);
-}
-
-
-// we could use the CarrierSense function added in the SX1272 library, but it is more convenient to duplicate it here
-// so that we could easily modify it for testing
-// 
-// in v1.5 the "only once" behavior is implemented for the gateway when it transmit downlink packets
-// to avoid blocking the gateway on a busy channel. Therefore from v1.5 the implementation differs from the
-// carrier sense function added in the SX12XX library
-//
-int CarrierSense(bool onlyOnce=false) {
-
-  int e;
-  uint8_t retries=3;
-  uint8_t DIFSretries=8;
-  uint8_t cad_value;
-  unsigned long startDoCad, endDoCad;
-
-  // symbol time in ms
-  double ts = 1000.0 / (LT.returnBandwidth() / ( 1 << LT.getLoRaSF()));
-
-  //approximate duration of a CAD, avoid having 0ms
-  cad_value=2*ts+1;  
-  
-  if (cad_number) {
-    do { 
-    	DIFSretries=8;
-      do {
-        
-        // check for free channel (SIFS/DIFS)        
-        startDoCad=millis();
-        e = LT.doCAD(cad_number);
-        endDoCad=millis();
-        
-        PRINT_CSTSTR("--> CAD duration ");
-        PRINT_VALUE("%ld",endDoCad-startDoCad);
-        PRINTLN;
-        
-        if (e==0) {
-          PRINT_CSTSTR("OK1\n");
-          
-          if (extendedIFS)  {          
-            // wait for random number of CAD
-
-            uint8_t w = rand() % 8 + 1;
-  
-            PRINT_CSTSTR("--> waiting for ");
-            PRINT_VALUE("%d",w);
-            PRINT_CSTSTR(" CAD = ");
-            PRINT_VALUE("%d",cad_value*w);
-            PRINTLN;
-            
-            delay(cad_value*w);
-            
-            // check for free channel (SIFS/DIFS) once again
-            startDoCad=millis();
-            e = LT.doCAD(cad_number);
-            endDoCad=millis();
- 
-            PRINT_CSTSTR("--> CAD duration ");
-            PRINT_VALUE("%ld",endDoCad-startDoCad);
-            PRINTLN;
-        
-            if (!e)
-              PRINT_CSTSTR("OK2");            
-            else
-              PRINT_CSTSTR("###2");
-            
-            PRINTLN;
-          }              
-        }
-        else {
-          PRINT_CSTSTR("###1\n");  
-          
-          // if we have "only once" behavior then exit here to not have retries
-          if (onlyOnce)
-          	return 1;
-
-          // wait for random number of DIFS
-          uint8_t w = rand() % 8 + 1;
-          
-          PRINT_CSTSTR("--> waiting for ");
-          PRINT_VALUE("%d",w);
-          PRINT_CSTSTR(" DIFS (DIFS=3SIFS) = ");
-          PRINT_VALUE("%d", cad_value*3*w);
-          PRINTLN;
-          
-          delay(cad_value*3*w);
-          
-          PRINT_CSTSTR("--> retry\n");
-        }
-
-      } while (e!=0 && --DIFSretries);
-
-    } while (--retries); 
-  }
-  return 1;
 }
 
 void packet_is_Error()
@@ -1341,11 +1279,9 @@ void loop(void)
 							
 					// check if it is a valid send request
 					if (document["status"]=="send_request" && document["dst"].IsInt()) {
-			
-						// disable extended IFS behavior, just a small number of CAD
-						extendedIFS=false;
-			
-						if (!CarrierSense(true)) {
+						
+						//TODO CarrierSense?
+						if (1) {
 				
 							uint8_t p_type=PKT_TYPE_DATA | PKT_FLAG_DATA_DOWNLINK;
 						
@@ -1407,8 +1343,6 @@ void loop(void)
 							PRINT_CSTSTR("^$DELAYED: busy channel\n");	
 							// here we will retry later because of a busy channel
 						}
-						//set back extendedIFS
-						extendedIFS=true;
 					}
 					else {
 						PRINT_CSTSTR("^$DISCARDING: not valid send_request\n");   	
@@ -1516,29 +1450,34 @@ int main (int argc, char *argv[]){
   while ((opt = getopt_long(argc, argv,"a:b:c:d:ef:g:h:ij", 
                  long_options, &long_index )) != -1) {
       switch (opt) {
-           case 'a' : loraMode = atoi(optarg); //keep loraMode == 11 == LoRaWAN for the moment
+           case 'a' : loraMode = atoi(optarg); 
+           						// from 1 to 10 (see https://github.com/CongducPham/LowCostLoRaGw#annexa-lora-mode-and-predefined-channels)
+           						// for SX128X, BW 125, 250 and 500 are replaced respectively by BW 203, 406 and 812
+           						// keep loraMode == 11 == LoRaWAN for the moment
                break;
            case 'b' : optBW = atoi(optarg); 
-                      // 125, 250 or 500
-                      // setBW() will correct the optBW value  
+                      // 7, 10, 15, 20, 31, 41, 62, 125, 250 or 500 for SX126X and SX127X_lora_gateway
+                      // 203, 406, 812 or 1625 for SX128X
                break;
            case 'c' : optCR = atoi(optarg);
                       // 5, 6, 7 or 8
-                      // setCR() will correct the optCR value
                break;
            case 'd' : optSF = atoi(optarg);
-                      // 6, 7, 8, 9, 10, 11 or 12
+                      // 5, 6, 7, 8, 9, 10, 11 or 12
                break;
            case 'e' : optRAW=true;
+           						// no header
+           						// required for LoRaWAN
                break;               
            case 'f' : optFQ=atof(optarg)*1000000.0;
-                      // optarg in MHz e.g. 868.1
+                      // optFQ in MHz e.g. 868.1
                break;     
            case 'g' : optCH=atoi(optarg);
                       if (optCH < STARTING_CHANNEL || optCH > ENDING_CHANNEL)
                         optCH=STARTING_CHANNEL;
                       optCH=optCH-STARTING_CHANNEL;  
                       DEFAULT_CHANNEL=loraChannelArray[optCH]; 
+                      // pre-defined channels (see https://github.com/CongducPham/LowCostLoRaGw#annexa-lora-mode-and-predefined-channels)
                break;      
            case 'h' : { 
            							uint8_t sw=atoi(optarg);

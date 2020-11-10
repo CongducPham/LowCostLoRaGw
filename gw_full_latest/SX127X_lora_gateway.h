@@ -1,8 +1,14 @@
 //*******  Setup hardware pin definitions here ! ***************
 
+// will be translated into GPIO8/SPI_CE0 by arduPI
+#ifndef NSS
 #define NSS 10                                  //select pin on LoRa device
+#endif
 // will be translated into GPIO4 by arduPI
+#ifndef NRESET
 #define NRESET 6                                //reset pin on LoRa device
+#endif
+// will be translated into GPI18/GEN01 by arduPI
 #define DIO0 2                                  //DIO0 pin on LoRa device, used for RX and TX done 
 #define DIO1 -1                                 //DIO1 pin on LoRa device, normally not used so set to -1 
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1

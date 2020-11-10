@@ -1847,6 +1847,8 @@ uint8_t SX126XLT::receive(uint8_t *rxbuffer, uint8_t size, uint32_t rxtimeout, u
   
   while (!digitalRead(_RXDonePin));       //Wait for DIO1 to go high
 
+	_RXDoneTimestamp=millis();
+	
   setMode(MODE_STDBY_RC);                 //ensure to stop further packet reception
 
   regdata = readIrqStatus();
@@ -3079,6 +3081,8 @@ uint8_t SX126XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
   
   while (!digitalRead(_RXDonePin));       //Wait for DIO1 to go high
 
+	_RXDoneTimestamp=millis();
+	
   setMode(MODE_STDBY_RC);                 //ensure to stop further packet reception
 
   regdata = readIrqStatus();
@@ -4164,13 +4168,13 @@ uint16_t SX126XLT::getToA(uint8_t pl) {
 // we advise using cad_number=3 for a SIFS and DIFS=3*SIFS
 #define DEFAULT_CAD_NUMBER    3
 
-void SX126XLT::CarrierSense(uint8_t cs, bool extendedIFS) {
+void SX126XLT::CarrierSense(uint8_t cs, bool extendedIFS, bool onlyOnce) {
 #ifdef SX126XDEBUG1
   PRINTLN_CSTSTR("CarrierSense()");
 #endif
   
   if (cs==1)
-    CarrierSense1(DEFAULT_CAD_NUMBER, extendedIFS);
+    CarrierSense1(DEFAULT_CAD_NUMBER, extendedIFS, onlyOnce);
 
   if (cs==2)
     CarrierSense2(DEFAULT_CAD_NUMBER, extendedIFS);
@@ -4179,7 +4183,7 @@ void SX126XLT::CarrierSense(uint8_t cs, bool extendedIFS) {
     CarrierSense3(DEFAULT_CAD_NUMBER);
 }
 
-void SX126XLT::CarrierSense1(uint8_t cad_number, bool extendedIFS) {
+void SX126XLT::CarrierSense1(uint8_t cad_number, bool extendedIFS, bool onlyOnce) {
 
   int e;
   uint8_t retries=3;
@@ -4246,7 +4250,11 @@ void SX126XLT::CarrierSense1(uint8_t cad_number, bool extendedIFS) {
         }
         else {
             PRINT_CSTSTR("#1\n");
-
+            
+            // if we have "only once" behavior then exit here to not have retries
+          	if (onlyOnce)
+          		return; 
+          		
             // wait for random number of DIFS
 #ifdef ARDUINO                
             uint8_t w = random(1,8);
