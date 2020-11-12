@@ -17,7 +17,7 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: November 3rd, 2020 by C. Pham
+ * last update: November 12th, 2020 by C. Pham
  * 
  * NEW: LoRa communicain library moved from Libelium's lib to StuartProject's lib
  * https://github.com/StuartsProjects/SX12XX-LoRa
@@ -26,7 +26,6 @@
  * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
  * the sensor-related code is in a separate file
  */
-
 
 #include <SPI.h> 
 
@@ -147,26 +146,26 @@ uint32_t TXPacketCount=0;
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
-#define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
-#define PRINTLN_CSTSTR(fmt,param) SerialUSB.println(F(param))
+#define PRINT_CSTSTR(param)       SerialUSB.print(F(param))
+#define PRINTLN_CSTSTR(param)     SerialUSB.println(F(param))
 #define PRINT_STR(fmt,param)      SerialUSB.print(param)
 #define PRINTLN_STR(fmt,param)    SerialUSB.println(param)
 #define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
 #define PRINTLN_VALUE(fmt,param)  SerialUSB.println(param)
 #define PRINT_HEX(fmt,param)      SerialUSB.print(param,HEX)
 #define PRINTLN_HEX(fmt,param)    SerialUSB.println(param,HEX)
-#define FLUSHOUTPUT               SerialUSB.flush();
+#define FLUSHOUTPUT               SerialUSB.flush()
 #else
 #define PRINTLN                   Serial.println("")
-#define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
-#define PRINTLN_CSTSTR(fmt,param) Serial.println(F(param))
+#define PRINT_CSTSTR(param)       Serial.print(F(param))
+#define PRINTLN_CSTSTR(param)     Serial.println(F(param))
 #define PRINT_STR(fmt,param)      Serial.print(param)
 #define PRINTLN_STR(fmt,param)    Serial.println(param)
 #define PRINT_VALUE(fmt,param)    Serial.print(param)
 #define PRINTLN_VALUE(fmt,param)  Serial.println(param)
 #define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
 #define PRINTLN_HEX(fmt,param)    Serial.println(param,HEX)
-#define FLUSHOUTPUT               Serial.flush();
+#define FLUSHOUTPUT               Serial.flush()
 #endif
 
 #ifdef WITH_EEPROM
@@ -281,82 +280,85 @@ void setup()
 #endif
   
   // Print a start message
-  PRINT_CSTSTR("%s","Simple LoRa temperature sensor\n");
+  PRINT_CSTSTR("Simple LoRa temperature sensor\n");
 
 #ifdef ARDUINO_AVR_PRO
-  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");  
+  PRINT_CSTSTR("Arduino Pro Mini detected\n");  
 #endif
 #ifdef ARDUINO_AVR_NANO
-  PRINT_CSTSTR("%s","Arduino Nano detected\n");   
+  PRINT_CSTSTR("Arduino Nano detected\n");   
 #endif
 #ifdef ARDUINO_AVR_MINI
-  PRINT_CSTSTR("%s","Arduino Mini/Nexus detected\n");  
+  PRINT_CSTSTR("Arduino Mini/Nexus detected\n");  
 #endif
 #ifdef ARDUINO_AVR_MEGA2560
-  PRINT_CSTSTR("%s","Arduino Mega2560 detected\n");  
+  PRINT_CSTSTR("Arduino Mega2560 detected\n");  
 #endif
 #ifdef ARDUINO_SAM_DUE
-  PRINT_CSTSTR("%s","Arduino Due detected\n");  
+  PRINT_CSTSTR("Arduino Due detected\n");  
 #endif
 #ifdef __MK66FX1M0__
-  PRINT_CSTSTR("%s","Teensy36 MK66FX1M0 detected\n");
+  PRINT_CSTSTR("Teensy36 MK66FX1M0 detected\n");
 #endif
 #ifdef __MK64FX512__
-  PRINT_CSTSTR("%s","Teensy35 MK64FX512 detected\n");
+  PRINT_CSTSTR("Teensy35 MK64FX512 detected\n");
 #endif
 #ifdef __MK20DX256__
-  PRINT_CSTSTR("%s","Teensy31/32 MK20DX256 detected\n");
+  PRINT_CSTSTR("Teensy31/32 MK20DX256 detected\n");
 #endif
 #ifdef __MKL26Z64__
-  PRINT_CSTSTR("%s","TeensyLC MKL26Z64 detected\n");
+  PRINT_CSTSTR("TeensyLC MKL26Z64 detected\n");
 #endif
 #if defined ARDUINO_SAMD_ZERO && not defined ARDUINO_SAMD_FEATHER_M0
-  PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
+  PRINT_CSTSTR("Arduino M0/Zero detected\n");
 #endif
 #ifdef ARDUINO_AVR_FEATHER32U4 
-  PRINT_CSTSTR("%s","Adafruit Feather32U4 detected\n"); 
+  PRINT_CSTSTR("Adafruit Feather32U4 detected\n"); 
 #endif
 #ifdef ARDUINO_SAMD_FEATHER_M0
-  PRINT_CSTSTR("%s","Adafruit FeatherM0 detected\n");
+  PRINT_CSTSTR("Adafruit FeatherM0 detected\n");
 #endif
 #if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined ESP8266
-  PRINT_CSTSTR("%s","Expressif ESP8266 detected\n");
+  PRINT_CSTSTR("Expressif ESP8266 detected\n");
   //uncomment if you want to disable the WiFi, this will reset your board
   //but maybe it is preferable to use the WiFi.mode(WIFI_OFF), see above
   //ESP.deepSleep(1, WAKE_RF_DISABLED);  
 #endif
 #if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32  || defined HELTEC_LORA
-  PRINT_CSTSTR("%s","Heltec WiFi LoRa 32 detected\n");
+  PRINT_CSTSTR("Heltec WiFi LoRa 32 detected\n");
 #endif
 
 // See http://www.nongnu.org/avr-libc/user-manual/using_tools.html
 // for the list of define from the AVR compiler
 
 #ifdef __AVR_ATmega328P__
-  PRINT_CSTSTR("%s","ATmega328P detected\n");
+  PRINT_CSTSTR("ATmega328P detected\n");
 #endif 
 #ifdef __AVR_ATmega32U4__
-  PRINT_CSTSTR("%s","ATmega32U4 detected\n");
+  PRINT_CSTSTR("ATmega32U4 detected\n");
 #endif 
 #ifdef __AVR_ATmega2560__
-  PRINT_CSTSTR("%s","ATmega2560 detected\n");
+  PRINT_CSTSTR("ATmega2560 detected\n");
 #endif 
 #ifdef __SAMD21G18A__ 
-  PRINT_CSTSTR("%s","SAMD21G18A ARM Cortex-M0+ detected\n");
+  PRINT_CSTSTR("SAMD21G18A ARM Cortex-M0+ detected\n");
 #endif
 #ifdef __SAM3X8E__ 
-  PRINT_CSTSTR("%s","SAM3X8E ARM Cortex-M3 detected\n");
+  PRINT_CSTSTR("SAM3X8E ARM Cortex-M3 detected\n");
 #endif
 #ifdef ESP32 
-  PRINT_CSTSTR("%s","ESP32 detected\n");
+  PRINT_CSTSTR("ESP32 detected\n");
 #endif
 
+//the reason this block of code is here for SX126X and SX128X is because it has not been tested with
+//real modules so RADIO_FAKE_TEST is defined in SX126XLT.cpp and SX128XLT.cpp to set saved parameters
+//to correct values in order to compute time-on-air
 #if defined SX126X || defined SX128X
 #ifdef COMPUTE_TOA
   PRINTLN;
   for (int i=10; i<=250; i+=10) {
     PRINT_VALUE("%d", i);
-    PRINT_CSTSTR("%s","\t");
+    PRINT_CSTSTR("\t");
     PRINTLN_VALUE("%d", LT.getToA(i));
   }
 
@@ -383,12 +385,12 @@ void setup()
   if (LT.begin(NSS, NRESET, RFBUSY, DIO1, DIO2, DIO3, RX_EN, TX_EN, LORA_DEVICE))
 #endif
   {
-    PRINT_CSTSTR("%s","LoRa Device found\n");                                  
+    PRINT_CSTSTR("LoRa Device found\n");                                  
     delay(1000);
   }
   else
   {
-    PRINT_CSTSTR("%s","No device responding\n");
+    PRINT_CSTSTR("No device responding\n");
     while (1){ }
   }
 
@@ -496,7 +498,7 @@ void setup()
   PRINTLN;
   for (int i=10; i<=250; i+=10) {
     PRINT_VALUE("%d", i);
-    PRINT_CSTSTR("%s","\t");
+    PRINT_CSTSTR("\t");
     PRINTLN_VALUE("%d", LT.getToA(i));
   }
 
@@ -517,10 +519,10 @@ void setup()
 
   // found a valid config?
   if (my_sx1272config.flag1==0x12 && my_sx1272config.flag2==0x34) {
-    PRINT_CSTSTR("%s","Get back previous sx1272 config\n");
+    PRINT_CSTSTR("Get back previous sx1272 config\n");
     // set sequence number for SX1272 library
     LT.setTXSeqNo(my_sx1272config.seq);
-    PRINT_CSTSTR("%s","Using packet sequence number of ");
+    PRINT_CSTSTR("Using packet sequence number of ");
     PRINT_VALUE("%d", LT.readTXSeqNo());
     PRINTLN;  
   }
@@ -532,26 +534,26 @@ void setup()
   }
 #endif
 
-  PRINT_CSTSTR("%s","Setting Power: ");
-  PRINT_VALUE("%d", MAX_DBM);
-  PRINTLN;
-  
-  PRINT_CSTSTR("%s","node addr: ");
+  PRINT_CSTSTR("Setting Power: ");
+  PRINTLN_VALUE("%d", MAX_DBM); 
+
+  LT.setDevAddr(node_addr);
+  PRINT_CSTSTR("node addr: ");
   PRINT_VALUE("%d", node_addr);
-  PRINTLN;
+  PRINTLN;  
 
 #ifdef SX126X
-  PRINT_CSTSTR("%s","SX126X");
+  PRINT_CSTSTR("SX126X");
 #endif
 #ifdef SX127X
-  PRINT_CSTSTR("%s","SX127X");
+  PRINT_CSTSTR("SX127X");
 #endif
 #ifdef SX128X
-  PRINT_CSTSTR("%s","SX128X");
+  PRINT_CSTSTR("SX128X");
 #endif 
     
   // Print a success message
-  PRINT_CSTSTR("%s"," successfully configured\n");
+  PRINT_CSTSTR(" successfully configured\n");
 
   delay(500);
 }
@@ -596,7 +598,7 @@ void loop(void)
       digitalWrite(PIN_POWER,LOW);
 #endif
 
-      PRINT_CSTSTR("%s","Mean temp is ");
+      PRINT_CSTSTR("Mean temp is ");
       temp = temp/5;
       PRINT_VALUE("%f", temp);
       PRINTLN;
@@ -615,11 +617,11 @@ void loop(void)
       r_size=sprintf((char*)message,"\\!%s/%s",nomenclature_str,float_str);
 #endif
 
-      PRINT_CSTSTR("%s","Sending ");
+      PRINT_CSTSTR("Sending ");
       PRINT_STR("%s",(char*)(message));
       PRINTLN;
       
-      PRINT_CSTSTR("%s","Real payload size is ");
+      PRINT_CSTSTR("Real payload size is ");
       PRINT_VALUE("%d", r_size);
       PRINTLN;
 
@@ -639,19 +641,19 @@ void loop(void)
       PRINTLN_CSTSTR("%s","Will request an ACK");         
 #endif
       //will return packet length sent if OK, otherwise 0 if transmit error      
-      if (LT.transmitAddressed(message, pl, p_type, DEFAULT_DEST_ADDR, node_addr, 10000, MAX_DBM, WAIT_TX))
+      if (LT.transmitAddressed(message, pl, p_type, DEFAULT_DEST_ADDR, LT.readDevAddr(), 10000, MAX_DBM, WAIT_TX))
       {
         endSend = millis();                                          
         TXPacketCount++;
         uint16_t localCRC = LT.CRCCCITT(message, pl, 0xFFFF);
-        PRINT_CSTSTR("%s","CRC,");
+        PRINT_CSTSTR("CRC,");
         PRINT_HEX("%d", localCRC);
 
         if (LT.readAckStatus()) {
           PRINTLN;
-          PRINT_CSTSTR("%s","Received ACK from ");
+          PRINT_CSTSTR("Received ACK from ");
           PRINTLN_VALUE("%d", LT.readRXSource());
-          PRINT_CSTSTR("%s","SNR of transmitted pkt is ");
+          PRINT_CSTSTR("SNR of transmitted pkt is ");
           PRINTLN_VALUE("%d", LT.readPacketSNRinACK());          
         }
       }
@@ -660,8 +662,8 @@ void loop(void)
         //if here there was an error transmitting packet
         uint16_t IRQStatus;
         IRQStatus = LT.readIrqStatus();                      
-        PRINT_CSTSTR("%s","SendError,");
-        PRINT_CSTSTR("%s",",IRQreg,");
+        PRINT_CSTSTR("SendError,");
+        PRINT_CSTSTR(",IRQreg,");
         PRINT_HEX("%d", IRQStatus);
         LT.printIrqStatus(); 
       }
@@ -677,30 +679,25 @@ void loop(void)
 #endif
 #endif
       PRINTLN;
-      PRINT_CSTSTR("%s","LoRa pkt size ");
+      PRINT_CSTSTR("LoRa pkt size ");
       PRINT_VALUE("%d", pl);
       PRINTLN;
       
-      PRINT_CSTSTR("%s","LoRa pkt seq ");   
+      PRINT_CSTSTR("LoRa pkt seq ");   
       PRINT_VALUE("%d", LT.readTXSeqNo()-1);    
       PRINTLN;
     
-      PRINT_CSTSTR("%s","LoRa Sent in ");
+      PRINT_CSTSTR("LoRa Sent in ");
       PRINT_VALUE("%ld", endSend-startSend);
       PRINTLN;
       
 #if defined LOW_POWER && not defined ARDUINO_SAM_DUE
-      PRINT_CSTSTR("%s","Switch to power saving mode\n");
+      PRINT_CSTSTR("Switch to power saving mode\n");
 
       LT.setSleep(0);
-      e=0;
-
-      if (!e)
-        PRINT_CSTSTR("%s","Successfully switch LoRa module in sleep mode\n");
-      else  
-        PRINT_CSTSTR("%s","Could not switch LoRa module in sleep mode\n");
+      PRINT_CSTSTR("Successfully switch LoRa module in sleep mode\n");
         
-      FLUSHOUTPUT
+      FLUSHOUTPUT;
       
 #ifdef LOW_POWER_TEST
       delay(10000);
@@ -721,8 +718,8 @@ void loop(void)
       
       LowPower.standby();
       
-      PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
-      FLUSHOUTPUT
+      PRINT_CSTSTR("SAMD21G18A wakes up from standby\n");      
+      FLUSHOUTPUT;
 #else
 
 #if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
@@ -756,8 +753,8 @@ void loop(void)
           // use the delay function
           delay(LOW_POWER_PERIOD*1000);
 #endif                        
-          PRINT_CSTSTR("%s",".");
-          FLUSHOUTPUT
+          PRINT_CSTSTR(".");
+          FLUSHOUTPUT;
           delay(1);                        
       }
 #endif      
@@ -765,7 +762,7 @@ void loop(void)
 #else
       PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;
-      PRINT_CSTSTR("%s","Will send next value at\n");
+      PRINT_CSTSTR("Will send next value at\n");
       // can use a random part also to avoid collision
       nextTransmissionTime=millis()+(unsigned long)idlePeriodInMin*60*1000; //+(unsigned long)random(15,60)*1000;
       PRINT_VALUE("%ld", nextTransmissionTime);

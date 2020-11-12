@@ -21,10 +21,14 @@
 #ifndef RFBUSY
 #define RFBUSY 5                                //busy pin on LoRa device
 #endif
+#ifdef ARDUINO
+#define DIO1 3                                
+#else
 //will be translated into GPIO18/GEN01 by arduPI. WARNING: our current RFM95 PCB breakout does not expose DIO1
 //we do not connect DIO1 as we use polling method
 #ifndef DIO1 
 #define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done 
+#endif
 #endif
 //*******
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1 
@@ -85,7 +89,7 @@ const uint8_t Optimisation = LDRO_AUTO;         //low data rate optimisation set
 
 #ifndef PABOOST
 #define PABOOST 
-#endif                        
+#endif                    
 #endif
 
 ////////////////////////////////////////////////////////////////
@@ -110,14 +114,10 @@ const uint8_t Optimisation = LDRO_AUTO;         //low data rate optimisation set
 #ifndef RFBUSY
 #define RFBUSY 5                                //busy pin on LoRa device
 #endif
-#ifdef ARDUINO
-#define DIO1 3                                
-#else
-//will be translated into GPIO18/GEN01 by arduPI. WARNING: our current RFM95 PCB breakout does not expose DIO1
+//will be translated into GPIO18/GEN01 by arduPI
 //we do not connect DIO1 as we use polling method
 #ifndef DIO1 
 #define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done 
-#endif
 #endif
 //*******
 #define DIO2 -1                 								//not used 
@@ -136,11 +136,11 @@ uint8_t SpreadingFactor = LORA_SF12;             //LoRa spreading factor
 uint8_t CodeRate = LORA_CR_4_5;                  //LoRa coding rate                         
 
 #undef MAX_DBM
-#define MAX_DBM									10
+#define MAX_DBM                  10                 
 #endif
 
 #ifndef MAX_DBM
-#define MAX_DBM									14
+#define MAX_DBM                 14
 #endif
 
-#define RXBUFFER_SIZE 250                        //RX buffer size
+#define RXBUFFER_SIZE             250                        //RX buffer size  

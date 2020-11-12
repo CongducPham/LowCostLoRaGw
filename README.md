@@ -12,7 +12,7 @@ June 19th, 2020. The low-cost, low-power and long-distance cattle collar develop
 Latest news
 -----------
 
-- **NEW-Oct20** The low-level radio communication library has moved to the SX12XX LoRa library from Stuart Robinson in order to build devices and gateways with **SX126X, SX127X and SX128X LoRa chip**.  This is a major move to provide support for the most recent LoRa chips including those for 2.4GHz LoRa. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-SX12XX.md)
+- **NEW-Oct20** The low-level radio communication library has moved to the SX12XX LoRa library from Stuart Robinson in order to build devices and gateways with **SX126X, SX127X and SX128X LoRa chip**. The default gateway program is compiled for an SX127X based module using the SX12XX library. This is a major move to provide support for the most recent LoRa chips including those for 2.4GHz LoRa. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-SX12XX.md).
 
 Quick start
 -----------
@@ -31,35 +31,47 @@ Quick start
 PCBs
 ----
 
-In order to facilitate connection between an Arduino board or a RaspberryPI and the well-known RFM95 LoRa radio module, we developed simple PCBs for Arduino ProMini, Arduino Nano and RaspberryPI and make them **freely** available. 
+In order to facilitate connection between an Arduino board or a RaspberryPI and the well-known RFM95W LoRa radio module, we developed simple PCBs for Arduino ProMini, Arduino Nano and RaspberryPI and make them **freely** available. 
+
+The first PCB is a simple RFM95W breakout with header pin for both the Raspberry (to make a gateway) and Arduino boards. The RFM95 breakout initially designed for the HopeRF RFM95W can also host the NiceRF SX1262 as both radio modules have similar pinout. The initial RFM95W breakout has been updated to also expose DIO2 and DIO1 on the RPI header to better support the NiceRF SX1262 module: DIO2 location on the RFM95W is the BUSY pin on the NiceRF SX1262 and DIO1 pin is used for RX/TX done interrupt on the NiceRF SX1262. However, connecting those pins are not mandatory with our modified SX12XX library and the old RFM95W breakout can still be used to drive the NiceRF SX1262.
+
+We also made a variant of the RFM95W breakout for the NiceRF SX1280 module (I really don't know why the SX1280 did not use the same pinout than SX12262 and therefore RFM95W!). All these breakout PCBs are illustrated in the following figure.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFM95Breakout.jpg)
 
-The first PCB is a simple RFM95 breakout with header pin for both the Raspberry (to make a gateway) and Arduino boards. This PCB can therefore be connected to the GPIO header row of the Raspberry as shown below.
+These PCBs can therefore be connected to the GPIO header row of the Raspberry as shown below. Pins on the Raspberry for RST, CS (or NSS), DIO2/BUSY and DIO1 are shown.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFMonRPI.jpg)
 
-Or on an Arduino board as it will be explained in Section [connect a radio module to your end-device](https://github.com/CongducPham/LowCostLoRaGw#connect-a-radio-module-to-your-end-device) and illustrated below. On the breakout Arduino header, you can connect RFM95's DIO0 to a digital pin of your Arduino if you want to use another communication library that needs this pin. Our communication library does not need it but we left this possibility open.
+They can also be used for Arduino boards as it will be explained in Section [connect a radio module to your end-device](https://github.com/CongducPham/LowCostLoRaGw#connect-a-radio-module-to-your-end-device) and illustrated below. On the breakout Arduino header, you can connect RFM95's DIO0 to a digital pin of your Arduino if you want to use another communication library that needs this pin. For NiceRF SX1262 and NiceRF SX1280 you can get BUSY and DIO1 pins from the Raspberry header. Again, our modified communication library does not need any of those pins but we left this possibility open.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFMonArduino.jpg)
 
-Then, 2 specific PCBs for Arduino Nano and Arduino ProMini are available as shown below. The PCB for Arduino Nano is mainly intended for teaching/training purpose as the Nano is not energy-efficient enough for real deployment. However its main advantage is to avoid the need of an external FTDI breakout cable to program it.
+Then, 2 specific PCBs for Arduino Nano and Arduino ProMini are available as shown below. The PCB for Arduino Nano is mainly intended for teaching/training purpose as the Nano is not energy-efficient enough for real deployment. However its main advantage is to avoid the need of an external FTDI breakout cable to program it. It has not been updated for a while and we are not really maintaining it anymore.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/NanoLoRaBreakout.jpg)
 
-The PCB for the Arduino ProMini (3.3v, 8MHz version) can be used for prototyping and even integration purpose. Beware that A4 and A5 (which are usually SDA and SCL pin of the I2C bus) are not connected on the PCB. If you need to use them, use these 2 pins from the Arduino board.
+The PCB for the Arduino ProMini (3.3v, 8MHz version) can be used for prototyping and even integration purpose. Beware that A4 and A5 (which are usually SDA and SCL pin of the I2C bus) are not connected on the PCB. If you need to use them, use these 2 pins from the Arduino board. The PCB for the Arduino ProMini has been updated several times. The last version is v3 for both RFM95W and NiceRF SX1262 and v2 for NiceRF SX1280.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/ProMiniLoRaBreakout.jpg)
 
-All the PCBs have footprint for an SMA connector or uFl. Both Nano and ProMini PCBs have replicated rows for all the pins. They also have extra VCC and GND rails. They also have 4 solder pads that can be soldered together if you want to connect RFM95's DIO0 to D2, DIO1 to D3, RST to D4 and DIO2 to D5. Our communication library does not need it but we left this possibility open (for LMIC stack for instance). We also indicate clearly which pin of the RFM95 you need to solder on the PCB (for instance `MOSI>`). As you can see on the picture, you can directly solder the Arduino board on the PCB, or, as we did, use intermediate headers so that the Arduino board can be easily plugged and removed.
+All the PCBs have footprint for an SMA connector or uFl. Both Nano and ProMini PCBs have replicated rows for all the pins. They also have extra VCC and GND rails. They also have 4 solder pads that can be soldered together if you want to connect various DIO pins. Some of these pads are by default connected. If you want to use the connected Arduino pins for other purposes, just cut the wire between the pads with a cutter and test for discontinuity.
+
+- for RFM95W. Connected by default: DIO0 to D2, DIO1 to D3, RST to D4. Not connected by default: DIO2 to D5
+- for NiceRF SX1262. Connected by default: DIO1 to D3, RST to D4. Not connected by default: BUSY to D5
+- for NiceRF SX1280. Connected by default: DIO1 to D2, BUSY to D3 and RST to D4. Not connected by default: DIO2 to D5 
+
+Our modified communication library makes wiring quite easy because only CS, MISO, MOSI, SCK and RST are needed. However on the PCBs, DIOs pins are available to use other libraries (for LMIC stack for instance). We also indicate clearly which pin of the LoRa module you need to solder on the PCB (for instance `MOSI>`). As you can see on the picture, you can directly solder the Arduino board on the PCB, or, as we did, use intermediate headers so that the Arduino board can be easily plugged and removed.
 
 You can download all the Gerber zipped archive and view them on an [online Gerber viewer](https://www.pcbgogo.com/GerberViewer.html).
 
-- RFM95 breakout zipped Gerber archive, 2 layer board of 29x37mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/RFM95Breakout_2020-08-31.zip)
-- Arduino Nano v2 breakout zipped Gerber archive, 2 layer board of 30x81mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/NanoLoRaBreakout_2019-05-14.zip)
-- Arduino ProMini v2 breakout zipped Gerber archive, 2 layer board of 30x77mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/ProMiniLoRaBreakout_2020-08-24.zip)
+- RFM95W/NiceRF SX1262 breakout zipped Gerber archive, 2 layer board of 29x37mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/RFM95Breakout_2020-11-12.zip)
+- NiceRF SX1280 breakout zipped Gerber archive, 2 layer board of 29x37mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/SX1280Breakout_2020-11-11.zip)
+- Arduino Nano v2 PCB for RFM95W zipped Gerber archive, 2 layer board of 30x81mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/NanoLoRaBreakout_2019-05-14.zip)
+- Arduino ProMini v3 PCB for RFM95W/NiceRF SX1262 zipped Gerber archive, 2 layer board of 30x77mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/ProMiniLoRaBreakout_2020-11-12.zip)
+- Arduino ProMini v2 PCB for NiceRF SX1280 zipped Gerber archive, 2 layer board of 30x77mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/ProMiniLoRaBreakoutSX1280_2020-11-11.zip)
 
-You can easily make them produced on many online PCB manufacturers. Usually, you just need to provide the zip archive and both size and number of layers are detected. You can dramatically decrease the price by using "panelize" option. As you can see on the pictures, we use 3x2 for the RFM95 breakout and 3x1 for both the Nano and ProMini breakout. For instance, we ordered them from [JLCPCB](https://jlcpcb.com/) and the cost of 10 panels (i.e. 60 RFM breakout or 30 Nano/ProMini breakout) is about $2!
+You can easily make them produced on many online PCB manufacturers. Usually, you just need to provide the zip archive and both size and number of layers are detected. You can dramatically decrease the price by using "panelize" option. As you can see on the pictures, we use 3x2 for the RFM95 breakout and 3x1 for both the Nano and ProMini PCBs. For instance, we ordered them from [JLCPCB](https://jlcpcb.com/) and the cost of 10 panels (i.e. 60 RFM95W breakout or 30 Nano/ProMini breakout) is about $4!
 
 Tutorial materials
 ------------------
@@ -123,10 +135,10 @@ Main features of gateway
 - by default, incoming data are uploaded to our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794)
 - works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
 
-Connect a radio module to the Raspberry
+Manually connect a radio module to the Raspberry
 =======================================
 
-You have to connect a LoRa radio module to the Raspberry's GPIO header. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS). It is advised to also connect reset pin.
+If you want to manually connect a LoRa radio module to the Raspberry's GPIO header, just connect the corresponding SPI pin (MOSI, MISO, CLK, CS) and the reset (RST) pin.
 
 ```
       RPI            Radio module
@@ -143,7 +155,7 @@ You can have a look at the "Low-cost-LoRa-GW-step-by-step" tutorial in our tutor
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/connect-radio-rpi.jpg)
 
-**Or you can of course use our RFM95 breakout PCB that can be directly connected to the RPI GPIO header**. Look also at our [Low-cost-LoRa-GW-outdoor](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-outdoor.pdf) tutorial to build an outdoor gateway.
+**Or you can of course use our RFM95W/NiceRF SX1262 and NiceRF SX1280 breakouts that can be directly connected to the Raspberry GPIO header**. Look also at our [Low-cost-LoRa-GW-outdoor](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-outdoor.pdf) tutorial to build an outdoor gateway.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/outdoor-gw.jpg)
 
@@ -330,7 +342,7 @@ The LoRa gateway starts automatically when RPI is powered on. Then use `cmd.sh` 
 Connect a radio module to your end-device
 =========================================
 
-To have an end-device, you have to connect a LoRa radio module to an Arduino board. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS/SS). On the Uno, Pro Mini, Mini, Nano, Teensy the mapping is as follows:
+To have an end-device, you have to connect a LoRa radio module to an Arduino board. Just connect the corresponding SPI pin (MOSI, MISO, CLK, CS/SS) and the RST pin. On the Uno, Pro Mini, Mini, Nano, Teensy the mapping is as follows:
 
 ```
        Arduino      Radio module
@@ -340,19 +352,20 @@ To have an end-device, you have to connect a LoRa radio module to an Arduino boa
  SCK pin D13----------SCK   (SPI clock in)
 MOSI pin D11----------MOSI  (SPI Data in)
 MISO pin D12----------MISO  (SPI Data out)
+          D4----------RST   (Reset)
 ```
 
-**For the Nano and the ProMini, you can of course use our Nano/ProMini breakout PCB that makes connection to an RFM95 radio straightforward**.
+**For the Nano and the ProMini, you can of course use our Nano/ProMini PCBs that makes connection to an RFM95W/NiceRF SX1262 and NiceRF SX1280 radio straightforward**.
 
 On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino and Teensy boards. You can have a look at the [Low-cost-LoRa-IoT-step-by-step](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-outdoor-step-by-step.pdf) tutorial in the tutorial repository https://github.com/CongducPham/tutorials.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/connect-radio-device.png)
 
-There is an important issue regarding the radio modules. The Semtech SX1272/76 has actually 2 lines of RF power amplification (PA): a high efficiency PA up to 14dBm (RFO) and a high power PA up to 20dBm (PA_BOOST). Setting transmission power to `L` (Low), `H` (High), and `M` (Max) only uses the RFO and delivers 2dBm, 6dBm and 14dBm respectively. `x` (extreme) and `X` (eXtreme) use the PA_BOOST and deliver 14dBm and 20dBm respectively.
+There is an important issue regarding the radio modules. The Semtech SX1272/76 has actually 2 lines of RF power amplification (PA): a high efficiency PA up to 14dBm (RFO) and a high power PA up to 20dBm (PA_BOOST).
 
-However even if the SX1272/76 chip has the PA_BOOST and the 20dBm features, not all radio modules (integrating these SX1272/76) do have the appropriate wiring and circuits to enable these features: it depends on the choice of the reference design that itself is guided by the main intended frequency band usage, and sometimes also by the target country's regulations (such as maximum transmitted power). So you have to check with the datasheet whether your radio module has PA_BOOST (usually check whether the PA_BOOST pin is wired) and 20dBm capability before using `x` or `X`. Some other radio modules only wire the PA_BOOST and not the RFO resulting in very bad range when trying to use the RFO mode (`L`, `H`, and `M`). In this case, one has to use `x` to indicate PA_BOOST usage to get 14dBm.
+However even if the SX1272/76 chip has the PA_BOOST and the 20dBm features, not all radio modules (integrating these SX1272/76) do have the appropriate wiring and circuits to enable these features: it depends on the choice of the reference design that itself is guided by the main intended frequency band usage, and sometimes also by the target country's regulations (such as maximum transmitted power). So you have to check with the datasheet whether your radio module has PA_BOOST (usually check whether the PA_BOOST pin is wired) and 20dBm capability. Some other radio modules only wire the PA_BOOST and not the RFO resulting in very bad range when trying to use the RFO mode. In this case, you have to explicitly indicate that PA_BOOST is used.
 
-Practically, we only use either `M` (Max) or `x` (extreme) to have maximum range. They both deliver 14dBm but the difference is whether the RFO pin is used or the PA_BOOST. Therefore, when uploading a sketch on your board, you have to check whether your radio module needs the PA_BOOST in order to get significant output level in which case `x` should be used instead of `M`. All the examples start with:
+All the examples using the SX127X radio module start with:
 
 	// IMPORTANT
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -524,24 +537,18 @@ Verify if the low-level gateway program detects your radio module and if the rad
 
 	> sudo ./lora_gateway
 	
-You should see the following output
+You should see the following output, here for an SX127X based gateway
 
-	SX1276 detected, starting.
-	SX1276 LF/HF calibration
-	...
-	^$**********Power ON: state 0
-	^$Default sync word: 0x12
-	^$LoRa mode 1
-	^$Setting mode: state 0
-	^$Channel CH_10_868: state 0
-	^$Set LoRa power dBm to 14
-	^$Power: state 0
-	^$Get Preamble Length: state 0
+	^$**********Power ON
+	^$Frequency 865200000
+	^$LoRa addr 1
+	^$Use PA_BOOST amplifier line
+	^$Set LoRa txpower dBm to 14
 	^$Preamble Length: 8
-	^$LoRa addr 1: state 0
-	^$SX1272/76 configured as LR-BS. Waiting RF input for transparent RF-serial bridge	
-
-If one of the state result is different from 0 then it might be a power/current issue. If the Preamble Length is different from 8 then it can also be a power/current issue but also indicate more important failure of the radio module. Get the "faulty" radio module and connect it to an Arduino board running the interactive end-device sketch. If the Preamble Length is now correct, then retry again with the Raspberry gateway. If the problem on the Raspberry persists, try with another radio module.
+	^$Sync word: 0x12
+	^$SX1276,865199936hz,SF12,BW125000,CR4:5,LDRO_On,SyncWord_0x12,IQNormal,Preamble_8
+	^$SX1276,SLEEP,Version_12,PacketMode_LoRa,Explicit,CRC_On,AGCauto_On,LNAgain_1,LNAboostHF_On,LNAboostLF_On
+	^$SX127X configured as LR-BS. Waiting RF input for transparent RF-serial bridge	
 	
 Warning
 =======

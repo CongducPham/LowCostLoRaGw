@@ -14,11 +14,6 @@
 
 //*******  Setup hardware pin definitions here ! ***************
 
-//These are the pin definitions for one of my own boards, the Easy Pro Mini,
-//be sure to change the definitions to match your own setup. Some pins such as DIO1,
-//DIO2, BUZZER are not used by this sketch so they do not need to be connected and
-//should be set to -1.
-
 #if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
   // for the Heltec ESP32 WiFi LoRa module
 #define NSS 18
@@ -26,7 +21,12 @@
 #define NSS 10                                  //select pin on LoRa device
 #endif
 #define NRESET 4                                //reset pin on LoRa device
+//we do not connect DIO0 as we use polling method
+//if you have an RFM95 then
+//you can use our ProMini LoRa PCB for RFM95 where DIO0 can be connected to D2
+//in that case, comment #define USE_POLLING in SX127XLT.cpp to use DIO0 interrrupt pin
 #define DIO0 2                                  //DIO0 pin on LoRa device, used for RX and TX done 
+//*******
 #define DIO1 -1                                 //DIO1 pin on LoRa device, normally not used so set to -1 
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1
 

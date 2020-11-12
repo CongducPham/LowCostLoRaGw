@@ -16,8 +16,16 @@
 
 #define NSS 10                                  //select pin on LoRa device
 #define NRESET 4                                //reset pin on LoRa device
+//we do not connect RFBUSY
+//if you have a NiceRF SX1262 which has almost the same pinout than the RFM95 then
+//you can use our ProMini LoRa PCB for RFM95 where RFBUSY (marked DIO2 on the RFM95 PCB) can be connected to D5
 #define RFBUSY 5                                //busy pin on LoRa device 
-#define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done 
+//we do not connect DIO1 as we use polling method
+//if you have a NiceRF SX1262 which has almost the same pinout than the RFM95 then
+//you can use our ProMini LoRa PCB for RFM95 where DIO1 can be connected to D3
+//in that case, comment #define USE_POLLING in SX126XLT.cpp to use DIO1 interrrupt pin
+#define DIO1 3                                  //DIO1 pin on LoRa device, used for RX and TX done
+//*******
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1 
 #define DIO3 -1                                 //DIO3 pin on LoRa device, normally not used so set to -1
 #define RX_EN -1                                //pin for RX enable, used on some SX126X devices, set to -1 if not used
@@ -34,6 +42,9 @@ const uint8_t Bandwidth = LORA_BW_125;          //LoRa bandwidth
 const uint8_t SpreadingFactor = LORA_SF12;       //LoRa spreading factor
 const uint8_t CodeRate = LORA_CR_4_5;           //LoRa coding rate
 const uint8_t Optimisation = LDRO_AUTO;         //low data rate optimisation setting, normally set to auto
+
+// can be set to LORA_IQ_NORMAL or LORA_IQ_INVERTED
+const uint8_t IQ_Setting = LORA_IQ_NORMAL; 
 
 //for SX1262, SX1268 power range is +22dBm to -9dBm
 //for SX1261, power range is +15dBm t0 -9dBm

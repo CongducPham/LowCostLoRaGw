@@ -87,10 +87,10 @@
  *        Add support of a small OLED screen in both CAD_TEST and PERIODIC_SENDER mode
  *  June, 29th, 2017. v1.8
  *        Add CarrierSense selection method to perform tests
- *          - CarrierSense0 does nothing -> pure ALOHA
- *          - CarrierSense1 is the inital proposed carrier sense mechanism described in TOS LAS paper
- *          - CarrierSense2 is an alternative carrier sense mechanism derived from 802.11
- *          - CarrierSense3 is the proposed carrier sense mechanism 
+ *          - CarrierSense(0) does nothing -> pure ALOHA
+ *          - CarrierSense(1) is the inital proposed carrier sense mechanism described in TOS LAS paper
+ *          - CarrierSense(2) is an alternative carrier sense mechanism derived from 802.11
+ *          - CarrierSense(3) is the proposed carrier sense mechanism for cohabitation with long message
  *          - /@CS0#, /@CS1# or /@CS2# or /@CS3# can dynamically choose between those
  *  May, 8th, 2017. v1.7 
  *        Improve AES support
@@ -1766,99 +1766,3 @@ void loop(void)
     }
   } // end of "if (receivedFromSerial || receivedFromLoRa)"
 } 
-
-
-/*
- * 
-#ifdef WITH_RCVW
-      // TODO        
-      // open a receive window
-      uint16_t w_timer=10000;
-
-      PRINT_CSTSTR("*");
-      
-      if (loraMode==1)
-        w_timer=10000;
-  
-      e = sx1272.receivePacketTimeout(MAX_TIMEOUT);
-
-      PRINT_VALUE("%d",e);
-#endif 
-///////////////////////////////////////////////////////////////////
-
-/////////////////////////////////////////////////////////////////// 
-// IF WE RECEIVE A RADIO PACKET
-//
-      if (!e) {
-         int a=0, b=0;
-         uint8_t tmp_length;
-
-         digitalWrite(SX1272_led_rcv, HIGH);
-
-         receivedFromLoRa=true;
-         sx1272.getSNR();
-         sx1272.getRSSIpacket();
-
-         tmp_length=sx1272._payloadlength;
-         
-         sprintf(sprintf_buf,"--- rxlora. dst=%d type=0x%.2X src=%d seq=%d len=%d SNR=%d RSSIpkt=%d BW=%d CR=4/%d SF=%d\n", 
-                   sx1272.packet_received.dst,
-                   sx1272.packet_received.type, 
-                   sx1272.packet_received.src,
-                   sx1272.packet_received.packnum,
-                   tmp_length, 
-                   sx1272._SNR,
-                   sx1272._RSSIpacket,
-                   (sx1272._bandwidth==BW_125)?125:((sx1272._bandwidth==BW_250)?250:500),
-                   sx1272._codingRate+4,
-                   sx1272._spreadingFactor);
-                   
-         PRINT_STR("%s",sprintf_buf);
-
-         // provide a short output for external program to have information about the received packet
-         // ^psrc_id,seq,len,SNR,RSSI
-         sprintf(sprintf_buf,"^p%d,%d,%d,%d,%d,%d,%d\n",
-                   sx1272.packet_received.dst,
-                   sx1272.packet_received.type,                   
-                   sx1272.packet_received.src,
-                   sx1272.packet_received.packnum, 
-                   tmp_length,
-                   sx1272._SNR,
-                   sx1272._RSSIpacket);
-                   
-         PRINT_STR("%s",sprintf_buf);          
-
-         // ^rbw,cr,sf
-         sprintf(sprintf_buf,"^r%d,%d,%d\n", 
-                   (sx1272._bandwidth==BW_125)?125:((sx1272._bandwidth==BW_250)?250:500),
-                   sx1272._codingRate+4,
-                   sx1272._spreadingFactor);
-                   
-         PRINT_STR("%s",sprintf_buf);  
-                             
-
-         for ( ; a<tmp_length; a++) {
-           PRINT_STR("%c",(char)sx1272.packet_received.data[a]);
-
-           if (b<sizeof(cmd)-1) {
-              cmd[b]=(char)sx1272.packet_received.data[a];
-              b++;
-           }
-         }
-         
-         // strlen(cmd) will be correct as only the payload is copied
-         cmd[b]='\0';    
-         PRINTLN;
-         FLUSHOUTPUT;
-
-#ifdef OLED
-         u8x8.clearDisplay();
-         u8x8.drawString(0, 0, "rcv:");        
-         u8x8.drawString(0, 1, cmd);
-#endif 
-         delay(1000);
-         
-         digitalWrite(led_rcv, LOW);
-      }
-  }   
- */

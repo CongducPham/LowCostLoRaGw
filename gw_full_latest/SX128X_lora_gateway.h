@@ -1,5 +1,7 @@
 //*******  Setup hardware pin definitions here ! ***************
 
+//pinout is defined for our NiceRF SX1280 PCB breakout
+//
 // will be translated into GPIO8/SPI_CE0 by arduPI
 #ifndef NSS
 #define NSS 10                                  //select pin on LoRa device
@@ -8,10 +10,15 @@
 #ifndef NRESET
 #define NRESET 6                                //reset pin on LoRa device
 #endif                               //reset pin on LoRa device
-// will be translated into GPI25/GEN06 by arduPI
+//will be translated into GPIO25/GEN06 by arduPI
+#ifndef RFBUSY
 #define RFBUSY 5                                //busy pin on LoRa device
-// will be translated into GPI18/GEN01 by arduPI 
+#endif
+//will be translated into GPIO18/GEN01 by arduPI
+//we do not connect DIO1 as we use polling method
+#ifndef DIO1 
 #define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done 
+#endif
 #define DIO2 -1                 //not used 
 #define DIO3 -1                 //not used                      
 #define RX_EN -1                //pin for RX enable, used on some SX1280 devices, set to -1 if not used

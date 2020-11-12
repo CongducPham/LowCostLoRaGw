@@ -2,7 +2,7 @@
  *  simple ping-pong test by requesting an ACK from the gateway
  *  version with an LCD display using the U8g2 library
  *  
- *  Copyright (C) 2018 Congduc Pham, University of Pau, France
+ *  Copyright (C) 2020 Congduc Pham, University of Pau, France
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -19,8 +19,13 @@
  *
  *****************************************************************************
  *
- * last update: Jan 15th, 2019 by C. Pham
+ * last update: November 12th, 2020 by C. Pham
+ * 
+ * NEW: LoRa communicain library moved from Libelium's lib to StuartProject's lib
+ * https://github.com/StuartsProjects/SX12XX-LoRa
+ * to support SX126X, SX127X and SX128X chips (SX128X is LoRa in 2.4GHz band)
  */
+ 
 #include <SPI.h>
 #define USE_SPI_TRANSACTION          //this is the standard behaviour of library, use SPI Transaction switching
 // please uncomment only 1 choice 
@@ -55,6 +60,19 @@ SX128XLT LT;
                           __/ |                                  
                          |___/                                   
 ********************************************************************/
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE NODE ADDRESS 
+uint8_t node_addr=8;
+//////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////
+// CHANGE HERE THE TIME IN SECONDS BETWEEN 2 READING & TRANSMISSION
+unsigned int idlePeriodInSec = 8;
+///////////////////////////////////////////////////////////////////
+
+//keep track of the number of successful transmissions
+uint32_t TXPacketCount=0;
+uint8_t TXPacketL;
 
 //#define OLED
 //#define OLED_GND234
@@ -110,10 +128,6 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 12, /* data=*/ 14, /* reset=*
 char oled_msg[20];
 #endif
 
-//keep track of the number of successful transmissions
-uint32_t TXPacketCount=0;
-uint8_t TXPacketL;
-
 /*****************************
  _____           _      
 /  __ \         | |     
@@ -134,7 +148,7 @@ uint8_t TXPacketL;
 #define PRINTLN_VALUE(fmt,param)  SerialUSB.println(param)
 #define PRINT_HEX(fmt,param)      SerialUSB.print(param,HEX)
 #define PRINTLN_HEX(fmt,param)    SerialUSB.println(param,HEX)
-#define FLUSHOUTPUT               SerialUSB.flush();
+#define FLUSHOUTPUT               SerialUSB.flush()
 #else
 #define PRINTLN                   Serial.println("")
 #define PRINT_CSTSTR(param)       Serial.print(F(param))
@@ -145,7 +159,7 @@ uint8_t TXPacketL;
 #define PRINTLN_VALUE(fmt,param)  Serial.println(param)
 #define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
 #define PRINTLN_HEX(fmt,param)    Serial.println(param,HEX)
-#define FLUSHOUTPUT               Serial.flush();
+#define FLUSHOUTPUT               Serial.flush()
 #endif
 
 #define DEFAULT_DEST_ADDR 1
@@ -360,10 +374,6 @@ void setup()
 
   loraConfig();
 
-  LT.setDevAddr(8);
-  PRINT_CSTSTR("Set LoRa txpower dBm to ");
-  PRINTLN_VALUE("%d", MAX_DBM); 
-  
   PRINTLN;
   LT.printModemSettings();                                     //reads and prints the configured LoRa settings, useful check
   PRINTLN;
@@ -381,6 +391,14 @@ void setup()
   PRINTLN;
   PRINTLN;
 
+  PRINT_CSTSTR("Setting Power: ");
+  PRINTLN_VALUE("%d", MAX_DBM); 
+
+  LT.setDevAddr(node_addr);
+  PRINT_CSTSTR("node addr: ");
+  PRINT_VALUE("%d", node_addr);
+  PRINTLN;  
+  
 #ifdef SX126X
   PRINT_CSTSTR("SX126X - ");
 #endif
@@ -486,6 +504,6 @@ void loop(void)
     endSend=millis();
 
     PRINTLN;  
-    delay(8000);   
+    delay(idlePeriodInSec*1000);   
   }          
 }

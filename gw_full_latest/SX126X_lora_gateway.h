@@ -1,17 +1,25 @@
 //*******  Setup hardware pin definitions here ! ***************
 
-// will be translated into GPIO8/SPI_CE0 by arduPI
+//pinout is defined for our RFM95 PCB breakout used to host a NiceRF SX1262 module which almost the same pinout
+//
+//will be translated into GPIO8/SPI_CE0 by arduPI
 #ifndef NSS
 #define NSS 10                                  //select pin on LoRa device
 #endif
-// will be translated into GPIO4 by arduPI
+//will be translated into GPIO4 by arduPI
 #ifndef NRESET
 #define NRESET 6                                //reset pin on LoRa device
 #endif                               //reset pin on LoRa device
-// will be translated into GPI25/GEN06 by arduPI
+//will be translated into GPIO25/GEN06 by arduPI. WARNING: our current RFM95 PCB breakout does not expose DIO2(RFM95)/BUSY(NiceRFSX1280)
+//we do not connect RFBUSY
+#ifndef RFBUSY
 #define RFBUSY 5                                //busy pin on LoRa device
-// will be translated into GPI18/GEN01 by arduPI 
+#endif
+//will be translated into GPIO18/GEN01 by arduPI. WARNING: our current RFM95 PCB breakout does not expose DIO1
+//we do not connect DIO1 as we use polling method
+#ifndef DIO1 
 #define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done 
+#endif
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1 
 #define DIO3 -1                                 //DIO3 pin on LoRa device, normally not used so set to -1
 #define RX_EN -1                                //pin for RX enable, used on some SX126X devices, set to -1 if not used

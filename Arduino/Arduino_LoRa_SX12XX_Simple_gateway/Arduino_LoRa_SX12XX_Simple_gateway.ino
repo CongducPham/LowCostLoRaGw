@@ -1,10 +1,6 @@
 /* 
- *  Very simple LoRa gateway to test the new SX127XLT lib on the RPI
- * 
- *	The code also works on an Arduino to build a simple gateway
+ *  Very simple LoRa gateway to test the new SX127XLT lib
  *
- *	Author: Congduc Pham, 2020
- * 
  *  Based on the simple receiver example from SX127XLT lib
  */
 
@@ -57,7 +53,7 @@ SX127XLT LT;
 SX128XLT LT;                                         
 #endif
 
-#include "SX12XX_simple_lora_gateway.h"                 //include the setiings file, frequencies, LoRa settings etc   
+#include "Arduino_LoRa_SX12XX_Simple_gateway.h"                 //include the setiings file, frequencies, LoRa settings etc   
 
 #ifdef ARDUINO
 	#define PRINTLN                   Serial.println("")
@@ -69,7 +65,7 @@ SX128XLT LT;
 	#define PRINTLN_VALUE(fmt,param)	Serial.println(param)
 	#define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
 	#define PRINTLN_HEX(fmt,param)		Serial.println(param,HEX)
-	#define FLUSHOUTPUT               Serial.flush();
+	#define FLUSHOUTPUT               Serial.flush()
 #else
 	#define PRINTLN                   printf("\n")
 	#define PRINT_CSTSTR(param)       printf(param)
@@ -80,7 +76,7 @@ SX128XLT LT;
 	#define PRINTLN_VALUE(fmt,param)	do {printf(fmt,param);printf("\n");} while(0)
 	#define PRINT_HEX(fmt,param)      printf(fmt,param)
 	#define PRINTLN_HEX(fmt,param)		do {printf(fmt,param);printf("\n");} while(0)
-	#define FLUSHOUTPUT               fflush(stdout);
+	#define FLUSHOUTPUT               fflush(stdout)
 #endif
 
 ///////////////////////////////////////////////////////////////////
@@ -310,7 +306,7 @@ void setup() {
 #if defined SX126X || defined SX128X
   LT.setTxParams(MAX_DBM, RAMP_TIME);
 #endif
-
+  
 #ifdef SX126X
 	PRINT_CSTSTR("SX126X - ");
 #endif
@@ -377,4 +373,3 @@ int main (int argc, char *argv[]){
   return (0);
 }
 #endif
-

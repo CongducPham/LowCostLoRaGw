@@ -1,7 +1,7 @@
 Arduino example sketches
 ========================
 
-This folder contains sketches for Arduino (and compatible) boards. The example sketches, in increasing level of complexity, will show how simple, yet effective, low-cost LoRa IoT device can be programmed. For instance, they show how LoRa radio modules are configured and how a device can send sensed data to a gateway. They actually serve as template for future developments. On the Uno, Pro Mini, Mini, Nano and Teensy the mapping is as follows:
+This folder contains sketches for Arduino (and compatible) boards. The example sketches, in increasing level of complexity, will show how simple, yet effective, low-cost LoRa IoT device can be programmed. For instance, they show how LoRa radio modules are configured and how a device can send sensed data to a gateway. They actually serve as template for future developments. On the Uno, Pro Mini, Mini, Nano and Teensy the minimum connection mapping is as follows:
 
 ```
        Arduino      Radio module
@@ -11,6 +11,7 @@ This folder contains sketches for Arduino (and compatible) boards. The example s
  SCK pin D13----------SCK   (SPI clock in)
 MOSI pin D11----------MOSI  (SPI Data in)
 MISO pin D12----------MISO  (SPI Data out)
+          D4----------RST   (Reset)
 ```
 
 On the MEGA, the SPI pin are as follows: 50 (MISO), 51 (MOSI), 52 (SCK). Starting from November 3rd, 2017, the CS pin is always pin number 10 on Arduino and Teensy boards. You can have a look at the [Low-cost-LoRa-IoT-step-by-step](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-IoT-outdoor-step-by-step.pdf) tutorial in the tutorial repository (https://github.com/CongducPham/tutorials).
@@ -29,6 +30,8 @@ These 2 examples can be used as templates to adapt all the legacy examples to th
 **`Arduino_LoRa_SX12XX_Ping_Pong_LCD`** is the new version of **`Arduino_LoRa_Ping_Pong_LCD`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281
 
 **`Arduino_LoRa_SX12XX_InteractiveDevice`** is the new version of **`Arduino_LoRa_InteractiveDevice`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281
+
+**`Arduino_LoRa_SX12XX_Simple_gateway`** is a very simple Arduino-based gateway using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281. In addition, the code shows how the same code can be compiled and run on Arduino and RaspberryPI. `Arduino_LoRa_SX12XX_Simple_gateway.ino` is exactly the same code than `SX12XX_simple_lora_gateway.cpp` for the RaspberryPI, see https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest.
 
 Legacy (use SX1272/76 library initially from Libelium, modified for our framework)
 ------

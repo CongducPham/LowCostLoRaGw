@@ -16,8 +16,16 @@
 
 #define NSS 10                                  //select pin on LoRa device
 #define NRESET 4                                //reset pin on LoRa device
+//we do not connect RFBUSY
+//if you have a NiceRF SX1262 which has almost the same pinout than the RFM95 then
+//you can use our ProMini LoRa PCB for RFM95 where RFBUSY (marked DIO2 on the RFM95 PCB) can be connected to D5
 #define RFBUSY 5                                //busy pin on LoRa device 
-#define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done 
+//we do not connect DIO1 as we use polling method
+//if you have a NiceRF SX1262 which has almost the same pinout than the RFM95 then
+//you can use our ProMini LoRa PCB for RFM95 where DIO1 can be connected to D3
+//in that case, comment #define USE_POLLING in SX126XLT.cpp to use DIO1 interrrupt pin
+#define DIO1 3                                  //DIO1 pin on LoRa device, used for RX and TX done
+//*******
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1 
 #define DIO3 -1                                 //DIO3 pin on LoRa device, normally not used so set to -1
 #define RX_EN -1                                //pin for RX enable, used on some SX126X devices, set to -1 if not used
