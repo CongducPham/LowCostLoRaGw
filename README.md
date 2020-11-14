@@ -65,11 +65,11 @@ Our modified communication library makes wiring quite easy because only CS, MISO
 
 You can download all the Gerber zipped archive and view them on an [online Gerber viewer](https://www.pcbgogo.com/GerberViewer.html).
 
-- RFM95W/NiceRF SX1262 breakout zipped Gerber archive, 2 layer board of 29x37mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/RFM95Breakout_2020-11-12.zip)
-- NiceRF SX1280 breakout zipped Gerber archive, 2 layer board of 29x37mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/SX1280Breakout_2020-11-11.zip)
+- RFM95W/NiceRF SX1262 breakout zipped Gerber archive, 2 layer board of 29x37mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/RFM95Breakout_2020-11-14.zip)
+- NiceRF SX1280 breakout zipped Gerber archive, 2 layer board of 29x37mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/SX1280Breakout_2020-11-14.zip)
 - Arduino Nano v2 PCB for RFM95W zipped Gerber archive, 2 layer board of 30x81mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/NanoLoRaBreakout_2019-05-14.zip)
-- Arduino ProMini v3 PCB for RFM95W/NiceRF SX1262 zipped Gerber archive, 2 layer board of 30x77mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/ProMiniLoRaBreakout_2020-11-12.zip)
-- Arduino ProMini v2 PCB for NiceRF SX1280 zipped Gerber archive, 2 layer board of 30x77mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/ProMiniLoRaBreakoutSX1280_2020-11-11.zip)
+- Arduino ProMini v3 PCB for RFM95W/NiceRF SX1262 zipped Gerber archive, 2 layer board of 30x77mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/ProMiniLoRaBreakout_2020-11-14.zip)
+- Arduino ProMini v2 PCB for NiceRF SX1280 zipped Gerber archive, 2 layer board of 30x77mm [.zip](https://github.com/CongducPham/LowCostLoRaGw/raw/master/PCBs/ProMiniLoRaBreakoutSX1280_2020-11-14.zip)
 
 You can easily make them produced on many online PCB manufacturers. Usually, you just need to provide the zip archive and both size and number of layers are detected. You can dramatically decrease the price by using "panelize" option. As you can see on the pictures, we use 3x2 for the RFM95 breakout and 3x1 for both the Nano and ProMini PCBs. For instance, we ordered them from [JLCPCB](https://jlcpcb.com/) and the cost of 10 panels (i.e. 60 RFM95W breakout or 30 Nano/ProMini breakout) is about $4!
 
