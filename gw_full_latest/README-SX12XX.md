@@ -83,11 +83,9 @@ Early pictures
 
 Here are some pictures of our early test with Ebyte SX1280. As you see both device and gateway are fully operational. Here frequency is 2403000000Hz and datarate if SF12BW203125.
 
-<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlydevice.jpg" width="400">
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlydevice.jpg" width="400"><img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlygw.jpg" width="400">
 
-<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlygw.jpg" width="400">
-
-<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-fullgw.png" width="400">
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-fullgw.png">
 	
 Enjoy!
 C. Pham		
