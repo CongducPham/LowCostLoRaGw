@@ -3272,7 +3272,7 @@ void SX127XLT::printModemSettings()
 
   printDevice();
   PRINT_CSTSTR(",");
-  PRINT_VALUE("%ld",getFreqInt());
+  PRINT_VALUE("%lu",getFreqInt());
   PRINT_CSTSTR("hz,SF");
   PRINT_VALUE("%d",getLoRaSF());
   PRINT_CSTSTR(",BW");
@@ -4149,7 +4149,7 @@ void SX127XLT::toneFM(uint16_t frequency, uint32_t length, uint32_t deviation, f
 
 #ifdef SX127XDEBUG3
   PRINT_CSTSTR("frequency ");
-  PRINTLN_VALUE("%ld",frequency);
+  PRINTLN_VALUE("%lu",frequency);
   PRINT_CSTSTR("length ");
   PRINTLN_VALUE("%ld",length);
 

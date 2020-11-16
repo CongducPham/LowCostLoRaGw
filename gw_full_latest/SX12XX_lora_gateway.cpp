@@ -524,11 +524,11 @@ void loraConfig() {
 			}												
 #endif
 #ifdef SX128X
-			if (optBW==203 || optBW==200)
+			if (optBW==125 || optBW==203 || optBW==200)
 				Bandwidth = LORA_BW_0200;	//actually 203125hz		
-			else if (optBW==406 || optBW==400)
+			else if (optBW==250 || optBW==406 || optBW==400)
 				Bandwidth = LORA_BW_0400; //actually 406250hz
-			else if (optBW==812 || optBW==800)
+			else if (optBW==500 || optBW==812 || optBW==800)
 				Bandwidth = LORA_BW_0800;	//actually 812500hz						    
 			else if (optBW==1625 || optBW==1600)
 				Bandwidth = LORA_BW_1600; //actually 1625000hz
@@ -567,7 +567,7 @@ void loraConfig() {
 	
 	//otherwise DEFAULT_CHANNEL is set in SX12XX_lora_gateway.h
 	PRINT_CSTSTR("^$Frequency ");
-	PRINTLN_VALUE("%ld", DEFAULT_CHANNEL);
+	PRINTLN_VALUE("%lu", DEFAULT_CHANNEL);
 
 	PRINT_CSTSTR("^$LoRa addr ");
 	PRINTLN_VALUE("%d", GW_ADDR);
@@ -935,7 +935,11 @@ void loop(void)
 				PacketSNR,
 				PacketRSSI,
 				LT.returnBandwidth()/1000,
+#if defined SX126X || defined SX128X
+				LT.getLoRaCodingRate()+4,
+#else				
 				LT.getLoRaCodingRate(),
+#endif				
 				LT.getLoRaSF());     
 
 			PRINT_STR("%s", print_buf);              
@@ -1457,7 +1461,7 @@ int main (int argc, char *argv[]){
                break;
            case 'b' : optBW = atoi(optarg); 
                       // 7, 10, 15, 20, 31, 41, 62, 125, 250 or 500 for SX126X and SX127X_lora_gateway
-                      // 203, 406, 812 or 1625 for SX128X
+                      // 125/200/203, 250/400/406, 500/800/812 or 1600/1625 for SX128X
                break;
            case 'c' : optCR = atoi(optarg);
                       // 5, 6, 7 or 8

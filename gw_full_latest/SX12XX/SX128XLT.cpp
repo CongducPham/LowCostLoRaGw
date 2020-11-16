@@ -866,7 +866,7 @@ void SX128XLT::printModemSettings()
 
   printDevice();
   PRINT_CSTSTR(",");
-  PRINT_VALUE("%ld",getFreqInt());
+  PRINT_VALUE("%lu",getFreqInt());
   PRINT_CSTSTR("hz");
   
   if (savedPacketType == PACKET_TYPE_LORA) 

@@ -37,7 +37,7 @@
 
 //LoRa Modem Parameters
 #define Offset 0                                 //offset frequency for calibration purposes  
-#define Bandwidth LORA_BW_0400                   //LoRa bandwidth
+#define Bandwidth LORA_BW_0200                   //LoRa bandwidth
 #define SpreadingFactor LORA_SF12                 //LoRa spreading factor
 #define CodeRate LORA_CR_4_5                     //LoRa coding rate
 

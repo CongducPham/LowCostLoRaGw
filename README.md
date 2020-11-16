@@ -11,6 +11,7 @@ June 19th, 2020. The low-cost, low-power and long-distance cattle collar develop
 
 Latest news
 -----------
+- **NEW-Nov20** To support the new SX126X and SX128X LoRa chips, we updated and added Arduino ProMini PCBs to easily connect NiceRF SX1262 and NiceRF SX1280 modules. These modules have same size than the HopeRF RFM95W for SX1276.
 
 - **NEW-Oct20** The low-level radio communication library has moved to the SX12XX LoRa library from Stuart Robinson in order to build devices and gateways with **SX126X, SX127X and SX128X LoRa chip**. The default gateway program is compiled for an SX127X based module using the SX12XX library. This is a major move to provide support for the most recent LoRa chips including those for 2.4GHz LoRa. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-SX12XX.md).
 
@@ -31,11 +32,11 @@ Quick start
 PCBs
 ----
 
-In order to facilitate connection between an Arduino board or a RaspberryPI and the well-known RFM95W LoRa radio module, we developed simple PCBs for Arduino ProMini, Arduino Nano and RaspberryPI and make them **freely** available. 
+In order to facilitate connection between an Arduino board or a RaspberryPI and the well-known RFM95W (SX1276) LoRa radio module, we developed simple PCBs for Arduino ProMini, Arduino Nano and RaspberryPI and make them **freely** available. 
 
-The first PCB is a simple RFM95W breakout with header pin for both the Raspberry (to make a gateway) and Arduino boards. The RFM95 breakout initially designed for the HopeRF RFM95W can also host the NiceRF SX1262 as both radio modules have similar pinout. The initial RFM95W breakout has been updated to also expose DIO2 and DIO1 on the RPI header to better support the NiceRF SX1262 module: DIO2 location on the RFM95W is the BUSY pin on the NiceRF SX1262 and DIO1 pin is used for RX/TX done interrupt on the NiceRF SX1262. However, connecting those pins are not mandatory with our modified SX12XX library and the old RFM95W breakout can still be used to drive the NiceRF SX1262.
+The first PCB is a simple RFM95W breakout with header pins for both the Raspberry (mainly to make a gateway) and Arduino boards. The RFM95W breakout initially designed for the HopeRF RFM95W can actually also host the recent NiceRF SX1262 as both radio modules have similar pinout. However, we updated the initial RFM95W breakout's wiring to also expose DIO2 and DIO1 on the Raspberry header to better support the NiceRF SX1262 module (DIO2 location on the RFM95W is the BUSY pin on the NiceRF SX1262 and DIO1 pin is used for RX/TX done interrupt on the NiceRF SX1262 instead of the DIO0 pin on the RFM95W). However, connecting those pins are not mandatory with our modified SX12XX library and the old RFM95W breakout can still be used to drive the recent NiceRF SX1262. When updating the RFM95W breakout we also added a 4-pin header to easily connect a small OLED screen to a Raspberry using the I2C bus (SCL and SDA pin).
 
-We also made a variant of the RFM95W breakout for the NiceRF SX1280 module (I really don't know why the SX1280 did not use the same pinout than SX12262 and therefore RFM95W!). All these breakout PCBs are illustrated in the following figure.
+We also made a variant of the new RFM95W/NiceRF SX1262 breakout to support the NiceRF SX1280 module which provides LoRa modulation on the 2.4Ghz band (I really don't know why the SX1280 did not use the same pinout than the SX1262 which is similar to the RFM95W!). All these breakout PCBs are illustrated in the following figure.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFM95Breakout.jpg)
 
@@ -43,15 +44,15 @@ These PCBs can therefore be connected to the GPIO header row of the Raspberry as
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFMonRPI.jpg)
 
-They can also be used for Arduino boards as it will be explained in Section [connect a radio module to your end-device](https://github.com/CongducPham/LowCostLoRaGw#connect-a-radio-module-to-your-end-device) and illustrated below. On the breakout Arduino header, you can connect RFM95's DIO0 to a digital pin of your Arduino if you want to use another communication library that needs this pin. For NiceRF SX1262 and NiceRF SX1280 you can get BUSY and DIO1 pins from the Raspberry header. Again, our modified communication library does not need any of those pins but we left this possibility open.
+These breakouts can also be used for Arduino boards as it will be explained in Section [connect a radio module to your end-device](https://github.com/CongducPham/LowCostLoRaGw#connect-a-radio-module-to-your-end-device) and illustrated below. On the breakout's Arduino header, you can connect RFM95's DIO0 to a digital pin of your Arduino if you want to use another communication library that needs this pin. For NiceRF SX1262 and NiceRF SX1280 you can get BUSY and DIO1 pins from the Raspberry header. Again, our modified communication library does not need any of those pins but we left this possibility open. 
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFMonArduino.jpg)
 
-Then, 2 specific PCBs for Arduino Nano and Arduino ProMini are available as shown below. The PCB for Arduino Nano is mainly intended for teaching/training purpose as the Nano is not energy-efficient enough for real deployment. However its main advantage is to avoid the need of an external FTDI breakout cable to program it. It has not been updated for a while and we are not really maintaining it anymore.
+However, for Arduino, it is more convenient to use our dedicated Arduino Nano/ProMini PCBs illustrated below. The PCB for Arduino Nano is mainly intended for teaching/training purpose as the Nano is not energy-efficient enough for real deployment. However its main advantage is to avoid the need of an external FTDI breakout cable to program it. It has not been updated for a while and we are not really maintaining it anymore. You can find in the PCB folder the EAGLE schematic file (NanoLoRaBreakout_2019-05-14.sch) if you want to modify the design yourself.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/NanoLoRaBreakout.jpg)
 
-The PCB for the Arduino ProMini (3.3v, 8MHz version) can be used for prototyping and even integration purpose. Beware that A4 and A5 (which are usually SDA and SCL pin of the I2C bus) are not connected on the PCB. If you need to use them, use these 2 pins from the Arduino board. The PCB for the Arduino ProMini has been updated several times. The last version is v3 for both RFM95W and NiceRF SX1262 and v2 for NiceRF SX1280.
+The PCB for the Arduino ProMini (3.3v, 8MHz version) can be used for prototyping and even integration purpose. Beware that A4 and A5 (which are usually SDA and SCL pin of the I2C bus) are not connected on the PCB. If you need to use them, use these 2 pins from the Arduino board itself. The PCB for the Arduino ProMini has been updated several times. The last version is v3 for both RFM95W and NiceRF SX1262 and v2 for NiceRF SX1280.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/ProMiniLoRaBreakout.jpg)
 
@@ -106,6 +107,8 @@ Also consult the following web page: http://cpham.perso.univ-pau.fr/LORA/RPIgate
 
 Main features of gateway
 ------------------------
+
+- **NEW** The low-level radio communication library has moved to the SX12XX LoRa library from Stuart Robinson in order to build devices and gateways with **SX126X, SX127X and SX128X LoRa chip**.
 - **NEW** The single-channel gateway now also provides LoRaWAN downlink and OTAA features
 	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
 - **NEW** Integration and easy configuration of the open-source ChirpStack Network Server as local Network Server
@@ -174,7 +177,7 @@ Get our SD card image
 
 Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip). The current image has everything you need including:
 
-- support for all RPI models including the last RPI4 as well. We however recommend the 3B version unless you need to run other applications on the RPI otherwise both 3B+/4 are much more power consuming and heats a lot more.
+- support for all RPI models including the last RPI4 as well. We however recommend the 3B version unless you need to run other applications on the RPI otherwise both 3B+/4 are much more power consuming and heat a lot more.
 - pre-installed open-source ChirpStack LoRaWAN Network Server
 - pre-installed Semtech's `lora_pkt_fwd` for multi-channel gteway
 - pre-installed `remot3.it` and `anydesk` tools for remote access
@@ -386,7 +389,7 @@ Run the gateway with:
 
 	> sudo ./lora_gateway
 	
-With the Arduino IDE, open the `Arduino_LoRa_Ping_Pong` sketch compile it and upload to an Arduino board. Check your radio module first, see `Connect a radio module to your end-device` above.
+With the Arduino IDE, open the `Arduino_LoRa_Ping_Pong` sketch (or the `Arduino_LoRa_SX12XX_Ping_Pong_LCD` if you move to the SX12XX library which is advised because `Arduino_LoRa_Ping_Pong` will not be maintained anymore)compile it and upload to an Arduino board. Check your radio module first, see `Connect a radio module to your end-device` above.
 
 The end-device runs in LoRa mode 1 and has address 8. Open the Serial Monitor (38400 bauds) to see the output of the Arduino. It will send "Ping" to the gateway by requesting an ACK every 10s. If the ACK is received then it will display "Pong received from gateway!" otherwise it displays "No Pong from gw!". There is a version using an OLED display, `Arduino_LoRa_Ping_Pong_LCD`, that can be compiled for the Heltec ESP32 WiFi LoRa OLED board or a regular Arduino Pro Mini board (we use a Pro Mini or a Nano) with a 0.96inch OLED I2C display. Such device can be used as a very convenient simple range tester.
 
@@ -402,7 +405,7 @@ See the [video here](https://www.youtube.com/watch?v=YsKbJeeav_M).
 
 First, install the Arduino IDE. You can use the latest one (we tested with 1.8.3). But then, check (see the board manager) that the Arduino AVR board library is not above 1.6.11 as there might be some compilation issues because of the change of the GCC AVR compiler. Then, in your sketch folder, copy the content of the Arduino folder of the distribution.
 
-With the Arduino IDE, open the `Arduino_LoRa_Simple_temp` sketch, compile it and upload to an Arduino board. Check your radio module first, see `Connect a radio module to your end-device` above.
+With the Arduino IDE, open the `Arduino_LoRa_Simple_temp` sketch (or the `Arduino_LoRa_SX12XX_Simple_temp` if you move to the SX12XX library which is advised because `Arduino_LoRa_Simple_temp` will not be maintained anymore), compile it and upload to an Arduino board. Check your radio module first, see `Connect a radio module to your end-device` above.
 
 The end-device runs in LoRa mode 1 and has address 6. It will send data to the gateway.
 
@@ -436,15 +439,11 @@ The program has been tested on Arduino Uno, Mega2560, Nano, Pro Mini, Mini, Due,
 An interactive end-device for sending LoRa messages with the Arduino IDE
 ========================================================================
 
-With the Arduino IDE, open the `Arduino_LoRa_InteractiveDevice` sketch. Then compile it and upload to an Arduino board. It is better to use a more powerful Arduino platform for building the interactive device otherwise stability issues can occur (and especially with more RAM memory such as a MEGA, the Uno, ATMega328P, will be very unstable because of the small amount of memory).
-
-By default, the interactive end-device has address 6 and runs in LoRa mode 1.
+With the Arduino IDE, open the `Arduino_LoRa_InteractiveDevice` sketch (or the `Arduino_LoRa_SX12XX_InteractiveDevice` if you move to the SX12XX library which is advised because `Arduino_LoRa_InteractiveDevice` will not be maintained anymore). Then compile it and upload to an Arduino board. You might need an Arduino platform with more memory if you also connect a small OLED screen. By default, the interactive end-device has address 6 and runs in LoRa mode 1, SF12BW125.
 
 Enter `\!SGSH52UGPVAUYG3S#1#21.6` in the input window and press RETURN
 
 The command will be sent to the gateway and you should see the gateway pushing the data to the ThingSpeak test channel. If you go to https://thingspeak.com/channels/66794 you should see the reported value.
-
-When testing with the interactive end-device, you should not use the `--wappkey` option for the `post_processing_gw.py` post-processing Python script otherwise your command will not be accepted as only text string without logging services will be received and displayed when `--wappkey` is set.
 
 	> sudo ./lora_gateway | python ./post_processing_gw.py | python ./log_gw
 

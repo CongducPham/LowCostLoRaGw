@@ -121,21 +121,6 @@ const uint32_t CH_01_433 = 433600000;
 const uint32_t CH_02_433 = 433900000;
 const uint32_t CH_03_433 = 434300000;
 // end
-#ifdef LORAWAN
-
-// Select frequency channel
-#ifdef BAND868
-//868.1MHz
-const uint32_t DEFAULT_CHANNEL=CH_18_868;
-#elif defined BAND900
-//hardcoded with the first LoRaWAN frequency
-const uint32_t DEFAULT_CHANNEL=923200000;
-#elif defined BAND433
-//hardcoded with the first LoRaWAN frequency
-const uint32_t DEFAULT_CHANNEL=433175000;
-#endif 
-
-#else //NO LORAWAN
 
 #ifdef BAND868
 #ifdef SENEGAL_REGULATION
@@ -149,8 +134,6 @@ const uint32_t DEFAULT_CHANNEL=CH_05_900;
 //const uint32_t DEFAULT_CHANNEL=CH_08_900;
 #elif defined BAND433
 const uint32_t DEFAULT_CHANNEL=CH_00_433;
-#endif
-
 #endif
 
 #define DEFAULT_DEST_ADDR       1

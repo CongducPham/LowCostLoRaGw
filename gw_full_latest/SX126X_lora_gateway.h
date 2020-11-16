@@ -10,8 +10,8 @@
 #ifndef NRESET
 #define NRESET 6                                //reset pin on LoRa device
 #endif                               //reset pin on LoRa device
-//will be translated into GPIO25/GEN06 by arduPI. WARNING: our current RFM95 PCB breakout does not expose DIO2(RFM95)/BUSY(NiceRFSX1280)
-//we do not connect RFBUSY
+//will be translated into GPIO25/GEN06 by arduPI. WARNING: old RFM95 PCB breakout does not expose DIO2(RFM95)/BUSY(NiceRFSX1280)
+//so if you are using the old RFM95 PCB you need to solder a wire
 #ifndef RFBUSY
 #define RFBUSY 5                                //busy pin on LoRa device
 #endif

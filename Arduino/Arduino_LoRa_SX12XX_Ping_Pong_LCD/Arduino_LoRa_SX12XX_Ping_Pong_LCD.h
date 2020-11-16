@@ -4,28 +4,17 @@
 
 //pinout is defined for our RFM95 PCB breakout used to host a NiceRF SX1262 module which almost the same pinout
 //
-//will be translated into GPIO8/SPI_CE0 by arduPI
-#ifndef NSS
 #define NSS 10                                  //select pin on LoRa device
-#endif
-#ifdef ARDUINO
 #define NRESET 4                                //reset pin on LoRa device
-#else
-//will be translated into GPIO4 by arduPI
-#ifndef NRESET
-#define NRESET 6                                //reset pin on LoRa device
-#endif                               //reset pin on LoRa device
-#endif
-//will be translated into GPIO25/GEN06 by arduPI. WARNING: our current RFM95 PCB breakout does not expose DIO2(RFM95)/BUSY(NiceRFSX1280)
 //we do not connect RFBUSY
-#ifndef RFBUSY
-#define RFBUSY 5                                //busy pin on LoRa device
-#endif
-//will be translated into GPIO18/GEN01 by arduPI. WARNING: our current RFM95 PCB breakout does not expose DIO1
+//if you have a NiceRF SX1262 which has almost the same pinout than the RFM95 then
+//you can use our ProMini LoRa PCB for RFM95 where RFBUSY (marked DIO2 on the RFM95 PCB) can be connected to D5
+#define RFBUSY 5                                //busy pin on LoRa device 
 //we do not connect DIO1 as we use polling method
-#ifndef DIO1 
-#define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done 
-#endif
+//if you have a NiceRF SX1262 which has almost the same pinout than the RFM95 then
+//you can use our ProMini LoRa PCB for RFM95 where DIO1 can be connected to D3
+//in that case, comment #define USE_POLLING in SX126XLT.cpp to use DIO1 interrrupt pin
+#define DIO1 3                                  //DIO1 pin on LoRa device, used for RX and TX done
 //*******
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1 
 #define DIO3 -1                                 //DIO3 pin on LoRa device, normally not used so set to -1
@@ -51,23 +40,18 @@ const uint8_t Optimisation = LDRO_AUTO;         //low data rate optimisation set
 
 //pinout is defined for our RFM95 PCB breakout
 //
-//will be translated into GPIO8/SPI_CE0 by arduPI
-#ifndef NSS
+#if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
+  // for the Heltec ESP32 WiFi LoRa module
+#define NSS 18
+#else
 #define NSS 10                                  //select pin on LoRa device
 #endif
-#ifdef ARDUINO
 #define NRESET 4                                //reset pin on LoRa device
-#else
-//will be translated into GPIO4 by arduPI
-#ifndef NRESET
-#define NRESET 6                                //reset pin on LoRa device
-#endif
-#endif
-//will be translated into GPIO18/GEN01 by arduPI. WARNING: our current RFM95 PCB breakout does not connect DIO0 on the RPI header pin
 //we do not connect DIO0 as we use polling method
-#ifndef DIO0
+//if you have an RFM95 then
+//you can use our ProMini LoRa PCB for RFM95 where DIO0 can be connected to D2
+//in that case, comment #define USE_POLLING in SX127XLT.cpp to use DIO0 interrrupt pin
 #define DIO0 2                                  //DIO0 pin on LoRa device, used for RX and TX done 
-#endif
 //*******
 #define DIO1 -1                                 //DIO1 pin on LoRa device, normally not used so set to -1 
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1
@@ -92,27 +76,17 @@ const uint8_t Optimisation = LDRO_AUTO;         //low data rate optimisation set
 
 //pinout is defined for our NiceRF SX1280 PCB breakout
 //
-// will be translated into GPIO8/SPI_CE0 by arduPI
-#ifndef NSS
-#define NSS 10                                  //select pin on LoRa device
-#endif
-#ifdef ARDUINO
-#define NRESET 4                                //reset pin on LoRa device
-#else
-// will be translated into GPIO4 by arduPI
-#ifndef NRESET
-#define NRESET 6                                //reset pin on LoRa device
-#endif                               //reset pin on LoRa device
-#endif
-//will be translated into GPIO25/GEN06 by arduPI
-#ifndef RFBUSY
-#define RFBUSY 5                                //busy pin on LoRa device
-#endif
-//will be translated into GPIO18/GEN01 by arduPI
+#define NSS 10
+#define NRESET 4
+//we do not connect RFBUSY
+//if you have a NiceRF SX1280
+//you can use our ProMini LoRa PCB for SX1280 where RFBUSY is by default connected to D3
+#define RFBUSY 3                                //busy pin on LoRa device 
 //we do not connect DIO1 as we use polling method
-#ifndef DIO1 
-#define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done 
-#endif
+//if you have a NiceRF SX1280
+//you can use our ProMini LoRa PCB for SX1280 where DIO1 can be connected to D2
+//in that case, comment #define USE_POLLING in SX128XLT.cpp to use DIO1 interrrupt pin
+#define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done
 //*******
 #define DIO2 -1                 								//not used 
 #define DIO3 -1                 								//not used                      
@@ -125,7 +99,7 @@ const uint8_t Optimisation = LDRO_AUTO;         //low data rate optimisation set
 //LoRa Modem Parameters
 const uint32_t Frequency = 2403000000;           //frequency of transmissions in hertz
 const uint32_t Offset = 0;                       //offset frequency for calibration purposes  
-uint8_t Bandwidth = LORA_BW_0400;                //LoRa bandwidth
+uint8_t Bandwidth = LORA_BW_0200;                //LoRa bandwidth
 uint8_t SpreadingFactor = LORA_SF12;             //LoRa spreading factor
 uint8_t CodeRate = LORA_CR_4_5;                  //LoRa coding rate                         
 
@@ -136,5 +110,4 @@ uint8_t CodeRate = LORA_CR_4_5;                  //LoRa coding rate
 #define MAX_DBM                 14
 #endif
 
-#define PKT_TYPE_DATA           0x10
 #define DEFAULT_DEST_ADDR       1

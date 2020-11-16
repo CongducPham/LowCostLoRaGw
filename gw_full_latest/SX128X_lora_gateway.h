@@ -31,7 +31,7 @@
 
 //LoRa Modem Parameters
 const uint32_t Offset = 0;                                 //offset frequency for calibration purposes  
-uint8_t Bandwidth = LORA_BW_0400;                   //LoRa bandwidth
+uint8_t Bandwidth = LORA_BW_0200;                   //LoRa bandwidth
 uint8_t SpreadingFactor = LORA_SF12;                 //LoRa spreading factor
 uint8_t CodeRate = LORA_CR_4_5;                     //LoRa coding rate
 

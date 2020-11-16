@@ -131,8 +131,8 @@ uint8_t node_addr=8;
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 3;
-unsigned int idlePeriodInSec = 0;
+unsigned int idlePeriodInMin = 1;
+unsigned int idlePeriodInSec = 20;
 ///////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
@@ -1143,13 +1143,9 @@ void loop(void)
 #if defined LOW_POWER
       PRINT_CSTSTR("%s","Switch to power saving mode\n");
 
-      LT.setSleep(0);
-      e=0;
-      
-      if (!e)
-        PRINT_CSTSTR("%s","Successfully switch LoRa module in sleep mode\n");
-      else  
-        PRINT_CSTSTR("%s","Could not switch LoRa module in sleep mode\n");
+      //CONFIGURATION_RETENTION=RETAIN_DATA_RAM on SX128X
+      //parameter is ignored on SX127X
+      LT.setSleep(CONFIGURATION_RETENTION);
         
       FLUSHOUTPUT
       delay(10);
@@ -1259,12 +1255,13 @@ void loop(void)
           // use the delay function
           delay(waiting_t);
           waiting_t = 0;
-#endif                                            
+#endif          
        }
 #endif  
-      
+
+      PRINT_CSTSTR("%s","Wake from power saving mode\n");
+      LT.wake();      
 #else
-      PRINT_VALUE("%ld", nextTransmissionTime);
       PRINTLN;
       PRINT_CSTSTR("%s","Will send next value at\n");
       // can use a random part also to avoid collision
@@ -1274,6 +1271,4 @@ void loop(void)
       PRINTLN;
   }
 #endif
-
-  LT.wake();
 }

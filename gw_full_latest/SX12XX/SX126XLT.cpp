@@ -1198,7 +1198,7 @@ void SX126XLT::printModemSettings()
 
   printDevice();
   PRINT_CSTSTR(",");
-  PRINT_VALUE("%ld",getFreqInt());
+  PRINT_VALUE("%lu",getFreqInt());
   PRINT_CSTSTR("hz,SF");
   PRINT_VALUE("%d",getLoRaSF());
   PRINT_CSTSTR(",BW");
@@ -1717,7 +1717,7 @@ void SX126XLT::setRfFrequency( uint32_t frequency, int32_t offset )
 
 #ifdef SX126XDEBUG1
   PRINT_CSTSTR("setRfFrequency()  ");
-  PRINTLN_VALUE("%ld",frequency + offset);
+  PRINTLN_VALUE("%lu",frequency + offset);
 #endif
 
   uint8_t buffer[4];

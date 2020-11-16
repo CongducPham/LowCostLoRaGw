@@ -16,7 +16,11 @@ SeqNo: 13
 \!TC/22.50
 CRC,4560,RSSI,-42dBm,SNR,8dB,Length,10,Packets,1,Errors,0,IRQreg,50
 --> Packet is for gateway
--------------------------------------
+--- rxlora. dst=1 type=0x10 src=15 seq=7 len=23 SNR=6 RSSIpkt=-31 BW=125 CR=4/0 SF=5
+^p1,16,15,7,23,6,-31
+^r125,0,5,867172364
+^t##*67575
+⸮⸮Hello World 1234567890*
 
 */
 
@@ -82,6 +86,15 @@ SX128XLT LT;
 ///////////////////////////////////////////////////////////////////
 uint8_t GW_ADDR=1;
 //////////////////////////////////////////////////////////////////
+
+// will use 0xFF0xFE to prefix data received from LoRa, so that post-processing stage can differenciate
+// data received from radio
+#define WITH_DATA_PREFIX
+
+#ifdef WITH_DATA_PREFIX
+#define DATA_PREFIX_0 0xFF
+#define DATA_PREFIX_1 0xFE
+#endif
 
 uint32_t RXpacketCount;
 uint32_t errors;
@@ -324,8 +337,10 @@ void setup() {
 
 void loop()
 {
+  char print_buf[120];
+  
   RXPacketL = LT.receiveAddressed(RXBUFFER, RXBUFFER_SIZE, 10000, WAIT_RX); //wait for a packet to arrive with 60seconds (60000mS) timeout
-
+  
   PacketRSSI = LT.readPacketRSSI();              //read the recived RSSI value
   PacketSNR = LT.readPacketSNR();                //read the received SNR value
 
@@ -348,15 +363,81 @@ void loop()
     PRINT_CSTSTR("SeqNo: ");
     PRINTLN_VALUE("%d", LT.readRXSeqNo());
   	PRINT_CSTSTR("RXTimestamp: ");
-  	PRINTLN_VALUE("%d", LT.readRXTimestamp());
+  	PRINTLN_VALUE("%ld", LT.readRXTimestamp());
   	PRINT_CSTSTR("RXDoneTimestamp: ");
-  	PRINTLN_VALUE("%d", LT.readRXDoneTimestamp());  	      
+  	PRINTLN_VALUE("%ld", LT.readRXDoneTimestamp());    
     packet_is_OK();
     
     if (LT.readRXDestination()==1)
     	PRINTLN_CSTSTR("--> Packet is for gateway");
     
     PRINTLN_CSTSTR("-------------------------------------");
+
+    // reproduce the behavior of the lora_gateway
+    //
+    sprintf(print_buf, "--- rxlora. dst=%d type=0x%02X src=%d seq=%d", 
+      LT.readRXDestination(),
+      LT.readRXPacketType(), 
+      LT.readRXSource(),
+      LT.readRXSeqNo());
+ 
+    PRINT_STR("%s", print_buf);
+
+    sprintf(print_buf, " len=%d SNR=%d RSSIpkt=%d BW=%d CR=4/%d SF=%d\n", 
+      RXPacketL, 
+      PacketSNR,
+      PacketRSSI,
+      (uint16_t)(LT.returnBandwidth()/1000),
+      LT.getLoRaCodingRate(),
+      LT.getLoRaSF());     
+
+    PRINT_STR("%s", print_buf);              
+
+    // provide a short output for external program to have information about the received packet
+    // ^psrc_id,seq,len,SNR,RSSI
+    sprintf(print_buf, "^p%d,%d,%d,%d,",
+      LT.readRXDestination(),
+      LT.readRXPacketType(), 
+      LT.readRXSource(),
+      LT.readRXSeqNo());
+ 
+    PRINT_STR("%s", print_buf);       
+
+    sprintf(print_buf, "%d,%d,%d\n",
+      RXPacketL, 
+      PacketSNR,
+      PacketRSSI);
+
+    PRINT_STR("%s", print_buf); 
+
+    // ^rbw,cr,sf,fq
+    sprintf(print_buf, "^r%d,%d,%d,%ld\n", 
+      (uint16_t)(LT.returnBandwidth()/1000),
+      LT.getLoRaCodingRate(),
+      LT.getLoRaSF(),
+      (uint32_t)Frequency/1000);
+
+    PRINT_STR("%s", print_buf);
+
+    //print the reception date and time
+    sprintf(print_buf, "^t#*%ld\n", LT.readRXDoneTimestamp()*1000);
+    PRINT_STR("%s", print_buf);
+
+#if defined WITH_DATA_PREFIX
+    PRINT_STR("%c",(char)DATA_PREFIX_0);        
+    PRINT_STR("%c",(char)DATA_PREFIX_1);
+#endif
+
+    // print to stdout the content of the packet
+    //
+    FLUSHOUTPUT;
+ 
+    for (int a=0; a<RXPacketL; a++) {
+        PRINT_STR("%c",(char)RXBUFFER[a]);
+      }
+   
+    PRINTLN;
+    FLUSHOUTPUT;          
     FLUSHOUTPUT;	
   }
 }
