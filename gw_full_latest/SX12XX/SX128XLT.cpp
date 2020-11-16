@@ -60,7 +60,7 @@ Added by C. Pham - Oct. 2020
 	#define PRINTLN_VALUE(fmt,param)	SerialUSB.println(param)
 	#define PRINT_HEX(fmt,param)      SerialUSB.print(param,HEX)
 	#define PRINTLN_HEX(fmt,param)		SerialUSB.println(param,HEX)
-	#define FLUSHOUTPUT               SerialUSB.flush();
+	#define FLUSHOUTPUT               SerialUSB.flush()
 #elif defined ARDUINO
 	#define PRINTLN                   Serial.println("")
 	#define PRINT_CSTSTR(param)   		Serial.print(F(param))
@@ -71,7 +71,7 @@ Added by C. Pham - Oct. 2020
 	#define PRINTLN_VALUE(fmt,param)	Serial.println(param)
 	#define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
 	#define PRINTLN_HEX(fmt,param)		Serial.println(param,HEX)
-	#define FLUSHOUTPUT               Serial.flush();
+	#define FLUSHOUTPUT               Serial.flush()
 #else
 	#define PRINTLN                   printf("\n")
 	#define PRINT_CSTSTR(param)       printf(param)
@@ -82,7 +82,7 @@ Added by C. Pham - Oct. 2020
 	#define PRINTLN_VALUE(fmt,param)	do {printf(fmt,param);printf("\n");} while(0)
 	#define PRINT_HEX(fmt,param)      printf(fmt,param)
 	#define PRINTLN_HEX(fmt,param)		do {printf(fmt,param);printf("\n");} while(0)
-	#define FLUSHOUTPUT               fflush(stdout);
+	#define FLUSHOUTPUT               fflush(stdout)
 #endif
 
 //! MACROS //

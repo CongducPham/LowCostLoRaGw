@@ -1,25 +1,27 @@
 /* 
- *  Very simple LoRa gateway to test the new SX127XLT lib
+ *  Very simple LoRa gateway to test the new SX12XX lib
  *
- *  Based on the simple receiver example from SX127XLT lib
+ *  Based on the simple receiver example from SX12XX lib
  */
 
 /* Output example 
 
 -------------------------------------
-Packet length: 10
+Packet length: 23
 Destination: 1
 Packet Type: 16
-Source: 8
-SeqNo: 13
+Source: 15
+SeqNo: 2
+RXTimestamp: 92616
+RXDoneTimestamp: 92616
 
-\!TC/22.50
-CRC,4560,RSSI,-42dBm,SNR,8dB,Length,10,Packets,1,Errors,0,IRQreg,50
+Hello World 1234567890*
+CRC,DAAB,RSSI,-61dBm,SNR,6dB,Length,23,Packets,3,Errors,0,IRQreg,8012
 --> Packet is for gateway
---- rxlora. dst=1 type=0x10 src=15 seq=7 len=23 SNR=6 RSSIpkt=-31 BW=125 CR=4/0 SF=5
-^p1,16,15,7,23,6,-31
-^r125,0,5,867172364
-^t##*67575
+--- rxlora. dst=1 type=0x10 src=15 seq=2 len=23 SNR=6 RSSIpkt=-61 BW=203 CR=4/5 SF=12
+^p1,16,15,2,23,6,-61
+^r203,5,12,2403000
+^t#*92616000
 ⸮⸮Hello World 1234567890*
 
 */
@@ -370,8 +372,6 @@ void loop()
     
     if (LT.readRXDestination()==1)
     	PRINTLN_CSTSTR("--> Packet is for gateway");
-    
-    PRINTLN_CSTSTR("-------------------------------------");
 
     // reproduce the behavior of the lora_gateway
     //
@@ -388,7 +388,11 @@ void loop()
       PacketSNR,
       PacketRSSI,
       (uint16_t)(LT.returnBandwidth()/1000),
+#if defined SX126X || defined SX128X
+      LT.getLoRaCodingRate()+4,
+#else        
       LT.getLoRaCodingRate(),
+#endif  
       LT.getLoRaSF());     
 
     PRINT_STR("%s", print_buf);              
@@ -413,7 +417,11 @@ void loop()
     // ^rbw,cr,sf,fq
     sprintf(print_buf, "^r%d,%d,%d,%ld\n", 
       (uint16_t)(LT.returnBandwidth()/1000),
+#if defined SX126X || defined SX128X
+      LT.getLoRaCodingRate()+4,
+#else        
       LT.getLoRaCodingRate(),
+#endif  
       LT.getLoRaSF(),
       (uint32_t)Frequency/1000);
 

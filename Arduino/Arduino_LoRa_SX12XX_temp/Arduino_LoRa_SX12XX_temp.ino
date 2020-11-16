@@ -131,8 +131,8 @@ uint8_t node_addr=8;
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 1;
-unsigned int idlePeriodInSec = 20;
+unsigned int idlePeriodInMin = 3;
+unsigned int idlePeriodInSec = 0;
 ///////////////////////////////////////////////////////////////////
 
 #ifdef WITH_APPKEY
@@ -245,7 +245,7 @@ uint32_t TXPacketCount=0;
 #define PRINTLN_VALUE(fmt,param)  SerialUSB.println(param)
 #define PRINT_HEX(fmt,param)      SerialUSB.print(param,HEX)
 #define PRINTLN_HEX(fmt,param)    SerialUSB.println(param,HEX)
-#define FLUSHOUTPUT               SerialUSB.flush();
+#define FLUSHOUTPUT               SerialUSB.flush()
 #else
 #define PRINTLN                   Serial.println("")
 #define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
@@ -256,7 +256,7 @@ uint32_t TXPacketCount=0;
 #define PRINTLN_VALUE(fmt,param)  Serial.println(param)
 #define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
 #define PRINTLN_HEX(fmt,param)    Serial.println(param,HEX)
-#define FLUSHOUTPUT               Serial.flush();
+#define FLUSHOUTPUT               Serial.flush()
 #endif
 
 #ifdef WITH_EEPROM
@@ -1147,7 +1147,7 @@ void loop(void)
       //parameter is ignored on SX127X
       LT.setSleep(CONFIGURATION_RETENTION);
         
-      FLUSHOUTPUT
+      FLUSHOUTPUT;
       delay(10);
 
       //how much do we still have to wait, in millisec?
@@ -1162,7 +1162,7 @@ void loop(void)
       unsigned long waiting_t = nextTransmissionTime-now_millis;
 
       PRINTLN_VALUE("%ld",waiting_t);
-      FLUSHOUTPUT
+      FLUSHOUTPUT;
       
 #ifdef __SAMD21G18A__
       // For Arduino M0 or Zero we use the built-in RTC
@@ -1178,7 +1178,7 @@ void loop(void)
       LowPower.standby();
 
       PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
-      FLUSHOUTPUT
+      FLUSHOUTPUT;
 #else
 
 #if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
@@ -1232,7 +1232,7 @@ void loop(void)
           }
 
 #ifdef SHOW_LOW_POWER_CYCLE
-          FLUSHOUTPUT
+          FLUSHOUTPUT;
           delay(1);
 #endif
           

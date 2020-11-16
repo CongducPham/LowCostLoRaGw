@@ -47,7 +47,7 @@ SX128XLT LT;
 	#define PRINTLN_VALUE(fmt,param)	Serial.println(param)
 	#define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
 	#define PRINTLN_HEX(fmt,param)		Serial.println(param,HEX)
-	#define FLUSHOUTPUT               Serial.flush();
+	#define FLUSHOUTPUT               Serial.flush()
 #else
 	#define PRINTLN                   printf("\n")
 	#define PRINT_CSTSTR(param)       printf(param)
@@ -58,7 +58,7 @@ SX128XLT LT;
 	#define PRINTLN_VALUE(fmt,param)	do {printf(fmt,param);printf("\n");} while(0)
 	#define PRINT_HEX(fmt,param)      printf(fmt,param)
 	#define PRINTLN_HEX(fmt,param)		do {printf(fmt,param);printf("\n");} while(0)
-	#define FLUSHOUTPUT               fflush(stdout);
+	#define FLUSHOUTPUT               fflush(stdout)
 #endif
 
 uint8_t TXPacketL;

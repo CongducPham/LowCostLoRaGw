@@ -20,14 +20,14 @@
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
-#define PRINT_CSTSTR(param)       SerialUSB.print(F(param))
+#define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
 #define PRINT_STR(fmt,param)      SerialUSB.print(param)
 #define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
 #define PRINT_HEX(fmt,param)      SerialUSB.print(param,HEX)
 #define FLUSHOUTPUT               SerialUSB.flush();
 #else
 #define PRINTLN                   Serial.println("")
-#define PRINT_CSTSTR(param)       Serial.print(F(param))
+#define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
 #define PRINT_STR(fmt,param)      Serial.print(param)
 #define PRINT_VALUE(fmt,param)    Serial.print(param)
 #define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
@@ -45,29 +45,29 @@ uint8_t local_lsc_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_key_offse
 
       PRINT_STR("%s",(char*)(message+app_key_offset));
       PRINTLN;
-      PRINT_CSTSTR("[PLAIN HEX]:\n");
+      PRINT_CSTSTR("%s","[PLAIN HEX]:\n");
       for (int i=0; i<pl;i++) {
         if (message[i]<16)
-          PRINT_CSTSTR("0");
+          PRINT_CSTSTR("%s","0");
         PRINT_HEX("%X", message[i]);
-        PRINT_CSTSTR(" ");
+        PRINT_CSTSTR("%s"," ");
       }
       PRINTLN; 
 
       //longer message may need a longer buffer
       unsigned char cipher[80];
 
-      PRINT_CSTSTR("Encrypting\n");     
+      PRINT_CSTSTR("%s","Encrypting\n");     
       LSC_encrypt(message, cipher+HEADER_SIZE, pl, LT.readTXSeqNo(), LSC_ENCRYPT);
       
       //Print encrypted message     
-      PRINT_CSTSTR("[CIPHER]:\n");
+      PRINT_CSTSTR("%s","[CIPHER]:\n");
       for (int i = 0; i < pl; i++)      
       {
         if (cipher[HEADER_SIZE+i]<16)
-          PRINT_CSTSTR("0");
+          PRINT_CSTSTR("%s","0");
         PRINT_HEX("%X", cipher[HEADER_SIZE+i]);         
-        PRINT_CSTSTR(" ");
+        PRINT_CSTSTR("%s"," ");
       }
       PRINTLN;   
 
@@ -77,51 +77,51 @@ uint8_t local_lsc_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_key_offse
       cipher[1]=p_type; //PTYPE
       cipher[2]=node_addr;    //src   
       cipher[3]=LT.readTXSeqNo();    // current seq
-      PRINT_CSTSTR("[HEADER+CIPHER]:\n");
+      PRINT_CSTSTR("%s","[HEADER+CIPHER]:\n");
       for (int i = 0; i < pl+HEADER_SIZE; i++) {
         if (cipher[i]<16)
-          PRINT_CSTSTR("0");
+          PRINT_CSTSTR("%s","0");
         PRINT_HEX("%X", cipher[i]);
         if (i==HEADER_SIZE-1)
-          PRINT_CSTSTR("|");
+          PRINT_CSTSTR("%s","|");
         else        
-          PRINT_CSTSTR(" ");      
+          PRINT_CSTSTR("%s"," ");      
       }
       PRINTLN;
 
       // compute the MIC on [HEADER+CIPHER]
       // using a random number = LT.getTXSeqNo()+1    
       LSC_setMIC(cipher, message, pl+HEADER_SIZE, LT.readTXSeqNo()+1);
-      PRINT_CSTSTR("[encrypted HEADER+CIPHER]:\n");
+      PRINT_CSTSTR("%s","[encrypted HEADER+CIPHER]:\n");
       for (int i = 0; i < pl+HEADER_SIZE; i++) {
         if (message[i]<16)
-          PRINT_CSTSTR("0");
+          PRINT_CSTSTR("%s","0");
         PRINT_HEX("%X", message[i]);
-        PRINT_CSTSTR(" ");      
+        PRINT_CSTSTR("%s"," ");      
       }
       PRINTLN;
       
-      PRINT_CSTSTR("[MIC]:\n");
+      PRINT_CSTSTR("%s","[MIC]:\n");
       for (int i = 0; i < 4; i++) {
         if (cipher[pl+HEADER_SIZE+i]<16)
-          PRINT_CSTSTR("0");        
+          PRINT_CSTSTR("%s","0");        
         PRINT_HEX("%X", cipher[pl+HEADER_SIZE+i]);
-        PRINT_CSTSTR(" ");      
+        PRINT_CSTSTR("%s"," ");      
       }
       PRINTLN;
     
-      PRINT_CSTSTR("transmitted packet:\n");
-      PRINT_CSTSTR("CIPHER | MIC[4]\n");
+      PRINT_CSTSTR("%s","transmitted packet:\n");
+      PRINT_CSTSTR("%s","CIPHER | MIC[4]\n");
       //Print transmitted data
       for(int i = 0; i < pl+LSC_MIC; i++)
       {
         if (cipher[HEADER_SIZE+i]<16)
-          PRINT_CSTSTR("0");
+          PRINT_CSTSTR("%s","0");
         PRINT_HEX("%X", cipher[HEADER_SIZE+i]);
         if (i==pl-1)
-          PRINT_CSTSTR("|");
+          PRINT_CSTSTR("%s","|");
         else                  
-          PRINT_CSTSTR(" ");
+          PRINT_CSTSTR("%s"," ");
       }
       PRINTLN;      
 
@@ -135,7 +135,7 @@ uint8_t local_lsc_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_key_offse
         char b64_encoded[b64_encodedLen];
                
         base64_encode(b64_encoded, (char*)message, pl);
-        PRINT_CSTSTR("[base64 CIPHER+MIC]:");
+        PRINT_CSTSTR("%s","[base64 CIPHER+MIC]:");
         PRINT_STR("%s", b64_encoded);
         PRINTLN;
 #endif   

@@ -3,14 +3,14 @@
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
-#define PRINT_CSTSTR(param)       SerialUSB.print(F(param))
+#define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
 #define PRINT_STR(fmt,param)      SerialUSB.print(param)
 #define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
 #define PRINT_HEX(fmt,param)      SerialUSB.print(param,HEX)
 #define FLUSHOUTPUT               SerialUSB.flush();
 #else
 #define PRINTLN                   Serial.println("")
-#define PRINT_CSTSTR(param)       Serial.print(F(param))
+#define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
 #define PRINT_STR(fmt,param)      Serial.print(param)
 #define PRINT_VALUE(fmt,param)    Serial.print(param)
 #define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
@@ -29,6 +29,7 @@
 //unsigned char AppSkey[16] = { 0x54, 0xAC, 0x7B, 0x9E, 0xC6, 0x65, 0xD5, 0xCF, 0x0F, 0x1C, 0xD7, 0x92, 0x40, 0x11, 0x07, 0x2A };
 
 //Pau
+//0540AC07B09E0C60650D50CF00F01C0D
 unsigned char AppSkey[16] = { 0x05, 0x40, 0xAC, 0x07, 0xB0, 0x9E, 0x0C, 0x60, 0x65, 0x0D, 0x50, 0xCF, 0x00, 0xF0, 0x1C, 0x0D };
 
 //this is the default as LoRaWAN example
@@ -43,6 +44,7 @@ unsigned char AppSkey[16] = { 0x05, 0x40, 0xAC, 0x07, 0xB0, 0x9E, 0x0C, 0x60, 0x
 //unsigned char NwkSkey[16] = { 0x11, 0xFF, 0x06, 0xBA, 0xAE, 0x0F, 0xA6, 0x6B, 0xA5, 0x8F, 0x1F, 0xE0, 0x52, 0xDD, 0x8A, 0x21 };
 
 //Pau
+//0110FF0060BA0AE00F0A606B0A508F01
 unsigned char NwkSkey[16] = { 0x01, 0x10, 0xFF, 0x00, 0x60, 0xBA, 0x0A, 0xE0, 0x0F, 0x0A, 0x60, 0x6B, 0x0A, 0x50, 0x8F, 0x01 };
 
 //this is the default as LoRaWAN example
@@ -62,26 +64,26 @@ uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_k
 
       PRINT_STR("%s",(char*)(message+app_key_offset));
       PRINTLN;
-      PRINT_CSTSTR("plain payload hex\n");
+      PRINT_CSTSTR("%s","plain payload hex\n");
       for (int i=0; i<pl;i++) {
         if (message[i]<16)
-          PRINT_CSTSTR("0");
+          PRINT_CSTSTR("%s","0");
         PRINT_HEX("%X", message[i]);
-        PRINT_CSTSTR(" ");
+        PRINT_CSTSTR("%s"," ");
       }
       PRINTLN; 
 
-      PRINT_CSTSTR("Encrypting\n");     
+      PRINT_CSTSTR("%s","Encrypting\n");     
       Encrypt_Payload((unsigned char*)message, pl, Frame_Counter_Up, Direction);
 
-      PRINT_CSTSTR("encrypted payload\n");
+      PRINT_CSTSTR("%s","encrypted payload\n");
       //Print encrypted message
       for (int i = 0; i < pl; i++)      
       {
         if (message[i]<16)
-          PRINT_CSTSTR("0");
+          PRINT_CSTSTR("%s","0");
         PRINT_HEX("%X", message[i]);         
-        PRINT_CSTSTR(" ");
+        PRINT_CSTSTR("%s"," ");
       }
       PRINTLN;   
 
@@ -126,7 +128,7 @@ uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_k
       //Add data Lenth to package length
       LORAWAN_Package_Length = LORAWAN_Package_Length + pl;
     
-      PRINT_CSTSTR("calculate MIC with NwkSKey\n");
+      PRINT_CSTSTR("%s","calculate MIC with NwkSKey\n");
       //Calculate MIC
       Calculate_MIC(LORAWAN_Data, MIC, LORAWAN_Package_Length, Frame_Counter_Up, Direction);
     
@@ -139,15 +141,15 @@ uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_k
       //Add MIC length to package length
       LORAWAN_Package_Length = LORAWAN_Package_Length + 4;
     
-      PRINT_CSTSTR("transmitted LoRaWAN-like packet:\n");
-      PRINT_CSTSTR("MHDR[1] | DevAddr[4] | FCtrl[1] | FCnt[2] | FPort[1] | EncryptedPayload | MIC[4]\n");
+      PRINT_CSTSTR("%s","transmitted LoRaWAN-like packet:\n");
+      PRINT_CSTSTR("%s","MHDR[1] | DevAddr[4] | FCtrl[1] | FCnt[2] | FPort[1] | EncryptedPayload | MIC[4]\n");
       //Print transmitted data
       for (int i = 0; i < LORAWAN_Package_Length; i++)
       {
         if (LORAWAN_Data[i]<16)
-          PRINT_CSTSTR("0");
+          PRINT_CSTSTR("%s","0");
         PRINT_HEX("%X", LORAWAN_Data[i]);         
-        PRINT_CSTSTR(" ");
+        PRINT_CSTSTR("%s"," ");
       }
       PRINTLN;      
 
@@ -161,7 +163,7 @@ uint8_t local_aes_lorawan_create_pkt(uint8_t* message, uint8_t pl, uint8_t app_k
       char b64_encoded[b64_encodedLen];
                
       base64_encode(b64_encoded, (char*)message, pl);
-      PRINT_CSTSTR("[base64 LoRaWAN HEADER+CIPHER+MIC]:");
+      PRINT_CSTSTR("%s","[base64 LoRaWAN HEADER+CIPHER+MIC]:");
       PRINT_STR("%s", b64_encoded);
       PRINTLN;
 #endif      
@@ -193,7 +195,7 @@ int8_t local_lorawan_decode_pkt(uint8_t* message, uint8_t pl) {
           (uint8_t)MIC[1]==message[pl-3] &&
           (uint8_t)MIC[0]==message[pl-4]) {
 
-          PRINT_CSTSTR("Valid MIC\n");  
+          PRINT_CSTSTR("%s","Valid MIC\n");  
            
           //start of payload
           uint8_t poff=OFF_DAT_OPTS+1+(uint8_t)(message[OFF_DAT_FCT] & FCT_OPTLEN);
@@ -202,27 +204,27 @@ int8_t local_lorawan_decode_pkt(uint8_t* message, uint8_t pl) {
           int8_t ml=pend-poff;
     
           if (ml>0) {
-            PRINT_CSTSTR("Decrypting\n");          
+            PRINT_CSTSTR("%s","Decrypting\n");          
             Encrypt_Payload((unsigned char*)(message+poff), ml, seqno, 1);
     
-            PRINT_CSTSTR("clear payload\n"); 
+            PRINT_CSTSTR("%s","clear payload\n"); 
             //Print decrypted message
             for (int i = poff; i < poff+ml; i++)      
             {
               if (message[i]<16)
-                PRINT_CSTSTR("0");
+                PRINT_CSTSTR("%s","0");
               PRINT_HEX("%X", message[i]);         
-              PRINT_CSTSTR(" ");
+              PRINT_CSTSTR("%s"," ");
             }
             PRINTLN;
     
             return (int8_t)poff;
           }
           else
-            PRINT_CSTSTR("No payload\n"); 
+            PRINT_CSTSTR("%s","No payload\n"); 
       }
       else 
-        PRINT_CSTSTR("Bad MIC\n");
+        PRINT_CSTSTR("%s","Bad MIC\n");
         
       return -1;              
 }

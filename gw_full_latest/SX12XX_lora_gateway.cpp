@@ -244,7 +244,7 @@ extern int optind, opterr, optopt;
 #define PRINTLN_VALUE(fmt,param)	do {printf(fmt,param);printf("\n");} while(0)
 #define PRINT_HEX(fmt,param)      printf(fmt,param)
 #define PRINTLN_HEX(fmt,param)		do {printf(fmt,param);printf("\n");} while(0)
-#define FLUSHOUTPUT               fflush(stdout);
+#define FLUSHOUTPUT               fflush(stdout)
 
 //#define DEBUG
 
@@ -964,7 +964,11 @@ void loop(void)
 			// ^rbw,cr,sf,fq
 			sprintf(print_buf, "^r%d,%d,%d,%ld\n", 
 				LT.returnBandwidth()/1000,
+#if defined SX126X || defined SX128X
+				LT.getLoRaCodingRate()+4,
+#else				
 				LT.getLoRaCodingRate(),
+#endif	
 				LT.getLoRaSF(),
 				(uint32_t)(DEFAULT_CHANNEL/1000.0));
 
