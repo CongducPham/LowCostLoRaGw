@@ -237,8 +237,8 @@ uint32_t TXPacketCount=0;
 // we wrapped Serial.println to support the Arduino Zero or M0
 #if defined __SAMD21G18A__ && not defined ARDUINO_SAMD_FEATHER_M0
 #define PRINTLN                   SerialUSB.println("")              
-#define PRINT_CSTSTR(fmt,param)   SerialUSB.print(F(param))
-#define PRINTLN_CSTSTR(fmt,param) SerialUSB.println(F(param))
+#define PRINT_CSTSTR(param)       SerialUSB.print(F(param))
+#define PRINTLN_CSTSTR(param)     SerialUSB.println(F(param))
 #define PRINT_STR(fmt,param)      SerialUSB.print(param)
 #define PRINTLN_STR(fmt,param)    SerialUSB.println(param)
 #define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
@@ -248,8 +248,8 @@ uint32_t TXPacketCount=0;
 #define FLUSHOUTPUT               SerialUSB.flush()
 #else
 #define PRINTLN                   Serial.println("")
-#define PRINT_CSTSTR(fmt,param)   Serial.print(F(param))
-#define PRINTLN_CSTSTR(fmt,param) Serial.println(F(param))
+#define PRINT_CSTSTR(param)       Serial.print(F(param))
+#define PRINTLN_CSTSTR(param)     Serial.println(F(param))
 #define PRINT_STR(fmt,param)      Serial.print(param)
 #define PRINTLN_STR(fmt,param)    Serial.println(param)
 #define PRINT_VALUE(fmt,param)    Serial.print(param)
@@ -394,62 +394,62 @@ void setup()
 #endif  
   
   // Print a start message
-  PRINT_CSTSTR("%s","LoRa temperature sensor, extended version\n");
+  PRINT_CSTSTR("LoRa temperature sensor, extended version\n");
 
 #ifdef ARDUINO_AVR_PRO
-  PRINT_CSTSTR("%s","Arduino Pro Mini detected\n");  
+  PRINT_CSTSTR("Arduino Pro Mini detected\n");  
 #endif
 #ifdef ARDUINO_AVR_NANO
-  PRINT_CSTSTR("%s","Arduino Nano detected\n");   
+  PRINT_CSTSTR("Arduino Nano detected\n");   
 #endif
 #ifdef ARDUINO_AVR_MINI
-  PRINT_CSTSTR("%s","Arduino MINI/Nexus detected\n");  
+  PRINT_CSTSTR("Arduino MINI/Nexus detected\n");  
 #endif
 #ifdef ARDUINO_AVR_MEGA2560
-  PRINT_CSTSTR("%s","Arduino Mega2560 detected\n");  
+  PRINT_CSTSTR("Arduino Mega2560 detected\n");  
 #endif
 #ifdef ARDUINO_SAM_DUE
-  PRINT_CSTSTR("%s","Arduino Due detected\n");  
+  PRINT_CSTSTR("Arduino Due detected\n");  
 #endif
 #ifdef __MK66FX1M0__
-  PRINT_CSTSTR("%s","Teensy36 MK66FX1M0 detected\n");
+  PRINT_CSTSTR("Teensy36 MK66FX1M0 detected\n");
 #endif
 #ifdef __MK64FX512__
-  PRINT_CSTSTR("%s","Teensy35 MK64FX512 detected\n");
+  PRINT_CSTSTR("Teensy35 MK64FX512 detected\n");
 #endif
 #ifdef __MK20DX256__
-  PRINT_CSTSTR("%s","Teensy31/32 MK20DX256 detected\n");
+  PRINT_CSTSTR("Teensy31/32 MK20DX256 detected\n");
 #endif
 #ifdef __MKL26Z64__
-  PRINT_CSTSTR("%s","TeensyLC MKL26Z64 detected\n");
+  PRINT_CSTSTR("TeensyLC MKL26Z64 detected\n");
 #endif
 #if defined ARDUINO_SAMD_ZERO && not defined ARDUINO_SAMD_FEATHER_M0
-  PRINT_CSTSTR("%s","Arduino M0/Zero detected\n");
+  PRINT_CSTSTR("Arduino M0/Zero detected\n");
 #endif
 #ifdef ARDUINO_AVR_FEATHER32U4 
-  PRINT_CSTSTR("%s","Adafruit Feather32U4 detected\n"); 
+  PRINT_CSTSTR("Adafruit Feather32U4 detected\n"); 
 #endif
 #ifdef  ARDUINO_SAMD_FEATHER_M0
-  PRINT_CSTSTR("%s","Adafruit FeatherM0 detected\n");
+  PRINT_CSTSTR("Adafruit FeatherM0 detected\n");
 #endif
 
 // See http://www.nongnu.org/avr-libc/user-manual/using_tools.html
 // for the list of define from the AVR compiler
 
 #ifdef __AVR_ATmega328P__
-  PRINT_CSTSTR("%s","ATmega328P detected\n");
+  PRINT_CSTSTR("ATmega328P detected\n");
 #endif 
 #ifdef __AVR_ATmega32U4__
-  PRINT_CSTSTR("%s","ATmega32U4 detected\n");
+  PRINT_CSTSTR("ATmega32U4 detected\n");
 #endif 
 #ifdef __AVR_ATmega2560__
-  PRINT_CSTSTR("%s","ATmega2560 detected\n");
+  PRINT_CSTSTR("ATmega2560 detected\n");
 #endif 
 #ifdef __SAMD21G18A__ 
-  PRINT_CSTSTR("%s","SAMD21G18A ARM Cortex-M0+ detected\n");
+  PRINT_CSTSTR("SAMD21G18A ARM Cortex-M0+ detected\n");
 #endif
 #ifdef __SAM3X8E__ 
-  PRINT_CSTSTR("%s","SAM3X8E ARM Cortex-M3 detected\n");
+  PRINT_CSTSTR("SAM3X8E ARM Cortex-M3 detected\n");
 #endif
 
   //start SPI bus communication
@@ -468,12 +468,12 @@ void setup()
   if (LT.begin(NSS, NRESET, RFBUSY, DIO1, DIO2, DIO3, RX_EN, TX_EN, LORA_DEVICE))
 #endif
   {
-    PRINT_CSTSTR("%s","LoRa Device found\n");                                  
+    PRINT_CSTSTR("LoRa Device found\n");                                  
     delay(1000);
   }
   else
   {
-    PRINT_CSTSTR("%s","No device responding\n");
+    PRINT_CSTSTR("No device responding\n");
     while (1){ }
   }
 
@@ -555,11 +555,11 @@ void setup()
 
   if (IQ_Setting==LORA_IQ_INVERTED) {
     LT.invertIQ(true);
-    PRINT_CSTSTR("%s","Invert I/Q on RX\n");
+    PRINT_CSTSTR("Invert I/Q on RX\n");
   }
   else {
     LT.invertIQ(false);
-    PRINT_CSTSTR("%s","Normal I/Q\n");
+    PRINT_CSTSTR("Normal I/Q\n");
   }  
    
   //***************************************************************************************************
@@ -591,15 +591,15 @@ void setup()
 
   // found a valid config?
   if (my_sx1272config.flag1==0x12 && my_sx1272config.flag2==0x35) {
-    PRINT_CSTSTR("%s","Get back previous sx1272 config\n");
+    PRINT_CSTSTR("Get back previous sx1272 config\n");
     // set sequence number for SX1272 library
     LT.setTXSeqNo(my_sx1272config.seq);
-    PRINT_CSTSTR("%s","Using packet sequence number of ");
+    PRINT_CSTSTR("Using packet sequence number of ");
     PRINT_VALUE("%d", LT.readTXSeqNo());
     PRINTLN;    
 
 #ifdef FORCE_DEFAULT_VALUE
-    PRINT_CSTSTR("%s","Forced to use default parameters\n");
+    PRINT_CSTSTR("Forced to use default parameters\n");
     my_sx1272config.flag1=0x12;
     my_sx1272config.flag2=0x35;   
     my_sx1272config.seq=LT.readTXSeqNo(); 
@@ -611,30 +611,30 @@ void setup()
     // get back the node_addr
     if (my_sx1272config.addr!=0 && my_sx1272config.overwrite==1) {
       
-        PRINT_CSTSTR("%s","Used stored address\n");
+        PRINT_CSTSTR("Used stored address\n");
         node_addr=my_sx1272config.addr;        
     }
     else
-        PRINT_CSTSTR("%s","Stored node addr is null\n"); 
+        PRINT_CSTSTR("Stored node addr is null\n"); 
 
     // get back the idle period
     if (my_sx1272config.idle_period!=0 && my_sx1272config.overwrite==1) {
       
-        PRINT_CSTSTR("%s","Used stored idle period\n");
+        PRINT_CSTSTR("Used stored idle period\n");
         idlePeriodInMin=my_sx1272config.idle_period;        
     }
     else
-        PRINT_CSTSTR("%s","Stored idle period is null\n");                 
+        PRINT_CSTSTR("Stored idle period is null\n");                 
 #endif  
 
 #if defined WITH_AES && not defined EXTDEVADDR && not defined LORAWAN
     DevAddr[3] = (unsigned char)node_addr;
 #endif            
-    PRINT_CSTSTR("%s","Using node addr of ");
+    PRINT_CSTSTR("Using node addr of ");
     PRINT_VALUE("%d", node_addr);
     PRINTLN;   
 
-    PRINT_CSTSTR("%s","Using idle period of ");
+    PRINT_CSTSTR("Using idle period of ");
     PRINT_VALUE("%d", idlePeriodInMin);
     PRINTLN;     
   }
@@ -649,11 +649,11 @@ void setup()
   }
 #endif
 
-  PRINT_CSTSTR("%s","Setting Power: ");
+  PRINT_CSTSTR("Setting Power: ");
   PRINT_VALUE("%d", MAX_DBM);
   PRINTLN;
   
-  PRINT_CSTSTR("%s","node addr: ");
+  PRINT_CSTSTR("node addr: ");
   PRINT_VALUE("%d", node_addr);
   PRINTLN;
   
@@ -664,17 +664,17 @@ void setup()
 #endif
 
 #ifdef SX126X
-  PRINT_CSTSTR("%s","SX126X");
+  PRINT_CSTSTR("SX126X");
 #endif
 #ifdef SX127X
-  PRINT_CSTSTR("%s","SX127X");
+  PRINT_CSTSTR("SX127X");
 #endif
 #ifdef SX128X
-  PRINT_CSTSTR("%s","SX128X");
+  PRINT_CSTSTR("SX128X");
 #endif 
   
   // Print a success message
-  PRINT_CSTSTR("%s"," successfully configured\n");
+  PRINT_CSTSTR(" successfully configured\n");
 
   //printf_begin();
   delay(500);
@@ -735,7 +735,7 @@ void loop(void)
       digitalWrite(PIN_POWER,LOW);
 #endif
       
-      PRINT_CSTSTR("%s","Mean temp is ");
+      PRINT_CSTSTR("Mean temp is ");
       temp = temp/5;
       PRINT_VALUE("%f", temp);
       PRINTLN;
@@ -764,11 +764,11 @@ void loop(void)
       r_size=sprintf((char*)message+app_key_offset,"\\!%s/%s",nomenclature_str,float_str);
 #endif
 
-      PRINT_CSTSTR("%s","Sending ");
+      PRINT_CSTSTR("Sending ");
       PRINT_STR("%s",(char*)(message+app_key_offset));
       PRINTLN;
       
-      PRINT_CSTSTR("%s","Real payload size is ");
+      PRINT_CSTSTR("Real payload size is ");
       PRINT_VALUE("%d", r_size);
       PRINTLN;
 
@@ -801,9 +801,9 @@ void loop(void)
 ///////////////////////////////////
 #ifdef WITH_AES
 #ifdef LORAWAN
-      PRINT_CSTSTR("%s","end-device uses native LoRaWAN packet format\n");
+      PRINT_CSTSTR("end-device uses native LoRaWAN packet format\n");
 #else
-      PRINT_CSTSTR("%s","end-device uses encapsulated LoRaWAN packet format only for encryption\n");
+      PRINT_CSTSTR("end-device uses encapsulated LoRaWAN packet format only for encryption\n");
 #endif
       pl=local_aes_lorawan_create_pkt(message, pl, app_key_offset);
 #endif
@@ -819,7 +819,7 @@ void loop(void)
 //use our Lightweight Stream Cipher (LSC) encrypting
 ////////////////////////////////////////////////////
 #ifdef WITH_LSC
-      PRINT_CSTSTR("%s","end-device uses LSC encryption\n");
+      PRINT_CSTSTR("end-device uses LSC encryption\n");
       pl=local_lsc_create_pkt(message, pl, app_key_offset, p_type, node_addr);
 #endif
 
@@ -844,14 +844,14 @@ void loop(void)
         endSend = millis();                                          
         TXPacketCount++;
         uint16_t localCRC = LT.CRCCCITT(message, pl, 0xFFFF);
-        PRINT_CSTSTR("%s","CRC,");
+        PRINT_CSTSTR("CRC,");
         PRINT_HEX("%d", localCRC);      
         
         if (LT.readAckStatus()) {
           PRINTLN;
-          PRINT_CSTSTR("%s","Received ACK from ");
+          PRINT_CSTSTR("Received ACK from ");
           PRINTLN_VALUE("%d", LT.readRXSource());
-          PRINT_CSTSTR("%s","SNR of transmitted pkt is ");
+          PRINT_CSTSTR("SNR of transmitted pkt is ");
           PRINTLN_VALUE("%d", LT.readPacketSNRinACK());          
         }          
       }
@@ -860,8 +860,8 @@ void loop(void)
         //if here there was an error transmitting packet
         uint16_t IRQStatus;
         IRQStatus = LT.readIrqStatus();
-        PRINT_CSTSTR("%s","SendError,");
-        PRINT_CSTSTR("%s",",IRQreg,");
+        PRINT_CSTSTR("SendError,");
+        PRINT_CSTSTR(",IRQreg,");
         PRINT_HEX("%d", IRQStatus);
         LT.printIrqStatus(); 
       }
@@ -874,15 +874,15 @@ void loop(void)
       EEPROM.put(0, my_sx1272config);
 #endif
       PRINTLN;
-      PRINT_CSTSTR("%s","LoRa pkt size ");
+      PRINT_CSTSTR("LoRa pkt size ");
       PRINT_VALUE("%d", pl);
       PRINTLN;
       
-      PRINT_CSTSTR("%s","LoRa pkt seq ");   
+      PRINT_CSTSTR("LoRa pkt seq ");   
       PRINT_VALUE("%d", LT.readTXSeqNo()-1);
       PRINTLN;
     
-      PRINT_CSTSTR("%s","LoRa Sent in ");
+      PRINT_CSTSTR("LoRa Sent in ");
       PRINT_VALUE("%ld", endSend-startSend);
       PRINTLN;
 
@@ -908,7 +908,7 @@ void loop(void)
       uint8_t RXPacketL;
                               
       do {
-          PRINT_CSTSTR("%s","Wait for ");
+          PRINT_CSTSTR("Wait for ");
           PRINT_VALUE("%d", (endSend+rxw*DELAY_BEFORE_RCVW) - millis());
           PRINTLN;
     
@@ -917,7 +917,7 @@ void loop(void)
           while (millis()-endSend < rxw*DELAY_BEFORE_RCVW)
             ;
           
-          PRINT_CSTSTR("%s","Wait for incoming packet-RX");
+          PRINT_CSTSTR("Wait for incoming packet-RX");
           PRINT_VALUE("%d", rxw);
           PRINTLN;
             
@@ -932,20 +932,20 @@ void loop(void)
             if (++rxw<=rxw_max) {
 #ifdef BAND868
               //change freq to 869.525 as we are targeting RX2 window
-              PRINT_CSTSTR("%s","Set downlink frequency to 869.525MHz\n");
+              PRINT_CSTSTR("Set downlink frequency to 869.525MHz\n");
               LT.setRfFrequency(869525000, Offset);
 #elif defined BAND900
               //TODO?
 #elif defined BAND433
               //change freq to 434.665 as we are targeting RX2 window
-              PRINT_CSTSTR("%s","Set downlink frequency to 434.665MHz\n");
+              PRINT_CSTSTR("Set downlink frequency to 434.665MHz\n");
               LT.setRfFrequency(434655000, Offset);
 #elif defined BAND2400
               //no changes in 2400 band              
 #endif
               //change to SF12 as we are targeting RX2 window
               //valid for EU868 and EU433 band        
-              PRINT_CSTSTR("%s","Set to SF12\n");
+              PRINT_CSTSTR("Set to SF12\n");
 #if defined SX126X || defined SX127X
               LT.setModulationParams(LORA_SF12, Bandwidth, CodeRate, Optimisation);
 #endif
@@ -956,14 +956,14 @@ void loop(void)
             else {
 #ifdef LORAWAN              
               //set back to the reception frequency
-              PRINT_CSTSTR("%s","Set back frequency\n");
+              PRINT_CSTSTR("Set back frequency\n");
 #ifdef MY_FREQUENCY
               LT.setRfFrequency(MY_FREQUENCY, Offset);
 #else  
               LT.setRfFrequency(DEFAULT_CHANNEL, Offset);                   
 #endif              
               //set back the SF
-              PRINT_CSTSTR("%s","Set back SF\n");
+              PRINT_CSTSTR("Set back SF\n");
 #if defined SX126X || defined SX127X
               LT.setModulationParams(SpreadingFactor, Bandwidth, CodeRate, Optimisation);
 #endif
@@ -998,13 +998,13 @@ void loop(void)
                    LT.readPacketRSSI());                                   
         PRINT_STR("%s",(char*)print_buff);         
 
-        PRINT_CSTSTR("%s","frame hex\n"); 
+        PRINT_CSTSTR("frame hex\n"); 
         
         for ( i=0 ; i<RXPacketL; i++) {               
           if (message[i]<16)
-            PRINT_CSTSTR("%s","0");
+            PRINT_CSTSTR("0");
           PRINT_HEX("%X", message[i]);
-          PRINT_CSTSTR("%s"," ");       
+          PRINT_CSTSTR(" ");       
         }
         PRINTLN;
 
@@ -1030,7 +1030,7 @@ void loop(void)
             // copy the downlink payload, up to sizeof(cmdstr)
             strncpy(cmdstr,(char*)(message+i),sizeof(cmdstr)); 
                 
-            PRINT_CSTSTR("%s","Parsing command\n");
+            PRINT_CSTSTR("Parsing command\n");
             PRINT_STR("%s", cmdstr);
             PRINTLN;      
             i=2;   
@@ -1056,7 +1056,7 @@ void loop(void)
                       DevAddr[3] = (unsigned char)node_addr;
 #endif
                       
-                      PRINT_CSTSTR("%s","Set LoRa node addr to ");
+                      PRINT_CSTSTR("Set LoRa node addr to ");
                       PRINT_VALUE("%d", node_addr);  
                       PRINTLN;     
 
@@ -1080,7 +1080,7 @@ void loop(void)
                       // idlePeriodInMin      
                       idlePeriodInMin=cmdValue; 
                       
-                      PRINT_CSTSTR("%s","Set duty-cycle to ");
+                      PRINT_CSTSTR("Set duty-cycle to ");
                       PRINT_VALUE("%d", idlePeriodInMin);  
                       PRINTLN;         
 
@@ -1100,7 +1100,7 @@ void loop(void)
                       i++;
                       cmdValue=getCmdValue(i, cmdstr);
                       
-                      PRINT_CSTSTR("%s","Toggle LED on pin ");
+                      PRINT_CSTSTR("Toggle LED on pin ");
                       PRINT_VALUE("%ld", cmdValue);
                       PRINTLN;
 
@@ -1126,13 +1126,13 @@ void loop(void)
 
                   default:
       
-                    PRINT_CSTSTR("%s","Unrecognized cmd\n");       
+                    PRINT_CSTSTR("Unrecognized cmd\n");       
                     break;
             }
         }          
       }
       else
-        PRINT_CSTSTR("%s","No downlink\n");
+        PRINT_CSTSTR("No downlink\n");
 #endif
 
 ///////////////////////////////////////////////////////////////////
@@ -1141,7 +1141,7 @@ void loop(void)
 ///////////////////////////////////////////////////////////////////
 
 #if defined LOW_POWER
-      PRINT_CSTSTR("%s","Switch to power saving mode\n");
+      PRINT_CSTSTR("Switch to power saving mode\n");
 
       //CONFIGURATION_RETENTION=RETAIN_DATA_RAM on SX128X
       //parameter is ignored on SX127X
@@ -1177,7 +1177,7 @@ void loop(void)
       
       LowPower.standby();
 
-      PRINT_CSTSTR("%s","SAMD21G18A wakes up from standby\n");      
+      PRINT_CSTSTR("SAMD21G18A wakes up from standby\n");      
       FLUSHOUTPUT;
 #else
 
@@ -1197,36 +1197,36 @@ void loop(void)
             LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); 
             waiting_t = waiting_t - 8158;
 #ifdef SHOW_LOW_POWER_CYCLE                  
-                  PRINT_CSTSTR("%s","8");
+                  PRINT_CSTSTR("8");
 #endif              
           }
           else if (waiting_t > 4158) {
             LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); 
             waiting_t = waiting_t - 4158;
 #ifdef SHOW_LOW_POWER_CYCLE                  
-                  PRINT_CSTSTR("%s","4");
+                  PRINT_CSTSTR("4");
 #endif 
           }
           else if (waiting_t > 2158) {
             LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF); 
             waiting_t = waiting_t - 2158;
 #ifdef SHOW_LOW_POWER_CYCLE                  
-                  PRINT_CSTSTR("%s","2");
+                  PRINT_CSTSTR("2");
 #endif 
           }
           else if (waiting_t > 1158) {
             LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF); 
             waiting_t = waiting_t - 1158;
 #ifdef SHOW_LOW_POWER_CYCLE                  
-                  PRINT_CSTSTR("%s","1");
+                  PRINT_CSTSTR("1");
 #endif 
           }      
           else {
             delay(waiting_t); 
 #ifdef SHOW_LOW_POWER_CYCLE                   
-                  PRINT_CSTSTR("%s","D[");
+                  PRINT_CSTSTR("D[");
                   PRINT_VALUE("%d", waiting_t);
-                  PRINT_CSTSTR("%s","]\n");
+                  PRINT_CSTSTR("]\n");
 #endif
             waiting_t = 0;
           }
@@ -1259,11 +1259,11 @@ void loop(void)
        }
 #endif  
 
-      PRINT_CSTSTR("%s","Wake from power saving mode\n");
+      PRINT_CSTSTR("Wake from power saving mode\n");
       LT.wake();      
 #else
       PRINTLN;
-      PRINT_CSTSTR("%s","Will send next value at\n");
+      PRINT_CSTSTR("Will send next value at\n");
       // can use a random part also to avoid collision
       nextTransmissionTime=millis()+((idlePeriodInSec==0)?(unsigned long)idlePeriodInMin*60*1000:(unsigned long)idlePeriodInSec*1000);
       //+(unsigned long)random(15,60)*1000;

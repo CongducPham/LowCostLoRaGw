@@ -372,8 +372,6 @@ void loop()
     
     if (LT.readRXDestination()==1)
     	PRINTLN_CSTSTR("--> Packet is for gateway");
-    
-    PRINTLN_CSTSTR("-------------------------------------");
 
     // reproduce the behavior of the lora_gateway
     //
