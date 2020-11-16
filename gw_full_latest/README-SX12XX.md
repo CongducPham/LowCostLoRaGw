@@ -38,7 +38,7 @@ The objective is to seamlessly support the whole SX12XX family chip with the sam
 
 - pre-defined frequency channels (see https://github.com/CongducPham/LowCostLoRaGw#annexa-lora-mode-and-predefined-channels) are also preserved but they are defined in the `SX126X_lora_gateway.h`, `SX127X_lora_gateway.h` and `SX128X_lora_gateway.h` files. 3 additional channel for the 2.4GHz band of the SX128X chip are: CH_00_2400 = 2403000000Hz, CH_01_2400 = 2425000000Hz and CH_02_2400 = 2479000000Hz. CH_00_2400 is the default frequency in 2.4GHz.
 
-- the wiring of NSS, NRESET, BUSY and DIO1 pins are defined in the `SX126X_lora_gateway.h`, `SX127X_lora_gateway.h` and `SX128X_lora_gateway.h` files. You can overwrite these definitions in `radio.makefile`: for instance `-DNRESET=7`. Important notice: the pin numbering follows the Arduino numbering. See below for the mapping between Arduino pin number to Raspberry pin number.
+- the wiring of NSS, NRESET, BUSY and DIO1 pins are defined in the `SX126X_lora_gateway.h`, `SX127X_lora_gateway.h` and `SX128X_lora_gateway.h` files. You can overwrite these definitions in `radio.makefile`: for instance `-DNRESET=7`. Important notice: the pin numbering follows the Arduino numbering. See below for the mapping between Arduino pin number to Raspberry pin number. By default: NSS=10->GPIO8, BUSY=5->GPIO25, NRESET=6->GPIO4, DIO1=2->GPIO18. See [https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFMonRPI.jpg](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFMonRPI.jpg).
 
 - you can select the frequency band in `radio.makefile` as it was done previously by indicating `-DBAND868` or `-DBAND900` or `-DBAND433`. There is no `-DBAND2400` in `radio.makefile` because compiling for SX128X target automatically set `-DBAND2400`.
 
@@ -55,23 +55,23 @@ We use the `arduPi` layer to make Arduino-like program running on the Raspberry.
 
 ```
        Arduino                         Raspberry
-		  D2							GPIO18
-		  D3							GPIO23
-		  D4							GPIO24
-		  D5							GPIO25
-		  D6							GPIO4
-		  D7							GPIO17
-		  D8							GPIO21 or GPIO27
-		  D9							GPIO22
-		  D10     				        GPIO8 (CE0)
-		  D11							GPIO10 (MOSI)
-		  D12							GPIO9 (MISO)
-		  D13							GPIO11 (SCK)
+          D2                            GPIO18
+          D3                            GPIO23
+          D4                            GPIO24
+          D5                            GPIO25
+          D6                            GPIO4
+          D7                            GPIO17
+          D8                            GPIO21 or GPIO27
+          D9                            GPIO22
+          D10                           GPIO8 (CE0)
+          D11                           GPIO10 (MOSI)
+          D12                           GPIO9 (MISO)
+          D13                           GPIO11 (SCK)
 ```
 
 GPIO pin are as follows on the Raspberry header:
 
-![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/GPIO_Pi2.png)
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/GPIO_Pi2.png" width="400">
 
 Arduino examples
 ----------------
@@ -83,11 +83,11 @@ Early pictures
 
 Here are some pictures of our early test with Ebyte SX1280. As you see both device and gateway are fully operational. Here frequency is 2403000000Hz and datarate if SF12BW203125.
 
-![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlydevice.jpg)
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlydevice.jpg" width="400">
 
-![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlygw.jpg)
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlygw.jpg" width="400">
 
-![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-fullgw.png)
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-fullgw.jpg" width="400">
 	
 Enjoy!
 C. Pham		
