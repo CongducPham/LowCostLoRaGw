@@ -87,7 +87,7 @@ Here are some pictures of our early test with Ebyte SX1280. As you see both devi
 
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlygw.jpg" width="400">
 
-<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-fullgw.jpg" width="400">
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-fullgw.png" width="400">
 	
 Enjoy!
 C. Pham		
