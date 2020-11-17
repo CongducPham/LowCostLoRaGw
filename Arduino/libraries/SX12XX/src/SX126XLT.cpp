@@ -19,7 +19,7 @@ See LICENSE.TXT file included in the library
   	- in the return ack, the SNR of the received packet at the gateway is included
   	- the sending of the ack and the reception of the ack use inverted IQ
   	- you can disable IQ inversion in ack transaction by commenting #define INVERTIQ_ON_ACK    	
-  - Add polling mechanism to avoid additional DIO0 connection - done - to test
+  - Add polling mechanism to avoid additional DIO0 connection - done
   	- uncomment #define USE_POLLING  
   	- this is the default behavior    	
   - All Serial.print replaced by macros - done
@@ -124,7 +124,7 @@ End by C. Pham - Oct. 2020
 //#define DEBUGBUSY                   //comment out if you do not want a busy timeout message
 //#define SX126XDEBUG1               //enable debug messages
 //#define SX126XDEBUG3              //enable debug messages
-#define SX128XDEBUGACK               //enable ack transaction debug messages
+#define SX126XDEBUGACK               //enable ack transaction debug messages
 //#define SX126XDEBUGPINS           //enable pin allocation debug messages
 //#define DEBUGFSKRTTY                 //enable for FSKRTTY debugging 
 
@@ -3920,7 +3920,7 @@ void SX126XLT::setCadParams()
 	uint8_t cadSymbolNum, cadDetMin, cadDetPeak;
 	
 	if (savedModParam2==LORA_BW_500) {
-  	switch (savedModParam2)
+  	switch (savedModParam1)
   	{
   		// from AN1200.48 Nov 2019
     	case 5:
@@ -3960,7 +3960,7 @@ void SX126XLT::setCadParams()
 		// all other bandwidth values
 		// from AN1200.48 Nov 2019 for LORA_BW_125
 		// we decided to take same parameters for all other bandwidth values
-		switch (savedModParam2)
+		switch (savedModParam1)
 			{
 				case 5:
 				case 6:
@@ -4240,13 +4240,16 @@ void SX126XLT::CarrierSense1(uint8_t cad_number, bool extendedIFS, bool onlyOnce
                 PRINT_VALUE("%d",_endDoCad-_startDoCad);
                 PRINTLN;
 
-                if (e==0)
+                if (e==0) {
                     PRINT_CSTSTR("OK2");
+                    return;	
+                }
                 else
                     PRINT_CSTSTR("#2");
 
                 PRINTLN;
             }
+            return;
         }
         else {
             PRINT_CSTSTR("#1\n");
@@ -4276,6 +4279,9 @@ void SX126XLT::CarrierSense1(uint8_t cad_number, bool extendedIFS, bool onlyOnce
       } while (e!=0 && --DIFSretries);
 
     } while (--retries);
+    
+    if (!retries)
+    	PRINT_CSTSTR("--> abort\n");
   }
 }
 
@@ -4402,11 +4408,16 @@ void SX126XLT::CarrierSense2(uint8_t cad_number, bool extendedIFS) {
               PRINT_CSTSTR("--> CAD ");
               PRINTLN_VALUE("%d",_endDoCad-_startDoCad);
 
-              if (e==0)
-                PRINTLN_CSTSTR("OK2");
+              if (e==0) {
+                  PRINT_CSTSTR("OK2");
+                  return;	
+              }
               else
-                PRINTLN_CSTSTR("#2");
+                  PRINT_CSTSTR("#2");
+
+              PRINTLN;
             }
+            return;
           }
         }
         else {
@@ -4444,6 +4455,9 @@ void SX126XLT::CarrierSense2(uint8_t cad_number, bool extendedIFS) {
         }
       } while (e!=0 && --DIFSretries);
     } while (--retries);
+
+    if (!retries)
+    	PRINT_CSTSTR("--> abort\n");    
   }
 }
 

@@ -3436,13 +3436,16 @@ void SX128XLT::CarrierSense1(uint8_t cad_number, bool extendedIFS, bool onlyOnce
                 PRINT_VALUE("%d",_endDoCad-_startDoCad);
                 PRINTLN;
 
-                if (e==0)
+                if (e==0) {
                     PRINT_CSTSTR("OK2");
+                    return;	
+                }
                 else
                     PRINT_CSTSTR("#2");
 
                 PRINTLN;
             }
+            return;
         }
         else {
             PRINT_CSTSTR("#1\n");
@@ -3472,6 +3475,9 @@ void SX128XLT::CarrierSense1(uint8_t cad_number, bool extendedIFS, bool onlyOnce
       } while (e!=0 && --DIFSretries);
 
     } while (--retries);
+
+    if (!retries)
+    	PRINT_CSTSTR("--> abort\n");    
   }
 }
 
@@ -3598,11 +3604,16 @@ void SX128XLT::CarrierSense2(uint8_t cad_number, bool extendedIFS) {
               PRINT_CSTSTR("--> CAD ");
               PRINTLN_VALUE("%d",_endDoCad-_startDoCad);
 
-              if (e==0)
-                PRINTLN_CSTSTR("OK2");
+              if (e==0) {
+                  PRINT_CSTSTR("OK2");
+                  return;	
+              }
               else
-                PRINTLN_CSTSTR("#2");
+                  PRINT_CSTSTR("#2");
+
+              PRINTLN;
             }
+            return;
           }
         }
         else {
@@ -3640,6 +3651,9 @@ void SX128XLT::CarrierSense2(uint8_t cad_number, bool extendedIFS) {
         }
       } while (e!=0 && --DIFSretries);
     } while (--retries);
+
+    if (!retries)
+    	PRINT_CSTSTR("--> abort\n");     
   }
 }
 
