@@ -38,9 +38,9 @@ then
 
 	if [ $2 == "true" ]
 	then
-		sudo sed -i 's/#*CFLAGS/CFLAGS/g' /home/pi/lora_gateway/radio.makefile	
+		sudo sed -i 's/#*CFLAGS+=-DPABOOST/CFLAGS+=-DPABOOST/g' /home/pi/lora_gateway/radio.makefile	
 	else
-		sudo sed -i 's/^CFLAGS/#CFLAGS/g' /home/pi/lora_gateway/radio.makefile
+		sudo sed -i 's/^CFLAGS+=-DPABOOST/#CFLAGS+=-DPABOOST/g' /home/pi/lora_gateway/radio.makefile
 	fi	
 fi
 

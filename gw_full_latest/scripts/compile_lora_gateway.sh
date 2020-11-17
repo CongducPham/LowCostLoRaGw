@@ -7,6 +7,15 @@ pushd /home/pi/lora_gateway
 #remove old binaries
 make clean
 
+getoptissue=`cat /etc/os-release | grep buster`
+
+if [ "$getoptissue" = "" ]
+then
+	sudo sed -i 's/^CFLAGS+=-DGETOPT_ISSUE/#CFLAGS+=-DGETOPT_ISSUE/g' /home/pi/lora_gateway/raspberry.makefile
+else
+	sudo sed -i 's/#*CFLAGS+=-DGETOPT_ISSUE/CFLAGS+=-DGETOPT_ISSUE/g' /home/pi/lora_gateway/raspberry.makefile
+fi	
+
 revision=`cat /proc/cpuinfo | grep "Revision" | cut -d ':' -f 2 | tr -d " \t\n\r"`
 
 rev_hex="0x$revision"

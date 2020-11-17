@@ -252,7 +252,7 @@ require 'header.php';
     									    <td>PA_BOOST</td>
     										<td id="paboost_value">
     											<?php
-    												$current_paboost=exec('egrep ^CFLAGS /home/pi/lora_gateway/radio.makefile');
+    												$current_paboost=exec('egrep "^CFLAGS.*BOOST" /home/pi/lora_gateway/radio.makefile');
     												
     												if ($current_paboost=='')
 													{
