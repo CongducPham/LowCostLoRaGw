@@ -129,7 +129,7 @@ Could not wait to receive the NiceRF SX1262 so here is a very "dirty" SX1262 dev
 
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-earlydevice.jpg" width="400">
 
-Two days after the Ebyte SX1262 test, I finally received the NiceRF SX1262! Since I have some old RFM95W breakout left, I just solder the NiceRF SX1262 on the RFM95W. As stated previously, both have almost same pinout. See how the BUSY pin of the SX1262 is connected with a wire to the Raspberry's GPIO25 pin. The ProMini LoRa 
+Two days after the Ebyte SX1262 test, I finally received the 2 NiceRF SX1262 I've ordered from AliExpress! Since I have some old RFM95W breakout left, I just solder the NiceRF SX1262 on the old RFM95W breakout. As stated previously, both RFM95W and NiceRF SX1262 have almost same pinout. See how the BUSY pin of the SX1262 is connected with a wire to the Raspberry's GPIO25 pin. The old ProMini LoRa RFM95W was also used to host the second NiceRF SX1262 to serve as a device since I didn't receive the new ProMini PCBs yet.
 
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-fullgw.jpg" width="400">
 
