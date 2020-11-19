@@ -213,6 +213,9 @@ def main(ldata, pdata, rdata, tdata, gwid):
 	#LoRaWAN packet
 	if dst==256:
 		src_str="0x%0.8X" % src
+		#we force to BW125 as Chirpstack is can not handle other bandwidth right now, for instance those of Lora 2.4GHz
+		#TODO: change when ChirpStack will support LoRa 2.4GHz
+		rbw=125
 	else:
 		src_str=str(src)	
 
