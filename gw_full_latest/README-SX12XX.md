@@ -90,20 +90,52 @@ Once uplink packets are pushed to the network server, downlink transmission migh
 
 With Arduino boards, one of the most popular LoRaWAN library is the LMIC library that has been mainly written to work with SX127X chips and, most importantly, to deal with sub-GHz regulations such as radio duty-cycle. Therefore, when using LoRaWAN-like communication with LoRa 2.4GHz, we are not using LMIC but our light and limited LoRaWAN support targeting mainly communication with a single-channel gateway. [`Arduino_LoRa_SX12XX_temp`](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_SX12XX_temp) is an example of LoRaWAN-like communication with support of only downlink in ABP mode that can be used for uploading LoRaWAN packet to a LoRaWAN network server. 
 			
+			
+New PCBs
+--------
+
+The RFM95W breakout initially designed for the HopeRF RFM95W (referred to as old RFM95W breakout) can actually also host the recent NiceRF SX1262 as both radio modules have similar pinout. However, we updated the old RFM95W breakout's wiring to also expose DIO2 and DIO1 on the Raspberry header to better support the NiceRF SX1262 module (DIO2 location on the RFM95W is the BUSY pin on the NiceRF SX1262 and DIO1 pin is used for RX/TX done interrupt on the NiceRF SX1262 instead of the DIO0 pin on the RFM95W). BUSY pin is needed for the SX126X so if you are using the old RFM95W breakout you need to solder a wire. Our modified communication library does not need DIO1 pin. When updating the RFM95W breakout we also added a 4-pin header to easily connect a small OLED screen to a Raspberry using the I2C bus (SCL and SDA pin).
+
+We also made a variant to support the NiceRF SX1280 module which provides LoRa modulation on the 2.4GHz band (I really don't know why the SX1280 did not use the same pinout than the SX1262 which is similar to the RFM95W!). All these breakout PCBs are illustrated in the following figure.
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFM95Breakout.jpg)
+
+The ProMini LoRa RFM95W PCB for the Arduino ProMini has been slightly modified to reflect that it can work with the NiceRF SX1262 as well. It is then referred to as ProMini LoRa RFM95W/NiceRF SX1262. We then created the ProMini LoRa NiceRF SX1280.
+
+![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/ProMiniLoRaBreakout.jpg)
+
+These PCBs have 4 solder pads that can be soldered together if you want to connect various DIO pins. Some of these pads are by default connected. If you want to use the connected Arduino pins for other purposes, just cut the wire between the pads with a cutter and test for discontinuity.
+
+- for RFM95W. Connected by default: DIO0 to D2, DIO1 to D3, RST to D4. Not connected by default: DIO2 to D5
+- for NiceRF SX1262. Connected by default: DIO1 to D3, RST to D4. Not connected by default: BUSY to D5
+- for NiceRF SX1280. Connected by default: DIO1 to D2, BUSY to D3 and RST to D4. Not connected by default: DIO2 to D5
+			
 Early pictures
 --------------
 
-Here are some pictures of our early test with Ebyte SX1280. As you can see both device and gateway are fully operational. Here frequency is 2403000000Hz and datarate if SF12BW203125.
+Here are some pictures of our early test with Ebyte SX1280 (E28-2G4M12S SPI). As you can see both device and gateway are fully operational. Here frequency is 2403000000Hz and datarate is SF12BW203. The PCB breakouts for the Ebyte SX1280 has been provided by my colleague Mojtaba. Soldering the Ebyte SX1280 was quite challenging!
 
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlydevice.jpg" width="400"><img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlygw.jpg" width="400">
 
-Upload to WAZIUP cloud is shown below. Now, you can benefit from the versatile low-cost single-channel gateway with all LoRa chip family: SX126X, SX127X and SX128X.
+With the SX1280 for both device and gateway, upload to WAZIUP cloud is shown below.
 
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-fullgw.png">
 
 Upload to LoRaWAN TTN network server with LoRa 2.4GHz is shown below. Data are sent with a device running `Arduino_LoRa_SX12XX_temp`. See how the LoRa modulation's bandwith is advertised as 125kHz while the real bandwidth that was used for the communication was 203.125kHz.
 
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-ttn.png">
-	
+
+Could not wait to receive the NiceRF SX1262 so here is a very "dirty" SX1262 device with an Ebyte SX1262 (E22-900M22S SPI 868MHz) connected to an Arduino ProMini. Again, soldering was challenging, especially that I did not have a PCB breakout for the Ebyte SX1262! After making one radio, I did not have the courage to solder a second one, so I only tested at device side to check that data can be received by an RFM95W (SX1276) gateway. Tests were successful and an SX1262 can talk to an SX1276 without any issue.
+
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-earlydevice.jpg" width="400">
+
+Two days after the Ebyte SX1262 test, I finally received the NiceRF SX1262! Since I have some old RFM95W breakout left, I just solder the NiceRF SX1262 on the RFM95W. As stated previously, both have almost same pinout. See how the BUSY pin of the SX1262 is connected with a wire to the Raspberry's GPIO25 pin. The ProMini LoRa 
+
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-fullgw.jpg" width="400">
+
+Now, you can benefit from the versatile low-cost single-channel gateway with all LoRa chip family: SX126X, SX127X and SX128X.
+
+I will put pictures of the new ProMini SX1280 PCB and the SX1280 PCB breakout as soon as I received them from JLCPCB.
+
 Enjoy!
 C. Pham		

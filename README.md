@@ -63,7 +63,7 @@ All the PCBs have footprint for an SMA connector or uFl. Both Nano and ProMini P
 - for NiceRF SX1262. Connected by default: DIO1 to D3, RST to D4. Not connected by default: BUSY to D5
 - for NiceRF SX1280. Connected by default: DIO1 to D2, BUSY to D3 and RST to D4. Not connected by default: DIO2 to D5 
 
-Our modified communication library makes wiring quite easy because only CS, MISO, MOSI, SCK and RST are needed. However on the PCBs, DIOs pins are available to use other libraries (for LMIC stack for instance). We also indicate clearly which pin of the LoRa module you need to solder on the PCB (for instance `MOSI>`). As you can see on the picture, you can directly solder the Arduino board on the PCB, or, as we did, use intermediate headers so that the Arduino board can be easily plugged and removed.
+Our modified communication library makes wiring a bit easier because only CS, MISO, MOSI, SCK, BUSY (SX126X and SX128X only) and RST are needed. However on the PCBs, DIOs pins are available to use other libraries (for LMIC stack for instance). We also indicate clearly which pin of the LoRa module you need to solder on the PCB (for instance `MOSI>`). As you can see on the picture, you can directly solder the Arduino board on the PCB, or, as we did, use intermediate headers so that the Arduino board can be easily plugged and removed.
 
 You can download all the Gerber zipped archive and view them on an [online Gerber viewer](https://www.pcbgogo.com/GerberViewer.html).
 
