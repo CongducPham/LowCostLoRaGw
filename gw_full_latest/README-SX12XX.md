@@ -40,7 +40,7 @@ The objective is to seamlessly support the whole SX12XX family chip with the sam
 
 - the wiring of NSS, NRESET, BUSY and DIO1 pins are defined in the `SX126X_lora_gateway.h`, `SX127X_lora_gateway.h` and `SX128X_lora_gateway.h` files. You can overwrite these definitions in `radio.makefile`: for instance `-DNRESET=7`. Important notice: the pin numbering follows the Arduino numbering. See below for the mapping between Arduino pin number to Raspberry pin number. By default: NSS=10->GPIO8, BUSY=5->GPIO25, NRESET=6->GPIO4, DIO1=2->GPIO18. See [https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFMonRPI.jpg](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFMonRPI.jpg).
 
-- you can select the frequency band in `radio.makefile` as it was done previously by indicating `-DBAND868` or `-DBAND900` or `-DBAND433`. There is no `-DBAND2400` in `radio.makefile` because compiling for SX128X target automatically set `-DBAND2400`.
+- you can select the frequency band in `radio.makefile` as it was done previously by indicating `-DBAND868` or `-DBAND900` or `-DBAND433`. There is no `-DBAND2400` in `radio.makefile` because compiling for SX128X target automatically uses 2400MHz band.
 
 - for LoRaWAN mode in 2.4GHz, as there is no LoRaWAN specifications for frequency usage, the uplink and the downlink frequency (as well as data rate) are identical, even if RX2 is targeted. By defaut, it is CH_00_2400 = 2403000000Hz.
 
@@ -78,14 +78,32 @@ Arduino examples
 
 Along with the support of these new LoRa chips, we updated our Arduino examples. See [https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino)
 			
+
+SX128X: Using LoRaWAN-like communications and uploading to LoRaWAN Network Servers with LoRa 2.4GHz
+---------------------------------------------------------------------------------------------------
+
+Although there is an increasing interest and demand for LoRa 2.4GHz in order to facilitate worldwide deployment, there is no LoRaWAN specifications for this band. Therefore most of LoRaWAN network servers do not support yet datarate offered by LoRa 2.4GHz. For instance, if the LoRa bandwidth differs from 125kHz, most of network servers will refuse the uplink packet. Also, there is no definition of frequencies for both uplink and downlink.
+
+With the support of LoRa 2.4GHz, our single-channel can easily push received packets to LoRaWAN network servers such as TTN or ChirpStack by declaring the bandwidth to be 125kHz although the real bandwidth can be different. `CloudTTN.py` and `CloudChirpStack.py` python scripts set the LoRa modulation's bandwidth to be 125kHz to comply with actual LoRaWAN specifications.
+
+Once uplink packets are pushed to the network server, downlink transmission might occur. With LoRa 2.4GHz the low-level gateway will not change the downlink frequency even when receive window 2 (RX2) is targeted. 
+
+With Arduino boards, one of the most popular LoRaWAN library is the LMIC library that has been mainly written to work with SX127X chips and, most importantly, to deal with sub-GHz regulations such as radio duty-cycle. Therefore, when using LoRaWAN-like communication with LoRa 2.4GHz, we are not using LMIC but our light and limited LoRaWAN support targeting mainly communication with a single-channel gateway. [`Arduino_LoRa_SX12XX_temp`](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_SX12XX_temp) is an example of LoRaWAN-like communication with support of only downlink in ABP mode that can be used for uploading LoRaWAN packet to a LoRaWAN network server. 
+			
 Early pictures
 --------------
 
-Here are some pictures of our early test with Ebyte SX1280. As you see both device and gateway are fully operational. Here frequency is 2403000000Hz and datarate if SF12BW203125.
+Here are some pictures of our early test with Ebyte SX1280. As you can see both device and gateway are fully operational. Here frequency is 2403000000Hz and datarate if SF12BW203125.
 
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlydevice.jpg" width="400"><img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-earlygw.jpg" width="400">
 
+Upload to WAZIUP cloud is shown below. Now, you can benefit from the versatile low-cost single-channel gateway with all LoRa chip family: SX126X, SX127X and SX128X.
+
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-fullgw.png">
+
+Upload to LoRaWAN TTN network server with LoRa 2.4GHz is shown below. Data are sent with a device running `Arduino_LoRa_SX12XX_temp`. See how the LoRa modulation's bandwith is advertised as 125kHz while the real bandwidth that was used for the communication was 203.125kHz.
+
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-ttn.png">
 	
 Enjoy!
 C. Pham		

@@ -18,15 +18,16 @@ Latest news
 Quick start
 -----------
 
-- **The current SD card image (Debian Buster) has everything you need!** [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip)
-- Use the single-channel gateway for limited LoRaWAN (including downlink and OTAA feature) on the 433MHz band
-- The single-channel gateway now also provides LoRaWAN downlink and OTAA features, see updated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
+- **The current SD card image (Debian Buster) has everything you need!** [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip). See [installation section](https://github.com/CongducPham/LowCostLoRaGw#installing-the-latest-gateway-version)
+- Use the single-channel gateway for LoRaWAN-like communication (including downlink) with LoRa 2.4GHz. Upload to TTN or ChirpStack network servers. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-SX12XX.md)
+- Use the single-channel gateway for limited LoRaWAN (including downlink and OTAA feature) on the 433MHz band for devices with our [modified LMIC](https://github.com/CongducPham/LMIC_low_power#using-433mhz-band)
+- The single-channel gateway now also provides LoRaWAN downlink and OTAA features for devices with our [modified LMIC](https://github.com/CongducPham/LMIC_low_power#using-single-channel-gateway). See updated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
 - Includes support of the open-source ChirpStack LoRaWAN Network Server, see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/chirpstack/README.md)
 - Support of multi-channel RPI SX1301 LoRaWAN gateway: benefit from the open, versatile, multi-cloud Low-cost LoRa IoT framework with the flexibility and scalability of a multi-channel LoRaWAN gateway, see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/scripts/rak2245-rak831/README.md)
 - We have a new online [Arduino-Sensor-LoRa tutorial](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/tuto/index.html) and here is the direct link to the [LoRa part](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/tuto/sensors/lora_sensor/Arduino_lora_demo.html)
 - Read the [Low-cost-LoRa-device leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-device-leaflet.pdf)
 - Read the [Low-cost-LoRa-GW leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-leaflet.pdf)
-- Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. **For instance, to configure a new gateway, it is recommended to use the web admin interface to update the gateway software and to run the basic configuration procedure as described [here](https://github.com/CongducPham/LowCostLoRaGw#option-i)**.
+- Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. **For instance, to configure a new gateway, it is recommended to use the web admin interface to update the gateway software and to run the basic configuration procedure as described [here](https://github.com/CongducPham/LowCostLoRaGw#option-i)**
 - **The rest of this README file contains additional information to better understand the proposed low-cost IoT framework**.
 
 PCBs
@@ -36,7 +37,7 @@ In order to facilitate connection between an Arduino board or a RaspberryPI and 
 
 The first PCB is a simple RFM95W breakout with header pins for both the Raspberry (mainly to make a gateway) and Arduino boards. The RFM95W breakout initially designed for the HopeRF RFM95W (referred to as old RFM95W breakout) can actually also host the recent NiceRF SX1262 as both radio modules have similar pinout. However, we updated the old RFM95W breakout's wiring to also expose DIO2 and DIO1 on the Raspberry header to better support the NiceRF SX1262 module (DIO2 location on the RFM95W is the BUSY pin on the NiceRF SX1262 and DIO1 pin is used for RX/TX done interrupt on the NiceRF SX1262 instead of the DIO0 pin on the RFM95W). BUSY pin is needed for the SX126X so if you are using the old RFM95W breakout you need to solder a wire. Our modified communication library does not need DIO1 pin. When updating the RFM95W breakout we also added a 4-pin header to easily connect a small OLED screen to a Raspberry using the I2C bus (SCL and SDA pin).
 
-We also made a variant to support the NiceRF SX1280 module which provides LoRa modulation on the 2.4Ghz band (I really don't know why the SX1280 did not use the same pinout than the SX1262 which is similar to the RFM95W!). All these breakout PCBs are illustrated in the following figure.
+We also made a variant to support the NiceRF SX1280 module which provides LoRa modulation on the 2.4GHz band (I really don't know why the SX1280 did not use the same pinout than the SX1262 which is similar to the RFM95W!). All these breakout PCBs are illustrated in the following figure.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFM95Breakout.jpg)
 
