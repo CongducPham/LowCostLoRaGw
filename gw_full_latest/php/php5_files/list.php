@@ -34,48 +34,20 @@
 	// THIS IS TO RECOVER NOMENCLATURES //
 	//////////////////////////////////////
 	
-
-    // 20201103 engineer
 	// connection with local MongoDB database
-	//$connection = new MongoClient();
+	$connection = new MongoClient();
 
 	// select the collection from the database
-	//$collection = $connection->messages->ReceivedData;
+	$collection = $connection->messages->ReceivedData;
 	
 	// recover the whole collection ascending by date
-	//$data = $collection->find();
-
-
-    // 20201110 engineer
-	try {
-		$mng = new MongoDB\Driver\Manager("mongodb://localhost:27017");
-		$query = new MongoDB\Driver\Query([]); 
-		$data = $mng->executeQuery("messages.ReceivedData", $query);
-
-            } catch (MongoDB\Driver\Exception\Exception $e) {
-
-                $filename = basename(__FILE__);
-
-                echo "The $filename script has experienced an error.\n";
-                echo "It failed with the following exception:\n";
-
-                echo "Exception:", $e->getMessage(), "\n";
-                echo "In file:", $e->getFile(), "\n";
-                echo "On line:", $e->getLine(), "\n";
-        }
-
+	$data = $collection->find();
 	
 	// array containing the nomenclatures
 	$data_nom = array();
 	
-
-    // 20201103 engineer
-	//while($data->hasNext()) { 
-	//	$document = $data->getNext();
-        $it = new \IteratorIterator($data);
-        $it->rewind(); // Very important;
-        while ($result = $it->current()) {
-               $document = get_object_vars($result);
+	while($data->hasNext()) { 
+		$document = $data->getNext();
 		
 		// recovering json object from "data"
 		$data_json = $document["data"];
@@ -88,7 +60,6 @@
 				array_push($data_nom, $key);
 			}
 		}
-                $it->next();
 	}
 	
 	// functions to know if a string begins and ends with another string respectively
@@ -230,37 +201,14 @@ $(function()
 			<?php if (isset($_GET['Editbox1']) && isset($_GET['Combobox1'])) {
 				if($_GET['Combobox1'] == "first") {
 					if($_GET['Combobox2'] == "date") {
-
-						// 20201110 engineer
-						//$cursor = $collection->find();
+						$cursor = $collection->find();
 						// sort by date ascending
-						//$cursor->sort(array('time' => 1));
-						$query = new MongoDB\Driver\Query([], ['sort' => [ 'time' => 1]]); 
-                				$data = $mng->executeQuery("messages.ReceivedData", $query);
-						$it = new \IteratorIterator($data);
-						$it->rewind(); // Very important;
-
+						$cursor->sort(array('time' => 1));
 						// number of documents traveled
 						$iteration = 0;
-
-						/*
-						// 20201110 engineer
 						while($cursor->hasNext() && $iteration<intval($_GET['Editbox1'])) { 
 							$document = $cursor->getNext(); ?>
-						*/
-						while(($cursor = $it->current()) && $iteration<intval($_GET['Editbox1'])) { 
-							$document = get_object_vars($cursor);
-			?>
-							<!-- 20201110 engineer
-							//<li class="list-group-item" style="text-align:center;background-color: #337AB7;">
-								<a class="list-group-item" >
-									<?php // echo gmdate('Y-m-d H:i:s', $document["time"]->sec); ?>
-								</a>
-							-->
-							<li class="list-group-item" style="text-align:center;background-color: #337AB7;">
-								<a class="list-group-item" >
-									<?php echo gmdate('Y-m-d H:i:s', $document['time']->toDateTime()->getTimestamp()); ?>
-								</a>
+							<li class="list-group-item" style="text-align:center;background-color: #337AB7;"><a class="list-group-item" ><?php echo gmdate('Y-m-d H:i:s', $document["time"]->sec); ?></a>
 								<div table-responsive>
 									<table class="table" id="SlideMenu1_MoreInfo" >
 										<thead>
@@ -270,7 +218,7 @@ $(function()
 													<th>DATARATE</th>
 												</tr>										
 											</thead>
-											<tbody>
+											<tblody>
 												<tr class="success">
 													<td><?php	$dataarray = json_decode($document["data"], true);
 														echo "[  ";
@@ -279,8 +227,7 @@ $(function()
 
 														}
 														echo "]";
-														?>
-													</td>
+												  ?></td>
 													<td><?php echo $document["node_eui"]; ?></td>
 													<td><?php echo $document["datarate"]; ?> CR: <?php echo $document["cr"]; ?></td>
 												</tr>
@@ -288,41 +235,26 @@ $(function()
 									</table>
 								</div>
 						   	</li>
-				<?php
-							$iteration += 1;
-
-							// 20201110 engineer
-							$it->next();
+							<?php $iteration += 1;
 						}
 					}else if(startsWith((string)$_GET['Combobox2'], "data_")){
 				
 						// recovering the nomenclature of the data
 						$nomenclature = recoverEnd((string)$_GET['Combobox2'], "data_");
-
-						// 20201110 engineer
-						//$cursor = $collection->find();
-						$query = new MongoDB\Driver\Query([]);
-                        $data = $mng->executeQuery("messages.ReceivedData", $query);
-                        $it = new \IteratorIterator($data);
-                        $it->rewind(); // Very important;
+				
+						$cursor = $collection->find();
 				
 						// auxiliary array which will contain data from MongoDB
 						$aux_array = array();
 			
-						// 20201110 engineer
-						//while($cursor->hasNext()) { 
-						//	$document = $cursor->getNext();
-						while ($cursor = $it->current()) {
-   							$document = get_object_vars($cursor);
+						while($cursor->hasNext()) { 
+							$document = $cursor->getNext();
 				
 							// to save in aux_array
 							$aux_document = $document;
 							// recovering the data in an array
 							$aux_document["data"] = json_decode($document["data"], true);
 							array_push($aux_array, $aux_document);
-
-							// 20201110 engineer
-							$it->next();
 						}
 						// sorting by the corresponding data
 						usort($aux_array, "compare_data_".(string)$nomenclature);
@@ -330,8 +262,7 @@ $(function()
 						$iteration = 0;
 				
 						foreach($aux_array as $value){ 
-							if ($iteration<intval($_GET['Editbox1'])) {
-				?>
+							if ($iteration<intval($_GET['Editbox1'])) { ?>
 								<li class="list-group-item"  style="text-align:center;background-color: #337AB7;" ><a class="list-group-item"><?php echo strtoupper((string)$nomenclature).": ".($value["data"][(string)$nomenclature]); ?></a>
 									<div table-responsive>
 										<table class="table" id="SlideMenu1_MoreInfo">
@@ -352,15 +283,9 @@ $(function()
 																}
 															}
 															echo "]";
-														?>
+													  ?>
 													</td>
-													<td>
-														<?php
-															// 20201113 engineer
-															//echo gmdate('Y-m-d H:i:s', $value["time"]->sec);
-															echo gmdate('Y-m-d H:i:s', $value["time"]->toDateTime()->getTimestamp());
-														?>
-													</td>
+													<td><?php echo gmdate('Y-m-d H:i:s', $value["time"]->sec); ?></td>
 													<td><?php echo $value["node_eui"]; ?></td>
 													<td><?php echo $value["datarate"]; ?> CR: <?php echo $value["cr"]; ?></td>
 												</tr>
@@ -368,43 +293,22 @@ $(function()
 										</table>
 									</div>
 							   	</li>
-			<?php					$iteration += 1;
+						<?php		$iteration += 1;
 							}
 						}
 					}
 				}else{
 					if($_GET['Combobox2'] == "date") {
-						/* 20201113 engineer
+		
 						$cursor = $collection->find();
 						// sort by date ascending
 						$cursor->sort(array('time' => -1));
-						*/
-						$query = new MongoDB\Driver\Query([], ['sort' => [ 'time' => -1]]);
-                        $data = $mng->executeQuery("messages.ReceivedData", $query);
-                        $it = new \IteratorIterator($data);
-                        $it->rewind(); // Very important;
-
 						// number of documents traveled
 						$iteration = 0;
-
-						/* 20201113 engineer
+			
 						while($cursor->hasNext() &&  $iteration<intval($_GET['Editbox1'])) { 
-						$document = $cursor->getNext();
-						*/
-						while (($cursor = $it->current()) && $iteration<intval($_GET['Editbox1'])) {
-							$document = get_object_vars($cursor);
-
-			?>
-						<!-- 2020113 engineer
-							<li class="list-group-item"  style="text-align:center;background-color: #337AB7;">
-								<a class="list-group-item">
-									<?php //echo gmdate('Y-m-d H:i:s', $document["time"]->sec); ?>
-								</a>
-						 -->
-						<li class="list-group-item"  style="text-align:center;background-color: #337AB7;">
-							<a class="list-group-item">
-								<?php echo gmdate('Y-m-d H:i:s', $document["time"]->toDateTime()->getTimestamp()); ?>
-							</a>
+						$document = $cursor->getNext(); ?>
+						<li class="list-group-item"  style="text-align:center;background-color: #337AB7;"><a class="list-group-item"><?php echo gmdate('Y-m-d H:i:s', $document["time"]->sec); ?></a>
 							<div table-responsive>
 								<table class="table" id="SlideMenu1_MoreInfo">
 									<thead>
@@ -430,38 +334,25 @@ $(function()
 									</table>
 							</div>
 					   	</li>
-				<?php
-							$iteration += 1;
-
-							// 20201113 engineer
-							$it->next();
+						<?php $iteration += 1;
 						}
 					}else if(startsWith((string)$_GET['Combobox2'], "data_")){
 				
 						// recovering the nomenclature of the data
 						$nomenclature = recoverEnd((string)$_GET['Combobox2'], "data_");
-						/* 20201113 engineer
+				
 						$cursor = $collection->find();
 						// sort by date descending
 						$cursor->sort(array('time' => -1));
-						 */
-						$query = new MongoDB\Driver\Query([], ['sort' => [ 'time' => -1]]);
-                        $data = $mng->executeQuery("messages.ReceivedData", $query);
-                        $it = new \IteratorIterator($data);
-                        $it->rewind(); // Very important;
-
 						// number of documents traveled
 						$iteration = 0;
 				
 						// auxiliary array which will contain data from MongoDB
 						$aux_array = array();
-
-						/* 20201113 engineer
+			
 						while($cursor->hasNext()) { 
 							$document = $cursor->getNext();
-						*/
-						while ($cursor = $it->current()) {
-							$document = get_object_vars($cursor);
+				
 							// to save in aux_array
 							$aux_document = $document;
 							// recovering the data in an array
@@ -474,8 +365,8 @@ $(function()
 						$iteration = 0;
 				
 						foreach($aux_array as $value){ 
-							if ($iteration<intval($_GET['Editbox1'])) {
-				?>
+							if ($iteration<intval($_GET['Editbox1'])) { ?>
+
 								<li class="list-group-item"  style="text-align:center;background-color: #337AB7;"><a class="list-group-item"><?php echo strtoupper((string)$nomenclature).": ".($value["data"][(string)$nomenclature]); ?></a>
 									<div table-responsive>
 										<table class="table" id="SlideMenu1_MoreInfo">
@@ -508,19 +399,15 @@ $(function()
 								      		</table>
 									</div>
 							   	</li>
-		<?php						$iteration += 1;
-
-									// 20201113 engineer
-									$it->next();
+						<?php		$iteration += 1;
 							}
 						}
 					}
 				}
-			}
-		?>
+			} ?>
 			</ul>
 			</div>
-<?php } ?>
+		<?php } ?>
 
 		</div>
 	</div>

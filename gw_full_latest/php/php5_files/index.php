@@ -45,7 +45,7 @@
 					</div>
 
 					<div id="flot" >
-						<?php include 'flot7.php';?>
+						<?php include 'flot.php';?>
 					</div>
 				</div>
 			</div>
