@@ -127,7 +127,7 @@ Upload to LoRaWAN TTN network server with LoRa 2.4GHz is shown below. Data are s
 
 Could not wait to receive the NiceRF SX1262 so here is a very "dirty" SX1262 device with an Ebyte SX1262 (E22-900M22S SPI 868MHz) connected to an Arduino ProMini. Again, soldering was challenging, especially that I did not have a PCB breakout for the Ebyte SX1262! After making one radio, I did not have the courage to solder a second one, so I only tested at device side to check that data can be received by an RFM95W (SX1276) gateway. Tests were successful and an SX1262 can talk to an SX1276 without any issue.
 
-<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-earlydevice.jpg" width="400">
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-earlydevice.jpg" width="400"><img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-earlydevicecloseup.jpg" width="400">
 
 Two days after the Ebyte SX1262 test, I finally received the 2 NiceRF SX1262 I've ordered from AliExpress! Since I have some old RFM95W breakout left, I just solder the NiceRF SX1262 on the old RFM95W breakout. As stated previously, both RFM95W and NiceRF SX1262 have almost same pinout. See how the BUSY pin of the SX1262 is connected with a wire to the Raspberry's GPIO25 pin. The old ProMini LoRa RFM95W was also used to host the second NiceRF SX1262 to serve as a device since I didn't receive the new ProMini PCBs yet.
 
