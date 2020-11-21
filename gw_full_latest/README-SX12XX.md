@@ -133,7 +133,11 @@ Two days after the Ebyte SX1262 test, I finally received the 2 NiceRF SX1262 I'v
 
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-fullgw.jpg" width="400">
 
-Now, you can benefit from the versatile low-cost single-channel gateway with all LoRa chip family: SX126X, SX127X and SX128X.
+For the device, I did the same procedure with one of the ProMini LoRa RFM95W PCB I still have without waiting for the updated ProMini LoRa RFM95W/NiceRF SX1262. BUSY pin is connected using the DIO2 connecting pads to ProMini D5 pin.
+
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-ProMini.jpg" width="400">
+
+Now, you can benefit from the versatile low-cost single-channel gateway with all LoRa chip family SX126X, SX127X and SX128X!
 
 I will put pictures of the new ProMini SX1280 PCB and the SX1280 PCB breakout as soon as I received them from JLCPCB.
 

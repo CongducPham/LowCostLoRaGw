@@ -2368,7 +2368,7 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
     	_RXTimestamp=millis();
 
 			//update endtimeoutmS to avoid timeout at the middle of a packet reception
-			endtimeoutmS = (_RXTimestamp + rxtimeout);
+			endtimeoutmS = (_RXTimestamp + 10000);
     }
               
     //poll the irq register for RXDone, bit 6
