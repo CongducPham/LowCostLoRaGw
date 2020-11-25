@@ -59,7 +59,11 @@ SX127XLT LT;
 SX128XLT LT;                                         
 #endif
 
+#ifdef ARDUINO
+#include "Arduino_LoRa_SX12XX_Simple_gateway.h"
+#else
 #include "SX12XX_simple_lora_gateway.h"                 //include the setiings file, frequencies, LoRa settings etc   
+#endif
 
 #ifdef ARDUINO
 	#define PRINTLN                   Serial.println("")

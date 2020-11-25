@@ -1,5 +1,5 @@
-#ifndef MY_TEMP_SENSOR_CODE
-#define MY_TEMP_SENSOR_CODE
+#ifndef MY_DEMO_SENSOR_CODE
+#define MY_DEMO_SENSOR_CODE
 
 #include "Arduino.h"
 

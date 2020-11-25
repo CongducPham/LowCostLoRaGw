@@ -37,18 +37,14 @@
 
 //LoRa Modem Parameters
 #define Offset 0                                 //offset frequency for calibration purposes  
-const uint8_t Bandwidth=LORA_BW_0200;            //LoRa bandwidth
-const uint8_t SpreadingFactor=LORA_SF12;         //LoRa spreading factor
-const uint8_t CodeRate=LORA_CR_4_5;              //LoRa coding rate
-
-// can be set to LORA_IQ_NORMAL or LORA_IQ_INVERTED
-const uint8_t IQ_Setting = LORA_IQ_NORMAL;
+#define Bandwidth LORA_BW_0200                   //LoRa bandwidth
+#define SpreadingFactor LORA_SF12                 //LoRa spreading factor
+#define CodeRate LORA_CR_4_5                     //LoRa coding rate
 
 /*******************************************************************************************************
   End from SX12XX example - Stuart Robinson 
 *******************************************************************************************************/
 
-#define BAND2400
 #define MAX_DBM 10
 
 // taken from Semtech's LoRa 2.4GHz 3-channel reference design

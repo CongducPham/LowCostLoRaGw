@@ -106,6 +106,13 @@ SX128X_lora_gateway: SX128X_lora_gateway.o arduPi.o SX12XX/SX128XLT.o base64.o
 	g++ -lrt -lpthread SX128X_lora_gateway.o arduPi.o SX12XX/SX128XLT.o base64.o -o SX128X_lora_gateway
 	rm -f lora_gateway
 	ln -s SX128X_lora_gateway ./lora_gateway	
+	
+#SX1280 ranging slave 
+#####################
+SX1280_ranging_slave: SX1280_ranging_slave.o arduPi.o SX12XX/SX128XLT.o base64.o
+	g++ -lrt -lpthread SX1280_ranging_slave.o arduPi.o SX12XX/SX128XLT.o base64.o -o SX1280_ranging_slave
+	rm -f ranging_slave
+	ln -s SX1280_ranging_slave ./ranging_slave	
 		
 # --------------> RPI2 & RPI3
 ################################
@@ -178,6 +185,13 @@ SX128X_lora_gateway_pi2: SX128X_lora_gateway.o arduPi_pi2.o SX12XX/SX128XLT.o ba
 	g++ -lrt -lpthread SX128X_lora_gateway.o arduPi_pi2.o SX12XX/SX128XLT.o base64.o -o SX128X_lora_gateway_pi2
 	rm -f lora_gateway
 	ln -s SX128X_lora_gateway_pi2 ./lora_gateway	
+
+#SX1280 ranging slave 
+#####################
+SX1280_ranging_slave_pi2: SX1280_ranging_slave.o arduPi_pi2.o SX12XX/SX128XLT.o base64.o
+	g++ -lrt -lpthread SX1280_ranging_slave.o arduPi_pi2.o SX12XX/SX128XLT.o base64.o -o SX1280_ranging_slave_pi2
+	rm -f ranging_slave
+	ln -s SX1280_ranging_slave_pi2 ./ranging_slave
 	
 # --------------> RPI4 
 ################################
@@ -250,6 +264,13 @@ SX128X_lora_gateway_pi4: SX128X_lora_gateway.o arduPi_pi4.o SX12XX/SX128XLT.o ba
 	g++ -lrt -lpthread SX128X_lora_gateway.o arduPi_pi4.o SX12XX/SX128XLT.o base64.o -o SX128X_lora_gateway_pi4
 	rm -f lora_gateway
 	ln -s SX128X_lora_gateway_pi4 ./lora_gateway	
+	
+#SX1280 ranging slave 
+#####################
+SX1280_ranging_slave_pi4: SX1280_ranging_slave.o arduPi_pi4.o SX12XX/SX128XLT.o base64.o
+	g++ -lrt -lpthread SX1280_ranging_slave.o arduPi_pi4.o SX12XX/SX128XLT.o base64.o -o SX1280_ranging_slave_pi4
+	rm -f ranging_slave
+	ln -s SX1280_ranging_slave_pi4 ./ranging_slave	
 
 ################################
 # rules
@@ -289,6 +310,9 @@ SX127X_lora_gateway.o: SX12XX_lora_gateway.cpp SX127X_lora_gateway.h radio.makef
 
 SX128X_lora_gateway.o: SX12XX_lora_gateway.cpp SX128X_lora_gateway.h radio.makefile raspberry.makefile
 	g++ $(CFLAGS) -I SX12XX -I . -DSX128X -c SX12XX_lora_gateway.cpp -o SX128X_lora_gateway.o
+	
+SX1280_ranging_slave.o: SX1280_ranging_slave.cpp SX1280_ranging_slave.h radio.makefile raspberry.makefile
+	g++ $(CFLAGS) -I SX12XX -I . -DSX128X -c SX1280_ranging_slave.cpp -o SX1280_ranging_slave.o
 
 ##
 	
@@ -347,4 +371,4 @@ base64.o: base64.c base64.h
 
 clean:
 	cd SX1272; rm -rf *.o; cd ../SX12XX; rm -rf *.o; cd ..
-	rm -rf *.o lora_gateway simple_lora_gateway simple_lora_transmitter SX1272_lora_gateway SX1272_lora_gateway_pi* SX12?X_lora_gateway SX12?X_lora_gateway_pi* SX12?X_simple_lora_gateway SX12?X_simple_lora_gateway_pi* SX12?X_simple_lora_transmitter SX12?X_simple_lora_transmitter_pi*
+	rm -rf *.o lora_gateway simple_lora_gateway simple_lora_transmitter ranging_slave SX1272_lora_gateway SX1272_lora_gateway_pi* SX12?X_lora_gateway SX12?X_lora_gateway_pi* SX12?X_simple_lora_gateway SX12?X_simple_lora_gateway_pi* SX12?X_simple_lora_transmitter SX12?X_simple_lora_transmitter_pi* SX1280_ranging_slave SX1280_ranging_slave_pi*

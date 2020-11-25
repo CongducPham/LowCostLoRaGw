@@ -28,7 +28,9 @@
  * the sensor-related code is in a separate file
  */
 
-#include <SPI.h> 
+#include <SPI.h>
+//this is the standard behaviour of library, use SPI Transaction switching
+#define USE_SPI_TRANSACTION  
 //indicate in this file the radio module: SX126X, SX127X or SX128X
 #include "RadioSettings.h"
 
@@ -98,7 +100,7 @@
 //#define EXTDEVADDR
 ////////////////////////////
 //this will enable a receive window after every transmission, uncomment it to also have LoRaWAN downlink
-//#define WITH_RCVW
+#define WITH_RCVW
 ////////////////////////////
 //normal behavior is to invert IQ for RX, the normal behavior at gateway is also to invert its IQ setting, only valid with WITH_RCVW
 #define INVERTIQ_ON_RX
@@ -652,7 +654,8 @@ void setup()
   PRINT_CSTSTR("Setting Power: ");
   PRINT_VALUE("%d", MAX_DBM);
   PRINTLN;
-  
+
+  LT.setDevAddr(node_addr);
   PRINT_CSTSTR("node addr: ");
   PRINT_VALUE("%d", node_addr);
   PRINTLN;
@@ -857,6 +860,7 @@ void loop(void)
       }
       else
       {
+        endSend=millis();
         //if here there was an error transmitting packet
         uint16_t IRQStatus;
         IRQStatus = LT.readIrqStatus();
@@ -865,8 +869,6 @@ void loop(void)
         PRINT_HEX("%d", IRQStatus);
         LT.printIrqStatus(); 
       }
-
-      endSend=millis();
           
 #ifdef WITH_EEPROM
       // save packet number for next packet in case of reboot     
@@ -901,7 +903,7 @@ void loop(void)
 
 #ifdef INVERTIQ_ON_RX
       // Invert I/Q
-      PRINTLN_CSTSTR("%s","Inverting I/Q for RX");
+      PRINTLN_CSTSTR("Inverting I/Q for RX");
       LT.invertIQ(true);
 #endif
       uint8_t rxw=1;
@@ -976,7 +978,7 @@ void loop(void)
 
 #ifdef INVERTIQ_ON_RX
       // Invert I/Q
-      PRINTLN_CSTSTR("%s","I/Q back to normal");
+      PRINTLN_CSTSTR("I/Q back to normal");
       LT.invertIQ(false);
 #endif      
       // we have received a downlink message
@@ -1055,7 +1057,7 @@ void loop(void)
 #ifdef WITH_AES 
                       DevAddr[3] = (unsigned char)node_addr;
 #endif
-                      
+                      LT.setDevAddr(node_addr);
                       PRINT_CSTSTR("Set LoRa node addr to ");
                       PRINT_VALUE("%d", node_addr);  
                       PRINTLN;     

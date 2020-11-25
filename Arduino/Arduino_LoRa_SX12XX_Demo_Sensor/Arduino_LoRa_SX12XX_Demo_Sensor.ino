@@ -1,5 +1,5 @@
 /*
- *  Fully operational temperature sensor on analog A0 to test the LoRa gateway
+ *  Demo of a simple temperature sensor on analog A0 to test the LoRa gateway
  *
  *  Copyright (C) 2016-2020 Congduc Pham, University of Pau, France
  *
@@ -17,19 +17,17 @@
  *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
  *
  *****************************************************************************
- * last update: November 12th, 2020 by C. Pham
+ * last update: November 23rd, 2020 by C. Pham
  * 
  * NEW: LoRa communicain library moved from Libelium's lib to StuartProject's lib
  * https://github.com/StuartsProjects/SX12XX-LoRa
  * to support SX126X, SX127X and SX128X chips (SX128X is LoRa in 2.4GHz band)
  * 
- * This version uses the same structure than the Arduino_LoRa_Demo_Sensor where
- * the sensor-related code is in a separate file
  */
 
 #include <SPI.h> 
 //this is the standard behaviour of library, use SPI Transaction switching
-#define USE_SPI_TRANSACTION 
+#define USE_SPI_TRANSACTION  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice 
 //#define SX126X
@@ -52,7 +50,7 @@
 #include "SX128X_RadioSettings.h"
 #endif
                                         
-#include "my_temp_sensor_code.h"
+#include "my_demo_sensor_code.h"
 
 // http://patorjk.com/software/taag
 /********************************************************************
@@ -74,41 +72,16 @@
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
-#define WITH_EEPROM
-//if you are low on program memory, comment STRING_LIB to save about 2K
-//#define STRING_LIB
-#define LOW_POWER
-#define LOW_POWER_HIBERNATE
-//#define WITH_ACK
-//#define LOW_POWER_TEST
-//uncomment to use a customized frequency. TTN plan includes 868.1/868.3/868.5/867.1/867.3/867.5/867.7/867.9 for LoRa
+#define OLED
+#define OLED_9GND876
+//uncomment to use a customized frequency.
 //#define MY_FREQUENCY 868100000
-//when sending to a LoRaWAN gateway (e.g. running util_pkt_logger) but with no native LoRaWAN format, just to set the correct sync word
-//#define PUBLIC_SYNCWORD
-///////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// ADD HERE OTHER PLATFORMS THAT DO NOT SUPPORT EEPROM
-#if defined ARDUINO_SAM_DUE || defined __SAMD21G18A__
-#undef WITH_EEPROM
-#endif
-
-///////////////////////////////////////////////////////////////////
-// ADD HERE OTHER PLATFORMS THAT DO NOT SUPPORT LOW POWER LIB
-#if defined ARDUINO_SAM_DUE || defined _VARIANT_ARDUINO_DUE_X_
-#undef LOW_POWER
-#endif
 ///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 // CHANGE HERE THE NODE ADDRESS 
-uint8_t node_addr=8;
+uint8_t node_addr=9;
 //////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////
-// CHANGE HERE THE TIME IN MINUTES BETWEEN 2 READING & TRANSMISSION
-unsigned int idlePeriodInMin = 10;
-///////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////
 // IF YOU SEND A LONG STRING, INCREASE THE SIZE OF MESSAGE
@@ -167,56 +140,30 @@ uint32_t TXPacketCount=0;
 #define FLUSHOUTPUT               Serial.flush()
 #endif
 
-#ifdef WITH_EEPROM
-#include <EEPROM.h>
-#endif
-
-#ifdef WITH_ACK
-#define NB_RETRIES 2
-#endif
-
-#ifdef LOW_POWER
-// this is for the Teensy36, Teensy35, Teensy31/32 & TeensyLC
-// need v6 of Snooze library
-#if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
-#define LOW_POWER_PERIOD 60
-#include <Snooze.h>
-SnoozeTimer timer;
-SnoozeBlock sleep_config(timer);
-#elif defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined ESP8266
-#define LOW_POWER_PERIOD 60
-//we will use the deepSleep feature, so no additional library
-#else // for all other boards based on ATMega168, ATMega328P, ATMega32U4, ATMega2560, ATMega256RFR2, ATSAMD21G18A
-#define LOW_POWER_PERIOD 8
-// you need the LowPower library from RocketScream
-// https://github.com/rocketscream/Low-Power
-#include "LowPower.h"
-
-#ifdef __SAMD21G18A__
-// use the RTC library
-#include "RTCZero.h"
-/* Create an rtc object */
-RTCZero rtc;
+#ifdef OLED
+#include <U8x8lib.h>
+//you can also power the OLED screen with a digital pin, here pin 8
+#define OLED_PWR_PIN 8
+// connection may depend on the board. Use A5/A4 for most Arduino boards. On ESP8266-based board we use GPI05 and GPI04. Heltec ESP32 has embedded OLED.
+#if defined ARDUINO_Heltec_WIFI_LoRa_32 || defined ARDUINO_WIFI_LoRa_32 || defined HELTEC_LORA
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
+#elif defined ESP8266 || defined ARDUINO_ESP8266_ESP01
+U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 12, /* data=*/ 14, /* reset=*/ U8X8_PIN_NONE);
+#else
+#if defined OLED_9GND876
+  #ifdef OLED_PWR_PIN
+    #undef OLED_PWR_PIN
+    #define OLED_PWR_PIN 8
+  #endif  
+  U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 7, /* data=*/ 6, /* reset=*/ U8X8_PIN_NONE);
+#else
+  U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ A5, /* data=*/ A4, /* reset=*/ U8X8_PIN_NONE);
 #endif
 #endif
-unsigned int nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
+char oled_msg[20];
 #endif
 
 unsigned long nextTransmissionTime=0L;
-
-#ifdef WITH_EEPROM
-struct sx1272config {
-
-  uint8_t flag1;
-  uint8_t flag2;
-  uint8_t seq;
-  // can add other fields such as LoRa mode,...
-};
-
-sx1272config my_sx1272config;
-#endif
-
-#ifndef STRING_LIB
 
 char *ftoa(char *a, double f, int precision)
 {
@@ -235,8 +182,6 @@ char *ftoa(char *a, double f, int precision)
  return ret;
 }
 
-#endif
-
 /*****************************
  _____      _               
 /  ___|    | |              
@@ -249,26 +194,9 @@ char *ftoa(char *a, double f, int precision)
 ******************************/
 
 void setup()
-{
-#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined ESP8266
-  //uncomment to disable WiFi on the ESP8266 boards
-  //will save about 50mA
-  //WiFi.disconnect();
-  //WiFi.mode(WIFI_OFF);
-  //WiFi.forceSleepBegin();
-  //delay(1);
-#endif
-  
+{  
   // initialization of the temperature sensor
   sensor_Init();
-
-#ifdef LOW_POWER
-#ifdef __SAMD21G18A__
-  rtc.begin();
-#endif  
-#else
-  digitalWrite(PIN_POWER,HIGH);
-#endif
 
   delay(3000);
   // Open serial communications and wait for port to open:
@@ -279,7 +207,7 @@ void setup()
 #endif
   
   // Print a start message
-  PRINT_CSTSTR("Simple LoRa temperature sensor\n");
+  PRINT_CSTSTR("Simple LoRa sensor demo\n");
 
 #ifdef ARDUINO_AVR_PRO
   PRINT_CSTSTR("Arduino Pro Mini detected\n");  
@@ -473,29 +401,18 @@ void setup()
   End from SX12XX example - Stuart Robinson 
 *******************************************************************************************************/
 
-#ifdef WITH_EEPROM
-#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
-  EEPROM.begin(512);
+#ifdef OLED
+#ifdef OLED_PWR_PIN
+  pinMode(OLED_PWR_PIN, OUTPUT);
+  digitalWrite(OLED_PWR_PIN, HIGH);
 #endif
-  // get config from EEPROM
-  EEPROM.get(0, my_sx1272config);
-
-  // found a valid config?
-  if (my_sx1272config.flag1==0x12 && my_sx1272config.flag2==0x34) {
-    PRINT_CSTSTR("Get back previous sx1272 config\n");
-    // set sequence number for SX1272 library
-    LT.setTXSeqNo(my_sx1272config.seq);
-    PRINT_CSTSTR("Using packet sequence number of ");
-    PRINT_VALUE("%d", LT.readTXSeqNo());
-    PRINTLN;  
-  }
-  else {
-    // otherwise, write config and start over
-    my_sx1272config.flag1=0x12;
-    my_sx1272config.flag2=0x34;
-    my_sx1272config.seq=LT.readTXSeqNo();  
-  }
-#endif
+  u8x8.begin();
+  //u8x8.setFont(u8x8_font_chroma48medium8_r);
+  u8x8.setFont(u8x8_font_pxplustandynewtv_r);
+  u8x8.drawString(0, 0, "Simple TempDemo");
+  sprintf(oled_msg,"SF%dBW%d", LT.getLoRaSF(), LT.returnBandwidth()/1000);
+  u8x8.drawString(0, 1, oled_msg); 
+#endif 
 
   PRINT_CSTSTR("Setting Power: ");
   PRINTLN_VALUE("%d", MAX_DBM); 
@@ -534,50 +451,33 @@ void setup()
 
 void loop(void)
 {
-  long startSend;
-  long endSend;
-  int e;
-  float temp;
-
-#ifndef LOW_POWER
-  // 600000+random(15,60)*1000
   if (millis() > nextTransmissionTime) {
-#endif
 
-#ifdef LOW_POWER
-      digitalWrite(PIN_POWER,HIGH);
-      // security?
-      delay(200);   
-#endif
-
-      temp = 0.0;
-      
-      for (int i=0; i<5; i++) {
-          temp += sensor_getValue();  
-          delay(100);
-      }
-      
-#ifdef LOW_POWER
-      digitalWrite(PIN_POWER,LOW);
-#endif
-
-      PRINT_CSTSTR("Mean temp is ");
-      temp = temp/5;
-      PRINT_VALUE("%f", temp);
-      PRINTLN;
+      double sensor_value = sensor_getValue();
 
       // for testing, uncomment if you just want to test, without a real temp sensor plugged
-      temp = 20.5;
-      
+      sensor_value = 20.5;      
+
+      PRINT_CSTSTR("Sensor value is ");
+      PRINT_VALUE("%f", sensor_value);
+      PRINTLN;
+
       uint8_t r_size;
-      
-      // the recommended format if now \!TC/22.5
-#ifdef STRING_LIB
-      r_size=sprintf((char*)message,"\\!%s/%s",nomenclature_str,String(temp).c_str());
-#else
-      char float_str[10];
-      ftoa(float_str,temp,2);
-      r_size=sprintf((char*)message,"\\!%s/%s",nomenclature_str,float_str);
+      char float_str[20];
+
+      //convert the floating value into a string
+      ftoa(float_str,sensor_value,2);
+
+      r_size=sprintf((char*)message, "\\!%s/%s", nomenclature_str, float_str);
+
+#ifdef OLED
+      u8x8.clearLine(2);
+      u8x8.clearLine(3);
+      u8x8.clearLine(4);
+      u8x8.clearLine(5);
+      u8x8.clearLine(6);            
+      u8x8.drawString(0, 3, "Sending");    
+      u8x8.drawString(0, 4, (char*)message);   
 #endif
 
       PRINT_CSTSTR("Sending ");
@@ -591,32 +491,19 @@ void loop(void)
       LT.printASCIIPacket(message, r_size);
       PRINTLN;
       
-      startSend=millis();
+      unsigned long startSend=millis();
+      unsigned long endSend;
       
       LT.CarrierSense();
-
-      uint8_t p_type=PKT_TYPE_DATA;
       
-#ifdef WITH_ACK
-      p_type=PKT_TYPE_DATA | PKT_FLAG_ACK_REQ;
-      PRINTLN_CSTSTR("%s","Will request an ACK");         
-#endif
       //will return packet length sent if OK, otherwise 0 if transmit error      
-      if (LT.transmitAddressed(message, r_size, p_type, DEFAULT_DEST_ADDR, LT.readDevAddr(), 10000, MAX_DBM, WAIT_TX))
+      if (LT.transmitAddressed(message, r_size, PKT_TYPE_DATA, DEFAULT_DEST_ADDR, LT.readDevAddr(), 10000, MAX_DBM, WAIT_TX))
       {
         endSend = millis();                                          
         TXPacketCount++;
         uint16_t localCRC = LT.CRCCCITT(message, r_size, 0xFFFF);
         PRINT_CSTSTR("CRC,");
         PRINT_HEX("%d", localCRC);
-
-        if (LT.readAckStatus()) {
-          PRINTLN;
-          PRINT_CSTSTR("Received ACK from ");
-          PRINTLN_VALUE("%d", LT.readRXSource());
-          PRINT_CSTSTR("SNR of transmitted pkt is ");
-          PRINTLN_VALUE("%d", LT.readPacketSNRinACK());          
-        }
       }
       else
       {
@@ -629,15 +516,7 @@ void loop(void)
         PRINT_HEX("%d", IRQStatus);
         LT.printIrqStatus(); 
       }
-    
-#ifdef WITH_EEPROM
-      // save packet number for next packet in case of reboot    
-      my_sx1272config.seq=LT.readTXSeqNo();    
-      EEPROM.put(0, my_sx1272config);
-#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined ESP8266
-      EEPROM.commit();
-#endif
-#endif
+      
       PRINTLN;
       PRINT_CSTSTR("LoRa pkt size ");
       PRINT_VALUE("%d", r_size);
@@ -650,85 +529,14 @@ void loop(void)
       PRINT_CSTSTR("LoRa Sent in ");
       PRINT_VALUE("%ld", endSend-startSend);
       PRINTLN;
-      
-#if defined LOW_POWER && not defined ARDUINO_SAM_DUE
-      PRINT_CSTSTR("Switch to power saving mode\n");
 
-      //CONFIGURATION_RETENTION=RETAIN_DATA_RAM on SX128X
-      //parameter is ignored on SX127X
-      LT.setSleep(CONFIGURATION_RETENTION);
-        
-      FLUSHOUTPUT;    
-#ifdef LOW_POWER_TEST
-      delay(10000);
-#else            
-      delay(10);
-#endif
+#ifdef OLED
+      sprintf(oled_msg, "Sending done");
+      u8x8.drawString(0, 5, oled_msg);
+      u8x8.drawString(0, 6, "Waiting..."); 
+#endif       
 
-#ifdef __SAMD21G18A__
-      // For Arduino M0 or Zero we use the built-in RTC
-      rtc.setTime(17, 0, 0);
-      rtc.setDate(1, 1, 2000);
-      rtc.setAlarmTime(17, idlePeriodInMin, 0);
-      // for testing with 20s
-      //rtc.setAlarmTime(17, 0, 20);
-      rtc.enableAlarm(rtc.MATCH_HHMMSS);
-      //rtc.attachInterrupt(alarmMatch);
-      rtc.standbyMode();
-      
-      LowPower.standby();
-      
-      PRINT_CSTSTR("SAMD21G18A wakes up from standby\n");      
-      FLUSHOUTPUT;
-#else
-
-#if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
-      // warning, setTimer accepts value from 1ms to 65535ms max
-      // milliseconds      
-      // by default, LOW_POWER_PERIOD is 60s for those microcontrollers      
-      timer.setTimer(LOW_POWER_PERIOD*1000);
-#endif
-
-      nCycle = idlePeriodInMin*60/LOW_POWER_PERIOD;
-                
-      for (uint8_t i=0; i<nCycle; i++) {  
-
-#if defined ARDUINO_AVR_MEGA2560 || defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__ 
-          // ATmega2560, ATmega328P, ATmega168, ATmega32U4
-          LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF);
-          
-#elif defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
-          // Teensy31/32 & TeensyLC
-#ifdef LOW_POWER_HIBERNATE
-          Snooze.hibernate(sleep_config);
-#else            
-          Snooze.deepSleep(sleep_config);
-#endif
-#elif defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined ESP8266
-          //in microseconds
-          //it is reported that RST pin should be connected to pin 16 to actually reset the board when deepsleep
-          //timer is triggered
-          ESP.deepSleep(LOW_POWER_PERIOD*1000*1000);
-#else
-          // use the delay function
-          delay(LOW_POWER_PERIOD*1000);
-#endif                        
-          PRINT_CSTSTR(".");
-          FLUSHOUTPUT;
-          delay(1);                        
-      }
-#endif      
-      
-#else
-      PRINT_VALUE("%ld", nextTransmissionTime);
-      PRINTLN;
-      PRINT_CSTSTR("Will send next value at\n");
-      // can use a random part also to avoid collision
-      nextTransmissionTime=millis()+(unsigned long)idlePeriodInMin*60*1000; //+(unsigned long)random(15,60)*1000;
-      PRINT_VALUE("%ld", nextTransmissionTime);
-      PRINTLN;
+      // 1 minute by default
+      nextTransmissionTime=millis()+60000;
   }
-#endif
-
-  LT.wake();
 }

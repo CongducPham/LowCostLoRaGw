@@ -21,15 +21,19 @@ All the examples use by default the so-called LoRa mode 1 (BW125, CR4/5, SF12) a
 New (use SX12XX library from Stuart Robinson, modified for our framework)
 ---
 
-**`Arduino_LoRa_SX12XX_Simple_temp`** is the new version of **`Arduino_LoRa_Simple_temp`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281
+It is highly recommended to use the new version of the examples as the old version are not maintained any more.
 
-**`Arduino_LoRa_SX12XX_temp`** is the new version of **`Arduino_LoRa_temp`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281
+**`Arduino_LoRa_SX12XX_Demo_Sensor`** is the new version of **`Arduino_LoRa_Demo_Sensor`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281.
 
-These 2 examples can be used as templates to adapt all the legacy examples to the SX12XX library.
+**`Arduino_LoRa_SX12XX_Simple_temp`** is the new version of **`Arduino_LoRa_Simple_temp`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281. 
 
-**`Arduino_LoRa_SX12XX_Ping_Pong_LCD`** is the new version of **`Arduino_LoRa_Ping_Pong_LCD`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281
+**`Arduino_LoRa_SX12XX_temp`** is the new version of **`Arduino_LoRa_temp`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281.
 
-**`Arduino_LoRa_SX12XX_InteractiveDevice`** is the new version of **`Arduino_LoRa_InteractiveDevice`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281
+These 3 examples can be used as templates to adapt all the legacy examples to the SX12XX library.
+
+**`Arduino_LoRa_SX12XX_Ping_Pong_LCD`** is the new version of **`Arduino_LoRa_Ping_Pong_LCD`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281.
+
+**`Arduino_LoRa_SX12XX_InteractiveDevice`** is the new version of **`Arduino_LoRa_InteractiveDevice`** (see below) using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281.
 
 **`Arduino_LoRa_SX12XX_Simple_gateway`** is a very simple Arduino-based gateway using the SX12XX library from Stuart Robinson to support the SX12XX LoRa chips: SX1261,SX1262,SX1268,SX1272,SX1276,SX1277,SX1278,SX1279,SX1280,SX1281. In addition, the code shows how the same code can be compiled and run on Arduino and RaspberryPI. `Arduino_LoRa_SX12XX_Simple_gateway.ino` is exactly the same code than `SX12XX_simple_lora_gateway.cpp` for the RaspberryPI, see https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest.
 

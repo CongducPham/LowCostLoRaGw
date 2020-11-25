@@ -1,11 +1,7 @@
 #ifndef MY_TEMP_SENSOR_CODE
 #define MY_TEMP_SENSOR_CODE
 
-#if ARDUINO >= 100
- #include "Arduino.h"
-#else
- #include "WProgram.h"
-#endif
+#include "Arduino.h"
 
 extern char nomenclature_str[4];
 void sensor_Init();

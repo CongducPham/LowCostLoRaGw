@@ -119,7 +119,7 @@ Here are some pictures of our early test with Ebyte SX1280 (E28-2G4M12S SPI). As
 
 With the SX1280 for both device and gateway, upload to WAZIUP cloud is shown below.
 
-<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-fullgw.png">
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-gw-output.png">
 
 Upload to LoRaWAN TTN network server with LoRa 2.4GHz is shown below. Data are sent with a device running `Arduino_LoRa_SX12XX_temp`. See how the LoRa modulation's bandwith is advertised as 125kHz while the real bandwidth that was used for the communication was 203.125kHz.
 
@@ -137,9 +137,13 @@ For the device, I did the same procedure with one of the ProMini LoRa RFM95W PCB
 
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-ProMini.jpg" width="400">
 
-Now, you can benefit from the versatile low-cost single-channel gateway with all LoRa chip family SX126X, SX127X and SX128X!
+At least, I've finally received my SX1280 breakout and ProMini PCB on Nov 25th, 2020!
 
-I will put pictures of the new ProMini SX1280 PCB and the SX1280 PCB breakout as soon as I received them from JLCPCB.
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-fullgw.jpg" width="550">
+
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-ProMini.jpg" width="550">
+
+Now, you can fully benefit from the versatile low-cost single-channel gateway with all LoRa chip family SX126X, SX127X and SX128X!
 
 Enjoy!
 C. Pham		
