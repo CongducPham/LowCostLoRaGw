@@ -7,6 +7,10 @@
 
 /* 
  *  Adapted by Congduc Pham, Nov. 2020
+ *  
+ *  When using the Arduino Serial Monitor, you can indicate the real distance if you know it
+ *  in order to determine the distance_ajustment factor. Simply enter 10# if the real
+ *  distance is 10m. You can do this procedure several time.
  *
  */
  
@@ -25,6 +29,7 @@ SX128XLT LT;
 //new small OLED screen, mostly based on SSD1306 
 #define OLED
 #define OLED_9GND876
+//#define OLED_6GND789
 
 #ifdef OLED
 #include <U8x8lib.h>
@@ -49,6 +54,12 @@ U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 12, /* data=*/ 14, /* reset=*
     #define OLED_PWR_PIN 8
   #endif  
   U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 7, /* data=*/ 6, /* reset=*/ U8X8_PIN_NONE);
+#elif defined OLED_6GND789
+  #ifdef OLED_PWR_PIN
+    #undef OLED_PWR_PIN
+    #define OLED_PWR_PIN 7
+  #endif  
+  U8X8_SSD1306_128X64_NONAME_SW_I2C u8x8(/* clock=*/ 8, /* data=*/ 9, /* reset=*/ U8X8_PIN_NONE);  
 #elif defined OLED_7GND654
   #ifdef OLED_PWR_PIN
     #undef OLED_PWR_PIN
@@ -71,9 +82,34 @@ char oled_msg[20];
 uint16_t rangeing_errors, rangeings_valid, rangeing_results;
 uint16_t IrqStatus;
 uint32_t endwaitmS, startrangingmS, range_result_sum, range_result_average;
-float distance, distance_sum, distance_average;
+float raw_distance, distance, raw_distance_sum, distance_sum, raw_distance_average, distance_average;
 bool ranging_error;
 int32_t range_result;
+
+//input command buffer
+char cmd[20]="**********";
+
+long getCmdValue(int &i, char* strBuff=NULL) {
+        
+        char seqStr[10]="******";
+
+        int j=0;
+        // character '#' will indicate end of cmd value
+        while ((char)cmd[i]!='#' && (i < strlen(cmd)) && j<strlen(seqStr)) {
+                seqStr[j]=(char)cmd[i];
+                i++;
+                j++;
+        }
+        
+        // put the null character at the end
+        seqStr[j]='\0';
+        
+        if (strBuff) {
+                strcpy(strBuff, seqStr);        
+        }
+        else
+                return (atol(seqStr));
+}   
 
 void setup()
 {
@@ -94,10 +130,14 @@ void setup()
   //use pin 9 as ground
   pinMode(9, OUTPUT);
   digitalWrite(9, LOW);
+#elif defined OLED_6GND789
+  //use pin 6 as ground
+  pinMode(6, OUTPUT);
+  digitalWrite(6, LOW);  
 #elif defined OLED_7GND654
   //use pin 7 as ground
   pinMode(7, OUTPUT);
-  digitalWrite(9, LOW);
+  digitalWrite(7, LOW);
 #endif
 #endif
 #endif
@@ -128,7 +168,7 @@ void setup()
   u8x8.drawString(0, 0, "Ranging master");
   sprintf(oled_msg,"SF%dBW%d", LT.getLoRaSF(), LT.returnBandwidth()/1000);
   u8x8.drawString(0, 1, oled_msg);
-  sprintf(oled_msg,"Cal %d", Calibration);
+  sprintf(oled_msg,"Cal %d", LT.getSetCalibrationValue());
   u8x8.drawString(0, 2, oled_msg);
   sprintf(oled_msg,"Adjust %d", (uint8_t)distance_adjustment);
   u8x8.drawString(0, 3, oled_msg);    
@@ -146,10 +186,41 @@ void setup()
 void loop()
 {
   uint8_t index;
+  int i;
+  raw_distance_sum = 0;
   distance_sum = 0;
   range_result_sum = 0;
   rangeing_results = 0;                           //count of valid results in each loop
 
+ // check if we received data from the input serial port
+  if (Serial.available()) {
+
+    i=0;  
+
+    while (Serial.available() && i<80) {
+      cmd[i]=Serial.read();
+      i++;
+      delay(50);
+    }
+    
+    cmd[i]='\0';
+
+    Serial.print("Rcv serial: ");
+    Serial.println(cmd);
+
+    i=0;
+    
+    uint16_t real_distance=getCmdValue(i);
+    
+    Serial.print("Take real distance: ");
+    Serial.println(real_distance);  
+
+    distance_adjustment=(float)real_distance/raw_distance_average;
+
+    Serial.print("Set distance adjustment to: ");
+    Serial.println(distance_adjustment);  
+  }
+  
   for (index = 1; index <= rangeingcount; index++)
   {
 
@@ -179,9 +250,11 @@ void loop()
       }
       range_result_sum = range_result_sum + range_result;
 
+      raw_distance = LT.getRangingDistance(RANGING_RESULT_RAW, range_result, 1.0);
       distance = LT.getRangingDistance(RANGING_RESULT_RAW, range_result, distance_adjustment);
       distance_sum = distance_sum + distance;
-
+      raw_distance_sum = raw_distance_sum + raw_distance;
+      
       Serial.print(F(",Distance,"));
       Serial.print(distance, 1);
     }
@@ -203,10 +276,12 @@ void loop()
       if (rangeing_results == 0)
       {
         distance_average = 0;
+        raw_distance_average = 0;
       }
       else
       {
         distance_average = (distance_sum / rangeing_results);
+        raw_distance_average = (raw_distance_sum / rangeing_results);
       }
       
       Serial.print(F(",TotalValid,"));
@@ -215,6 +290,8 @@ void loop()
       Serial.print(rangeing_errors);
       Serial.print(F(",AverageRAWResult,"));
       Serial.print(range_result_average);
+      Serial.print(F(",AverageRawDistance,"));
+      Serial.print(raw_distance_average, 1);      
       Serial.print(F(",AverageDistance,"));
       Serial.print(distance_average, 1);
 

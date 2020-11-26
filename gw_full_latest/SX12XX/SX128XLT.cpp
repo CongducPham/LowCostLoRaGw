@@ -869,7 +869,21 @@ void SX128XLT::printModemSettings()
   PRINT_VALUE("%lu",getFreqInt());
   PRINT_CSTSTR("hz");
   
-  if (savedPacketType == PACKET_TYPE_LORA) 
+  /**************************************************************************
+	Added by C. Pham - Oct. 2020
+  **************************************************************************/  
+  
+  if (savedPacketType == PACKET_TYPE_LORA || savedPacketType == PACKET_TYPE_RANGING)
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/  
+  
+  /* original code
+   ***************  
+  
+  if (savedPacketType == PACKET_TYPE_LORA)
+  */
   {
 		PRINT_CSTSTR(",SF");
 		PRINT_VALUE("%d",getLoRaSF());
@@ -1029,8 +1043,22 @@ uint32_t SX128XLT::getFreqInt()
   LTUNUSED(Msb);           //to prevent a compiler warning
   LTUNUSED(Mid);           //to prevent a compiler warning
   LTUNUSED(Lsb);           //to prevent a compiler warning
+
+  /**************************************************************************
+	Added by C. Pham - Oct. 2020
+  **************************************************************************/  
+  
+  if (savedPacketType == PACKET_TYPE_LORA || savedPacketType == PACKET_TYPE_RANGING)
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/  
+  
+  /* original code
+   ***************  
   
   if (savedPacketType == PACKET_TYPE_LORA)
+  */
   { 
   Msb = readRegister(REG_RFFrequency23_16);
   Mid = readRegister(REG_RFFrequency15_8);

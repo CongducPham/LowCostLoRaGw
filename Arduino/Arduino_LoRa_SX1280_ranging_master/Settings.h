@@ -31,7 +31,7 @@ const uint16_t  waittimemS = 10000;              //wait this long in mS for pack
 const uint16_t  TXtimeoutmS = 5000;              //ranging TX timeout in mS
 const uint16_t  packet_delaymS = 0;              //forced extra delay in mS between ranging requests
 const uint16_t  rangeingcount = 5;               //number of times ranging is cqarried out for each distance measurment  
-float distance_adjustment = 1.0000;              //adjustment factor to calculated distance
+float distance_adjustment = 1.0;              //adjustment factor to calculated distance
 
 //#define ENABLEOLED                               //enable this define to use display 
 //#define ENABLEDISPLAY                            //enable this define to use display
