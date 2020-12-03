@@ -3331,7 +3331,8 @@ uint8_t SX127XLT::receiveSXBuffer(uint8_t startaddr, uint32_t rxtimeout, uint8_t
 #ifdef SX127XDEBUG1
   PRINTLN_CSTSTR("receiveSXBuffer()");
 #endif
-
+	
+	uint16_t index;
   uint32_t endtimeoutmS;
 
   setMode(MODE_STDBY_RC);
@@ -3344,23 +3345,88 @@ uint8_t SX127XLT::receiveSXBuffer(uint8_t startaddr, uint32_t rxtimeout, uint8_t
     return 0;
   }
 
+  /**************************************************************************
+	Modified by C. Pham - Oct. 2020
+  **************************************************************************/
+  
   if (rxtimeout == 0)
   {
-    while (!digitalRead(_RXDonePin));                                       //Wait for DIO0 to go high, no timeout, RX DONE
+#ifdef USE_POLLING
+    index = readRegister(REG_IRQFLAGS);
+
+    //poll the irq register for ValidHeader, bit 4
+    while ((bitRead(index, 4) == 0))
+      {
+        index = readRegister(REG_IRQFLAGS);
+        // adding this small delay decreases the CPU load of the lora_gateway process to 4~5% instead of nearly 100%
+        // suggested by rertini (https://github.com/CongducPham/LowCostLoRaGw/issues/211)
+        // tests have shown no significant side effects
+        delay(1);        
+      }    
+    
+    //_RXTimestamp start when a valid header has been received
+    _RXTimestamp=millis();
+    
+    //poll the irq register for RXDone, bit 6
+    while ((bitRead(index, 6) == 0))
+      {
+        index = readRegister(REG_IRQFLAGS);
+      }  
+#else  
+    while (!digitalRead(_RXDonePin));                  ///Wait for DIO0 to go high, no timeout, RX DONE
+#endif    
   }
   else
   {
-    endtimeoutmS = millis() + rxtimeout;
+    endtimeoutmS = (millis() + rxtimeout);
+#ifdef USE_POLLING
+
+#ifdef SX127XDEBUG1
+  	PRINTLN_CSTSTR("RXDone using polling");
+#endif 
+    index = readRegister(REG_IRQFLAGS);
+
+    //poll the irq register for ValidHeader, bit 4
+    while ((bitRead(index, 4) == 0) && (millis() < endtimeoutmS))
+      {
+        index = readRegister(REG_IRQFLAGS);
+        delay(1);        
+      }    
+
+    //_RXTimestamp start when a valid header has been received
+    _RXTimestamp=millis();
+              
+    //poll the irq register for RXDone, bit 6
+    while ((bitRead(index, 6) == 0) && (millis() < endtimeoutmS))
+      {
+        index = readRegister(REG_IRQFLAGS);
+      }
+#else    
     while (!digitalRead(_RXDonePin) && (millis() < endtimeoutmS));
+#endif    
   }
 
-  setMode(MODE_STDBY_RC);                                                   //ensure to stop further packet reception
+  //_RXDoneTimestamp start when the packet been fully received  
+  _RXDoneTimestamp=millis();
+    
+  setMode(MODE_STDBY_RC);                                            //ensure to stop further packet reception
 
-  if (!digitalRead(_RXDonePin))                                             //check if not DIO still low, is so must be RX timeout
+#ifdef USE_POLLING
+  if (bitRead(index, 6) == 0)
+#else
+  if (!digitalRead(_RXDonePin))                                             //check if DIO still low, is so must be RX timeout
+#endif  
   {
     _IRQmsb = IRQ_RX_TIMEOUT;
+#ifdef SX127XDEBUG1    
+    PRINTLN_CSTSTR("RX timeout");
+#endif     
     return 0;
   }
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
 
   if ( readIrqStatus() != (IRQ_RX_DONE + IRQ_HEADER_VALID) )
   {
@@ -3379,7 +3445,8 @@ uint8_t SX127XLT::transmitSXBuffer(uint8_t startaddr, uint8_t length, uint32_t t
 #ifdef SX127XDEBUG1
   PRINTLN_CSTSTR("transmitSXBuffer()");
 #endif
-
+	
+	uint16_t index;
   uint32_t endtimeoutmS = 0;
 
   setMode(MODE_STDBY_RC);
@@ -3392,23 +3459,63 @@ uint8_t SX127XLT::transmitSXBuffer(uint8_t startaddr, uint8_t length, uint32_t t
   setDioIrqParams(IRQ_RADIO_ALL, IRQ_TX_DONE, 0, 0);    //set for IRQ on TX done
   setTx(0);                                             //TX timeout is not handled in setTX()
 
+  /**************************************************************************
+	Added by C. Pham - Oct. 2020
+  **************************************************************************/  
+  
+  // increment packet sequence number
+  _TXSeqNo++;
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
+  
   if (!wait)
   {
     return length;
   }
 
+  /**************************************************************************
+	Modified by C. Pham - Oct. 2020
+  **************************************************************************/
+  
   if (txtimeout == 0)
   {
-    while (!digitalRead(_TXDonePin));                   //Wait for DIO0 to go high, TX finished
+#ifdef USE_POLLING
+    index = readRegister(REG_IRQFLAGS);
+    //poll the irq register for TXDone, bit 3
+    while ((bitRead(index, 3) == 0))
+      {
+        index = readRegister(REG_IRQFLAGS);
+      }
+#else  
+    while (!digitalRead(_TXDonePin));                  //Wait for pin to go high, TX finished
+#endif    
   }
   else
   {
     endtimeoutmS = (millis() + txtimeout);
+#ifdef USE_POLLING
+
+#ifdef SX127XDEBUG1
+  	PRINTLN_CSTSTR("TXDone using polling");
+#endif  
+    index = readRegister(REG_IRQFLAGS);
+    //poll the irq register for TXDone, bit 3
+    while ((bitRead(index, 3) == 0) && (millis() < endtimeoutmS))
+      {
+        index = readRegister(REG_IRQFLAGS);
+      }
+#else    
     while (!digitalRead(_TXDonePin) && (millis() < endtimeoutmS));
+#endif    
   }
 
-  setMode(MODE_STDBY_RC);                               //ensure we leave function with TX off
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
 
+  setMode(MODE_STDBY_RC);                               //ensure we leave function with TX off
 
   if (millis() >= endtimeoutmS)                         //flag if TX timeout
   {

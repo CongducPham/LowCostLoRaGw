@@ -25,7 +25,8 @@
 //if you have an RFM95 then
 //you can use our ProMini LoRa PCB for RFM95 where DIO0 can be connected to D2
 //in that case, comment #define USE_POLLING in SX127XLT.cpp to use DIO0 interrrupt pin
-#define DIO0 2                                  //DIO0 pin on LoRa device, used for RX and TX done 
+//#define DIO0 2                                  //DIO0 pin on LoRa device, used for RX and TX done 
+#define DIO0 -1                                  //DIO0 pin on LoRa device, used for RX and TX done 
 //*******
 #define DIO1 -1                                 //DIO1 pin on LoRa device, normally not used so set to -1 
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1

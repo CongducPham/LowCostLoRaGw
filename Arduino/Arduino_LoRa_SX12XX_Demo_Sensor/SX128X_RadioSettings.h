@@ -24,7 +24,8 @@
 //if you have a NiceRF SX1280
 //you can use our ProMini LoRa PCB for SX1280 where DIO1 can be connected to D2
 //in that case, comment #define USE_POLLING in SX128XLT.cpp to use DIO1 interrrupt pin
-#define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done
+//#define DIO1 2                                  //DIO1 pin on LoRa device, used for RX and TX done
+#define DIO1 -1                                  //DIO1 pin on LoRa device, used for RX and TX done
 //*******
 #define DIO2 -1                 //not used 
 #define DIO3 -1                 //not used                      

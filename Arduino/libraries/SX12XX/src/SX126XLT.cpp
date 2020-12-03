@@ -1518,6 +1518,17 @@ uint8_t SX126XLT::transmit(uint8_t *txbuffer, uint8_t size, uint32_t txtimeout, 
   setDioIrqParams(IRQ_RADIO_ALL, (IRQ_TX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);   //set for IRQ on TX done and timeout on DIO1
   setTx(txtimeout);                                                          //this starts the TX
 
+  /**************************************************************************
+	Added by C. Pham - Oct. 2020
+  **************************************************************************/  
+  
+  // increment packet sequence number
+  _TXSeqNo++;
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
+  
   if (!wait)
   {
     return _TXPacketL;
@@ -1548,7 +1559,6 @@ uint8_t SX126XLT::transmit(uint8_t *txbuffer, uint8_t size, uint32_t txtimeout, 
   /**************************************************************************
 	End by C. Pham - Oct. 2020
   **************************************************************************/
-
   {
     return 0;
   }
@@ -2339,14 +2349,47 @@ uint8_t SX126XLT::transmitSXBuffer(uint8_t startaddr, uint8_t length, uint32_t t
   setDioIrqParams(IRQ_RADIO_ALL, (IRQ_TX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);   //set for IRQ on TX done and timeout on DIO1
   setTx(txtimeout);                            //this starts the TX
 
+  /**************************************************************************
+	Added by C. Pham - Oct. 2020
+  **************************************************************************/  
+  
+  // increment packet sequence number
+  _TXSeqNo++;
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
+  
   if (!wait)
   {
     return _TXPacketL;
   }
 
-  while (!digitalRead(_TXDonePin));            //Wait for DIO1 to go high
+  /**************************************************************************
+	Modified by C. Pham - Oct. 2020
+  **************************************************************************/
 
-  if (readIrqStatus() & IRQ_RX_TX_TIMEOUT )    //check for timeout
+#ifdef USE_POLLING
+
+	uint16_t regdata;
+	
+	do {
+		regdata = readIrqStatus();
+			
+	} while ( !(regdata & IRQ_TX_DONE) && !(regdata & IRQ_RX_TX_TIMEOUT) );
+	
+	if (regdata & IRQ_RX_TX_TIMEOUT )                        //check for timeout
+		
+#else		 
+  
+  while (!digitalRead(_TXDonePin));       //Wait for DIO1 to go high
+  
+  if (readIrqStatus() & IRQ_RX_TX_TIMEOUT )                        //check for timeout
+#endif  
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
   {
     return 0;
   }
@@ -2401,11 +2444,42 @@ uint8_t SX126XLT::receiveSXBuffer(uint8_t startaddr, uint32_t rxtimeout, uint8_t
     return 0;
   }
   
-  while (!digitalRead(_RXDonePin));                  //Wait for DIO1 to go high 
+  /**************************************************************************
+	Modified by C. Pham - Oct. 2020
+  **************************************************************************/
+
+#ifdef USE_POLLING
+
+	do {
+		regdata = readIrqStatus();
+		
+		if (regdata & IRQ_HEADER_VALID)
+			_RXTimestamp=millis();
+		
+		delay(1);
+			
+	} while ( !(regdata & IRQ_RX_DONE) && !(regdata & IRQ_RX_TX_TIMEOUT) );
+
+  setMode(MODE_STDBY_RC);                 //ensure to stop further packet reception
   
-  setMode(MODE_STDBY_RC);                            //ensure to stop further packet reception
+	if (regdata & IRQ_RX_DONE) 
+		_RXDoneTimestamp=millis();
+		
+#else		 
+  
+  while (!digitalRead(_RXDonePin));       //Wait for DIO1 to go high
+
+	_RXDoneTimestamp=millis();
+	
+  setMode(MODE_STDBY_RC);                 //ensure to stop further packet reception
 
   regdata = readIrqStatus();
+  
+#endif  
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
   
   if ( (regdata & IRQ_HEADER_ERROR) | (regdata & IRQ_CRC_ERROR) | (regdata & IRQ_RX_TX_TIMEOUT ) )
   {

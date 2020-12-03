@@ -4,7 +4,7 @@ include raspberry.makefile
 ################################
 # usage options
 # 
-# - by defining lora_gateway, loragateway_pi2 or lora_gateway_pi4 target according to
+# - by defining lora_gateway, lora_gateway_pi2 or lora_gateway_pi4 target according to
 #		* to your radio module (SX126X, SX127X or SX128X)
 #		* and low-level lib (Libelium 1272/1276 lib or StuartProject's SX12XX lib)
 #   * then:

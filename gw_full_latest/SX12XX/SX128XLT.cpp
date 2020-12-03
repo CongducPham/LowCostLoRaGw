@@ -17,7 +17,7 @@ See LICENSE.TXT file included in the library
   	- in the return ack, the SNR of the received packet at the gateway is included  	
   	- the sending of the ack and the reception of the ack use inverted IQ
   	- you can disable IQ inversion in ack transaction by commenting #define INVERTIQ_ON_ACK  
-  - Add polling mechanism to avoid additional DIO0 connection - done - to test
+  - Add polling mechanism to avoid additional DIO0 connection - done
   	- uncomment #define USE_POLLING  
   	- this is the default behavior    	
   - All Serial.print replaced by macros - done
@@ -1325,7 +1325,18 @@ uint8_t SX128XLT::transmit(uint8_t *txbuffer, uint8_t size, uint16_t timeout, in
   setTxParams(txpower, RAMP_TIME);
   setDioIrqParams(IRQ_RADIO_ALL, (IRQ_TX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);   //set for IRQ on TX done and timeout on DIO1
   setTx(timeout);                                                          //this starts the TX
+
+  /**************************************************************************
+	Added by C. Pham - Oct. 2020
+  **************************************************************************/  
   
+  // increment packet sequence number
+  _TXSeqNo++;
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
+    
   if (!wait)
   {
     return _TXPacketL;
@@ -2113,14 +2124,47 @@ uint8_t SX128XLT::transmitSXBuffer(uint8_t startaddr, uint8_t length, uint16_t t
   setDioIrqParams(IRQ_RADIO_ALL, (IRQ_TX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);   //set for IRQ on TX done and timeout on DIO1
   setTx(timeout);                            //this starts the TX
 
+  /**************************************************************************
+	Added by C. Pham - Oct. 2020
+  **************************************************************************/  
+  
+  // increment packet sequence number
+  _TXSeqNo++;
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
+  
   if (!wait)
   {
     return _TXPacketL;
   }
 
-  while (!digitalRead(_TXDonePin));            //Wait for DIO1 to go high
+  /**************************************************************************
+	Modified by C. Pham - Oct. 2020
+  **************************************************************************/
 
-  if (readIrqStatus() & IRQ_RX_TX_TIMEOUT )    //check for timeout
+#ifdef USE_POLLING
+
+	uint16_t regdata;
+	
+	do {
+		regdata = readIrqStatus();
+			
+	} while ( !(regdata & IRQ_TX_DONE) && !(regdata & IRQ_RX_TX_TIMEOUT) );
+	
+	if (regdata & IRQ_RX_TX_TIMEOUT )                        //check for timeout
+		
+#else		 
+  
+  while (!digitalRead(_TXDonePin));       //Wait for DIO1 to go high
+  
+  if (readIrqStatus() & IRQ_RX_TX_TIMEOUT )                        //check for timeout
+#endif  
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
   {
     return 0;
   }
@@ -2174,12 +2218,41 @@ uint8_t SX128XLT::receiveSXBuffer(uint8_t startaddr, uint16_t timeout, uint8_t w
   {
     return 0;
   }
+
+  /**************************************************************************
+	Modified by C. Pham - Oct. 2020
+  **************************************************************************/
+
+#ifdef USE_POLLING
+
+	do {
+		regdata = readIrqStatus();
+		
+		if (regdata & IRQ_HEADER_VALID)
+			_RXTimestamp=millis();
+			
+	} while ( !(regdata & IRQ_RX_DONE) && !(regdata & IRQ_RX_TX_TIMEOUT) );
+
+  setMode(MODE_STDBY_RC);                 //ensure to stop further packet reception
   
-  while (!digitalRead(_RXDonePin));                  //Wait for DIO1 to go high 
+	if (regdata & IRQ_RX_DONE) 
+		_RXDoneTimestamp=millis();
+		
+#else		 
   
-  setMode(MODE_STDBY_RC);                            //ensure to stop further packet reception
+  while (!digitalRead(_RXDonePin));       //Wait for DIO1 to go high
+
+	_RXDoneTimestamp=millis();
+	
+  setMode(MODE_STDBY_RC);                 //ensure to stop further packet reception
 
   regdata = readIrqStatus();
+  
+#endif  
+
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
   
   if ( (regdata & IRQ_HEADER_ERROR) | (regdata & IRQ_CRC_ERROR) | (regdata & IRQ_RX_TX_TIMEOUT ) )
   {
@@ -2395,9 +2468,29 @@ bool SX128XLT::transmitRanging(uint32_t address, uint16_t timeout, int8_t txpowe
     return true;
   }
 
-  while (!digitalRead(_TXDonePin));                               //Wait for DIO1 to go high
+  /**************************************************************************
+	Modified by C. Pham - Oct. 2020
+  **************************************************************************/
+  
+#ifdef USE_POLLING
 
-  if (readIrqStatus() & IRQ_RANGING_MASTER_RESULT_VALID )       //check for timeout
+	uint16_t regdata;
+	
+	do {
+		regdata = readIrqStatus();
+			
+	} while ( !(regdata & IRQ_TX_DONE) && !(regdata & IRQ_RANGING_MASTER_RESULT_VALID) && !(regdata & IRQ_RANGING_MASTER_RESULT_TIMEOUT) );
+	
+	if (regdata & IRQ_RANGING_MASTER_RESULT_VALID)
+#else		 
+
+  while (!digitalRead(_TXDonePin));                               //Wait for DIO1 to go high
+  
+  if (readIrqStatus() & IRQ_RANGING_MASTER_RESULT_VALID)       //check for timeout  
+#endif
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
   {
     return true;
   }
@@ -2424,11 +2517,33 @@ uint8_t SX128XLT::receiveRanging(uint32_t address, uint16_t timeout, int8_t txpo
     return NO_WAIT;                                                            //not wait requested so no packet length to pass
   }
 
-  while (!digitalRead(_RXDonePin));
-    
-  setMode(MODE_STDBY_RC);                                                    //ensure to stop further packet reception
+  /**************************************************************************
+	Modified by C. Pham - Oct. 2020
+  **************************************************************************/
   
-  if (readIrqStatus() & IRQ_RANGING_SLAVE_REQUEST_VALID)
+#ifdef USE_POLLING
+
+	uint16_t regdata;
+	
+	do {
+		regdata = readIrqStatus();
+			
+	} while ( !(regdata & IRQ_RANGING_SLAVE_RESPONSE_DONE) && !(regdata & IRQ_RANGING_SLAVE_REQUEST_DISCARDED) );
+
+  setMode(MODE_STDBY_RC);                                                    //ensure to stop further packet reception
+  	
+	if (regdata & IRQ_RANGING_SLAVE_REQUEST_VALID)
+#else		 
+
+  while (!digitalRead(_RXDonePin));
+
+  setMode(MODE_STDBY_RC);                                                    //ensure to stop further packet reception
+    
+  if (readIrqStatus() & IRQ_RANGING_SLAVE_REQUEST_VALID)       //check for timeout  
+#endif
+  /**************************************************************************
+	End by C. Pham - Oct. 2020
+  **************************************************************************/
   {
   return true; 
   }

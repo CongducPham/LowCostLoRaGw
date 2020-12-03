@@ -48,6 +48,8 @@ The objective is to seamlessly support the whole SX12XX family chip with the sam
 
 - `SX12XX_simple_lora_transmitter` is a very simple LoRa transmitter for the RPI that can also be used for testing purposes. You can use `make SX127X_simple_lora_transmitter_pi2` to build it for RPI2 using SX127X LoRa chip. Other versions (RPI and RPI4, SX126X and SX128X) are also available, similarly to `SX12XX_simple_lora_gateway.cpp`.
 
+- `SX1280_ranging_slave` is based on the SX128XLT ranging slave example from the SX12XX library. It is exactly the same code than the Arduino example `Arduino_LoRa_SX1280_ranging_slave` that can be compiled on the Raspberry in order to use the gateway as the slave for distance computation at the end-device. Type `make SX1280_ranging_slave` or  `make SX1280_ranging_slave_pi2` or `make SX1280_ranging_slave_pi4`, then `sudo ./ranging_slave`. Default LoRa settings are defined in `SX1280_ranging_slave.h`. You can add arguments to dynamically change bw, sf and frequency: `sudo ./ranging_slave --bw 400 --sf 8 --freq 2403.0`. 
+
 Mapping Arduino pin number to Raspberry pin number
 --------------------------------------------------
 
@@ -94,21 +96,21 @@ With Arduino boards, one of the most popular LoRaWAN library is the LMIC library
 New PCBs
 --------
 
-The RFM95W breakout initially designed for the HopeRF RFM95W (referred to as old RFM95W breakout) can actually also host the recent NiceRF SX1262 as both radio modules have similar pinout. However, we updated the old RFM95W breakout's wiring to also expose DIO2 and DIO1 on the Raspberry header to better support the NiceRF SX1262 module (DIO2 location on the RFM95W is the BUSY pin on the NiceRF SX1262 and DIO1 pin is used for RX/TX done interrupt on the NiceRF SX1262 instead of the DIO0 pin on the RFM95W). BUSY pin is needed for the SX126X so if you are using the old RFM95W breakout you need to solder a wire. Our modified communication library does not need DIO1 pin. When updating the RFM95W breakout we also added a 4-pin header to easily connect a small OLED screen to a Raspberry using the I2C bus (SCL and SDA pin).
+The RFM95W breakout initially designed for the HopeRF RFM95W (referred to as old RFM95W breakout) can actually also host the recent NiceRF SX1262 as both radio modules have similar pinout. However, we updated the old RFM95W breakout's wiring to also expose DIO2 and DIO1 on the Raspberry header to better support the NiceRF SX1262 module (DIO2 location on the RFM95W is the BUSY pin on the NiceRF SX1262 and DIO1 pin is used for RX/TX done interrupt on the NiceRF SX1262 instead of the DIO0 pin on the RFM95W). BUSY pin is needed for the SX126X so if you are using the old RFM95W breakout you need to solder a wire. Our modified communication library does not need DIO1 pin. When updating the RFM95W breakout we also added a 4-pin header to easily connect a small OLED screen to a Raspberry using the I2C bus (SCL and SDA pin). Pin order from left to right on the OLED should be GND, VCC, SCL and SDA.
 
 We also made a variant to support the NiceRF SX1280 module which provides LoRa modulation on the 2.4GHz band (I really don't know why the SX1280 did not use the same pinout than the SX1262 which is similar to the RFM95W!). All these breakout PCBs are illustrated in the following figure.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/RFM95Breakout.jpg)
 
-The ProMini LoRa RFM95W PCB for the Arduino ProMini has been slightly modified to reflect that it can work with the NiceRF SX1262 as well. It is then referred to as ProMini LoRa RFM95W/NiceRF SX1262. We then created the ProMini LoRa NiceRF SX1280.
+The ProMini LoRa RFM95W PCB for the Arduino ProMini has been slightly modified to reflect that it can work with the NiceRF SX1262 as well. It is then referred to as ProMini LoRa RFM95W/NiceRF SX1262. We then created the ProMini LoRa NiceRF SX1280 for the new SX1280.
 
 ![](https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/ProMiniLoRaBreakout.jpg)
 
-These PCBs have 4 solder pads that can be soldered together if you want to connect various DIO pins. Some of these pads are by default connected. If you want to use the connected Arduino pins for other purposes, just cut the wire between the pads with a cutter and test for discontinuity.
+These new !PCBs have 4 solder pads that can be soldered together if you want to connect various DIO pins. Some of these pads are by default connected. If you want to use the connected Arduino pins for other purposes, just cut the wire between the pads with a cutter and test for discontinuity.
 
-- for RFM95W. Connected by default: DIO0 to D2, DIO1 to D3, RST to D4. Not connected by default: DIO2 to D5
-- for NiceRF SX1262. Connected by default: DIO1 to D3, RST to D4. Not connected by default: BUSY to D5
-- for NiceRF SX1280. Connected by default: DIO1 to D2, BUSY to D3 and RST to D4. Not connected by default: DIO2 to D5
+- ProMini LoRa RFM95W/NiceRF SX1262 with an RFM95W. Connected by default: DIO0 to D2, DIO1 to D3, RST to D4. Not connected by default: DIO2 to D5. Since our modified SX12XX library is not using DIO0 nor DIO1 by default, you can disconnect to use pin D2 and D3 for your application.
+- ProMini LoRa RFM95W/NiceRF SX1262 with a NiceRF SX1262. Connected by default: DIO1 to D3 and RST to D4. Not connected by default: BUSY to D5. You **need** to connect BUSY to D5 with the corresponding pad. We chose to keep it this way because RFM95W are still very popular. Since our modified SX12XX library is not using DIO1 by default, you can disconnect to use pin D3 for your application.
+- ProMini LoRa NiceRF SX1280 with a NiceRF SX1280. Connected by default: DIO1 to D2, BUSY to D3 and RST to D4. Not connected by default: DIO2 to D5. Since our modified SX12XX library is not using DIO1 by default, you can disconnect to use pin D2 for your application.
 			
 Early pictures
 --------------
@@ -129,15 +131,15 @@ Could not wait to receive the NiceRF SX1262 so here is a very "dirty" SX1262 dev
 
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-earlydevice.jpg" width="400"><img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-earlydevicecloseup.jpg" width="400">
 
-Two days after the Ebyte SX1262 test, I finally received the 2 NiceRF SX1262 I've ordered from AliExpress! Since I have some old RFM95W breakout left, I just solder the NiceRF SX1262 on the old RFM95W breakout. As stated previously, both RFM95W and NiceRF SX1262 have almost same pinout. See how the BUSY pin of the SX1262 is connected with a wire to the Raspberry's GPIO25 pin. The old ProMini LoRa RFM95W was also used to host the second NiceRF SX1262 to serve as a device since I didn't receive the new ProMini PCBs yet.
+Two days after the Ebyte SX1262 test, I finally received the 2 NiceRF SX1262 I've ordered from AliExpress! Since I have some old RFM95W breakout left, I just solder the NiceRF SX1262 on the old RFM95W breakout. As stated previously, both RFM95W and NiceRF SX1262 have almost same pinout. See how the BUSY pin of the SX1262 is connected with a wire to the Raspberry's GPIO25 pin. 
 
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-fullgw.jpg" width="400">
 
-For the device, I did the same procedure with one of the ProMini LoRa RFM95W PCB I still have without waiting for the updated ProMini LoRa RFM95W/NiceRF SX1262. BUSY pin is connected using the DIO2 connecting pads to ProMini D5 pin.
+For the device, I did the same procedure with one of the old ProMini LoRa RFM95W PCB I still have without waiting for the updated ProMini LoRa RFM95W/NiceRF SX1262 PCB. Here the BUSY pin is connected to D5 using the DIO2 connecting pads.
 
-<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-ProMini.jpg" width="400">
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1262-ProMini.jpg" width="550">
 
-At least, I've finally received my SX1280 breakout and ProMini PCB on Nov 25th, 2020!
+At least, I've finally received my SX1280 breakout and ProMini LoRa SX1280 PCB on Nov 25th, 2020!
 
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/SX1280-fullgw.jpg" width="550">
 

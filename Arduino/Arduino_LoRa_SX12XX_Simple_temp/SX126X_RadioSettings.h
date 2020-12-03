@@ -24,7 +24,8 @@
 //if you have a NiceRF SX1262 which has almost the same pinout than the RFM95 then
 //you can use our ProMini LoRa PCB for RFM95 where DIO1 can be connected to D3
 //in that case, comment #define USE_POLLING in SX126XLT.cpp to use DIO1 interrrupt pin
-#define DIO1 3                                  //DIO1 pin on LoRa device, used for RX and TX done
+//#define DIO1 3                                  //DIO1 pin on LoRa device, used for RX and TX done
+#define DIO1 -1                                  //DIO1 pin on LoRa device, used for RX and TX done
 //*******
 #define DIO2 -1                                 //DIO2 pin on LoRa device, normally not used so set to -1 
 #define DIO3 -1                                 //DIO3 pin on LoRa device, normally not used so set to -1
