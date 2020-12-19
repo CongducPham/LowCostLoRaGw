@@ -1,3 +1,22 @@
+/*
+ *  simple lorawan lib to encode and decode lorawan packet
+ *  
+ *  Copyright (C) 2016-2020 Congduc Pham, University of Pau, France
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with the program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *****************************************************************************/
+ 
 #include "local_lorawan.h"
 
 // we wrapped Serial.println to support the Arduino Zero or M0
@@ -7,14 +26,14 @@
 #define PRINT_STR(fmt,param)      SerialUSB.print(param)
 #define PRINT_VALUE(fmt,param)    SerialUSB.print(param)
 #define PRINT_HEX(fmt,param)      SerialUSB.print(param,HEX)
-#define FLUSHOUTPUT               SerialUSB.flush();
+#define FLUSHOUTPUT               SerialUSB.flush()
 #else
 #define PRINTLN                   Serial.println("")
 #define PRINT_CSTSTR(param)       Serial.print(F(param))
 #define PRINT_STR(fmt,param)      Serial.print(param)
 #define PRINT_VALUE(fmt,param)    Serial.print(param)
 #define PRINT_HEX(fmt,param)      Serial.print(param,HEX)
-#define FLUSHOUTPUT               Serial.flush();
+#define FLUSHOUTPUT               Serial.flush()
 #endif
 
 ///////////////////////////////////////////////////////////////////

@@ -286,6 +286,7 @@ const uint8_t REG_INVERTIQ2 = 0x3B;
 
 #define PKT_TYPE_DATA   0x10
 #define PKT_TYPE_ACK    0x20
+#define PKT_TYPE_RTS    0x30
 
 #define PKT_FLAG_ACK_REQ            0x08
 #define PKT_FLAG_DATA_ENCRYPTED     0x04

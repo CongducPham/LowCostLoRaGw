@@ -396,6 +396,7 @@ const uint16_t RNG_CALIB_1600[] = { 13100,  13160,  13220,  13280,  13340,  1340
 
 #define PKT_TYPE_DATA   0x10
 #define PKT_TYPE_ACK    0x20
+#define PKT_TYPE_RTS    0x30
 
 #define PKT_FLAG_ACK_REQ            0x08
 #define PKT_FLAG_DATA_ENCRYPTED     0x04

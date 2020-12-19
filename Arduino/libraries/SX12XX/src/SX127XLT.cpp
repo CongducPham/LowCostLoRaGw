@@ -131,7 +131,9 @@ End by C. Pham - Oct. 2020
 //#define SX127XDEBUG1               //enable level 1 debug messages
 //#define SX127XDEBUG2               //enable level 2 debug messages
 //#define SX127XDEBUG3               //enable level 3 debug messages
+//#define SX127XDEBUG_TEST           //enable test debug messages
 #define SX127XDEBUGACK               //enable ack transaction debug messages
+#define SX127XDEBUGRTS
 //#define SX127XDEBUGCAD
 //#define DEBUGPHANTOM               //used to set bebuging for Phantom packets
 //#define SX127XDEBUGPINS            //enable pin allocation debug messages
@@ -147,7 +149,7 @@ SX127XLT::SX127XLT()
   _PA_BOOST = false;
   _TXSeqNo = 0;
   _RXSeqNo = 0;
-  
+    
   /**************************************************************************
 	End by C. Pham - Oct. 2020
   **************************************************************************/
@@ -2221,8 +2223,16 @@ uint8_t SX127XLT::receive(uint8_t *rxbuffer, uint8_t size, uint32_t rxtimeout, u
         delay(1);        
       }    
 
-    //_RXTimestamp start when a valid header has been received
-    _RXTimestamp=millis();
+		if (bitRead(index, 4)!=0) {
+    	//_RXTimestamp start when a valid header has been received
+    	_RXTimestamp=millis();		
+#ifdef SX127XDEBUG1		
+  		PRINTLN_CSTSTR("Valid header detected");		
+#endif
+
+			//update endtimeoutmS to avoid timeout at the middle of a packet reception
+			endtimeoutmS = (_RXTimestamp + 10000);
+    }
               
     //poll the irq register for RXDone, bit 6
     while ((bitRead(index, 6) == 0) && (millis() < endtimeoutmS))
@@ -2236,6 +2246,11 @@ uint8_t SX127XLT::receive(uint8_t *rxbuffer, uint8_t size, uint32_t rxtimeout, u
 
   //_RXDoneTimestamp start when the packet been fully received  
   _RXDoneTimestamp=millis();
+
+#ifdef SX127XDEBUG1
+  PRINTLN_VALUE("%ld", _RXTimestamp);
+	PRINTLN_VALUE("%ld", _RXDoneTimestamp);  		
+#endif
     
   setMode(MODE_STDBY_RC);                                            //ensure to stop further packet reception
 
@@ -2361,11 +2376,11 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
       }    
 
 		if (bitRead(index, 4)!=0) {
-#ifdef SX127XDEBUG1		
-  		PRINTLN_CSTSTR("Valid header detected");
-#endif
     	//_RXTimestamp start when a valid header has been received
-    	_RXTimestamp=millis();
+    	_RXTimestamp=millis();		
+#ifdef SX127XDEBUG1	
+  		PRINTLN_CSTSTR("Valid header detected"); 		
+#endif
 
 			//update endtimeoutmS to avoid timeout at the middle of a packet reception
 			endtimeoutmS = (_RXTimestamp + 10000);
@@ -2383,6 +2398,11 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
 
   //_RXDoneTimestamp start when the packet been fully received  
   _RXDoneTimestamp=millis();
+
+#ifdef SX127XDEBUG1
+  PRINTLN_VALUE("%ld", _RXTimestamp);
+	PRINTLN_VALUE("%ld", _RXDoneTimestamp);  		
+#endif
   
   setMode(MODE_STDBY_RC);                                            //ensure to stop further packet reception
 
@@ -2512,6 +2532,182 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
   return _RXPacketL;                           //so we can check for packet having enough buffer space
 }
 
+
+/**************************************************************************
+Added by C. Pham - Dec. 2020
+**************************************************************************/
+
+uint8_t SX127XLT::receiveRTSAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxtimeout, uint8_t wait)
+{
+#ifdef SX127XDEBUG1
+  PRINTLN_CSTSTR("receiveRTSAddressed()");
+#endif
+
+  uint16_t index;
+  uint32_t endtimeoutmS;
+  uint8_t regdata;
+  bool validHeader=false;
+
+  setMode(MODE_STDBY_RC);
+  regdata = readRegister(REG_FIFORXBASEADDR);                                //retrieve the RXbase address pointer
+  writeRegister(REG_FIFOADDRPTR, regdata);                                   //and save in FIFO access ptr
+
+  setDioIrqParams(IRQ_RADIO_ALL, (IRQ_RX_DONE + IRQ_HEADER_VALID), 0, 0);   //set for IRQ on RX done
+  setRx(0);                                                                 //no actual RX timeout in this function
+  
+  if (!wait)
+  {
+    return 0;                                                              //not wait requested so no packet length to pass
+  }
+  
+  if (rxtimeout == 0)
+  {
+#ifdef USE_POLLING
+    index = readRegister(REG_IRQFLAGS);
+
+    //poll the irq register for ValidHeader, bit 4
+    while ((bitRead(index, 4) == 0))
+      {
+        index = readRegister(REG_IRQFLAGS);
+        // adding this small delay decreases the CPU load of the lora_gateway process to 4~5% instead of nearly 100%
+        // suggested by rertini (https://github.com/CongducPham/LowCostLoRaGw/issues/211)
+        // tests have shown no significant side effects
+        delay(1);        
+      }    
+
+		validHeader=true;
+		
+    //_RXTimestamp start when a valid header has been received
+    _RXTimestamp=millis();
+#ifdef SX127XDEBUG1	
+  	PRINTLN_CSTSTR("Valid header detected"); 		
+#endif
+        
+    //poll the irq register for RXDone, bit 6
+    while ((bitRead(index, 6) == 0))
+      {
+        index = readRegister(REG_IRQFLAGS);
+      }
+#else  
+    while (!digitalRead(_RXDonePin));                  ///Wait for DIO0 to go high, no timeout, RX DONE
+#endif    
+  }
+  else
+  {
+    endtimeoutmS = (millis() + rxtimeout);
+#ifdef USE_POLLING
+
+#ifdef SX127XDEBUG1
+  	PRINTLN_CSTSTR("RXDone using polling");
+#endif 
+    index = readRegister(REG_IRQFLAGS);
+		
+    //poll the irq register for ValidHeader, bit 4
+    while ((bitRead(index, 4) == 0) && (millis() < endtimeoutmS))
+      {
+        index = readRegister(REG_IRQFLAGS);
+        delay(1);        
+      }    
+
+		if (bitRead(index, 4)!=0) {
+		
+			validHeader=true;
+			
+    	//_RXTimestamp start when a valid header has been received
+    	_RXTimestamp=millis();		
+#ifdef SX127XDEBUG1	
+  		PRINTLN_CSTSTR("Valid header detected"); 		
+#endif
+
+			//update endtimeoutmS to try to get the RXDone in a short time interval
+			endtimeoutmS = (_RXTimestamp + 250);
+    }
+              
+    //poll the irq register for RXDone, bit 6
+    while ((bitRead(index, 6) == 0) && (millis() < endtimeoutmS))
+      {
+        index = readRegister(REG_IRQFLAGS);
+      }
+#else    
+    while (!digitalRead(_RXDonePin) && (millis() < endtimeoutmS));
+#endif    
+  }
+
+  //_RXDoneTimestamp start when the packet been fully received  
+  _RXDoneTimestamp=millis();
+
+#ifdef SX127XDEBUG1
+  PRINTLN_VALUE("%ld", _RXTimestamp);
+	PRINTLN_VALUE("%ld", _RXDoneTimestamp);  		
+#endif
+  
+  setMode(MODE_STDBY_RC);                                            //ensure to stop further packet reception
+
+#ifdef USE_POLLING
+  if (bitRead(index, 6) == 0)
+#else
+  if (!digitalRead(_RXDonePin))                                             //check if DIO still low, is so must be RX timeout
+#endif  
+  {
+    _IRQmsb = IRQ_RX_TIMEOUT;
+#ifdef SX127XDEBUG1    
+    PRINTLN_CSTSTR("RX timeout");
+#endif
+		
+		// if we got a valid header but no RXDone, it is maybe a long data packet
+		// so we return a value greater than 1
+		if (validHeader)
+			return(2);
+		else	    
+    	return 0;
+  }
+
+  _RXPacketL = readRegister(REG_RXNBBYTES);
+
+#ifdef USE_SPI_TRANSACTION   //to use SPI_TRANSACTION enable define at beginning of CPP file 
+  SPI.beginTransaction(SPISettings(LTspeedMaximum, LTdataOrder, LTdataMode));
+#endif
+
+  digitalWrite(_NSS, LOW);                    //start the burst read
+  SPI.transfer(REG_FIFO); 
+  
+  // we read our header
+  _RXDestination = SPI.transfer(0);
+  _RXPacketType = SPI.transfer(0);
+  _RXSource = SPI.transfer(0);
+  _RXSeqNo = SPI.transfer(0);
+  
+  //the header is not passed to the user
+  _RXPacketL=_RXPacketL-HEADER_SIZE;
+  
+  if (_RXPacketL > size)                      //check passed buffer is big enough for packet
+  {
+  	// if _RXPacketL!=1 it is a very short data packet because we have RXDone
+  	// so we ignore it
+    return(0);
+  }  
+
+  for (index = 0; index < _RXPacketL; index++)
+  {
+    regdata = SPI.transfer(0);
+    rxbuffer[index] = regdata;
+  }
+  digitalWrite(_NSS, HIGH);
+
+#ifdef USE_SPI_TRANSACTION
+  SPI.endTransaction();
+#endif
+
+	// check if it is really an RTS packet
+	if (_RXPacketType!=PKT_TYPE_RTS)
+		return(0);
+
+  return _RXPacketL;                           //so we can check for packet having enough buffer space
+}
+
+/**************************************************************************
+End by C. Pham - Dec. 2020
+**************************************************************************/ 
 
 uint8_t SX127XLT::readPacket(uint8_t *rxbuffer, uint8_t size)
 {
@@ -2814,7 +3010,8 @@ uint8_t SX127XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
   **************************************************************************/  
   
   // increment packet sequence number
-  _TXSeqNo++;
+  if ((uint8_t)txpackettype!=PKT_TYPE_RTS)
+  	_TXSeqNo++;
 
   /**************************************************************************
 	End by C. Pham - Oct. 2020
@@ -5701,6 +5898,19 @@ void SX127XLT::CarrierSense(uint8_t cs, bool extendedIFS, bool onlyOnce) {
     CarrierSense3(DEFAULT_CAD_NUMBER);
 }
 
+uint16_t SX127XLT::CollisionAvoidance(uint8_t pl, uint8_t ca) {
+#ifdef SX127XDEBUG1
+  PRINTLN_CSTSTR("CollisionAvoidance()");
+#endif
+  
+  if (ca==1)
+  	// we force cad_number to 0 to skip the CAD procedure to test the collision avoidance mechanism
+  	// in real deployment, set to DEFAULT_CAD_NUMBER
+    return(CollisionAvoidance1(pl, 0 /* DEFAULT_CAD_NUMBER */));
+    
+  return(0);  
+}
+
 // need to set cad_number to a value > 0
 // we advise using cad_number=3 for a SIFS and cad_number=9 for a DIFS
 void SX127XLT::CarrierSense1(uint8_t cad_number, bool extendedIFS, bool onlyOnce) {
@@ -6039,15 +6249,198 @@ void SX127XLT::CarrierSense3(uint8_t cad_number) {
   }
 }
 
-/*
- Function: Sets I/Q mode
- Returns: Integer that determines if there has been any error
-   state = 2  --> The command has not been executed
-   state = 1  --> There has been an error while executing the command
-   state = 0  --> The command has been executed with no errors
-   
-   if invert==false, both RX and TX inversion are cleared, so dir is not used
-*/
+uint8_t SX127XLT::transmitRTSAddressed(uint8_t pl) {
+
+	uint8_t TXRTSPacketL;
+	const uint8_t TXBUFFER_SIZE=1;
+	uint8_t TXBUFFER[TXBUFFER_SIZE];
+	
+#ifdef SX127XDEBUG1
+	PRINTLN_CSTSTR("transmitRTSAddressed()");
+#endif
+			
+	TXBUFFER[0]=pl; //length of next data packet
+
+#ifdef SX127XDEBUGRTS
+	PRINT_CSTSTR("--> RTS: FOR ");
+	PRINT_VALUE("%d", pl);
+  PRINTLN_CSTSTR(" Bytes");		
+#endif
+	
+	// use -1 as txpower to use default setting
+	TXRTSPacketL=transmitAddressed(TXBUFFER, 1, PKT_TYPE_RTS, 0, _DevAddr, 10000, -1, WAIT_TX);	
+
+#ifdef SX127XDEBUGRTS
+	if (TXRTSPacketL)
+		PRINTLN_CSTSTR("--> RTS: SENT");
+	else	
+		PRINTLN_CSTSTR("--> RTS: ERROR"); 
+#endif
+
+	return(TXRTSPacketL);
+}
+
+uint16_t SX127XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
+
+  int e;
+	// P=0.1, i.e. 10%
+	uint8_t P=10;
+	uint8_t W=7;
+  double difs;
+  uint16_t listenRTSduration;
+	bool forceListen=false;
+  unsigned long _startDoCad, _endDoCad;
+
+  // symbol time in ms
+  double ts = 1000.0 / (returnBandwidth() / ( 1 << getLoRaSF()));
+
+  //set difs to packet's preamble length, in ms
+  difs=(getPreamble()+4.25)*ts;
+  
+  // W*DIFS+TOA(sizeof(RTS)), in ms
+  listenRTSduration=W*(uint16_t)difs+getToA(HEADER_SIZE+1);
+
+  PRINT_CSTSTR("--> CA1\n");
+
+#ifdef SX127XDEBUGRTS
+  PRINT_CSTSTR("--> CA1: ts ");
+	PRINT_VALUE("%d", (uint16_t)ts);
+  PRINT_CSTSTR(" DIFS ");
+	PRINT_VALUE("%d", (uint16_t)difs);
+	PRINT_CSTSTR(" listenRTSduration ");
+	PRINTLN_VALUE("%d", listenRTSduration);			 
+#endif
+
+	// first we try to see whether can detect activity
+  if (cad_number) {
+  	// check for free channel
+    _startDoCad=millis();
+    e = doCAD(cad_number);
+    _endDoCad=millis();
+    
+    PRINT_CSTSTR("--> --> CA1: CAD ");
+  	PRINT_VALUE("%d",_endDoCad-_startDoCad);
+    PRINTLN;    
+  }
+  else
+  	e==0;
+  
+  // we detected activity!
+  // since there is low probability of false positive
+  // it means that there is an ongoing transmission
+  // so we return the toa of the maximum packet length, i.e. 255 bytes
+  if (e!=0) {
+#ifdef SX127XDEBUGRTS
+  	PRINT_CSTSTR("--> CA1: BUSY DEFER BY MAX_TOA ");
+		PRINTLN_VALUE("%d", getToA(255));			 
+#endif  
+  	return(getToA(255));
+	}
+	// here e==0 so we detected no activity
+	// run the proposed channel access mechanism
+	// see scientific article
+	
+#ifdef ARDUINO                
+  uint8_t myP = random(100);
+#else
+  uint8_t myP = rand() % 100;
+#endif		
+
+#ifdef SX127XDEBUGRTS
+  	PRINT_CSTSTR("--> CA1: FREE, INITIATE CA ");
+  	PRINT_CSTSTR("P=");
+  	PRINT_VALUE("%d", P);
+  	PRINT_CSTSTR(" myP=");
+		PRINTLN_VALUE("%d", myP);			 
+#endif 
+	
+	// we will break from this infinite loop with a return
+	while (1) {
+	
+		// if myP>P we start at phase 1 to listen for RTS
+		if (myP>P || forceListen) {
+	
+			uint8_t RXRTSPacketL;
+			const uint8_t RXBUFFER_SIZE=1;
+			uint8_t RXBUFFER[RXBUFFER_SIZE];
+
+#ifdef SX127XDEBUGRTS
+			PRINTLN_CSTSTR("--> CA1: WAIT FOR RTS");
+#endif
+		
+			//try to receive the RTS
+			RXRTSPacketL=receiveRTSAddressed(RXBUFFER, RXBUFFER_SIZE, listenRTSduration, WAIT_RX);
+		
+			// length is 1 indicates an RTS
+			if (RXRTSPacketL==1) {
+#ifdef SX127XDEBUGRTS
+				PRINT_CSTSTR("--> CA1: RECEIVE RTS(");
+				PRINT_VALUE("%d", RXBUFFER[0]);
+				PRINT_CSTSTR(") FROM ");
+				PRINTLN_VALUE("%d", readRXSource());
+				PRINT_CSTSTR("--> CA1: NAV(RTS) FOR listenRTSduration+W*DIFS+ToA(");
+				PRINT_VALUE("%d", RXBUFFER[0]);
+				PRINT_CSTSTR(") ");						
+				PRINT_VALUE("%d", listenRTSduration+W*(uint16_t)difs+getToA(RXBUFFER[0]));
+				PRINTLN_CSTSTR(" ms"); 
+#endif		
+				return(listenRTSduration+W*(uint16_t)difs+getToA(RXBUFFER[0]));
+			}
+			else 
+			//indicate a longer data packet
+			if (RXRTSPacketL>1) {
+#ifdef SX127XDEBUGRTS
+				PRINT_CSTSTR("--> CA1: ValidHear FOR DATA DEFER BY MAX_TOA ");
+				PRINTLN_VALUE("%d", getToA(255));			 
+#endif  
+				return(getToA(255));	
+			}
+			else {
+#ifdef SX127XDEBUGRTS
+				PRINTLN_CSTSTR("--> CA1: NO RTS");		 
+#endif		
+			}
+		}		
+
+    // wait for random number of DIFS [0, W]
+#ifdef ARDUINO                
+    uint8_t w = random(0,W);
+#else
+    uint8_t w = rand() % (W+1);
+#endif
+
+#ifdef SX127XDEBUGRTS
+		PRINT_CSTSTR("--> CA1: WAIT FOR ");
+		PRINT_VALUE("%d", w);
+		PRINTLN_CSTSTR(" DIFS");		 
+#endif
+
+		delay(w*(uint16_t)difs);
+		
+		// if forceListen==true then this is the second time
+		// so we just exit after having waited for a random number of DIFS to send the data packet
+		// 
+		if (forceListen) {
+#ifdef SX127XDEBUGRTS
+			PRINTLN_CSTSTR("--> CA1: EXIT, ALLOW DATA TRANSMIT");
+#endif		
+			return(0);
+		}	
+		// if forceListen==false then this is the first time for nodes starting directly at phase 2
+		else {	
+#ifdef SX127XDEBUGRTS
+			PRINTLN_CSTSTR("--> CA1: SEND RTS");
+#endif			
+		
+			// phase 2 where we send an RTS
+			transmitRTSAddressed(pl);
+		
+			// go for another listening period
+			forceListen=true;
+		}
+	};	
+}
+
 uint8_t	SX127XLT::invertIQ(bool invert)
 {
 #ifdef SX127XDEBUG1

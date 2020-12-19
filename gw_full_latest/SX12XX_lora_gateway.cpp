@@ -430,6 +430,7 @@ SX128XLT LT;
 uint8_t RXBUFFER[RXBUFFER_SIZE];
 
 uint32_t RXpacketCount;
+uint32_t RXpacketCountReset=0;
 uint32_t errors;
 
 //stores length of packet received
@@ -922,7 +923,8 @@ void loop(void)
 			PacketRSSI = LT.readPacketRSSI();              //read the recived RSSI value
 			PacketSNR = LT.readPacketSNR();                //read the received SNR value
 
-			sprintf(print_buf, "--- rxlora. dst=%d type=0x%02X src=%d seq=%d", 
+			sprintf(print_buf, "--- rxlora[%lu]. dst=%d type=0x%02X src=%d seq=%d", 
+				RXpacketCount,
 				LT.readRXDestination(),
 				LT.readRXPacketType(), 
 				LT.readRXSource(),
@@ -1404,9 +1406,10 @@ void loop(void)
 
 #ifdef PERIODIC_RESET100	
 	//test periodic reconfiguration
-	if ( RXpacketCount!=0 && !(RXpacketCount % 100) )
+	if ( RXpacketCount!=0 && !(RXpacketCount % 100) && RXpacketCount!=RXpacketCountReset)
 	{	
 		PRINTLN_CSTSTR("^$****Periodic reset");
+		RXpacketCountReset=RXpacketCount;
 		LT.resetDevice();
 		loraConfig();	
 	}	

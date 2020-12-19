@@ -50,32 +50,31 @@ connection_failure = False
 
 # function to check connection availability with the server
 def test_network_available():
-	connection = False
+	response = 1
 	iteration = 0
-	response = None
+	
+	global connection_failure
 	
 	# we try 4 times to connect to the server.
-	while(not connection and iteration < 4) :
-		try:
-			# 3sec timeout in case of server available but overcrowded
-			response=urllib2.urlopen('http://'+key_MQTT.MQTT_server, timeout=3)
-			connection = True
-		except urllib2.URLError, e: pass
-		except socket.timeout: pass
-		except ssl.SSLError: pass
-	    	
-		# if connection_failure == True and the connection with the server is unavailable, don't waste more time, exit directly
-		if(connection_failure and response is None) :
+	while(response!=0 and iteration < 4) :
+		response = os.system("ping -q -c 1 -W 1 " + key_MQTT.MQTT_server + " > /dev/null 2>&1")
+
+		# if connection_failure == True and the connection with the server is unavailable
+		# don't waste more time, exit directly
+		if (connection_failure and response!=0) :
 			print('MQTT: the server is still unavailable')
 			iteration = 4
 			# print connection failure
-		elif(response is None) :
+		elif (response!=0) :
 			print('MQTT: server unavailable, retrying to connect soon...')
 			# wait before retrying
 			time.sleep(1)
 			iteration += 1
-	    		
-	return connection
+	
+	if response==0:    		
+		return True
+	else:
+		return False
 	
 # send a data to the server
 def send_data(data, src, nomenclatures, tdata):

@@ -125,6 +125,7 @@ End by C. Pham - Oct. 2020
 //#define SX126XDEBUG1               //enable debug messages
 //#define SX126XDEBUG3              //enable debug messages
 #define SX126XDEBUGACK               //enable ack transaction debug messages
+#define SX126XDEBUGRTS
 //#define SX126XDEBUGPINS           //enable pin allocation debug messages
 //#define DEBUGFSKRTTY                 //enable for FSKRTTY debugging 
 
@@ -2967,7 +2968,8 @@ uint8_t SX126XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
   **************************************************************************/  
   
   // increment packet sequence number
-  _TXSeqNo++;
+  if ((uint8_t)txpackettype!=PKT_TYPE_RTS)
+  	_TXSeqNo++;
 
   /**************************************************************************
 	End by C. Pham - Oct. 2020
@@ -3110,8 +3112,6 @@ uint8_t SX126XLT::readRXSource()
   return _RXSource;
 }
 
-
-
 uint8_t SX126XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxtimeout, uint8_t wait)
 {
 #ifdef SX126XDEBUG1
@@ -3139,9 +3139,12 @@ uint8_t SX126XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
 	do {
 		regdata = readIrqStatus();
 		
-		if (regdata & IRQ_HEADER_VALID)
+		if (regdata & IRQ_HEADER_VALID) {		
 			_RXTimestamp=millis();
-
+#ifdef SX126XDEBUG1	
+  		PRINTLN_CSTSTR("Valid header detected"); 		
+#endif			
+		}
 		delay(1);
 					
 	} while ( !(regdata & IRQ_RX_DONE) && !(regdata & IRQ_RX_TX_TIMEOUT) );
@@ -3287,6 +3290,133 @@ uint8_t SX126XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
   return _RXPacketL;                     //so we can check for packet having enough buffer space
 }
 
+
+/**************************************************************************
+Added by C. Pham - Dec. 2020
+**************************************************************************/
+
+uint8_t SX126XLT::receiveRTSAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxtimeout, uint8_t wait)
+{
+#ifdef SX126XDEBUG1
+  PRINTLN_CSTSTR("receiveRTSAddressed()");
+#endif
+
+  uint8_t index, RXstart, RXend;
+  uint16_t regdata;
+  uint8_t buffer[2];
+  uint32_t endtimeoutmS;
+  bool validHeader=false;  
+  
+  setDioIrqParams(IRQ_RADIO_ALL, (IRQ_RX_DONE + IRQ_RX_TX_TIMEOUT), 0, 0);   //set for IRQ on RX done or timeout
+  setRx(rxtimeout);                                                                
+  
+  if (!wait)
+  {
+    return 0;                                                                 //not wait requested so no packet length to pass
+  }
+
+#ifdef USE_POLLING
+
+	do {
+		regdata = readIrqStatus();
+		
+		if (regdata & IRQ_HEADER_VALID) {
+
+			validHeader=true;
+				
+			_RXTimestamp=millis();
+#ifdef SX126XDEBUG1	
+  		PRINTLN_CSTSTR("Valid header detected"); 		
+#endif
+
+			//update endtimeoutmS to try to get the RXDone in a short time interval
+			endtimeoutmS = (_RXTimestamp + 250);			
+		}
+		delay(1);
+					
+	} while ( !(regdata & IRQ_RX_DONE) && !(regdata & IRQ_RX_TX_TIMEOUT) && (millis() < endtimeoutmS));
+
+  setMode(MODE_STDBY_RC);                 //ensure to stop further packet reception
+  
+	if (regdata & IRQ_RX_DONE) 
+		_RXDoneTimestamp=millis();
+		
+#else		 
+  
+  while (!digitalRead(_RXDonePin));       //Wait for DIO1 to go high
+
+	_RXDoneTimestamp=millis();
+	
+  setMode(MODE_STDBY_RC);                 //ensure to stop further packet reception
+
+  regdata = readIrqStatus();
+  
+#endif  
+  
+	if ( (regdata & IRQ_HEADER_ERROR) | (regdata & IRQ_CRC_ERROR) | (regdata & IRQ_RX_TX_TIMEOUT ) ) //check if any of the preceding IRQs is set
+  {
+		// if we got a valid header but no RXDone, it is maybe a long data packet
+		// so we return a value greater than 1
+		if (validHeader)
+			return(2);
+		else	    
+    	return 0;
+  }
+    
+   readCommand(RADIO_GET_RXBUFFERSTATUS, buffer, 2);
+  _RXPacketL = buffer[0];
+  
+#ifdef USE_SPI_TRANSACTION     //to use SPI_TRANSACTION enable define at beginning of CPP file 
+  SPI.beginTransaction(SPISettings(LTspeedMaximum, LTdataOrder, LTdataMode));
+#endif
+
+  digitalWrite(_NSS, LOW);               //start the burst read
+  SPI.transfer(RADIO_READ_BUFFER);
+  SPI.transfer(RXstart);
+  SPI.transfer(0xFF);
+  
+  // we read our header
+  _RXDestination = SPI.transfer(0);
+  _RXPacketType = SPI.transfer(0);
+  _RXSource = SPI.transfer(0);
+  _RXSeqNo = SPI.transfer(0);
+  
+  //the header is not passed to the user
+  _RXPacketL=_RXPacketL-HEADER_SIZE;
+  
+  if (_RXPacketL > size)                      //check passed buffer is big enough for packet
+  {
+  	// if _RXPacketL!=1 it is a very short data packet because we have RXDone
+  	// so we ignore it
+    return(0);
+  }  
+  
+  RXstart = buffer[1];
+  
+  RXend = RXstart + _RXPacketL;  
+  
+  for (index = RXstart; index < RXend; index++)
+  {
+    regdata = SPI.transfer(0);
+    rxbuffer[index] = regdata;
+  }
+
+  digitalWrite(_NSS, HIGH);
+  
+#ifdef USE_SPI_TRANSACTION
+  SPI.endTransaction();
+#endif
+
+	// check if it is really an RTS packet
+	if (_RXPacketType!=PKT_TYPE_RTS)
+		return(0);
+		  
+  return _RXPacketL;                     //so we can check for packet having enough buffer space
+}
+
+/**************************************************************************
+End by C. Pham - Dec. 2020
+**************************************************************************/
 
 void SX126XLT::clearDeviceErrors()
 {
@@ -4257,6 +4387,19 @@ void SX126XLT::CarrierSense(uint8_t cs, bool extendedIFS, bool onlyOnce) {
     CarrierSense3(DEFAULT_CAD_NUMBER);
 }
 
+uint16_t SX126XLT::CollisionAvoidance(uint8_t pl, uint8_t ca) {
+#ifdef SX126XDEBUG1
+  PRINTLN_CSTSTR("CollisionAvoidance()");
+#endif
+  
+  if (ca==1)
+  	// we force cad_number to 0 to skip the CAD procedure to test the collision avoidance mechanism
+  	// in real deployment, set to DEFAULT_CAD_NUMBER
+    return(CollisionAvoidance1(pl, 0 /* DEFAULT_CAD_NUMBER */));
+    
+  return(0);  
+}
+
 void SX126XLT::CarrierSense1(uint8_t cad_number, bool extendedIFS, bool onlyOnce) {
 
   int e;
@@ -4593,16 +4736,199 @@ void SX126XLT::CarrierSense3(uint8_t cad_number) {
   }
 }
 
-//TODO C. Pham
-/*
- Function: Sets I/Q mode
- Returns: Integer that determines if there has been any error
-   state = 2  --> The command has not been executed
-   state = 1  --> There has been an error while executing the command
-   state = 0  --> The command has been executed with no errors
-   
-   dir is not used for SX126X
-*/
+uint8_t SX126XLT::transmitRTSAddressed(uint8_t pl) {
+
+	uint8_t TXRTSPacketL;
+	const uint8_t TXBUFFER_SIZE=1;
+	uint8_t TXBUFFER[TXBUFFER_SIZE];
+	
+#ifdef SX126XDEBUG1
+	PRINTLN_CSTSTR("transmitRTSAddressed()");
+#endif
+			
+	TXBUFFER[0]=pl; //length of next data packet
+
+#ifdef SX126XDEBUGRTS
+	PRINT_CSTSTR("--> RTS: FOR ");
+	PRINT_VALUE("%d", pl);
+  PRINTLN_CSTSTR(" Bytes");		
+#endif
+	
+	// use -1 as txpower to use default setting
+	TXRTSPacketL=transmitAddressed(TXBUFFER, 1, PKT_TYPE_RTS, 0, _DevAddr, 10000, -1, WAIT_TX);	
+
+#ifdef SX126XDEBUGRTS
+	if (TXRTSPacketL)
+		PRINTLN_CSTSTR("--> RTS: SENT");
+	else	
+		PRINTLN_CSTSTR("--> RTS: ERROR"); 
+#endif
+
+	return(TXRTSPacketL);
+}
+
+uint16_t SX126XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
+
+  int e;
+	// P=0.1, i.e. 10%
+	uint8_t P=10;
+	uint8_t W=7;
+  double difs;
+  uint16_t listenRTSduration;
+	bool forceListen=false;
+  unsigned long _startDoCad, _endDoCad;
+	uint8_t sf=getLoRaSF();
+	
+  // symbol time in ms
+  double ts = 1000.0 / (returnBandwidth() / ( 1 << sf));
+
+  //set difs to packet's preamble length, in ms
+  difs=(getPreamble()+((sf<7)?6.25:4.25))*ts;
+  
+  // W*DIFS+TOA(sizeof(RTS)), in ms
+  listenRTSduration=W*(uint16_t)difs+getToA(HEADER_SIZE+1);
+
+  PRINT_CSTSTR("--> CA1\n");
+
+#ifdef SX126XDEBUGRTS
+  PRINT_CSTSTR("--> CA1: ts ");
+	PRINT_VALUE("%d", (uint16_t)ts);
+  PRINT_CSTSTR(" DIFS ");
+	PRINT_VALUE("%d", (uint16_t)difs);
+	PRINT_CSTSTR(" listenRTSduration ");
+	PRINTLN_VALUE("%d", listenRTSduration);			 
+#endif
+
+	// first we try to see whether can detect activity
+  if (cad_number) {
+  	// check for free channel
+    _startDoCad=millis();
+    e = doCAD(cad_number);
+    _endDoCad=millis();
+    
+    PRINT_CSTSTR("--> --> CA1: CAD ");
+  	PRINT_VALUE("%d",_endDoCad-_startDoCad);
+    PRINTLN;    
+  }
+  else
+  	e==0;
+  
+  // we detected activity!
+  // since there is low probability of false positive
+  // it means that there is an ongoing transmission
+  // so we return the toa of the maximum packet length, i.e. 255 bytes
+  if (e!=0) {
+#ifdef SX126XDEBUGRTS
+  	PRINT_CSTSTR("--> CA1: BUSY DEFER BY MAX_TOA ");
+		PRINTLN_VALUE("%d", getToA(255));			 
+#endif  
+  	return(getToA(255));
+	}
+	// here e==0 so we detected no activity
+	// run the proposed channel access mechanism
+	// see scientific article
+	
+#ifdef ARDUINO                
+  uint8_t myP = random(100);
+#else
+  uint8_t myP = rand() % 100;
+#endif		
+
+#ifdef SX126XDEBUGRTS
+  	PRINT_CSTSTR("--> CA1: FREE, INITIATE CA ");
+  	PRINT_CSTSTR("P=");
+  	PRINT_VALUE("%d", P);
+  	PRINT_CSTSTR(" myP=");
+		PRINTLN_VALUE("%d", myP);			 
+#endif 
+	
+	// we will break from this infinite loop with a return
+	while (1) {
+	
+		// if myP>P we start at phase 1 to listen for RTS
+		if (myP>P || forceListen) {
+	
+			uint8_t RXRTSPacketL;
+			const uint8_t RXBUFFER_SIZE=1;
+			uint8_t RXBUFFER[RXBUFFER_SIZE];
+
+#ifdef SX126XDEBUGRTS
+			PRINTLN_CSTSTR("--> CA1: WAIT FOR RTS");
+#endif
+		
+			//try to receive the RTS
+			RXRTSPacketL=receiveRTSAddressed(RXBUFFER, RXBUFFER_SIZE, listenRTSduration, WAIT_RX);
+		
+			// length is 1 indicates an RTS
+			if (RXRTSPacketL==1) {
+#ifdef SX126XDEBUGRTS
+				PRINT_CSTSTR("--> CA1: RECEIVE RTS(");
+				PRINT_VALUE("%d", RXBUFFER[0]);
+				PRINT_CSTSTR(") FROM ");
+				PRINTLN_VALUE("%d", readRXSource());
+				PRINT_CSTSTR("--> CA1: NAV(RTS) FOR listenRTSduration+W*DIFS+ToA(");
+				PRINT_VALUE("%d", RXBUFFER[0]);
+				PRINT_CSTSTR(") ");						
+				PRINT_VALUE("%d", listenRTSduration+W*(uint16_t)difs+getToA(RXBUFFER[0]));
+				PRINTLN_CSTSTR(" ms"); 
+#endif		
+				return(listenRTSduration+W*(uint16_t)difs+getToA(RXBUFFER[0]));
+			}
+			else 
+			//indicate a longer data packet
+			if (RXRTSPacketL>1) {
+#ifdef SX126XDEBUGRTS
+				PRINT_CSTSTR("--> CA1: ValidHear FOR DATA DEFER BY MAX_TOA ");
+				PRINTLN_VALUE("%d", getToA(255));			 
+#endif  
+				return(getToA(255));	
+			}
+			else {
+#ifdef SX126XDEBUGRTS
+				PRINTLN_CSTSTR("--> CA1: NO RTS");		 
+#endif		
+			}
+		}		
+
+    // wait for random number of DIFS [0, W]
+#ifdef ARDUINO                
+    uint8_t w = random(0,W);
+#else
+    uint8_t w = rand() % (W+1);
+#endif
+
+#ifdef SX126XDEBUGRTS
+		PRINT_CSTSTR("--> CA1: WAIT FOR ");
+		PRINT_VALUE("%d", w);
+		PRINTLN_CSTSTR(" DIFS");		 
+#endif
+
+		delay(w*(uint16_t)difs);
+		
+		// if forceListen==true then this is the second time
+		// so we just exit after having waited for a random number of DIFS to send the data packet
+		// 
+		if (forceListen) {
+#ifdef SX126XDEBUGRTS
+			PRINTLN_CSTSTR("--> CA1: EXIT, ALLOW DATA TRANSMIT");
+#endif		
+			return(0);
+		}	
+		// if forceListen==false then this is the first time for nodes starting directly at phase 2
+		else {	
+#ifdef SX126XDEBUGRTS
+			PRINTLN_CSTSTR("--> CA1: SEND RTS");
+#endif			
+		
+			// phase 2 where we send an RTS
+			transmitRTSAddressed(pl);
+		
+			// go for another listening period
+			forceListen=true;
+		}
+	};	
+}
+
 uint8_t	SX126XLT::invertIQ(bool invert)
 {
 #ifdef SX126XDEBUG1
