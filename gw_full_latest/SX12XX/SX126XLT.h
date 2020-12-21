@@ -131,7 +131,6 @@ class SX126XLT  {
     /**************************************************************************
       Added by C. Pham - Oct. 2020
     **************************************************************************/
-
     uint32_t returnBandwidth();
     void setCadParams();
     int8_t doCAD(uint8_t counter);
@@ -154,7 +153,7 @@ class SX126XLT  {
     uint8_t readDevAddr();
     uint8_t readAckStatus();
     int8_t readPacketSNRinACK();    
-    
+    void setLowPowerFctPtr(void (*pf)(unsigned long));    
     /**************************************************************************
       End by C. Pham - Oct. 2020
     **************************************************************************/
@@ -297,6 +296,7 @@ class SX126XLT  {
     uint8_t _AckStatus;
     int8_t _PacketSNRinACK;    
     uint8_t _cadSymbolNum;
+    void (*_lowPowerFctPtr)(unsigned long);    
     /**************************************************************************
       End by C. Pham - Oct. 2020
     **************************************************************************/    

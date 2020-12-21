@@ -194,7 +194,6 @@ class SX127XLT
     /**************************************************************************
       Added by C. Pham - Oct. 2020
     **************************************************************************/
-
     uint32_t returnBandwidth();
     int8_t doCAD(uint8_t counter);
     uint16_t getToA(uint8_t pl);
@@ -217,7 +216,7 @@ class SX127XLT
     uint8_t readDevAddr();
     uint8_t readAckStatus();
     int8_t readPacketSNRinACK();
-    
+    void setLowPowerFctPtr(void (*pf)(unsigned long));    
     /**************************************************************************
       End by C. Pham - Oct. 2020
     **************************************************************************/
@@ -324,6 +323,7 @@ class SX127XLT
     uint8_t _DevAddr;
     uint8_t _AckStatus;
     int8_t _PacketSNRinACK;
+    void (*_lowPowerFctPtr)(unsigned long);    
     /**************************************************************************
       End by C. Pham - Oct. 2020
     **************************************************************************/

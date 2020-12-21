@@ -10,6 +10,19 @@ See LICENSE.TXT file included in the library
 */
 
 /**************************************************************************
+  Change logs
+
+	Dec. 21st, 2020
+		- add CollisionAvoidance mechanism: LT.CollisionAvoidance(uint8_t pl, uint8_t ca=1)
+			- returns a backoff timer expressed in ms
+			- if 0 then node can transmit data packet
+		- add a pointer to a user-defined low power function
+			- if no low power function is provided, then delay function is used in CollisionAvoidance
+			- setLowPowerFctPtr(void (*pf)(unsigned long)) is used to set the low power function 
+			- e.g. in Arduino sketch: LT.setLowPowerFctPtr(&lowPower) where lowPower() is the user-defined function
+**************************************************************************/
+
+/**************************************************************************
   CHANGES by C. Pham, October 2020
 
   - Ensure that lib compiles on Raspberry - done
@@ -135,6 +148,8 @@ SX128XLT::SX128XLT()
   
   _TXSeqNo = 0;
   _RXSeqNo = 0;
+  
+  _lowPowerFctPtr=NULL;
 
 //#define RADIO_FAKE_TEST
 #ifdef RADIO_FAKE_TEST 
@@ -4168,8 +4183,11 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 		PRINTLN_CSTSTR(" DIFS");		 
 #endif
 
-		delay(w*(uint16_t)difs);
-		
+		if (_lowPowerFctPtr==NULL)
+			delay(w*(uint16_t)difs);
+		else
+			(*_lowPowerFctPtr)(w*(uint16_t)difs);
+			
 		// if forceListen==true then this is the second time
 		// so we just exit after having waited for a random number of DIFS to send the data packet
 		// 
@@ -4287,6 +4305,14 @@ int8_t SX128XLT::readPacketSNRinACK()
   return(_PacketSNRinACK);
 }
 
+void SX128XLT::setLowPowerFctPtr(void (*pf)(unsigned long))
+{
+#ifdef SX128XDEBUG
+  PRINTLN_CSTSTR("setLowPowerFctPtr()");
+#endif
+
+	_lowPowerFctPtr=pf;
+}
 /**************************************************************************
   End by C. Pham - Oct. 2020
 **************************************************************************/

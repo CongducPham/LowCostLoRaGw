@@ -157,7 +157,8 @@ class SX128XLT  {
     void setDevAddr(uint8_t addr);
     uint8_t readDevAddr();
     uint8_t readAckStatus();
-    int8_t readPacketSNRinACK();    
+    int8_t readPacketSNRinACK();  
+    void setLowPowerFctPtr(void (*pf)(unsigned long));  
     /**************************************************************************
       End by C. Pham - Oct. 2020
     **************************************************************************/
@@ -277,7 +278,8 @@ class SX128XLT  {
     uint8_t _DevAddr;
     uint8_t _AckStatus;
     int8_t _PacketSNRinACK;    
-    uint8_t _cadSymbolNum;
+    uint8_t _cadSymbolNum;  
+    void (*_lowPowerFctPtr)(unsigned long);
     /**************************************************************************
       End by C. Pham - Oct. 2020
     **************************************************************************/     

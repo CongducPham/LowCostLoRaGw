@@ -10,6 +10,19 @@ See LICENSE.TXT file included in the library
 */
 
 /**************************************************************************
+  Change logs
+
+	Dec. 21st, 2020
+		- add CollisionAvoidance mechanism: LT.CollisionAvoidance(uint8_t pl, uint8_t ca=1)
+			- returns a backoff timer expressed in ms
+			- if 0 then node can transmit data packet
+		- add a pointer to a user-defined low power function
+			- if no low power function is provided, then delay function is used in CollisionAvoidance
+			- setLowPowerFctPtr(void (*pf)(unsigned long)) is used to set the low power function 
+			- e.g. in Arduino sketch: LT.setLowPowerFctPtr(&lowPower) where lowPower() is the user-defined function
+**************************************************************************/
+
+/**************************************************************************
   CHANGES by C. Pham, October 2020
 
   - Ensure that lib compiles on Raspberry - done
@@ -147,6 +160,8 @@ SX126XLT::SX126XLT()
   _TXSeqNo = 0;
   _RXSeqNo = 0;
 
+  _lowPowerFctPtr=NULL;
+  
 //#define RADIO_FAKE_TEST
 #ifdef RADIO_FAKE_TEST 
   savedModParam1 = LORA_SF12;
@@ -5022,6 +5037,14 @@ int8_t SX126XLT::readPacketSNRinACK()
   return(_PacketSNRinACK);
 }
 
+void SX126XLT::setLowPowerFctPtr(void (*pf)(unsigned long))
+{
+#ifdef SX126XDEBUG
+  PRINTLN_CSTSTR("setLowPowerFctPtr()");
+#endif
+
+	_lowPowerFctPtr=pf;
+}
 /**************************************************************************
   End by C. Pham - Oct. 2020
 **************************************************************************/
