@@ -362,6 +362,110 @@ char *ftoa(char *a, double f, int precision)
 }
 #endif
 
+#ifdef LOW_POWER
+
+void lowPower(unsigned long time_ms) {
+
+  unsigned long waiting_t=time_ms;
+
+  FLUSHOUTPUT;
+  delay(5);
+
+#ifdef __SAMD21G18A__
+
+  // For Arduino M0 or Zero we use the built-in RTC
+  rtc.setTime(17, 0, 0);
+  rtc.setDate(1, 1, 2000);
+  if (waiting_t<60000)
+    rtc.setAlarmTime(17, 0, waiting_t/1000);
+  else {
+    uint8_t minutes=waiting_t/60000;
+    uint8_t secondes=waiting_t/1000-minutes*60;
+    rtc.setAlarmTime(17, minutes, secondes);
+  }
+  rtc.enableAlarm(rtc.MATCH_HHMMSS);
+  //rtc.attachInterrupt(alarmMatch);
+  rtc.standbyMode();
+  
+  LowPower.standby();
+
+  PRINT_CSTSTR("SAMD21G18A wakes up from standby\n");      
+  FLUSHOUTPUT;
+  
+#else
+              
+  while (waiting_t>0) {  
+  
+#if defined ARDUINO_AVR_MEGA2560 || defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__    
+      // ATmega2560, ATmega328P, ATmega168, ATmega32U4
+      // each wake-up introduces an overhead of about 158ms
+      if (waiting_t > 8158) {
+        LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); 
+        waiting_t = waiting_t - 8158;
+#ifdef SHOW_LOW_POWER_CYCLE                  
+              PRINT_CSTSTR("8");
+#endif              
+      }
+      else if (waiting_t > 4158) {
+        LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); 
+        waiting_t = waiting_t - 4158;
+#ifdef SHOW_LOW_POWER_CYCLE                  
+              PRINT_CSTSTR("4");
+#endif 
+      }
+      else if (waiting_t > 2158) {
+        LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF); 
+        waiting_t = waiting_t - 2158;
+#ifdef SHOW_LOW_POWER_CYCLE                  
+              PRINT_CSTSTR("2");
+#endif 
+      }
+      else if (waiting_t > 1158) {
+        LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF); 
+        waiting_t = waiting_t - 1158;
+#ifdef SHOW_LOW_POWER_CYCLE                  
+              PRINT_CSTSTR("1");
+#endif 
+      }      
+    else {
+        delay(waiting_t); 
+#ifdef SHOW_LOW_POWER_CYCLE                   
+              PRINT_CSTSTR("D[");
+              PRINT_VALUE("%d", waiting_t);
+              PRINT_CSTSTR("]\n");
+#endif
+        waiting_t = 0;
+      }
+  
+#ifdef SHOW_LOW_POWER_CYCLE
+      FLUSHOUTPUT;
+      delay(1);
+#endif
+      
+#elif defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
+      // Teensy31/32 & TeensyLC
+      if (waiting_t < LOW_POWER_PERIOD*1000) {
+        timer.setTimer(waiting_t);
+        waiting_t = 0;
+      }
+      else
+        waiting_t = waiting_t - LOW_POWER_PERIOD*1000;
+                    
+#ifdef LOW_POWER_HIBERNATE
+      Snooze.hibernate(sleep_config);
+#else            
+      Snooze.deepSleep(sleep_config);
+#endif
+  
+#else
+      // use the delay function
+      delay(waiting_t);
+      waiting_t = 0;
+#endif          
+   }
+#endif   
+}
+#endif
 
 /*****************************
  _____      _               
@@ -588,6 +692,9 @@ void setup()
 *******************************************************************************************************/
 
 #ifdef WITH_EEPROM
+#if defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU
+  EEPROM.begin(512);
+#endif
   // get config from EEPROM
   EEPROM.get(0, my_sx1272config);
 
@@ -1142,15 +1249,12 @@ void loop(void)
 // 
 ///////////////////////////////////////////////////////////////////
 
-#if defined LOW_POWER
+#if defined LOW_POWER && not defined ARDUINO_SAM_DUE
       PRINT_CSTSTR("Switch to power saving mode\n");
 
       //CONFIGURATION_RETENTION=RETAIN_DATA_RAM on SX128X
       //parameter is ignored on SX127X
       LT.setSleep(CONFIGURATION_RETENTION);
-        
-      FLUSHOUTPUT;
-      delay(10);
 
       //how much do we still have to wait, in millisec?
       unsigned long now_millis=millis();
@@ -1165,102 +1269,9 @@ void loop(void)
 
       PRINTLN_VALUE("%ld",waiting_t);
       FLUSHOUTPUT;
+
+      lowPower(waiting_t);
       
-#ifdef __SAMD21G18A__
-      // For Arduino M0 or Zero we use the built-in RTC
-      rtc.setTime(17, 0, 0);
-      rtc.setDate(1, 1, 2000);
-      rtc.setAlarmTime(17, idlePeriodInMin, 0);
-      // for testing with 20s
-      //rtc.setAlarmTime(17, 0, 20);
-      rtc.enableAlarm(rtc.MATCH_HHMMSS);
-      //rtc.attachInterrupt(alarmMatch);
-      rtc.standbyMode();
-      
-      LowPower.standby();
-
-      PRINT_CSTSTR("SAMD21G18A wakes up from standby\n");      
-      FLUSHOUTPUT;
-#else
-
-#if defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
-      // warning, setTimer accepts value from 1ms to 65535ms max
-      // milliseconds
-      // by default, LOW_POWER_PERIOD is 60s for those microcontrollers
-      timer.setTimer(LOW_POWER_PERIOD*1000);
-#endif  
-      
-      while (waiting_t>0) {  
-
-#if defined ARDUINO_AVR_MEGA2560 || defined ARDUINO_AVR_PRO || defined ARDUINO_AVR_NANO || defined ARDUINO_AVR_UNO || defined ARDUINO_AVR_MINI || defined __AVR_ATmega32U4__    
-          // ATmega2560, ATmega328P, ATmega168, ATmega32U4
-          // each wake-up introduces an overhead of about 158ms
-          if (waiting_t > 8158) {
-            LowPower.powerDown(SLEEP_8S, ADC_OFF, BOD_OFF); 
-            waiting_t = waiting_t - 8158;
-#ifdef SHOW_LOW_POWER_CYCLE                  
-                  PRINT_CSTSTR("8");
-#endif              
-          }
-          else if (waiting_t > 4158) {
-            LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); 
-            waiting_t = waiting_t - 4158;
-#ifdef SHOW_LOW_POWER_CYCLE                  
-                  PRINT_CSTSTR("4");
-#endif 
-          }
-          else if (waiting_t > 2158) {
-            LowPower.powerDown(SLEEP_2S, ADC_OFF, BOD_OFF); 
-            waiting_t = waiting_t - 2158;
-#ifdef SHOW_LOW_POWER_CYCLE                  
-                  PRINT_CSTSTR("2");
-#endif 
-          }
-          else if (waiting_t > 1158) {
-            LowPower.powerDown(SLEEP_1S, ADC_OFF, BOD_OFF); 
-            waiting_t = waiting_t - 1158;
-#ifdef SHOW_LOW_POWER_CYCLE                  
-                  PRINT_CSTSTR("1");
-#endif 
-          }      
-          else {
-            delay(waiting_t); 
-#ifdef SHOW_LOW_POWER_CYCLE                   
-                  PRINT_CSTSTR("D[");
-                  PRINT_VALUE("%d", waiting_t);
-                  PRINT_CSTSTR("]\n");
-#endif
-            waiting_t = 0;
-          }
-
-#ifdef SHOW_LOW_POWER_CYCLE
-          FLUSHOUTPUT;
-          delay(1);
-#endif
-          
-#elif defined __MK20DX256__ || defined __MKL26Z64__ || defined __MK64FX512__ || defined __MK66FX1M0__
-          // Teensy31/32 & TeensyLC
-          if (waiting_t < LOW_POWER_PERIOD*1000) {
-            timer.setTimer(waiting_t);
-            waiting_t = 0;
-          }
-          else
-            waiting_t = waiting_t - LOW_POWER_PERIOD*1000;
-                        
-#ifdef LOW_POWER_HIBERNATE
-          Snooze.hibernate(sleep_config);
-#else            
-          Snooze.deepSleep(sleep_config);
-#endif
-
-#else
-          // use the delay function
-          delay(waiting_t);
-          waiting_t = 0;
-#endif          
-       }
-#endif  
-
       PRINT_CSTSTR("Wake from power saving mode\n");
       LT.wake();      
 #else
