@@ -4787,7 +4787,9 @@ uint16_t SX126XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
   int e;
 	// P=0.1, i.e. 10%
 	uint8_t P=10;
-	uint8_t W=7;
+	uint8_t W2=7;
+	uint8_t W2afterP1=W2+3;
+	uint8_t W3=W2;
   double difs;
   uint16_t listenRTSduration;
 	bool forceListen=false;
@@ -4800,8 +4802,8 @@ uint16_t SX126XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
   //set difs to packet's preamble length, in ms
   difs=(getPreamble()+((sf<7)?6.25:4.25))*ts;
   
-  // W*DIFS+TOA(sizeof(RTS)), in ms
-  listenRTSduration=W*(uint16_t)difs+getToA(HEADER_SIZE+1);
+  // W2*DIFS+TOA(sizeof(RTS)), in ms
+  listenRTSduration=W2*(uint16_t)difs+getToA(HEADER_SIZE+1);
 
   PRINT_CSTSTR("--> CA1\n");
 
@@ -4842,9 +4844,10 @@ uint16_t SX126XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 	// here e==0 so we detected no activity
 	// run the proposed channel access mechanism
 	// see scientific article
-	
+
+	//[0,100]	
 #ifdef ARDUINO                
-  uint8_t myP = random(100);
+  uint8_t myP = random(100+1);
 #else
   uint8_t myP = rand() % 100;
 #endif		
@@ -4860,6 +4863,7 @@ uint16_t SX126XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 	// we will break from this infinite loop with a return
 	while (1) {
 	
+		// 0<= myP <=P then go to phase 2
 		// if myP>P we start at phase 1 to listen for RTS
 		if (myP>P || forceListen) {
 	
@@ -4868,6 +4872,12 @@ uint16_t SX126XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 			uint8_t RXBUFFER[RXBUFFER_SIZE];
 
 #ifdef SX126XDEBUGRTS
+			PRINT_CSTSTR("--> CA1: LISTEN ");
+			if (forceListen)
+				PRINTLN_CSTSTR("P2");
+			else
+				PRINTLN_CSTSTR("P1");			
+							 
 			PRINTLN_CSTSTR("--> CA1: WAIT FOR RTS");
 #endif
 		
@@ -4881,19 +4891,19 @@ uint16_t SX126XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 				PRINT_VALUE("%d", RXBUFFER[0]);
 				PRINT_CSTSTR(") FROM ");
 				PRINTLN_VALUE("%d", readRXSource());
-				PRINT_CSTSTR("--> CA1: NAV(RTS) FOR listenRTSduration+W*DIFS+ToA(");
+				PRINT_CSTSTR("--> CA1: NAV(RTS) FOR listenRTSduration+W3*DIFS+ToA(");
 				PRINT_VALUE("%d", RXBUFFER[0]);
 				PRINT_CSTSTR(") ");						
-				PRINT_VALUE("%d", listenRTSduration+W*(uint16_t)difs+getToA(RXBUFFER[0]));
+				PRINT_VALUE("%d", listenRTSduration+W3*(uint16_t)difs+getToA(RXBUFFER[0]));
 				PRINTLN_CSTSTR(" ms"); 
 #endif		
-				return(listenRTSduration+W*(uint16_t)difs+getToA(RXBUFFER[0]));
+				return(listenRTSduration+W3*(uint16_t)difs+getToA(RXBUFFER[0]));
 			}
 			else 
 			//indicate a longer data packet
 			if (RXRTSPacketL>1) {
 #ifdef SX126XDEBUGRTS
-				PRINT_CSTSTR("--> CA1: ValidHear FOR DATA DEFER BY MAX_TOA ");
+				PRINT_CSTSTR("--> CA1: ValidHeader FOR DATA DEFER BY MAX_TOA ");
 				PRINTLN_VALUE("%d", getToA(255));			 
 #endif  
 				return(getToA(255));	
@@ -4905,21 +4915,62 @@ uint16_t SX126XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 			}
 		}		
 
-    // wait for random number of DIFS [0, W]
-#ifdef ARDUINO                
-    uint8_t w = random(0,W);
-#else
-    uint8_t w = rand() % (W+1);
+    // wait for random number of DIFS 
+    // [0, W2] if direct to phase 2
+    // [0, W2afterP1] if phase 2 after phase 1
+    // [0, W3] in phase 3
+    uint8_t w;
+        
+		// we are actually finishing the second listening period
+		// we backoff before transmitting W3*DIFS
+		if (forceListen) {
+#ifdef SX126XDEBUGRTS
+			PRINT_CSTSTR("--> CA1: P3 W3=");
+			PRINTLN_VALUE("%d", W3);	 
 #endif
-
+#ifdef ARDUINO		
+			w = random(0,W3+1);
+#else
+			w = rand() % (W3+1);
+#endif			
+		}
+		else {	
+			// we were in phase 1
+			if (myP>P) {
+#ifdef SX126XDEBUGRTS
+				PRINT_CSTSTR("--> CA1: P1->P2 W2afterP1=");
+				PRINTLN_VALUE("%d", W2afterP1);	 
+#endif			  
+#ifdef ARDUINO			          
+				w = random(0,W2afterP1+1);
+#else
+				w = rand() % (W2afterP1+1);
+#endif								
+			}	
+			else {
+#ifdef SX126XDEBUGRTS
+				PRINT_CSTSTR("--> CA1: direct P2 W2=");
+				PRINTLN_VALUE("%d", W2);	 
+#endif			
+#ifdef ARDUINO			
+				w = random(0,W2+1);	
+#else		
+				w = rand() % (W2+1);
+#endif		
+			}		
+		}
+		
 #ifdef SX126XDEBUGRTS
 		PRINT_CSTSTR("--> CA1: WAIT FOR ");
 		PRINT_VALUE("%d", w);
 		PRINTLN_CSTSTR(" DIFS");		 
 #endif
 
-		delay(w*(uint16_t)difs);
-		
+		if (_lowPowerFctPtr==NULL)
+			delay(w*(uint16_t)difs);
+		else
+			(*_lowPowerFctPtr)(w*(uint16_t)difs);
+			
 		// if forceListen==true then this is the second time
 		// so we just exit after having waited for a random number of DIFS to send the data packet
 		// 
@@ -4941,7 +4992,7 @@ uint16_t SX126XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 			// go for another listening period
 			forceListen=true;
 		}
-	};	
+	}
 }
 
 uint8_t	SX126XLT::invertIQ(bool invert)
