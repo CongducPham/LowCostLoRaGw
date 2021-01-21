@@ -11,6 +11,8 @@ June 19th, 2020. The low-cost, low-power and long-distance cattle collar develop
 
 Latest news
 -----------
+- **NEW-Jan21** To provide support for next 64-bit OS the low-level SPI library on the Raspberry gateway has moved from Libelium's `arduPi` lib to Gordon's `wiringPi` lib because `arduPi` relies heavily on direct memory accesses that are difficult to port. The main reason for 64-bit OS is to prepare the whole low-cost Raspberry-based gateway to embed advance AI frameworks that are mostly based on 64-bit OS. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-WiringPi-64bit-OS.md).
+
 - **NEW-Nov20** To support the new SX126X and SX128X LoRa chips, we updated and added Arduino ProMini PCBs to easily connect NiceRF SX1262 and NiceRF SX1280 modules. These modules have same size than the HopeRF RFM95W for SX1276.
 
 - **NEW-Oct20** The low-level radio communication library has moved to the SX12XX LoRa library from Stuart Robinson in order to build devices and gateways with **SX126X, SX127X and SX128X LoRa chip**. The default gateway program is compiled for an SX127X based module using the SX12XX library. This is a major move to provide support for the most recent LoRa chips including those for 2.4GHz LoRa. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-SX12XX.md).
@@ -109,6 +111,7 @@ Also consult the following web page: http://cpham.perso.univ-pau.fr/LORA/RPIgate
 Main features of gateway
 ------------------------
 
+- **NEW** Support of 64-bit OS to better embed AI frameworks
 - **NEW** The low-level radio communication library has moved to the SX12XX LoRa library from Stuart Robinson in order to build devices and gateways with **SX126X, SX127X and SX128X LoRa chip**.
 - **NEW** The single-channel gateway now also provides LoRaWAN downlink and OTAA features
 	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)

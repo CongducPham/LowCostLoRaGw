@@ -1,6 +1,46 @@
 Change logs
 ===========
 
+Jan 20th, 2021
+--------------
+- the low-level SPI library on the Raspberry has moved from Libelium's `arduPi` lib to Gordon's `wiringPi` lib
+	* the main reason is to prepare the low-level radio bridge to 64-bit architecture as `arduPi` relies heavily on direct memory accesses that are difficult to port
+	* on 32-bit OS, `arduPi`can still be used
+	* on 32-bit OS, the original wiringPi distribution, although not maintained anymore by the author, can be installed (http://wiringpi.com/)
+	* on 64-bit OS, the "UNOFICIAL WiringPi library for RPi 64bit OS" (https://github.com/TheNextLVL/wiringPi) must be installed
+	* however, for RPI4, you must take this updated version where RPI4 has been added as detected platform
+		- https://github.com/CongducPham/LowCostLoRaGw/blob/master/zip/wiringPi-64bit.tgz
+	* for more details see https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-WiringPi-64bit-OS
+
+Oct 28th, 2020
+--------------
+- v2.2 `lora_gateway.cpp`
+	* The low-level LoRa communication lib has moved from Libelium-based lib to Stuart Robinson's SX12XX lib.
+		- https://github.com/StuartsProjects/SX12XX-LoRa
+		- SX126X, SX127X, and SX128X related files have been ported to run on both Arduino & RaspberryPI environment
+		- support for SX1261, SX1262, SX1268, SX1272, SX1276, SX1277, SX1278, SX1279, SX1280, SX1281
+		- for more details see https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-SX12XX.md
+	* `SX1272_lora_gateway.cpp` is the Libelium-based lib version only for SX1272/76
+	* `SX12XX_lora_gateway.cpp` is the Stuart Robinson's SX12XX lib version	
+
+May 19th, 2020
+--------------
+- v2.1a `lora_gateway.cpp`
+	*	uplink and downlink feequency
+		- define LORAWAN_UPFQ, LORAWAN_D2FQ and LORAWAN_D2SF to better adapt the custom frequency plan
+		- change these parameters for each band definition (BAND868, BAND900 and BAND433)
+ 
+Jan 29th, 2020
+---------------
+- v2.1 `lora_gateway.cpp`
+	* `lora_gateway` in raw mode now checks 4 times for `downlink.txt` after a packet reception at t_r (to work with Network Server sending PULL_RESP in just-in-time mode)
+		- first, after t_r+DELAY_DNWFILE (delay of 900ms, no reception possible) to target RX1
+		- second, after t_r+DELAY_DNWFILE+DELAY_EXTDNW2 (additional delay of 1000ms, no reception possible) to target RX2
+		- third, after t_r+DELAY_JACC1-DELAY_DNWFILE (radio in reception mode) to target RX1 for join-accept only
+			* if a new packet is received during the last wait period then it has priority
+			* lora_gateway then starts a new cycle of downlink attempts
+		- last, after t_r+DELAY_JACC1+DELAY_EXTDNW2-DELAY_DNWFILE (additional delay of 1000ms, no reception possible) to target RX2 for join-accept only
+ 
 Jan 27th, 2020
 --------------
 - v2.0 `lora_gateway.cpp`

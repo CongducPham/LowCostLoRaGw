@@ -322,7 +322,7 @@ int SerialPi::readBytesUntil(char character,char buffer[],int length){
 
 
 bool SerialPi::find(const char *target){
-    findUntil(target,NULL);
+    return findUntil(target,NULL);
 }
 
 /* Reads data from the serial buffer until a target string of given length
@@ -1456,6 +1456,7 @@ int raspberryPinNumber(int arduinoPin){
 		case 12: return 9; break;
 		case 13: return 11; break;
 	}
+	return 0;
 }
 
 void ch_gpio_fsel(uint8_t pin, uint8_t mode){
@@ -1482,6 +1483,7 @@ pthread_t *getThreadIdFromPin(int pin){
 		case 12: return &idThread12; break;
 		case 13: return &idThread13; break;
 	}
+	return 0;
 }
 
 /* This is the function that will be running in a thread if

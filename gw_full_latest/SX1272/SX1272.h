@@ -32,7 +32,11 @@
 
 #include <stdint.h>
 
-#include "arduPi.h"
+#ifdef USE_ARDUPI
+#include "arduPi.h"	
+#else
+#include "arduinoPi.h"
+#endif
 
 #ifndef inttypes_h
 	#include <inttypes.h>
@@ -48,14 +52,20 @@
 //#define W_NET_KEY
 //#define W_INITIALIZATION
 
+#ifdef USE_ARDUPI
 // will be translated into GPIO4 by arduPI
 #define SX1272_RST  6
+#else
+// pin 7 for wiringPi correspond to GPIO4 
+#define SX1272_RST  7
+#endif
 
 #define SX1272Chip  0
 #define SX1276Chip  1
 // end
 
 // will be translated into GPIO8 (CE0) by arduPI
+// or keep as it is for wiringPi
 #define SX1272_SS 10
 
 #define SX1272_debug_mode 0

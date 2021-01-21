@@ -12,6 +12,8 @@
 /**************************************************************************
   Change logs
 
+	Jan. 15th, 2021
+		- move to wiringPI for low-level SPI communication. arduinoPi.cpp is a wrapper providing the SPI class for Raspberry
 	Dec. 21st, 2020
 		- add CollisionAvoidance mechanism: LT.CollisionAvoidance(uint8_t pl, uint8_t ca=1)
 			- returns a backoff timer expressed in ms
@@ -144,7 +146,7 @@ End by C. Pham - Oct. 2020
 //#define SX127XDEBUG1               //enable level 1 debug messages
 //#define SX127XDEBUG2               //enable level 2 debug messages
 //#define SX127XDEBUG3               //enable level 3 debug messages
-//#define SX127XDEBUG_TEST           //enable test debug messages
+#define SX127XDEBUG_TEST           //enable test debug messages
 #define SX127XDEBUGACK               //enable ack transaction debug messages
 #define SX127XDEBUGRTS
 //#define SX127XDEBUGCAD
@@ -180,6 +182,11 @@ bool SX127XLT::begin(int8_t pinNSS, int8_t pinNRESET, int8_t pinDIO0, int8_t pin
 //format 1 pins, assign the all available pins 
 #ifdef SX127XDEBUG1
   PRINTLN_CSTSTR("1 begin()");
+#endif
+
+#if not defined ARDUINO && not defined USE_ARDUPI
+  wiringPiSetup() ;
+  PRINTLN_CSTSTR("<<< using wiringPi >>>"); 
 #endif
 
   //assign the passed pins to the class private variabled
@@ -243,6 +250,11 @@ bool SX127XLT::begin(int8_t pinNSS, int8_t pinNRESET, int8_t pinDIO0, uint8_t de
 //format 2 pins, simplified 
 #ifdef SX127XDEBUG1
   PRINTLN_CSTSTR("2 begin()");
+#endif
+
+#if not defined ARDUINO && not defined USE_ARDUPI
+  wiringPiSetup() ;
+  PRINTLN_CSTSTR("<<< using wiringPi >>>");   
 #endif
 
   //assign the passed pins to the class private variabled
@@ -555,6 +567,8 @@ void SX127XLT::writeRegister(uint8_t address, uint8_t value)
   PRINTLN_CSTSTR("writeRegister()");
 #endif
 
+#if defined ARDUINO || defined USE_ARDUPI
+
 #ifdef USE_SPI_TRANSACTION                  //to use SPI_TRANSACTION enable define at beginning of CPP file 
   SPI.beginTransaction(SPISettings(LTspeedMaximum, LTdataOrder, LTdataMode));
 #endif
@@ -566,6 +580,16 @@ void SX127XLT::writeRegister(uint8_t address, uint8_t value)
 
 #ifdef USE_SPI_TRANSACTION
   SPI.endTransaction();
+#endif
+
+#else
+  uint8_t spibuf[2];
+  spibuf[0] = address | 0x80;
+  spibuf[1] = value;
+
+  digitalWrite(_NSS, LOW);         //set NSS low
+  wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 2);
+  digitalWrite(_NSS, HIGH);        //set NSS high
 #endif
 
 #ifdef SX127XDEBUG2
@@ -587,6 +611,8 @@ uint8_t SX127XLT::readRegister(uint8_t address)
 
   uint8_t regdata;
 
+#if defined ARDUINO || defined USE_ARDUPI
+
 #ifdef USE_SPI_TRANSACTION         //to use SPI_TRANSACTION enable define at beginning of CPP file 
   SPI.beginTransaction(SPISettings(LTspeedMaximum, LTdataOrder, LTdataMode));
 #endif
@@ -598,6 +624,18 @@ uint8_t SX127XLT::readRegister(uint8_t address)
 
 #ifdef USE_SPI_TRANSACTION
   SPI.endTransaction();
+#endif
+
+#else
+	uint8_t spibuf[2];
+	spibuf[0] = address & 0x7F;
+	spibuf[1] = 0x00;
+
+  digitalWrite(_NSS, LOW);         //set NSS low
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 2);   
+  digitalWrite(_NSS, HIGH);        //set NSS high
+  
+  regdata=spibuf[1];
 #endif
 
 #ifdef SX127XDEBUG2
@@ -2302,11 +2340,18 @@ uint8_t SX127XLT::receive(uint8_t *rxbuffer, uint8_t size, uint32_t rxtimeout, u
 #endif
 
   digitalWrite(_NSS, LOW);                    //start the burst read
+
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(REG_FIFO);
+#endif  
 
   for (index = 0; index < _RXPacketL; index++)
   {
+#if defined ARDUINO || defined USE_ARDUPI
     regdata = SPI.transfer(0);
+#else  
+    regdata = readRegister(REG_FIFO);
+#endif    
     rxbuffer[index] = regdata;
   }
   digitalWrite(_NSS, HIGH);
@@ -2392,7 +2437,7 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
 		if (bitRead(index, 4)!=0) {
     	//_RXTimestamp start when a valid header has been received
     	_RXTimestamp=millis();		
-#ifdef SX127XDEBUG1	
+#ifdef SX127XDEBUG1
   		PRINTLN_CSTSTR("Valid header detected"); 		
 #endif
 
@@ -2443,23 +2488,48 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
   }
 
   _RXPacketL = readRegister(REG_RXNBBYTES);
+  
+#ifdef SX127XDEBUG1
+  PRINT_CSTSTR("Receive ");
+  PRINT_VALUE("%d", _RXPacketL);
+  PRINTLN_CSTSTR(" bytes");     		
+#endif  
 
 #ifdef USE_SPI_TRANSACTION   //to use SPI_TRANSACTION enable define at beginning of CPP file 
   SPI.beginTransaction(SPISettings(LTspeedMaximum, LTdataOrder, LTdataMode));
 #endif
 
   digitalWrite(_NSS, LOW);                    //start the burst read
-  SPI.transfer(REG_FIFO);
 
   /**************************************************************************
 	Added by C. Pham - Oct. 2020
   **************************************************************************/  
-  
+
+#if defined ARDUINO || defined USE_ARDUPI
+  SPI.transfer(REG_FIFO);
   // we read our header
   _RXDestination = SPI.transfer(0);
   _RXPacketType = SPI.transfer(0);
   _RXSource = SPI.transfer(0);
-  _RXSeqNo = SPI.transfer(0);
+  _RXSeqNo = SPI.transfer(0);  
+#else  
+  // we read our header
+  _RXDestination = readRegister(REG_FIFO);
+  _RXPacketType = readRegister(REG_FIFO);
+  _RXSource = readRegister(REG_FIFO);
+  _RXSeqNo = readRegister(REG_FIFO);
+#endif  
+
+#ifdef SX127XDEBUG1
+	PRINT_CSTSTR("dest: ");
+	PRINTLN_VALUE("%d", _RXDestination);
+	PRINT_CSTSTR("ptype: ");
+	PRINTLN_VALUE("%d", _RXPacketType);		
+	PRINT_CSTSTR("src: ");
+	PRINTLN_VALUE("%d", _RXSource);
+	PRINT_CSTSTR("seq: ");
+	PRINTLN_VALUE("%d", _RXSeqNo);				 
+#endif	
   
   //the header is not passed to the user
   _RXPacketL=_RXPacketL-HEADER_SIZE;
@@ -2484,7 +2554,11 @@ uint8_t SX127XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
 
   for (index = 0; index < _RXPacketL; index++)
   {
+#if defined ARDUINO || defined USE_ARDUPI
     regdata = SPI.transfer(0);
+#else  
+    regdata = readRegister(REG_FIFO);
+#endif
     rxbuffer[index] = regdata;
   }
   digitalWrite(_NSS, HIGH);
@@ -2683,13 +2757,21 @@ uint8_t SX127XLT::receiveRTSAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t 
 #endif
 
   digitalWrite(_NSS, LOW);                    //start the burst read
-  SPI.transfer(REG_FIFO); 
   
+#if defined ARDUINO || defined USE_ARDUPI
+  SPI.transfer(REG_FIFO);
   // we read our header
   _RXDestination = SPI.transfer(0);
   _RXPacketType = SPI.transfer(0);
   _RXSource = SPI.transfer(0);
-  _RXSeqNo = SPI.transfer(0);
+  _RXSeqNo = SPI.transfer(0);  
+#else  
+  // we read our header
+  _RXDestination = readRegister(REG_FIFO);
+  _RXPacketType = readRegister(REG_FIFO);
+  _RXSource = readRegister(REG_FIFO);
+  _RXSeqNo = readRegister(REG_FIFO);
+#endif  
   
   //the header is not passed to the user
   _RXPacketL=_RXPacketL-HEADER_SIZE;
@@ -2703,7 +2785,11 @@ uint8_t SX127XLT::receiveRTSAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t 
 
   for (index = 0; index < _RXPacketL; index++)
   {
+#if defined ARDUINO || defined USE_ARDUPI  
     regdata = SPI.transfer(0);
+#else
+    regdata = readRegister(REG_FIFO);
+#endif    
     rxbuffer[index] = regdata;
   }
   digitalWrite(_NSS, HIGH);
@@ -2752,12 +2838,19 @@ uint8_t SX127XLT::readPacket(uint8_t *rxbuffer, uint8_t size)
 #endif
 
   digitalWrite(_NSS, LOW);                    //start the burst read
+
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(REG_FIFO);
+#endif
 
   for (index = 0; index < _RXPacketL; index++)
   {
+#if defined ARDUINO || defined USE_ARDUPI  
     regdata = SPI.transfer(0);
-    rxbuffer[index] = regdata;
+#else    
+    regdata = readRegister(REG_FIFO);
+#endif
+    rxbuffer[index] = regdata;   
   }
   digitalWrite(_NSS, HIGH);
 
@@ -2793,17 +2886,25 @@ uint8_t SX127XLT::readPacketAddressed(uint8_t *rxbuffer, uint8_t size)
 #endif
 
   digitalWrite(_NSS, LOW);                    //start the burst read
-  SPI.transfer(REG_FIFO);
   
   /**************************************************************************
 	Added by C. Pham - Oct. 2020
   **************************************************************************/  
-  
+
+#if defined ARDUINO || defined USE_ARDUPI  
+  SPI.transfer(REG_FIFO);
   // we read our header
   _RXDestination = SPI.transfer(0);
   _RXPacketType = SPI.transfer(0);
   _RXSource = SPI.transfer(0);
   _RXSeqNo = SPI.transfer(0);
+#else
+  // we read our header
+  _RXDestination = readRegister(REG_FIFO);
+  _RXPacketType = readRegister(REG_FIFO);
+  _RXSource = readRegister(REG_FIFO);
+  _RXSeqNo = readRegister(REG_FIFO);
+#endif
 
   /**************************************************************************
 	End by C. Pham - Oct. 2020
@@ -2820,7 +2921,11 @@ uint8_t SX127XLT::readPacketAddressed(uint8_t *rxbuffer, uint8_t size)
 
   for (index = 0; index < _RXPacketL; index++)
   {
+#if defined ARDUINO || defined USE_ARDUPI  
     regdata = SPI.transfer(0);
+#else
+    regdata = readRegister(REG_FIFO);
+#endif    
     rxbuffer[index] = regdata;
   }
   digitalWrite(_NSS, HIGH);
@@ -2857,12 +2962,19 @@ uint8_t SX127XLT::transmit(uint8_t *txbuffer, uint8_t size, uint32_t txtimeout, 
 #endif
 
   digitalWrite(_NSS, LOW);
+  
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(WREG_FIFO);
+#endif
 
   for (index = 0; index < size; index++)
   {
     bufferdata = txbuffer[index];
+#if defined ARDUINO || defined USE_ARDUPI    
     SPI.transfer(bufferdata);
+#else
+		writeRegister(WREG_FIFO, bufferdata);
+#endif    
   }
   digitalWrite(_NSS, HIGH);
 
@@ -2974,17 +3086,25 @@ uint8_t SX127XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
 #endif
 
   digitalWrite(_NSS, LOW);
-  SPI.transfer(WREG_FIFO);
-  
+
   /**************************************************************************
 	Added by C. Pham - Oct. 2020
-  **************************************************************************/  
+  **************************************************************************/
   
   // we insert our header
+#if defined ARDUINO || defined USE_ARDUPI  
+  SPI.transfer(WREG_FIFO);
   SPI.transfer(txdestination);                    //Destination node
   SPI.transfer(txpackettype);                     //Write the packet type
   SPI.transfer(txsource);                         //Source node
-  SPI.transfer(_TXSeqNo);                           //Sequence number  
+  SPI.transfer(_TXSeqNo);                           //Sequence number    
+#else  
+  writeRegister(WREG_FIFO, txdestination);
+  writeRegister(WREG_FIFO, txpackettype);
+  writeRegister(WREG_FIFO, txsource);
+  writeRegister(WREG_FIFO, _TXSeqNo);
+#endif  
+  
   _TXPacketL = HEADER_SIZE + size;                      //we have added 4 header bytes to size
 
   /**************************************************************************
@@ -3004,7 +3124,11 @@ uint8_t SX127XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
   for (index = 0; index < size; index++)
   {
     bufferdata = txbuffer[index];
+#if defined ARDUINO || defined USE_ARDUPI    
     SPI.transfer(bufferdata);
+#else
+    writeRegister(WREG_FIFO, bufferdata);
+#endif    
   }
   digitalWrite(_NSS, HIGH);
 
@@ -3738,8 +3862,6 @@ uint8_t SX127XLT::transmitSXBuffer(uint8_t startaddr, uint8_t length, uint32_t t
   return length;                                         //no timeout, so TXdone must have been set
 }
 
-
-
 void SX127XLT::printSXBufferHEX(uint8_t start, uint8_t end)
 {
 #ifdef SX127XDEBUG1
@@ -3756,11 +3878,18 @@ void SX127XLT::printSXBufferHEX(uint8_t start, uint8_t end)
 #endif
 
   digitalWrite(_NSS, LOW);                       //start the burst read
+  
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(REG_FIFO);
+#endif
 
   for (index = start; index <= end; index++)
   {
+#if defined ARDUINO || defined USE_ARDUPI   
     regdata = SPI.transfer(0);
+#else
+    regdata = readRegister(REG_FIFO);
+#endif    
     printHEXByte(regdata);
     PRINT_CSTSTR(" ");
 
@@ -3772,7 +3901,6 @@ void SX127XLT::printSXBufferHEX(uint8_t start, uint8_t end)
 #endif
 
 }
-
 
 void SX127XLT::printSXBufferASCII(uint8_t start, uint8_t end)
 {
@@ -3790,11 +3918,18 @@ void SX127XLT::printSXBufferASCII(uint8_t start, uint8_t end)
 #endif
 
   digitalWrite(_NSS, LOW);                    //start the burst read
+  
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(REG_FIFO);
+#endif
 
   for (index = start; index <= end; index++)
   {
+#if defined ARDUINO || defined USE_ARDUPI   
     regdata = SPI.transfer(0);
+#else
+    regdata = readRegister(REG_FIFO);
+#endif   
     Serial.write(regdata);
   }
   digitalWrite(_NSS, HIGH);
@@ -3804,7 +3939,6 @@ void SX127XLT::printSXBufferASCII(uint8_t start, uint8_t end)
 #endif
 
 }
-
 
 void SX127XLT::fillSXBuffer(uint8_t startaddress, uint8_t size, uint8_t character)
 {
@@ -3821,11 +3955,18 @@ void SX127XLT::fillSXBuffer(uint8_t startaddress, uint8_t size, uint8_t characte
 #endif
 
   digitalWrite(_NSS, LOW);                          //start the burst write
+
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(WREG_FIFO);
+#endif
 
   for (index = 0; index < size; index++)
   {
+#if defined ARDUINO || defined USE_ARDUPI  
     SPI.transfer(character);
+#else
+    writeRegister(WREG_FIFO, character);
+#endif        
   }
 
   digitalWrite(_NSS, HIGH);
@@ -3835,8 +3976,6 @@ void SX127XLT::fillSXBuffer(uint8_t startaddress, uint8_t size, uint8_t characte
 #endif
 
 }
-
-
 
 uint8_t SX127XLT::getByteSXBuffer(uint8_t addr)
 {
@@ -3854,8 +3993,12 @@ uint8_t SX127XLT::getByteSXBuffer(uint8_t addr)
 #endif
 
   digitalWrite(_NSS, LOW);                    //start the burst read
+#if defined ARDUINO || defined USE_ARDUPI   
   SPI.transfer(REG_FIFO);
   regdata = SPI.transfer(0);
+#else
+  regdata = readRegister(REG_FIFO);
+#endif  
   digitalWrite(_NSS, HIGH);
 
 #ifdef USE_SPI_TRANSACTION
@@ -3864,7 +4007,6 @@ uint8_t SX127XLT::getByteSXBuffer(uint8_t addr)
 
   return regdata;
 }
-
 
 void SX127XLT::writeByteSXBuffer(uint8_t addr, uint8_t regdata)
 {
@@ -3881,8 +4023,12 @@ void SX127XLT::writeByteSXBuffer(uint8_t addr, uint8_t regdata)
 #endif
 
   digitalWrite(_NSS, LOW);                //start the burst read
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(WREG_FIFO);
   SPI.transfer(regdata);
+#else
+	writeRegister(WREG_FIFO,regdata);
+#endif  
   digitalWrite(_NSS, HIGH);
 
 #ifdef USE_SPI_TRANSACTION
@@ -3890,7 +4036,6 @@ void SX127XLT::writeByteSXBuffer(uint8_t addr, uint8_t regdata)
 #endif
 
 }
-
 
 void SX127XLT::startWriteSXBuffer(uint8_t ptr)
 {
@@ -3908,9 +4053,10 @@ void SX127XLT::startWriteSXBuffer(uint8_t ptr)
 #endif
 
   digitalWrite(_NSS, LOW);
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(WREG_FIFO);
+#endif  
 }
-
 
 uint8_t SX127XLT::endWriteSXBuffer()
 {
@@ -3927,7 +4073,6 @@ uint8_t SX127XLT::endWriteSXBuffer()
   return _TXPacketL;
 }
 
-
 void SX127XLT::startReadSXBuffer(uint8_t ptr)
 {
 #ifdef SX127XDEBUG1
@@ -3943,12 +4088,13 @@ void SX127XLT::startReadSXBuffer(uint8_t ptr)
 #endif
 
   digitalWrite(_NSS, LOW);                       //start the burst read
+  
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(REG_FIFO);
-
+#endif
   //next line would be data = SPI.transfer(0);
   //SPI interface ready for byte to read from
 }
-
 
 uint8_t SX127XLT::endReadSXBuffer()
 {
@@ -3966,18 +4112,20 @@ uint8_t SX127XLT::endReadSXBuffer()
 
 }
 
-
 void SX127XLT::writeUint8(uint8_t x)
 {
 #ifdef SX127XDEBUG1
   PRINTLN_CSTSTR("writeUint8()");
 #endif
 
+#if defined ARDUINO || defined USE_ARDUPI
   SPI.transfer(x);
+#else
+	writeRegister(WREG_FIFO, x);
+#endif  
 
   _TXPacketL++;                     //increment count of bytes written
 }
-
 
 uint8_t SX127XLT::readUint8()
 {
@@ -3987,7 +4135,11 @@ uint8_t SX127XLT::readUint8()
 
   uint8_t x;
 
+#if defined ARDUINO || defined USE_ARDUPI
   x = SPI.transfer(0);
+#else
+	x = readRegister(REG_FIFO);
+#endif
 
   _RXPacketL++;                      //increment count of bytes read
   return (x);
@@ -4004,7 +4156,11 @@ uint8_t SX127XLT::readBytes(uint8_t *rxbuffer,   uint8_t size)
   
   for (index = 0; index < size; index++)
   {
+#if defined ARDUINO || defined USE_ARDUPI  
   x = SPI.transfer(0);
+#else
+	x = readRegister(REG_FIFO);
+#endif  
   rxbuffer[index] = x;
   }
   
@@ -4019,7 +4175,11 @@ void SX127XLT::writeInt8(int8_t x)
   PRINTLN_CSTSTR("writeInt8()");
 #endif
 
+#if defined ARDUINO || defined USE_ARDUPI
   SPI.transfer(x);
+#else
+	writeRegister(WREG_FIFO, x);
+#endif  
 
   _TXPacketL++;                     //increment count of bytes written
 }
@@ -4033,7 +4193,11 @@ int8_t SX127XLT::readInt8()
 
   int8_t x;
 
+#if defined ARDUINO || defined USE_ARDUPI
   x = SPI.transfer(0);
+#else
+	x = readRegister(REG_FIFO);
+#endif
 
   _RXPacketL++;                      //increment count of bytes read
   return (x);
@@ -4046,7 +4210,11 @@ void SX127XLT::writeChar(char x)
   PRINTLN_CSTSTR("writeChar()");
 #endif
 
+#if defined ARDUINO || defined USE_ARDUPI
   SPI.transfer(x);
+#else
+	writeRegister(WREG_FIFO, x);
+#endif
 
   _TXPacketL++;                     //increment count of bytes written
 }
@@ -4060,7 +4228,11 @@ char SX127XLT::readChar()
 
   char x;
 
+#if defined ARDUINO || defined USE_ARDUPI
   x = SPI.transfer(0);
+#else
+	x = readRegister(REG_FIFO);
+#endif
 
   _RXPacketL++;                      //increment count of bytes read
   return (x);
@@ -4073,8 +4245,13 @@ void SX127XLT::writeUint16(uint16_t x)
   PRINTLN_CSTSTR("writeUint16()");
 #endif
 
+#if defined ARDUINO || defined USE_ARDUPI
   SPI.transfer(lowByte(x));
   SPI.transfer(highByte(x));
+#else
+	writeRegister(WREG_FIFO, lowByte(x));
+	writeRegister(WREG_FIFO, highByte(x));
+#endif  
 
   _TXPacketL = _TXPacketL + 2;         //increment count of bytes written
 }
@@ -4088,8 +4265,13 @@ uint16_t SX127XLT::readUint16()
 
   uint8_t lowbyte, highbyte;
 
+#if defined ARDUINO || defined USE_ARDUPI
   lowbyte = SPI.transfer(0);
   highbyte = SPI.transfer(0);
+#else
+  lowbyte = readRegister(REG_FIFO);
+  highbyte = readRegister(REG_FIFO);
+#endif  
 
   _RXPacketL = _RXPacketL + 2;         //increment count of bytes read
   return ((highbyte << 8) + lowbyte);
@@ -4102,8 +4284,13 @@ void SX127XLT::writeInt16(int16_t x)
   PRINTLN_CSTSTR("writeInt16()");
 #endif
 
+#if defined ARDUINO || defined USE_ARDUPI
   SPI.transfer(lowByte(x));
   SPI.transfer(highByte(x));
+#else
+	writeRegister(WREG_FIFO, lowByte(x));
+	writeRegister(WREG_FIFO, highByte(x));
+#endif
 
   _TXPacketL = _TXPacketL + 2;         //increment count of bytes written
 }
@@ -4117,8 +4304,13 @@ int16_t SX127XLT::readInt16()
 
   uint8_t lowbyte, highbyte;
 
+#if defined ARDUINO || defined USE_ARDUPI
   lowbyte = SPI.transfer(0);
   highbyte = SPI.transfer(0);
+#else
+  lowbyte = readRegister(REG_FIFO);
+  highbyte = readRegister(REG_FIFO);
+#endif
 
   _RXPacketL = _RXPacketL + 2;         //increment count of bytes read
   return ((highbyte << 8) + lowbyte);
@@ -4143,7 +4335,11 @@ void SX127XLT::writeUint32(uint32_t x)
   for (i = 0; i < 4; i++)
   {
     j = data.b[i];
+#if defined ARDUINO || defined USE_ARDUPI    
     SPI.transfer(j);
+#else
+	writeRegister(WREG_FIFO, j);
+#endif    
   }
 
   _TXPacketL = _TXPacketL + 4;         //increment count of bytes written
@@ -4166,7 +4362,11 @@ uint32_t SX127XLT::readUint32()
 
   for (i = 0; i < 4; i++)
   {
+#if defined ARDUINO || defined USE_ARDUPI  
     j = SPI.transfer(0);
+#else
+		j = readRegister(REG_FIFO);
+#endif    
     readdata.b[i] = j;
   }
   _RXPacketL = _RXPacketL + 4;         //increment count of bytes read
@@ -4192,7 +4392,11 @@ void SX127XLT::writeInt32(int32_t x)
   for (i = 0; i < 4; i++)
   {
     j = data.b[i];
+#if defined ARDUINO || defined USE_ARDUPI    
     SPI.transfer(j);
+#else
+	writeRegister(WREG_FIFO, j);
+#endif
   }
 
   _TXPacketL = _TXPacketL + 4;         //increment count of bytes written
@@ -4215,7 +4419,11 @@ int32_t SX127XLT::readInt32()
 
   for (i = 0; i < 4; i++)
   {
+#if defined ARDUINO || defined USE_ARDUPI  
     j = SPI.transfer(0);
+#else
+		j = readRegister(REG_FIFO);
+#endif  
     readdata.b[i] = j;
   }
   _RXPacketL = _RXPacketL + 4;         //increment count of bytes read
@@ -4241,7 +4449,11 @@ void SX127XLT::writeFloat(float x)
   for (i = 0; i < 4; i++)
   {
     j = data.b[i];
+#if defined ARDUINO || defined USE_ARDUPI    
     SPI.transfer(j);
+#else
+	writeRegister(WREG_FIFO, j);
+#endif
   }
 
   _TXPacketL = _TXPacketL + 4;         //increment count of bytes written
@@ -4264,7 +4476,11 @@ float SX127XLT::readFloat()
 
   for (i = 0; i < 4; i++)
   {
+#if defined ARDUINO || defined USE_ARDUPI  
     j = SPI.transfer(0);
+#else
+		j = readRegister(REG_FIFO);
+#endif 
     readdata.b[i] = j;
   }
   _RXPacketL = _RXPacketL + 4;         //increment count of bytes read
@@ -4287,11 +4503,18 @@ void SX127XLT::writeBuffer(uint8_t *txbuffer, uint8_t size)
   for (index = 0; index < size; index++)
   {
     regdata = txbuffer[index];
+#if defined ARDUINO || defined USE_ARDUPI     
     SPI.transfer(regdata);
+#else
+		writeRegister(WREG_FIFO, regdata);
+#endif    
   }
 
+#if defined ARDUINO || defined USE_ARDUPI
   SPI.transfer(0);                     //this ensures last byte of buffer writen really is a null (0)
-
+#else
+	writeRegister(WREG_FIFO, 0);
+#endif    
 }
 
 
@@ -4311,11 +4534,18 @@ void SX127XLT::writeBufferChar(char *txbuffer, uint8_t size)
   for (index = 0; index < size; index++)
   {
     regdata = txbuffer[index];
+#if defined ARDUINO || defined USE_ARDUPI     
     SPI.transfer(regdata);
+#else
+		writeRegister(WREG_FIFO, regdata);
+#endif 
   }
 
+#if defined ARDUINO || defined USE_ARDUPI
   SPI.transfer(0);                     //this ensures last byte of buffer writen really is a null (0)
-
+#else
+	writeRegister(WREG_FIFO, 0);
+#endif 
 }
 
 
@@ -4329,7 +4559,11 @@ uint8_t SX127XLT::readBuffer(uint8_t *rxbuffer)
 
   do                                     //need to find the size of the buffer first
   {
+#if defined ARDUINO || defined USE_ARDUPI  
     regdata = SPI.transfer(0);
+#else
+		regdata = readRegister(REG_FIFO);
+#endif    
     rxbuffer[index] = regdata;           //fill the buffer.
     index++;
   } while (regdata != 0);                //keep reading until we have reached the null (0) at the buffer end
@@ -4352,7 +4586,11 @@ uint8_t SX127XLT::readBufferChar(char *rxbuffer)
 
   do                                     //need to find the size of the buffer first
   {
+#if defined ARDUINO || defined USE_ARDUPI  
     regdata = SPI.transfer(0);
+#else
+		regdata = readRegister(REG_FIFO);
+#endif
     rxbuffer[index] = regdata;           //fill the buffer.
     index++;
   } while (regdata != 0);                //keep reading until we have reached the null (0) at the buffer end
@@ -4438,10 +4676,24 @@ void SX127XLT::toneFM(uint16_t frequency, uint32_t length, uint32_t deviation, f
   #endif
   
   digitalWrite(_NSS, LOW);           //set NSS low
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(REG_FRMSB & 0x7F);    //mask address for read
   freqregH = SPI.transfer(0);
   freqregM = SPI.transfer(0);
   freqregL = SPI.transfer(0);
+#else
+	uint8_t spibuf[4];
+	spibuf[0] = REG_FRMSB & 0x7F;
+	spibuf[1] = 0x00;
+	spibuf[2] = 0x00;
+	spibuf[3] = 0x00;		
+
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 4);
+
+  freqregH = spibuf[1];
+  freqregM = spibuf[2];
+  freqregL = spibuf[3];	
+#endif  
   digitalWrite(_NSS, HIGH);          //set NSS high
   
 #ifdef USE_SPI_TRANSACTION
@@ -4515,29 +4767,56 @@ void SX127XLT::toneFM(uint16_t frequency, uint32_t length, uint32_t deviation, f
   for (index = 1; index <= loopcount; index++)
   {
     digitalWrite(_NSS, LOW);                  //set NSS low
+#if defined ARDUINO || defined USE_ARDUPI    
     SPI.transfer(0x86);                       //address for write to REG_FRMSB
     SPI.transfer(ShiftH);
     SPI.transfer(ShiftM);
     SPI.transfer(ShiftL);
+#else
+	uint8_t spibuf[4];
+	spibuf[0] = 0x86;
+	spibuf[1] = ShiftH;
+	spibuf[2] = ShiftM;
+	spibuf[3] = ShiftL;		
+
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 4);
+#endif    
     digitalWrite(_NSS, HIGH);                 //set NSS high
-    
     delayMicroseconds(ToneDelayus);
 
     digitalWrite(_NSS, LOW);                  //set NSS low
+#if defined ARDUINO || defined USE_ARDUPI    
     SPI.transfer(0x86);                       //address for write to REG_FRMSB
     SPI.transfer(NoShiftH);
     SPI.transfer(NoShiftM);
     SPI.transfer(NoShiftL);
+#else
+	spibuf[0] = 0x86;
+	spibuf[1] = NoShiftH;
+	spibuf[2] = NoShiftM;
+	spibuf[3] = NoShiftL;		
+
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 4);
+#endif    
     digitalWrite(_NSS, HIGH);                 //set NSS high
 
     delayMicroseconds(ToneDelayus);
   }
   //now set the frequency registers back to centre
   digitalWrite(_NSS, LOW);                  //set NSS low
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(0x86);                       //address for write to REG_FRMSB
   SPI.transfer(freqregH);
   SPI.transfer(freqregM);
   SPI.transfer(freqregL);
+#else
+	spibuf[0] = 0x86;
+	spibuf[1] = freqregH;
+	spibuf[2] = freqregM;
+	spibuf[3] = freqregL;		
+
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 4);
+#endif  
   digitalWrite(_NSS, HIGH);                 //set NSS high
 
 #ifdef USE_SPI_TRANSACTION
@@ -4547,7 +4826,6 @@ void SX127XLT::toneFM(uint16_t frequency, uint32_t length, uint32_t deviation, f
   writeRegister(REG_PLLHOP, 0x2D);          //restore PLLHOP register value
   setMode(MODE_STDBY_RC);                   //turns off carrier
 }
-
 
 void SX127XLT::setupDirect(uint32_t frequency, int32_t offset)
 {
@@ -4564,7 +4842,6 @@ void SX127XLT::setupDirect(uint32_t frequency, int32_t offset)
   calibrateImage(0);                          //run calibration after setting frequency
   writeRegister(REG_FDEVLSB, 0);              //We are generating a tone by frequency shift so set deviation to 0
 }
-
 
 int8_t SX127XLT::getDeviceTemperature()
 {
@@ -4605,7 +4882,6 @@ int8_t SX127XLT::getDeviceTemperature()
   
   writeRegister(REG_OPMODE,MODE_STDBY);
    
-
   return temperature;
 }
 
@@ -4620,7 +4896,6 @@ void SX127XLT::fskCarrierOn(int8_t txpower)
   writeRegister(REG_PLLHOP, 0xAD);          //set fast hop mode, needed for fast changes of frequency
   setTxParams(txpower, RADIO_RAMP_DEFAULT);
   setTXDirect();
-
 }
 
 
@@ -4631,63 +4906,80 @@ void SX127XLT::fskCarrierOff()
 #endif
 
  setMode(MODE_STDBY_RC);                   //turns off carrier
-
 }
 
 
 void SX127XLT::setRfFrequencyDirect(uint8_t high, uint8_t mid, uint8_t low)
 {   
   
-  #ifdef SX127XDEBUG1
+#ifdef SX127XDEBUG1
   PRINT_CSTSTR("setRfFrequencyDirect()");
-  #endif
+#endif
   
-  #ifdef USE_SPI_TRANSACTION         //to use SPI_TRANSACTION enable define at beginning of CPP file 
+#ifdef USE_SPI_TRANSACTION         //to use SPI_TRANSACTION enable define at beginning of CPP file 
   SPI.beginTransaction(SPISettings(LTspeedMaximum, LTdataOrder, LTdataMode));
-  #endif
+#endif
   
   digitalWrite(_NSS, LOW);                  //set NSS low
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(0x86);                       //address for write to REG_FRMSB
   SPI.transfer(high);
   SPI.transfer(mid);
   SPI.transfer(low);
+#else
+	uint8_t spibuf[4];
+	spibuf[0] = 0x86;
+	spibuf[1] = high;
+	spibuf[2] = mid;
+	spibuf[3] = low;		
+
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 4);
+#endif   
   digitalWrite(_NSS, HIGH);                 //set NSS high
   
-  #ifdef USE_SPI_TRANSACTION
+#ifdef USE_SPI_TRANSACTION
   SPI.endTransaction();
 #endif
-
-  
 }
-
 
 void SX127XLT::getRfFrequencyRegisters(uint8_t *buff)
 {
   //returns the register values for the current set frequency
   
-  #ifdef SX127XDEBUG1
+#ifdef SX127XDEBUG1
   PRINT_CSTSTR("getRfFrequencyRegisters()");
-  #endif
+#endif
 
   
-  #ifdef USE_SPI_TRANSACTION         //to use SPI_TRANSACTION enable define at beginning of CPP file 
+#ifdef USE_SPI_TRANSACTION         //to use SPI_TRANSACTION enable define at beginning of CPP file 
   SPI.beginTransaction(SPISettings(LTspeedMaximum, LTdataOrder, LTdataMode));
-  #endif
+#endif
   
   digitalWrite(_NSS, LOW);                  //set NSS low
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(REG_FRMSB & 0x7F);           //mask address for read
   buff[0] = SPI.transfer(0);                //read the byte into buffer
   buff[1] = SPI.transfer(0);                //read the byte into buffer
   buff[2] = SPI.transfer(0);                //read the byte into buffer
+#else
+	uint8_t spibuf[4];
+	spibuf[0] = REG_FRMSB & 0x7F;
+	spibuf[1] = 0x00;
+	spibuf[2] = 0x00;
+	spibuf[3] = 0x00;		
+
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 4);
+	
+	buff[0] = spibuf[1];
+	buff[1] = spibuf[2];
+	buff[2] = spibuf[3];		
+#endif   
   digitalWrite(_NSS, HIGH);                 //set NSS high
   
-  #ifdef USE_SPI_TRANSACTION
+#ifdef USE_SPI_TRANSACTION
   SPI.endTransaction();
 #endif
-
 }
-
-
 
 void SX127XLT::startFSKRTTY(uint32_t freqshift, uint8_t pips, uint16_t pipPeriodmS, uint16_t pipDelaymS, uint16_t leadinmS)
 {
@@ -5010,17 +5302,25 @@ uint32_t SX127XLT::transmitReliable(uint8_t *txbuffer, uint8_t size, char txpack
 #endif
 
   digitalWrite(_NSS, LOW);
-  SPI.transfer(WREG_FIFO);
-  
+
   /**************************************************************************
 	Added by C. Pham - Oct. 2020
   **************************************************************************/  
-  
+
+#if defined ARDUINO || defined USE_ARDUPI
+  SPI.transfer(WREG_FIFO);  
   // we insert our header
   SPI.transfer(txdestination);                    //Destination node
   SPI.transfer(txpackettype);                     //Write the packet type
   SPI.transfer(txsource);                         //Source node
   SPI.transfer(_TXSeqNo);                         //Sequence number  
+#else
+	writeRegister(WREG_FIFO, txdestination);
+	writeRegister(WREG_FIFO, txpackettype);
+	writeRegister(WREG_FIFO, txsource);
+	writeRegister(WREG_FIFO, _TXSeqNo);
+#endif
+  
   _TXPacketL = HEADER_SIZE + size;                //we have added 4 header bytes to size
   
   libraryCRC = addCRC(txdestination, libraryCRC);  
@@ -5050,7 +5350,11 @@ uint32_t SX127XLT::transmitReliable(uint8_t *txbuffer, uint8_t size, char txpack
   {
     bufferdata = txbuffer[index];
     libraryCRC = addCRC(bufferdata, libraryCRC);
+#if defined ARDUINO || defined USE_ARDUPI    
     SPI.transfer(bufferdata);
+#else
+		writeRegister(WREG_FIFO, bufferdata);
+#endif      
   }
   digitalWrite(_NSS, HIGH);
 
@@ -5361,18 +5665,25 @@ uint32_t SX127XLT::receiveReliable(uint8_t *rxbuffer, uint8_t size, char packett
 #endif
 
   digitalWrite(_NSS, LOW);                    //start the burst read
-  SPI.transfer(REG_FIFO);
 
   /**************************************************************************
 	Added by C. Pham - Oct. 2020
   **************************************************************************/  
   
+#if defined ARDUINO || defined USE_ARDUPI
+  SPI.transfer(REG_FIFO);  
   // we read our header
   _RXDestination = SPI.transfer(0);
   _RXPacketType = SPI.transfer(0);
   _RXSource = SPI.transfer(0);
   _RXSeqNo = SPI.transfer(0);
-  
+#else
+  // we read our header
+  _RXDestination = readRegister(REG_FIFO);
+  _RXPacketType = readRegister(REG_FIFO);
+  _RXSource = readRegister(REG_FIFO);
+  _RXSeqNo = readRegister(REG_FIFO);
+#endif  
   //the header is not passed to the user
   _RXPacketL=_RXPacketL-HEADER_SIZE;
   
@@ -5405,7 +5716,11 @@ uint32_t SX127XLT::receiveReliable(uint8_t *rxbuffer, uint8_t size, char packett
   
   for (index = 0; index < _RXPacketL; index++)
   {
+#if defined ARDUINO || defined USE_ARDUPI  
     regdata = SPI.transfer(0);
+#else
+    regdata = readRegister(REG_FIFO);
+#endif    
     libraryCRC = addCRC(regdata, libraryCRC);
     rxbuffer[index] = regdata;
   }
@@ -5499,8 +5814,6 @@ uint32_t SX127XLT::receiveReliable(uint8_t *rxbuffer, uint8_t size, char packett
   return ( ( (uint32_t) libraryCRC << 16) + (uint8_t) _RXPacketL ); 
 }
 
-
-
 uint32_t SX127XLT::receiveFT(uint8_t *rxbuffer, uint8_t size, char packettype, char destination, char source, uint32_t rxtimeout, uint8_t wait )
 {
 //set packettype, destnode, source to ) for no matching check
@@ -5562,11 +5875,18 @@ uint32_t SX127XLT::receiveFT(uint8_t *rxbuffer, uint8_t size, char packettype, c
 #endif
 
   digitalWrite(_NSS, LOW);                    //start the burst read
+  
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(REG_FIFO);
   
   _RXPacketType = SPI.transfer(0);
   _RXDestination = SPI.transfer(0); 
   _RXSource = SPI.transfer(0);
+#else
+  _RXPacketType = readRegister(REG_FIFO);
+  _RXDestination = readRegister(REG_FIFO);
+  _RXSource = readRegister(REG_FIFO);
+#endif  
   
   libraryCRC = addCRC(_RXPacketType, libraryCRC);
   libraryCRC = addCRC(_RXDestination, libraryCRC);
@@ -5576,7 +5896,11 @@ uint32_t SX127XLT::receiveFT(uint8_t *rxbuffer, uint8_t size, char packettype, c
   
   for (index = 0; index < size; index++)
   {
+#if defined ARDUINO || defined USE_ARDUPI  
     regdata = SPI.transfer(0);
+#else
+    regdata = readRegister(REG_FIFO);
+#endif    
     libraryCRC = addCRC(regdata, libraryCRC);
     rxbuffer[index] = regdata;
   }

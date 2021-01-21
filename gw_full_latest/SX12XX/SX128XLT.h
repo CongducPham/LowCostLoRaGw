@@ -9,7 +9,11 @@
 #else
   #include <stdint.h>
 
-  #include "arduPi.h"
+	#ifdef USE_ARDUPI
+  #include "arduPi.h"	
+	#else
+  #include "arduinoPi.h"
+	#endif
 
   #ifndef inttypes_h
     #include <inttypes.h>

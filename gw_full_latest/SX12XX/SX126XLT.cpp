@@ -11,7 +11,10 @@ See LICENSE.TXT file included in the library
 
 /**************************************************************************
   Change logs
-
+  
+	Jan. 15th, 2021
+		- move to wiringPI for low-level SPI communication. arduinoPi.cpp is a wrapper providing the SPI class for Raspberry
+		
 	Dec. 21st, 2020
 		- add CollisionAvoidance mechanism: LT.CollisionAvoidance(uint8_t pl, uint8_t ca=1)
 			- returns a backoff timer expressed in ms
@@ -193,6 +196,11 @@ SX126XLT::SX126XLT()
 bool SX126XLT::begin(int8_t pinNSS, int8_t pinNRESET, int8_t pinRFBUSY, int8_t pinDIO1, int8_t pinDIO2, int8_t pinDIO3, int8_t pinRXEN, int8_t pinTXEN, int8_t pinSW, uint8_t device)
 {
 
+#if not defined ARDUINO && not defined USE_ARDUPI
+  wiringPiSetup() ;
+  PRINTLN_CSTSTR("<<< using wiringPi >>>"); 
+#endif
+
   //format 1 pins, assign all available pins  
   _NSS = pinNSS;
   _NRESET = pinNRESET;
@@ -292,6 +300,11 @@ bool SX126XLT::begin(int8_t pinNSS, int8_t pinNRESET, int8_t pinRFBUSY, int8_t p
 bool SX126XLT::begin(int8_t pinNSS, int8_t pinNRESET, int8_t pinRFBUSY, int8_t pinDIO1, uint8_t device)
 {
 
+#if not defined ARDUINO && not defined USE_ARDUPI
+  wiringPiSetup() ;
+  PRINTLN_CSTSTR("<<< using wiringPi >>>"); 
+#endif
+
   //format 2 pins for NiceRF, NSS, NRESET, RFBUSY, DIO1  
   _NSS = pinNSS;
   _NRESET = pinNRESET;
@@ -364,6 +377,11 @@ bool SX126XLT::begin(int8_t pinNSS, int8_t pinNRESET, int8_t pinRFBUSY, int8_t p
 
 bool SX126XLT::begin(int8_t pinNSS, int8_t pinNRESET, int8_t pinRFBUSY, int8_t pinDIO1, int8_t pinSW, uint8_t device)
 {
+
+#if not defined ARDUINO && not defined USE_ARDUPI
+  wiringPiSetup() ;
+  PRINTLN_CSTSTR("<<< using wiringPi >>>"); 
+#endif
 
   //format 3 pins for Dorji, NSS, NRESET, RFBUSY, DIO1, SW  
   _NSS = pinNSS;
@@ -442,6 +460,11 @@ bool SX126XLT::begin(int8_t pinNSS, int8_t pinNRESET, int8_t pinRFBUSY, int8_t p
 
 bool SX126XLT::begin(int8_t pinNSS, int8_t pinNRESET, int8_t pinRFBUSY, int8_t pinDIO1, int8_t pinRXEN, int8_t pinTXEN, uint8_t device)
 {
+
+#if not defined ARDUINO && not defined USE_ARDUPI
+  wiringPiSetup() ;
+  PRINTLN_CSTSTR("<<< using wiringPi >>>"); 
+#endif
 
   //format 4 pins for Ebyte (not tested) , NSS, NRESET, RFBUSY, DIO1, RXEN, TXEN
   _NSS = pinNSS;
@@ -576,12 +599,22 @@ void SX126XLT::writeCommand(uint8_t Opcode, uint8_t *buffer, uint16_t size)
 #endif
 
   digitalWrite(_NSS, LOW);
+#if defined ARDUINO || defined USE_ARDUPI   
   SPI.transfer(Opcode);
 
   for (index = 0; index < size; index++)
   {
     SPI.transfer(buffer[index]);
   }
+#else
+	uint8_t spibuf[size+1];
+	spibuf[0] = Opcode;
+	for (index = 0; index < size; index++)
+	{
+		spibuf[1+index]=buffer[index];
+	}		
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, size+1);
+#endif 
   digitalWrite(_NSS, HIGH);
 
 #ifdef USE_SPI_TRANSACTION
@@ -609,14 +642,28 @@ void SX126XLT::readCommand(uint8_t Opcode, uint8_t *buffer, uint16_t size)
 #endif
 
   digitalWrite(_NSS, LOW);
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(Opcode);
   SPI.transfer(0xFF);
 
   for ( i = 0; i < size; i++ )
   {
-
     *(buffer + i) = SPI.transfer(0xFF);
   }
+#else
+	uint8_t spibuf[size+2];
+	spibuf[0] = Opcode;
+	spibuf[1] = 0xFF;
+	for (i = 0; i < size; i++)
+	{
+		spibuf[2+i]=0xFF;
+	}		
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, size+2);
+	for (i = 0; i < size; i++)
+	{
+		*(buffer + i) = spibuf[2+i];
+	} 
+#endif 
   digitalWrite(_NSS, HIGH);
 
 #ifdef USE_SPI_TRANSACTION
@@ -642,6 +689,7 @@ void SX126XLT::writeRegisters(uint16_t address, uint8_t *buffer, uint16_t size)
 #endif
 
   digitalWrite(_NSS, LOW);
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(RADIO_WRITE_REGISTER);
   SPI.transfer(addr_h);   //MSB
   SPI.transfer(addr_l);   //LSB
@@ -650,7 +698,17 @@ void SX126XLT::writeRegisters(uint16_t address, uint8_t *buffer, uint16_t size)
   {
     SPI.transfer(buffer[i]);
   }
-
+#else
+	uint8_t spibuf[size+3];
+	spibuf[0] = RADIO_WRITE_REGISTER;
+	spibuf[1] = addr_h;
+	spibuf[2] = addr_l;
+	for (i = 0; i < size; i++)
+	{
+		spibuf[3+i]=buffer[i];
+	}		
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, size+3);
+#endif
   digitalWrite(_NSS, HIGH);
 
 #ifdef USE_SPI_TRANSACTION
@@ -686,6 +744,7 @@ void SX126XLT::readRegisters(uint16_t address, uint8_t *buffer, uint16_t size)
 #endif
 
   digitalWrite(_NSS, LOW);
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(RADIO_READ_REGISTER);
   SPI.transfer(addr_h);               //MSB
   SPI.transfer(addr_l);               //LSB
@@ -694,7 +753,22 @@ void SX126XLT::readRegisters(uint16_t address, uint8_t *buffer, uint16_t size)
   {
     *(buffer + index) = SPI.transfer(0xFF);
   }
-
+#else
+	uint8_t spibuf[size+4];
+	spibuf[0] = RADIO_READ_REGISTER;
+	spibuf[1] = addr_h;
+	spibuf[2] = addr_l;
+	spibuf[3] = 0xFF;
+	for (index = 0; index < size; index++)
+	{
+		spibuf[4+index]= 0xFF;
+	}		
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, size+4);
+	for (index = 0; index < size; index++)
+	{
+		*(buffer + index) = spibuf[4+index];
+	}  	
+#endif
   digitalWrite(_NSS, HIGH);
 
 #ifdef USE_SPI_TRANSACTION
@@ -792,8 +866,15 @@ void SX126XLT::setMode(uint8_t modeconfig)
 #endif
 
   digitalWrite(_NSS, LOW);
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(RADIO_SET_STANDBY);
   SPI.transfer(modeconfig);
+#else
+	uint8_t spibuf[2];
+	spibuf[0] = RADIO_SET_STANDBY;
+	spibuf[1] = modeconfig;
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 2);
+#endif    
   digitalWrite(_NSS, HIGH);
 
 #ifdef USE_SPI_TRANSACTION
@@ -1512,6 +1593,7 @@ uint8_t SX126XLT::transmit(uint8_t *txbuffer, uint8_t size, uint32_t txtimeout, 
 #endif
 
   digitalWrite(_NSS, LOW);
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(RADIO_WRITE_BUFFER);
   SPI.transfer(0);
 
@@ -1520,7 +1602,19 @@ uint8_t SX126XLT::transmit(uint8_t *txbuffer, uint8_t size, uint32_t txtimeout, 
     bufferdata = txbuffer[index];
     SPI.transfer(bufferdata);
   }
-
+#else
+	uint8_t spibuf[size+2];
+	spibuf[0] = RADIO_WRITE_BUFFER;
+	spibuf[1] = 0;			
+	
+	for (index = 0; index < size; index++)
+	{
+		bufferdata = txbuffer[index];	
+		spibuf[2+index]=bufferdata;
+	}	
+	
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, size+2); 
+#endif
   digitalWrite(_NSS, HIGH);
 
 #ifdef USE_SPI_TRANSACTION
@@ -1910,6 +2004,7 @@ uint8_t SX126XLT::receive(uint8_t *rxbuffer, uint8_t size, uint32_t rxtimeout, u
 #endif
 
   digitalWrite(_NSS, LOW);             //start the burst read
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(RADIO_READ_BUFFER);
   SPI.transfer(RXstart);
   SPI.transfer(0xFF);
@@ -1919,7 +2014,24 @@ uint8_t SX126XLT::receive(uint8_t *rxbuffer, uint8_t size, uint32_t rxtimeout, u
     regdata = SPI.transfer(0);
     rxbuffer[index] = regdata;
   }
+#else
+	uint8_t spibuf[_RXPacketL+3];
+	spibuf[0] = RADIO_READ_BUFFER;
+	spibuf[1] = RXstart;
+	spibuf[2] = 0xFF;
 
+  for (index = RXstart; index < RXend; index++)
+	{
+		spibuf[3+index]=0x00;
+	}	
+	
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, _RXPacketL+3);
+
+  for (index = RXstart; index < RXend; index++)
+  {
+    rxbuffer[index] = spibuf[3+index];
+  }  
+#endif
   digitalWrite(_NSS, HIGH);
 
 #ifdef USE_SPI_TRANSACTION
@@ -2017,6 +2129,9 @@ void SX126XLT::setRx(uint32_t timeout)
 /***************************************************************************
 //Start direct access SX buffer routines
 ***************************************************************************/
+
+//WARNING/TODO C. Pham. Now with wiringPi, successive SPI.transfer() calls is not working anymore!
+//Therefore writing/reading directly from buffer is not supported 
 
 void SX126XLT::startWriteSXBuffer(uint8_t ptr)
 {
@@ -2580,8 +2695,16 @@ void SX126XLT::setSleep(uint8_t sleepconfig)
 #endif
   
   digitalWrite(_NSS, LOW);
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(RADIO_SET_SLEEP);
-  SPI.transfer(sleepconfig);
+  SPI.transfer(sleepconfig); 
+#else
+	uint8_t spibuf[2];
+	spibuf[0] = RADIO_SET_SLEEP;
+	spibuf[1] = sleepconfig;
+	
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 2);
+#endif  
   digitalWrite(_NSS, HIGH);
   
   #ifdef USE_SPI_TRANSACTION
@@ -2728,22 +2851,42 @@ void SX126XLT::toneFM(uint16_t frequency, uint32_t length, uint32_t deviation, f
   for (index = 1; index <= loopcount; index++)
   {
     digitalWrite(_NSS, LOW);
+#if defined ARDUINO || defined USE_ARDUPI    
     SPI.transfer(RADIO_SET_RFFREQUENCY); 
     SPI.transfer(HighShiftH);
     SPI.transfer(HighShiftMH);
     SPI.transfer(HighShiftML);
     SPI.transfer(HighShiftL);
+#else    
+		uint8_t spibuf[5];
+		spibuf[0] = RADIO_SET_RFFREQUENCY;
+		spibuf[1] = HighShiftH;
+		spibuf[2] = HighShiftMH;
+		spibuf[3] = HighShiftML;		
+		spibuf[4] = HighShiftL;
+		
+		wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 5);
+#endif    
     digitalWrite(_NSS, HIGH);
-  
   
     delayMicroseconds(ToneDelayus);
   
     digitalWrite(_NSS, LOW);
+#if defined ARDUINO || defined USE_ARDUPI    
     SPI.transfer(RADIO_SET_RFFREQUENCY); 
     SPI.transfer(LowShiftH);
     SPI.transfer(LowShiftMH);
     SPI.transfer(LowShiftML);
     SPI.transfer(LowShiftL);
+#else    
+		spibuf[0] = RADIO_SET_RFFREQUENCY;
+		spibuf[1] = LowShiftH;
+		spibuf[2] = LowShiftMH;
+		spibuf[3] = LowShiftML;		
+		spibuf[4] = LowShiftL;
+		
+		wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 5);
+#endif    
     digitalWrite(_NSS, HIGH);
 
     delayMicroseconds(ToneDelayus);
@@ -2751,11 +2894,22 @@ void SX126XLT::toneFM(uint16_t frequency, uint32_t length, uint32_t deviation, f
   
   //now set the frequency registers back to centre
   digitalWrite(_NSS, LOW);                  //set NSS low
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(0x86);                       //address for write to REG_FRMSB
   SPI.transfer(freqregH);
   SPI.transfer(freqregMH);
   SPI.transfer(freqregML);
   SPI.transfer(freqregL);
+#else    
+		uint8_t spibuf[5];
+		spibuf[0] = 0x86;
+		spibuf[1] = freqregH;
+		spibuf[2] = freqregMH;
+		spibuf[3] = freqregML;		
+		spibuf[4] = freqregL;
+		
+		wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 5);
+#endif  
   digitalWrite(_NSS, HIGH);                 //set NSS high
   
 #ifdef USE_SPI_TRANSACTION
@@ -2780,10 +2934,22 @@ uint8_t SX126XLT::getByteSXBuffer(uint8_t addr)
 #endif
 
   digitalWrite(_NSS, LOW);             //start the burst read
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(RADIO_READ_BUFFER);
   SPI.transfer(addr);
   SPI.transfer(0xFF);
   regdata = SPI.transfer(0);
+#else
+	uint8_t spibuf[4];
+	spibuf[0] = RADIO_READ_BUFFER;
+	spibuf[1] = addr;
+	spibuf[2] = 0xFF;
+	spibuf[3] = 0x00;
+	
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 4);
+	
+	regdata = spibuf[3];
+#endif  
   digitalWrite(_NSS, HIGH);
 
 #ifdef USE_SPI_TRANSACTION
@@ -2809,6 +2975,7 @@ void SX126XLT::printSXBufferHEX(uint8_t start, uint8_t end)
 #endif
 
   digitalWrite(_NSS, LOW);                       //start the burst read
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(RADIO_READ_BUFFER);
   SPI.transfer(start);
   SPI.transfer(0xFF);
@@ -2819,6 +2986,26 @@ void SX126XLT::printSXBufferHEX(uint8_t start, uint8_t end)
     printHEXByte(regdata);
     PRINT_CSTSTR(" ");
   }
+#else
+	uint8_t spibuf[end-start+1+3];
+	spibuf[0] = RADIO_READ_BUFFER;
+	spibuf[1] = start;
+	spibuf[2] = 0xFF;
+
+  for (index = start; index <= end; index++)
+	{
+		spibuf[3+index-start]=0x00;
+	}	
+	
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, end-start+1+3);
+
+  for (index = start; index <= end; index++)
+	{
+		regdata=spibuf[3+index-start];
+    printHEXByte(regdata);
+    PRINT_CSTSTR(" ");		
+	}	
+#endif 
   digitalWrite(_NSS, HIGH);
   
 #ifdef USE_SPI_TRANSACTION
@@ -2930,15 +3117,17 @@ uint8_t SX126XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
 #ifdef USE_SPI_TRANSACTION     //to use SPI_TRANSACTION enable define at beginning of CPP file 
   SPI.beginTransaction(SPISettings(LTspeedMaximum, LTdataOrder, LTdataMode));
 #endif
-  
+    
   digitalWrite(_NSS, LOW);
+  
+#if defined ARDUINO || defined USE_ARDUPI   
   SPI.transfer(RADIO_WRITE_BUFFER);
   SPI.transfer(0);
 
   /**************************************************************************
 	Added by C. Pham - Oct. 2020
-  **************************************************************************/  
-  
+  **************************************************************************/ 
+    
   // we insert our header
   SPI.transfer(txdestination);                    //Destination node
   SPI.transfer(txpackettype);                     //Write the packet type
@@ -2965,7 +3154,25 @@ uint8_t SX126XLT::transmitAddressed(uint8_t *txbuffer, uint8_t size, char txpack
     bufferdata = txbuffer[index];
     SPI.transfer(bufferdata);
   }
+#else
+	uint8_t spibuf[size+HEADER_SIZE+2];
+	spibuf[0] = RADIO_WRITE_BUFFER;
+	spibuf[1] = 0;
+	spibuf[2] = txdestination;	
+	spibuf[3] = txpackettype;	
+	spibuf[4] = txsource;	
+	spibuf[5] = _TXSeqNo;				
 
+	_TXPacketL = HEADER_SIZE + size; 
+	
+	for (index = 0; index < size; index++)
+	{
+		bufferdata = txbuffer[index];	
+		spibuf[2+HEADER_SIZE+index]=bufferdata;
+	}	
+	
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, _TXPacketL+2); 
+#endif
   digitalWrite(_NSS, HIGH);
   
 #ifdef USE_SPI_TRANSACTION
@@ -3194,18 +3401,28 @@ uint8_t SX126XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
    readCommand(RADIO_GET_RXBUFFERSTATUS, buffer, 2);
   _RXPacketL = buffer[0];
   
+  RXstart = buffer[1];
+    
 #ifdef USE_SPI_TRANSACTION     //to use SPI_TRANSACTION enable define at beginning of CPP file 
   SPI.beginTransaction(SPISettings(LTspeedMaximum, LTdataOrder, LTdataMode));
 #endif
 
   digitalWrite(_NSS, LOW);               //start the burst read
-  SPI.transfer(RADIO_READ_BUFFER);
-  SPI.transfer(RXstart);
-  SPI.transfer(0xFF);
-
+  
   /**************************************************************************
 	Added by C. Pham - Oct. 2020
   **************************************************************************/  
+
+#ifdef SX126XDEBUG1 
+  PRINT_CSTSTR("Receive ");
+  PRINT_VALUE("%d", _RXPacketL);
+  PRINTLN_CSTSTR(" bytes");   
+#endif  
+
+#if defined ARDUINO || defined USE_ARDUPI 
+  SPI.transfer(RADIO_READ_BUFFER);
+  SPI.transfer(RXstart);
+  SPI.transfer(0xFF); 
   
   // we read our header
   _RXDestination = SPI.transfer(0);
@@ -3220,8 +3437,6 @@ uint8_t SX126XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
   {
   	_RXPacketL = size;                   //truncate packet if not enough space
   }
-  
-  RXstart = buffer[1];
   
   RXend = RXstart + _RXPacketL;  
 
@@ -3243,7 +3458,51 @@ uint8_t SX126XLT::receiveAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxt
     regdata = SPI.transfer(0);
     rxbuffer[index] = regdata;
   }
+#else
+	uint8_t spibuf[_RXPacketL+3];
+	spibuf[0] = RADIO_READ_BUFFER;
+	spibuf[1] = RXstart;
+	spibuf[2] = 0xFF;
 
+	for (index = 0; index < _RXPacketL; index++)
+	{
+		spibuf[3+index]=0x00;
+	}	
+	
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, _RXPacketL+3);
+	
+  // we read our header
+  _RXDestination = spibuf[3];
+  _RXPacketType = spibuf[4];
+  _RXSource = spibuf[5];
+  _RXSeqNo = spibuf[6];
+
+#ifdef SX128XDEBUG1
+	PRINT_CSTSTR("dest: ");
+	PRINTLN_VALUE("%d", _RXDestination);
+	PRINT_CSTSTR("ptype: ");
+	PRINTLN_VALUE("%d", _RXPacketType);		
+	PRINT_CSTSTR("src: ");
+	PRINTLN_VALUE("%d", _RXSource);
+	PRINT_CSTSTR("seq: ");
+	PRINTLN_VALUE("%d", _RXSeqNo);				 
+#endif
+	
+  //the header is not passed to the user
+  _RXPacketL=_RXPacketL-HEADER_SIZE;
+  
+  if (_RXPacketL > size)               //check passed buffer is big enough for packet
+  {
+    _RXPacketL = size;                 //truncate packet if not enough space
+  }
+
+  RXend = RXstart + _RXPacketL; 	
+
+  for (index = RXstart; index < RXend; index++)
+  {
+    rxbuffer[index] = spibuf[3+HEADER_SIZE+index];
+  }  
+#endif
   digitalWrite(_NSS, HIGH);
   
 #ifdef USE_SPI_TRANSACTION
@@ -3380,12 +3639,15 @@ uint8_t SX126XLT::receiveRTSAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t 
     
    readCommand(RADIO_GET_RXBUFFERSTATUS, buffer, 2);
   _RXPacketL = buffer[0];
-  
+
+  RXstart = buffer[1];  
+    
 #ifdef USE_SPI_TRANSACTION     //to use SPI_TRANSACTION enable define at beginning of CPP file 
   SPI.beginTransaction(SPISettings(LTspeedMaximum, LTdataOrder, LTdataMode));
 #endif
 
   digitalWrite(_NSS, LOW);               //start the burst read
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(RADIO_READ_BUFFER);
   SPI.transfer(RXstart);
   SPI.transfer(0xFF);
@@ -3399,23 +3661,67 @@ uint8_t SX126XLT::receiveRTSAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t 
   //the header is not passed to the user
   _RXPacketL=_RXPacketL-HEADER_SIZE;
   
-  if (_RXPacketL > size)                      //check passed buffer is big enough for packet
+  if (_RXPacketL > size)               //check passed buffer is big enough for packet
   {
   	// if _RXPacketL!=1 it is a very short data packet because we have RXDone
   	// so we ignore it
     return(0);
-  }  
-  
-  RXstart = buffer[1];
-  
+  }
+
   RXend = RXstart + _RXPacketL;  
-  
+
   for (index = RXstart; index < RXend; index++)
   {
     regdata = SPI.transfer(0);
     rxbuffer[index] = regdata;
   }
+#else
+	uint8_t spibuf[_RXPacketL+3];
+	spibuf[0] = RADIO_READ_BUFFER;
+	spibuf[1] = RXstart;
+	spibuf[2] = 0xFF;
 
+	for (index = 0; index < _RXPacketL; index++)
+	{
+		spibuf[3+index]=0x00;
+	}	
+	
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, _RXPacketL+3);
+	
+  // we read our header
+  _RXDestination = spibuf[3];
+  _RXPacketType = spibuf[4];
+  _RXSource = spibuf[5];
+  _RXSeqNo = spibuf[6];
+
+#ifdef SX128XDEBUG1
+	PRINT_CSTSTR("dest: ");
+	PRINTLN_VALUE("%d", _RXDestination);
+	PRINT_CSTSTR("ptype: ");
+	PRINTLN_VALUE("%d", _RXPacketType);		
+	PRINT_CSTSTR("src: ");
+	PRINTLN_VALUE("%d", _RXSource);
+	PRINT_CSTSTR("seq: ");
+	PRINTLN_VALUE("%d", _RXSeqNo);				 
+#endif
+	
+  //the header is not passed to the user
+  _RXPacketL=_RXPacketL-HEADER_SIZE;
+  
+  if (_RXPacketL > size)               //check passed buffer is big enough for packet
+  {
+  	// if _RXPacketL!=1 it is a very short data packet because we have RXDone
+  	// so we ignore it
+    return(0);
+  }
+
+  RXend = RXstart + _RXPacketL; 	
+
+  for (index = RXstart; index < RXend; index++)
+  {
+    rxbuffer[index] = spibuf[3+HEADER_SIZE+index];
+  }  
+#endif
   digitalWrite(_NSS, HIGH);
   
 #ifdef USE_SPI_TRANSACTION
@@ -3690,6 +3996,7 @@ void SX126XLT::fillSXBuffer(uint8_t startaddress, uint8_t size, uint8_t characte
 #endif
 
   digitalWrite(_NSS, LOW);
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(RADIO_WRITE_BUFFER);
   SPI.transfer(startaddress);
   //SPI interface ready for byte to write to buffer
@@ -3698,7 +4005,18 @@ void SX126XLT::fillSXBuffer(uint8_t startaddress, uint8_t size, uint8_t characte
   {
     SPI.transfer(character);
   }
+#else
+	uint8_t spibuf[size+2];
+	spibuf[0] = RADIO_WRITE_BUFFER;
+	spibuf[1] = startaddress;
 
+  for (index = 0; index < size; index++)
+	{
+		spibuf[2+index]=character;
+	}	
+	
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, size+2);
+#endif
   digitalWrite(_NSS, HIGH);
 
 #ifdef USE_SPI_TRANSACTION
@@ -3734,6 +4052,7 @@ uint8_t SX126XLT::readPacket(uint8_t *rxbuffer, uint8_t size)
 #endif
   
   digitalWrite(_NSS, LOW);               //start the burst read
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(RADIO_READ_BUFFER);
   SPI.transfer(RXstart);
   SPI.transfer(0xFF);
@@ -3743,7 +4062,24 @@ uint8_t SX126XLT::readPacket(uint8_t *rxbuffer, uint8_t size)
     regdata = SPI.transfer(0);
     rxbuffer[index] = regdata;
   }
+#else
+	uint8_t spibuf[_RXPacketL+3];
+	spibuf[0] = RADIO_READ_BUFFER;
+	spibuf[1] = RXstart;
+	spibuf[2] = 0xFF;
 
+  for (index = RXstart; index < RXend; index++)
+	{
+		spibuf[3+index]=0x00;
+	}	
+	
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, _RXPacketL+3);
+
+  for (index = RXstart; index < RXend; index++)
+  {
+    rxbuffer[index] = spibuf[3+index];
+  }  
+#endif
   digitalWrite(_NSS, HIGH);
   
 #ifdef USE_SPI_TRANSACTION
@@ -3767,15 +4103,23 @@ void SX126XLT::writeByteSXBuffer(uint8_t addr, uint8_t regdata)
 #endif
 
   digitalWrite(_NSS, LOW);
+#if defined ARDUINO || defined USE_ARDUPI  
   SPI.transfer(RADIO_WRITE_BUFFER);
   SPI.transfer(addr);
   SPI.transfer(regdata);
+#else
+	uint8_t spibuf[3];
+	spibuf[0] = RADIO_WRITE_BUFFER;
+	spibuf[1] = addr;
+	spibuf[2] = regdata;
+	
+	wiringPiSPIDataRW(SPI_CHANNEL, spibuf, 3);
+#endif  
   digitalWrite(_NSS, HIGH);
 
 #ifdef USE_SPI_TRANSACTION
   SPI.endTransaction();
 #endif
-
 }
 
 

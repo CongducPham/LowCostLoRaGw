@@ -219,6 +219,11 @@ uint8_t SX1272::ON()
     printf("Starting 'ON'\n");
 #endif
 
+#if not defined ARDUINO && not defined USE_ARDUPI
+  	wiringPiSetup() ;
+  	printf("<<< using wiringPi >>>\n");   
+#endif
+
     // Powering the module
     pinMode(SX1272_SS,OUTPUT);
     digitalWrite(SX1272_SS,HIGH);

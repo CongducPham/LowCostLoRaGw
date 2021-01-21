@@ -19,15 +19,11 @@ The objective is to seamlessly support the whole SX12XX family chip with the sam
 - folder `SX12XX` contains the modified SX12XX library. Only files related to SX126X, SX127X and SX128X have been modified for our purposes.
 
 - the `makefile` has been updated
-  - you can change the definition of `lora_gateway`, `lora_gateway_pi2` and `lora_gateway_pi4` targets according to selected radio module (SX126X, SX127X or SX128X) and low-level lib (Libelium 1272/1276 lib or Stuart Robinson's SX12XX lib)
-  - default target is for SX127X family using the new SX12XX library: `SX127X_lora_gateway` or `SX127X_lora_gateway_pi2` or `SX127X_lora_gateway_pi4` 
-  	- if you want to keep the old Libelium SX1272 library version, then simply change `lora_gateway`, `lora_gateway_pi2` and `lora_gateway_pi4` targets to `SX1272_lora_gateway`, `SX1272_lora_gateway_pi2` and `SX1272_lora_gateway_pi4` respectively
-  - then
-    - `make lora_gateway`, or
-  	- `make lora_gateway_pi2`, or
-    - `make lora_gateway_pi4`, or
-    - simply using the `scripts/compile_lora_gw.sh` script that will automatically determine the Raspberry model to compile for the appropriate target
-    - using `scripts/compile_lora_gw.sh` is the recommended option because compilation of the low-level LoRa radio bridge will be realized seamlessly as in the previous framework
+	- use `radio.makefile` to indicate the radio type
+		- `SX12XX=SX1272 | SX126X | SX127X | SX128X`
+  - `SX12XX=SX1272` means that you want to keep the old Libelium SX1272 library version		
+  - then `make lora_gateway` or
+  - simply using the `scripts/compile_lora_gw.sh` script which is the recommended option
   - for testing purposes, you can however manually compile for a specific target
     - `make SX1272_lora_gateway` or `make SX1272_lora_gateway_pi2` or `make SX1272_lora_gateway_pi2` (Libelium 1272/1276 lib)
     - `make SX126X_lora_gateway` or `make SX126X_lora_gateway_pi2` or `make SX126X_lora_gateway_pi4` (Stuart Robinson's SX12XX lib)	
