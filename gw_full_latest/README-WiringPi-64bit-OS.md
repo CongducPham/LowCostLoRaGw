@@ -25,6 +25,7 @@ Compiling
 - the `makefile` has been updated
 	- use `raspberry.makefile` to indicate the SPI lib
 		- `SPILIB=ARDUPI | WIRINGPI`
+	- if there is a `/boot/raspberry.makefile` file, it will have priority
   - then `make lora_gateway` or
   - simply using the `scripts/compile_lora_gw.sh` script which is the recommended option		
 

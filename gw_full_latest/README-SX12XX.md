@@ -21,6 +21,7 @@ The objective is to seamlessly support the whole SX12XX family chip with the sam
 - the `makefile` has been updated
 	- use `radio.makefile` to indicate the radio type
 		- `SX12XX=SX1272 | SX126X | SX127X | SX128X`
+	- if there is a `/boot/radio.makefile` file, it will have priority
   - `SX12XX=SX1272` means that you want to keep the old Libelium SX1272 library version		
   - then `make lora_gateway` or
   - simply using the `scripts/compile_lora_gw.sh` script which is the recommended option

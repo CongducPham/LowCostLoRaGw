@@ -1,6 +1,11 @@
 include radio.makefile
 include raspberry.makefile
 
+#these definitions, if files exist will overwrite previous definitions
+-include /boot/radio.makefile
+-include /boot/raspberry.makefile
+
+
 RPIMODEL=$(shell /home/pi/lora_gateway/scripts/test_raspberry_model.sh | grep ">" | cut -d ">" -f2)
 
 #to test compilation on various models by writing an RPI model in the file

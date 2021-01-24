@@ -91,7 +91,9 @@ Use `radio.makefile` to indicate the radio type: `SX12XX=SX1272 | SX126X | SX127
 Use `raspberry.makefile` to indicate the SPI lib which can be `arduPi` or `wiringPi`: `SPILIB=ARDUPI | WIRINGPI`. Default setting is `SPILIB=ARDUPI`. If you run on 32-bit OS, which is probably the case, then leave it as it is. If you run on 64-bit OS then change to `SPILIB=WIRINGPI`. You can also decide to change to `wiringPi` even for 32-bit OS if you want. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-WiringPi-64bit-OS.md).
       
 Use also `radio.makefile` file to indicate whether your radio module uses the PA_BOOST amplifier line or not (which means it uses the RFO line). HopeRF RFM92W/95W or inAir9B or NiceRF1276 or a radio module with +20dBm possibility (the SX1272/76 has +20dBm feature but some radio modules that integrate the SX1272/76 may not have the electronic to support it) need the `-DPABOOST`. Both Libelium SX1272 and inAir9 (not inAir9B) do not use PA_BOOST. You can also define a maximum output power to stay within transmission power regulations of your country. For instance, if you do not define anything, then the output power is set to 14dBm (ETSI european regulations), otherwise use `-DMAX_DBM=10` for 10dBm. 
-  
+
+You can create `/boot/raspberry.makefile` or `/boot/radio.makefile` files, they will have priority  
+
 Then:
 
 	> make lora_gateway
