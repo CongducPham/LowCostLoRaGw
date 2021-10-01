@@ -35,6 +35,9 @@ require 'header.php';
                         <li>
                             <a href="system.php"><i class="fa fa-linux"></i> System</a>
                         </li>
+                        <li>
+                            <a href="jupyter.php"><img src="jupyter-logo.svg" width="15" height="14"> Jupyter</a>
+                        </li>                        
                     </ul>
                 </div>
                 <!-- /.sidebar-collapse -->

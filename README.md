@@ -1,8 +1,8 @@
 Low-cost LoRa IoT framework developed in the EU H2020 WAZIUP/WAZIHUB projects
 =====================================================================
 
-<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/WAZIUP.png" width="300">
-<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/wazihub.png" width="300">
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/WAZIUP.png" width="300"> <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/wazihub.png" width="300">
+<img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/hubiquitous.png" width="300"> <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/intel-irris-logo.png" width="300">
 
 News from EU commission
 -----------------------
@@ -11,7 +11,10 @@ June 19th, 2020. The low-cost, low-power and long-distance cattle collar develop
 
 Latest news
 -----------
-- **NEW-Jan21** To provide support for next 64-bit OS the low-level SPI library on the Raspberry gateway has moved from Libelium's `arduPi` lib to Gordon's `wiringPi` lib because `arduPi` relies heavily on direct memory accesses that are difficult to port. The main reason for 64-bit OS is to prepare the whole low-cost Raspberry-based gateway to embed advance AI frameworks that are mostly based on 64-bit OS. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-WiringPi-64bit-OS.md).
+
+- **NEW-Oct21** We have now a beta version of the whole low-cost Raspberry-based gateway with embedded advanced AI frameworks. The embedded AI framework will be used in PRIMA [INTEL-IRRIS project](http://intel-irris.eu/) to build low-cost and smart irrigation systems for smallholders. Follow INTEL-IRRIS [Twitter channel](https://twitter.com/Intel_IrriS) for updates. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-AI.md). Download the 64-bit RaspiOS SD image to be flashed on a 32GB class 10 SD card, see below.
+
+- **NEW-Jan21** To provide support for next 64-bit OS, the low-level SPI library on the Raspberry gateway has moved from Libelium's `arduPi` lib to Gordon's `wiringPi` lib because `arduPi` relies heavily on direct memory accesses that are difficult to port. The main reason for 64-bit OS is to prepare the whole low-cost Raspberry-based gateway to embed advanced AI frameworks that are mostly based on 64-bit OS. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-WiringPi-64bit-OS.md).
 
 - **NEW-Nov20** To support the new SX126X and SX128X LoRa chips, we updated and added Arduino ProMini PCBs to easily connect NiceRF SX1262 and NiceRF SX1280 modules. These modules have same size than the HopeRF RFM95W for SX1276.
 
@@ -19,8 +22,8 @@ Latest news
 
 Quick start
 -----------
-
-- **The current SD card image (Debian Buster) has everything you need!** [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip). See [installation section](https://github.com/CongducPham/LowCostLoRaGw#installing-the-latest-gateway-version)
+- **Beta version of RaspiOS (Debian Buster 64-bit) is ready for testing!** [zipped SD card image](https://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-raspios-buster-WAZIUP-demo-arm64_v1_oct21.iso). 
+- **The current SD card image (Debian Buster 32-bit) has everything you need!** [zipped SD card image](https://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip). See [installation section](https://github.com/CongducPham/LowCostLoRaGw#installing-the-latest-gateway-version)
 - Use the single-channel gateway for LoRaWAN-like communication (including downlink) with LoRa 2.4GHz. Upload to TTN or ChirpStack network servers. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-SX12XX.md)
 - Use the single-channel gateway for limited LoRaWAN (including downlink and OTAA feature) on the 433MHz band for devices with our [modified LMIC](https://github.com/CongducPham/LMIC_low_power#using-433mhz-band)
 - The single-channel gateway now also provides LoRaWAN downlink and OTAA features for devices with our [modified LMIC](https://github.com/CongducPham/LMIC_low_power#using-single-channel-gateway). See updated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)

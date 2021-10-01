@@ -3949,8 +3949,8 @@ uint16_t SX128XLT::CollisionAvoidance(uint8_t pl, uint8_t ca) {
   
   if (ca==1)
   	// we force cad_number to 0 to skip the CAD procedure to test the collision avoidance mechanism
-  	// in real deployment, set to DEFAULT_CAD_NUMBER
-    return(CollisionAvoidance1(pl, 0 /* DEFAULT_CAD_NUMBER */));
+  	// in a real deployment, set back to DEFAULT_CAD_NUMBER
+    return(CollisionAvoidance0(pl, 0 /* DEFAULT_CAD_NUMBER */));
     
   return(0);  
 }
@@ -4324,12 +4324,15 @@ uint8_t SX128XLT::transmitRTSAddressed(uint8_t pl) {
 	return(TXRTSPacketL);
 }
 
-uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
+uint16_t SX128XLT::CollisionAvoidance0(uint8_t pl, uint8_t cad_number) {
 
   int e;
 	// P=0.1, i.e. 10%
-	uint8_t P=10;
+	// we mainly use P=0 in real deployment (see scientific papers for simulation studies)
+	uint8_t P=0;
+	uint8_t WL=7;
 	uint8_t W2=7;
+	//W2afterP1 will be 10 if W2=7
 	uint8_t W2afterP1=W2+3;
 	uint8_t W3=W2;
   double difs;
@@ -4344,13 +4347,13 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
   //set difs to packet's preamble length, in ms
   difs=(getPreamble()+((sf<7)?6.25:4.25))*ts;
   
-  // W2*DIFS+TOA(sizeof(RTS)), in ms
-  listenRTSduration=W2*(uint16_t)difs+getToA(HEADER_SIZE+1);
+  // WL*DIFS+TOA(sizeof(RTS)), in ms
+  listenRTSduration=WL*(uint16_t)difs+getToA(HEADER_SIZE+1);
 
-  PRINT_CSTSTR("--> CA1\n");
+  PRINT_CSTSTR("--> CA\n");
 
 #ifdef SX128XDEBUGRTS
-  PRINT_CSTSTR("--> CA1: ts ");
+  PRINT_CSTSTR("--> CA: ts ");
 	PRINT_VALUE("%d", (uint16_t)ts);
   PRINT_CSTSTR(" DIFS ");
 	PRINT_VALUE("%d", (uint16_t)difs);
@@ -4365,7 +4368,7 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
     e = doCAD(cad_number);
     _endDoCad=millis();
     
-    PRINT_CSTSTR("--> --> CA1: CAD ");
+    PRINT_CSTSTR("--> --> CA: CAD ");
   	PRINT_VALUE("%d",_endDoCad-_startDoCad);
     PRINTLN;    
   }
@@ -4378,7 +4381,7 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
   // so we return the toa of the maximum packet length, i.e. 255 bytes
   if (e!=0) {
 #ifdef SX128XDEBUGRTS
-  	PRINT_CSTSTR("--> CA1: BUSY DEFER BY MAX_TOA ");
+  	PRINT_CSTSTR("--> CA: BUSY DEFER BY MAX_TOA ");
 		PRINTLN_VALUE("%d", getToA(255));			 
 #endif  
   	return(getToA(255));
@@ -4395,7 +4398,7 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 #endif		
 
 #ifdef SX128XDEBUGRTS
-  	PRINT_CSTSTR("--> CA1: FREE, INITIATE CA ");
+  	PRINT_CSTSTR("--> CA: FREE, INITIATE CA ");
   	PRINT_CSTSTR("P=");
   	PRINT_VALUE("%d", P);
   	PRINT_CSTSTR(" myP=");
@@ -4414,13 +4417,13 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 			uint8_t RXBUFFER[RXBUFFER_SIZE];
 
 #ifdef SX128XDEBUGRTS
-			PRINT_CSTSTR("--> CA1: LISTEN ");
+			PRINT_CSTSTR("--> CA: LISTEN ");
 			if (forceListen)
 				PRINTLN_CSTSTR("P2");
 			else
 				PRINTLN_CSTSTR("P1");			
 							 
-			PRINTLN_CSTSTR("--> CA1: WAIT FOR RTS");
+			PRINTLN_CSTSTR("--> CA: WAIT FOR RTS");
 #endif
 		
 			//try to receive the RTS
@@ -4429,11 +4432,11 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 			// length is 1 indicates an RTS
 			if (RXRTSPacketL==1) {
 #ifdef SX128XDEBUGRTS
-				PRINT_CSTSTR("--> CA1: RECEIVE RTS(");
+				PRINT_CSTSTR("--> CA: RECEIVE RTS(");
 				PRINT_VALUE("%d", RXBUFFER[0]);
 				PRINT_CSTSTR(") FROM ");
 				PRINTLN_VALUE("%d", readRXSource());
-				PRINT_CSTSTR("--> CA1: NAV(RTS) FOR listenRTSduration+W3*DIFS+ToA(");
+				PRINT_CSTSTR("--> CA: NAV(RTS) FOR listenRTSduration+W3*DIFS+ToA(");
 				PRINT_VALUE("%d", RXBUFFER[0]);
 				PRINT_CSTSTR(") ");						
 				PRINT_VALUE("%d", listenRTSduration+W3*(uint16_t)difs+getToA(RXBUFFER[0]));
@@ -4445,14 +4448,14 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 			//indicate a longer data packet
 			if (RXRTSPacketL>1) {
 #ifdef SX128XDEBUGRTS
-				PRINT_CSTSTR("--> CA1: ValidHeader FOR DATA DEFER BY MAX_TOA ");
+				PRINT_CSTSTR("--> CA: ValidHeader FOR DATA DEFER BY MAX_TOA ");
 				PRINTLN_VALUE("%d", getToA(255));			 
 #endif  
 				return(getToA(255));	
 			}
 			else {
 #ifdef SX128XDEBUGRTS
-				PRINTLN_CSTSTR("--> CA1: NO RTS");		 
+				PRINTLN_CSTSTR("--> CA: NO RTS");		 
 #endif		
 			}
 		}		
@@ -4467,7 +4470,7 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 		// we backoff before transmitting W3*DIFS
 		if (forceListen) {
 #ifdef SX128XDEBUGRTS
-			PRINT_CSTSTR("--> CA1: P3 W3=");
+			PRINT_CSTSTR("--> CA: P3 W3=");
 			PRINTLN_VALUE("%d", W3);	 
 #endif
 #ifdef ARDUINO		
@@ -4480,7 +4483,7 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 			// we were in phase 1
 			if (myP>P) {
 #ifdef SX128XDEBUGRTS
-				PRINT_CSTSTR("--> CA1: P1->P2 W2afterP1=");
+				PRINT_CSTSTR("--> CA: P1->P2 W2afterP1=");
 				PRINTLN_VALUE("%d", W2afterP1);	 
 #endif			  
 #ifdef ARDUINO			          
@@ -4491,7 +4494,7 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 			}	
 			else {
 #ifdef SX128XDEBUGRTS
-				PRINT_CSTSTR("--> CA1: direct P2 W2=");
+				PRINT_CSTSTR("--> CA: direct P2 W2=");
 				PRINTLN_VALUE("%d", W2);	 
 #endif			
 #ifdef ARDUINO			
@@ -4503,7 +4506,7 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 		}
 		
 #ifdef SX128XDEBUGRTS
-		PRINT_CSTSTR("--> CA1: WAIT FOR ");
+		PRINT_CSTSTR("--> CA: WAIT FOR ");
 		PRINT_VALUE("%d", w);
 		PRINTLN_CSTSTR(" DIFS");		 
 #endif
@@ -4518,14 +4521,14 @@ uint16_t SX128XLT::CollisionAvoidance1(uint8_t pl, uint8_t cad_number) {
 		// 
 		if (forceListen) {
 #ifdef SX128XDEBUGRTS
-			PRINTLN_CSTSTR("--> CA1: EXIT, ALLOW DATA TRANSMIT");
+			PRINTLN_CSTSTR("--> CA: EXIT, ALLOW DATA TRANSMIT");
 #endif		
 			return(0);
 		}	
 		// if forceListen==false then this is the first time for nodes starting directly at phase 2
 		else {	
 #ifdef SX128XDEBUGRTS
-			PRINTLN_CSTSTR("--> CA1: SEND RTS");
+			PRINTLN_CSTSTR("--> CA: SEND RTS");
 #endif			
 		
 			// phase 2 where we send an RTS

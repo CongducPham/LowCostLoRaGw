@@ -230,7 +230,7 @@ Example 2: `post-processing_gw.py` handling a fake LoRaWAN packet for local decr
 
 	import sys
 	print "^p0,0,0,0,26,8,-45"
-	print "^r125,5,12"
+	print "^r125,5,12,868100"
 	print "\xFF\xFE\x40\x06\x00\x00\x00\x00\x00\x00\x01\x4F\x29\xE7\x49\x77\xA1\xC2\xE7\x81\xE6\x16\xA6\x68\xFD\x75\x68\x74"
 	sys.stdout.flush()
 	
@@ -256,7 +256,7 @@ Output is shown below:
 	splitted in:  [0, 0, 0, 0, 26, 8, -45]
 	rawFormat(len=25 SNR=8 RSSI=-45)
 	rcv ctrl radio info (^r): 125,5,12
-	splitted in:  [125, 5, 12]
+	splitted in:  [125, 5, 12, 868100]
 	(BW=125 CR=5 SF=12)
 	got first framing byte
 	--> got data prefix

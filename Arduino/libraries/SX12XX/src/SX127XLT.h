@@ -207,7 +207,7 @@ class SX127XLT
     void CarrierSense2(uint8_t cad_number, bool extendedIFS=false);
     void CarrierSense3(uint8_t cad_number);
     uint8_t transmitRTSAddressed(uint8_t pl);
-    uint16_t CollisionAvoidance1(uint8_t pl, uint8_t cad_number);
+    uint16_t CollisionAvoidance0(uint8_t pl, uint8_t cad_number);
     uint8_t receiveRTSAddressed(uint8_t *rxbuffer, uint8_t size, uint32_t rxtimeout, uint8_t wait);    
     uint8_t invertIQ(bool invert);
     void setTXSeqNo(uint8_t seqno);

@@ -28,6 +28,9 @@ require 'header.php';
                         <li>
                             <a href="gateway_update.php"><i class="fa fa-upload"></i> Gateway Update</a>
                         </li>
+                        <li>
+                            <a href="jupyter.php"><img src="jupyter-logo.svg" width="15" height="14"> Jupyter</a>
+                        </li>                        
                     </ul>
                 </div>
                 <!-- /.sidebar-collapse -->

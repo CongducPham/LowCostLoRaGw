@@ -13,7 +13,24 @@ if(!isset($_SESSION['username'])){
 $radio_conf= null; $gw_conf= null; $alert_conf = null;
 process_gw_conf_json($radio_conf, $gw_conf, $alert_conf);
 
+$clouds = null; $encrypted_clouds= null; $lorawan_encrypted_clouds = null;
+process_clouds_json($clouds, $encrypted_clouds, $lorawan_encrypted_clouds);
+
+$key_clouds = process_key_clouds();
+
 $maxAddr = 255;
+$low_level_status_interval = 11;
+
+if (is_file("/lib/systemd/system/chirpstack-network-server.service")) { 
+	ob_start();
+	system("systemctl is-active chirpstack-network-server.service | grep inactive");
+	$chirpstack_not_active=ob_get_contents(); 
+	ob_clean();
+}
+else
+	$chirpstack_not_active="unknown";
+	
+$is_sx1301=exec('egrep "start_[ul]p[lf]_pprocessing_gw.sh" /etc/rc.local');	
 
 require 'header.php';
 ?>
@@ -31,6 +48,9 @@ require 'header.php';
                         <li>
                             <a href="system.php"><i class="fa fa-linux"></i> System</a>
                         </li>
+                        <li>
+                            <a href="jupyter.php"><img src="jupyter-logo.svg" width="15" height="14"> Jupyter</a>
+                        </li>                        
                     </ul>
                 </div>
                 <!-- /.sidebar-collapse -->
@@ -58,6 +78,8 @@ require 'header.php';
                                 </li>
                                 <li><a href="#gw_conf-pills" data-toggle="tab">Gateway</a>
                                 </li>
+                                <li><a href="#netserv-pills" data-toggle="tab">Network Server</a>
+                                </li>                                
                                 <li><a href="#alert_mail-pills" data-toggle="tab">Alert Mail</a>
                                 </li>
                                 <li><a href="#alert_sms-pills" data-toggle="tab">Alert SMS</a>
@@ -69,12 +91,91 @@ require 'header.php';
                             </ul>
 
 							</br>
+                            							
             				<p>&nbsp;&nbsp;&nbsp;&nbsp;After changing gateway parameters, you need to reboot for changes to take effect.</p>
-            				
+							<?php
+								$date=date('Y-m-d\TH:i:s');
+								echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;Date/Time: ';
+								echo $date;
+								echo '</p>';
+							?>	
+										            				
                             <!-- Tab panes -->
                             <div class="tab-content">
                             	<div class="tab-pane fade in active" id="radio_conf-pills">
-                                    </br></br>
+
+										<?php 									
+											if ($is_sx1301=='')
+											{
+												echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;Radio configuration file is for single channel radio</p>';
+									
+												ob_start(); 
+												system("grep -a 'Low-level gw status ON' /home/pi/lora_gateway/log/post-processing.log | tail -1 | cut -d '.' -f1");
+												$low_level=ob_get_contents(); 
+												ob_clean();
+												if ($low_level=='') {
+													echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>no low-level status</b></font></p>';					
+												}
+												else {
+													$date=str_replace("T", " ", $date, $count);
+													$datetime1 = new DateTime($date);
+													$low_level_1=str_replace("T", " ", $low_level, $count);
+													$datetime2 = new DateTime($low_level_1);
+													$interval = $datetime1->diff($datetime2);
+											
+													$interval_minute=intval($interval->format('%i'));
+											
+													//we have to check month, day and hour because minute is only between 1..59
+													if (intval($interval->format('%m'))>0 || intval($interval->format('%d'))>0 || intval($interval->format('%h'))>0) {
+														$interval_minute=$low_level_status_interval+1;
+													}
+											
+													echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;last low-level status: ';
+											
+													if ($interval_minute > $low_level_status_interval) {
+														echo '<font color="red"><b>';
+													}
+													else {
+														echo '<font color="green"><b>';
+													}
+				
+													echo $low_level;
+													echo $interval->format(' %mm-%dd-%hh-%imin from current date');	
+													echo '</b></font></p>';				
+												}																							
+											}
+											else {
+												echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;Radio configuration file is for SX1301-based multi-channel concentrator [<a href="../log/global_conf.json">global_conf.json</a>][<a href="../log/local_conf.json">local_conf.json</a>]</p>';
+												echo '<div style="margin-left: 1em;">';
+													echo '<form id="download_sx1301_conf_form" role="form">';
+														echo '<fieldset>';
+															echo '<div class="form-group">';
+																echo '<label>Enter the URL of a valid <tt>global_conf.json</tt> file if you want to replace the existing one</label>';
+																echo '<input class="form-control" placeholder="" name="sx1301_conf_file_name_url" type="text" value="" autofocus>';
+															echo '</div>';
+															echo '<p>e.g. EU863-870 from TTN [<a href="https://raw.githubusercontent.com/TheThingsNetwork/gateway-conf/master/EU-global_conf.json">copy link</a>]';
+															echo ' or from RAK [<a href="https://raw.githubusercontent.com/RAKWireless/rak_common_for_gateway/master/lora/rak2245/global_conf/global_conf.eu_863_870.json">copy link</a>]&nbsp;&nbsp;&nbsp;&nbsp;';
+															echo '<button type="submit" class="btn btn-primary">Download</button></p></br>';
+														echo '</fieldset>';
+													echo '</form>';
+												echo '</div>';												
+											}
+											
+											ob_start(); 
+											system("grep -a '\+\+\+ rxlora' /home/pi/lora_gateway/log/post-processing.log | tail -1");
+											$rx=ob_get_contents(); 
+											ob_clean();
+											if ($rx=='') {
+												echo '<p>&nbsp;&nbsp;&nbsp;&nbsp;<font color="red"><b>no rx found</b></font>';					
+											}
+											else {
+												echo '&nbsp;&nbsp;&nbsp;&nbsp;last rx: <font color="green"><b>';
+												echo $rx;
+												echo '</b></font></p>';					
+											}												
+										?>
+									
+                                    </br>
                                     
                                     <div id="radio_msg"></div>
                                     
@@ -86,7 +187,15 @@ require 'header.php';
     									 </thead>
 										<tbody>
 										   <tr>
-    									    <td>Mode</td>
+    									    <td><a href="#" class="my_tooltip" data-toggle="tooltip" title="mode 1 (SF12BW125)<br/>mode 2 (SF12BW250)<br/>mode 3 (SF10BW125)<br/>mode 4 (SF12BW500)<br/>mode 5 (SF10BW250)<br/>mode 6 (SF11BW500)<br/>mode 7 (SF09BW250)<br/>mode 8 (SF09BW500)<br/>mode 9 (SF08BW500)<br/>mode 10 (SF07BW500)<br/>mode 11 (LoRaWAN)">Mode</a>
+    									    <?php
+    								    		if ($radio_conf['mode']==11) {
+    								    			echo " <b>[LoRaWAN]</b>";
+    								    		if ($gw_conf['raw']==false)
+    								    			echo '<font color="red">[set raw format to true]</font>';
+    								    	}
+    								    ?>
+    									    </td>
     										<td id="mode_value"><?php echo $radio_conf['mode']; ?></td>
     										<td align="right"><button id="btn_edit_mode" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
    										    <td id="td_edit_mode">
@@ -95,7 +204,7 @@ require 'header.php';
                                             		<select id="mode_select" class="form-control">
                                                 		<option>-1</option> <option selected>1</option> <option>2</option> <option>3</option> <option>4</option>
                                                 		<option>5</option> <option>6</option> <option>7</option> <option>8</option>
-                                                		<option>9</option> <option>10</option> <option>11</option>
+                                                		<option>9</option> <option>10</option>
                                            			</select>
                                         		</div>
                                         	</td> 
@@ -130,7 +239,7 @@ require 'header.php';
    										    	<div class="form-group">
                                             		<label>ISM Band </label>
                                             		<select id="band_freq_select" class="form-control">
-                                                		<option></option> <option>433MHz</option> <option>868MHz</option> <option>915MHz</option> 
+                                                		<option></option> <option>-1</option> <option>433MHz</option> <option>868MHz</option> <option>915MHz</option> 
                                            			</select>
                                            			
                                            			<label>Frequency</label>
@@ -146,31 +255,37 @@ require 'header.php';
     									    <td>PA_BOOST</td>
     										<td id="paboost_value">
     											<?php
-    												$current_paboost=exec('egrep ^CFLAGS /home/pi/lora_gateway/radio.makefile');
+    												$current_paboost=exec('egrep "^CFLAGS.*BOOST" /home/pi/lora_gateway/radio.makefile');
     												
     												if ($current_paboost=='')
 													{
-    													echo "Disabled";
+    													//echo "Disabled";
     													$current_paboost=false;    
 													}
 													else {
-   					 									echo "Enabled";
+   					 									//echo "Enabled";
    					 									$current_paboost=true;   
 													}
-    											?>    										
+    											?>  										
     										</td>
-    										<td align="right"><button id="btn_edit_paboost" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+    										
+											<td align="right">
+											<input type="checkbox" id="paboost_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($current_paboost) echo "checked";?>>
+											</td>
+			
+											<!-- <td align="right"><button id="btn_edit_paboost" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+											
    										   	<td id="td_edit_paboost">
    										    	<div id="div_paboost_options" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
                                            			<fieldset id="paboost_group" >
                                                 		<label>
-                                                    		<input type="radio" name="paboost_group" id="paboost_true" value="Enabled" <?php if($current_paboost) echo "checked"?> >Enabled
+                                                    		<input type="radio" name="paboost_group" id="paboost_true" value="Enabled" <?php if($current_paboost) echo "checked";?> >Enabled
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="paboost_group" id="paboost_false" value="Disabled" <?php if(!$current_paboost) echo "checked"?> >Disabled
+                                                    		<input type="radio" name="paboost_group" id="paboost_false" value="Disabled" <?php if(!$current_paboost) echo "checked";?> >Disabled
                                                 		</label>
                                             		</div>
                                         		</div>
@@ -182,10 +297,10 @@ require 'header.php';
    										   
 										</tbody>
     								  </table>
-    								  <p>Use mode=11 to indicate LoRaWAN mode. Only in this case you can also select the Spreading Factor SF.</p>
-    								  <p>Change frequency if needed. Leave frequency as -1 to use default values (for LoRaWAN mode: 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433).</p>
-    								  <p>PA_BOOST is required for some radio modules such as inAir9B, RFM92W, RFM95W, NiceRF LoRa1276.</p>
-    								  <p>After changing the PA_BOOST settings, run <b>Gateway Update/Basic config</b> to recompile the low-level gateway program.</p> 
+    								  <p><b>Mode=11 will indicate LoRaWAN mode. Use "Configure for LoRaWAN" feature in Gateway tab to set for LoRaWAN mode.</b></p>
+    								  <p>For single-channel gateways, the default LoRaWAN mode means SF12BW125 and <a href="#" class="my_tooltip" data-toggle="tooltip" title="LoRaWAN defines a sync word of 0x34 for a public LoRaWAN networks. A typical LoRaWAN device will therefore use this sync word value.">sync word</a> 0x34 . In this mode you can change the Spreading Factor SF.</p>
+    								  <p>Change frequency for a single-channel gateway if needed. Leave frequency as -1 to use <a href="#" class="my_tooltip" data-toggle="tooltip" title="865.2MHz for BAND868, 913.88MHz for BAND900 and 433.3 for BAND433">default values</a> (for LoRaWAN mode: 868.1MHz for BAND868, 923.2MHz for BAND900 and 433.175 for BAND433).</p>
+    								  <p>PA_BOOST is required for some radio modules such as inAir9B, RFM92W, RFM95W, NiceRF LoRa1276. After changing the PA_BOOST settings, run <b>Gateway Update/Basic config</b> to recompile the low-level gateway program.</p> 
     							     </div>
     							     
     							  </div>
@@ -194,12 +309,60 @@ require 'header.php';
                                 <!-- tab-pane -->
                                 
                                 <div class="tab-pane fade" id="gw_conf-pills">
+                                	<div class="col-md-10 col-md-offset-0">
+                                	
+									<form id="gw_lorawan_conf_form" role="form">
+										<fieldset>
+											<a href="#" class="my_tooltip" data-toggle="tooltip" title="set mode to 11, raw format to true, aes_lorawan to false, status interval to 600s (5min) if interval is 0, disable non-LoRaWAN downlink timer, enable downlink process for LoRaWAN and enable/disable LoRaWAN cloud as selected"><button  id="btn_gw_lorawan_conf" type="button" class="btn btn-primary">Configure for LoRaWAN</button></a>
+											<input type="checkbox" id="gw_lorawan_conf_ttn_checkbox" name="gw_lorawan_conf_ttn_checkbox" value="true" <?php if (get_cloud_status($lorawan_encrypted_clouds, "python CloudTTN.py")) echo "checked";?>>TTN cloud</input>
+											<?php
+											if (is_file("/lib/systemd/system/chirpstack-network-server.service")) {
+												echo '<input type="checkbox" id="gw_lorawan_conf_chirpstack_checkbox" name="gw_lorawan_conf_chirpstack_checkbox" value="true" ';
+												if (get_cloud_status($lorawan_encrypted_clouds, "python CloudChirpStack.py")) 
+													echo 'checked';
+												echo '>ChirpStack cloud</input>';
+											}
+											?>
+										</fieldset>
+									</form>
+									
+									<?php
+										if (get_cloud_status($lorawan_encrypted_clouds, "python CloudChirpStack.py") or get_cloud_status($lorawan_encrypted_clouds, "python CloudTTN.py"))
+											$cloud_lorawan_enabled=true;
+										else
+											$cloud_lorawan_enabled=false;
+											
+    								 	if ($cloud_lorawan_enabled) {
+											if ($is_sx1301=='') {
+												echo '<p><font color="green">You have a single-channel gateway. </font>';
+
+												if ($radio_conf['mode']==11)
+													echo '<font color="green">Radio mode is for LoRaWAN. You can have <a href="#" class="my_tooltip" data-toggle="tooltip" title="Join-request for OTAA must use LoRa uplink setting.">limited</a> LoRaWAN support.</font></p>';
+												else
+													echo '<font color="orange">Radio mode is not for LoRaWAN. You can configure for <a href="#" class="my_tooltip" data-toggle="tooltip" title="Join-request for OTAA must use LoRa uplink setting.">limited</a> LoRaWAN support</font></p>';     								 				
+											}
+											else {
+												echo '<p><font color="green">You have a multi-channel gateway. </font>';
+												if ($radio_conf['mode']==11)
+													echo '<font color="green">Radio mode is for LoRaWAN. You can have <a href="#" class="my_tooltip" data-toggle="tooltip" title="All downlink messages will be handled by Semtech lora_pkt_fwd">full</a> LoRaWAN support.</font></p>';
+												else
+													echo '<font color="orange">Radio mode is not for LoRaWAN. You can configure for <a href="#" class="my_tooltip" data-toggle="tooltip" title="All downlink messages will be handled by Semtech lora_pkt_fwd">full</a> LoRaWAN support.</font></p>';
+											}
+																								
+										if (get_cloud_status($lorawan_encrypted_clouds, "python CloudChirpStack.py") and $chirpstack_not_active!='')
+											echo '<p><font color="orange">You are pushing to ChirpStack but there is no local ChirpStack service. Be sure to have a remote ChirpStack Network Server available.</font></p>';
+										}
+										else {
+											echo '<p><font color="orange">You have no LoRaWAN cloud enabled.</font></p>'; 
+										}								
+													
+									?>				
+													                             
                                     </br>
                                     <!-- <h4>Gateway settings</h4></br> -->
                                     <div id="gw_msg"></div>
                                     <!-- Tab panes -->
-                
-                                    <div class="col-md-10 col-md-offset-0">
+
                                       <div class="table-responsive">
 										<table class="table table-striped table-bordered table-hover">
    										  <thead>
@@ -243,6 +406,7 @@ require 'header.php';
    										   <tr>
    										   <td>IP address</td>
    										   <td id="ip_address_value">
+   										   		<!--
    										   		<?php 
 													ob_start(); 
 													system("ifconfig eth0");
@@ -291,13 +455,22 @@ require 'header.php';
 														echo "eth0: $ip";													
 													} 
 												?>
+												-->
+   										   		<?php 
+													ob_start(); 
+													system("hostname -I | cut -d ' ' -f1");
+													$ip=ob_get_contents(); 
+													ob_clean(); 
+													echo "$ip";
+												?>												
    										   </td>
    										   <td align="right">not editable</td>
    										   </tr>	
    										   
    										   <tr>
-   										   	<td>Mac addresss</td>
+   										   	<td>MAC addresss</td>
    										   	<td id="mac_address_value">
+   										   		<!--
    										   		<?php 
 													ob_start(); 
 													system("ifconfig eth0"); 
@@ -308,9 +481,18 @@ require 'header.php';
 													$mac=substr($mycom,($pmac+7),17); 
 													echo "eth0: $mac"; 
 												?>
+												-->
+   										   		<?php 
+													ob_start(); 
+													system("ifconfig eth0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'");
+													$mac=ob_get_contents(); 
+													ob_clean(); 
+													echo "eth0: $mac"; 
+												?>												
    										   	</td> 
    										   	<td align="right">not editable</td>
    										   </tr>	
+   										   
    										   <tr>
    										   		<td>GPS coordinates</td>
    										   		<td>
@@ -416,30 +598,25 @@ require 'header.php';
    										   			<button align="right" id="btn_submit_position" class="btn btn-primary">Submit<span class="fa fa-arrow-right"></span></button>
    										   		</td>
    										   </tr>
+   										   
     										   <tr>
    										   		<td>wappkey</td>
-   										   		<td id="wappkey_value">
-   										   		<?php 
-    												if($gw_conf['wappkey'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-   										   		?>
-   										   		</td>
-   										   		<td align="right" ><button id="btn_edit_wappkey" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+   										   		<td id="wappkey_value"></td>
+												<td align="right">
+												<input type="checkbox" id="wappkey_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($gw_conf['wappkey']) echo "checked";?>>
+												</td>
+												<!-- <td align="right" ><button id="btn_edit_wappkey" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+   										   		
    										   		<td id="td_edit_wappkey">
    										   			<div id="div_wappkey" class="form-group">
    										   				<div class="radio">
    										   				<fieldset id="wappkey_group" >	
    										   				<label>
-   										   					<input type="radio" name="wappkey_group" id="wappkey_true" value="true" <?php if($gw_conf['wappkey']) echo "checked"?> >True
+   										   					<input type="radio" name="wappkey_group" id="wappkey_true" value="true" <?php if($gw_conf['wappkey']) echo "checked";?> >True
    										   				</label>
    										   				</br>
    										   				<label>
-   										   					<input type="radio" name="wappkey_group" id="wappkey_false" value="false" <?php if(!$gw_conf['wappkey']) echo "checked"?> >False
+   										   					<input type="radio" name="wappkey_group" id="wappkey_false" value="false" <?php if(!$gw_conf['wappkey']) echo "checked";?> >False
    										   				</label>
    										   				</fieldset>
    										   				</div>
@@ -448,31 +625,33 @@ require 'header.php';
    										   		<td id="td_wappkey_submit" align="right">
    										   			<button id="btn_wappkey_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										   		</td>
-   										   </tr>     										   
+   										   </tr>
+   										        										   
    										   <tr>
-   										   		<td>raw format</td>
+   										   		<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="raw format disables the 4-byte packet header. Set to true for LoRaWAN.">raw format</a></td>
    										   		<td id="raw_value">
-   										   		<?php 
-    												if($gw_conf['raw'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-   										   		?>
-   										   		</td>
-   										   		<td align="right" ><button id="btn_edit_raw" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+    								    		<?php
+    								    			if ($radio_conf['mode']==11) {
+    								    				if ($gw_conf['raw']==false)
+    								    					echo '<font color="red">For LoRaWAN mode, set to true</font>';	
+    								    			}
+    								    		?>   										   		
+   										   		</td>   										   		
+												<td align="right">
+												<input type="checkbox" id="raw_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($gw_conf['raw']) echo "checked";?>>
+												</td>
+												<!-- <td align="right" ><button id="btn_edit_raw" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+												
    										   		<td id="td_edit_raw">
    										   			<div id="div_edit_raw" class="form-group">
    										   				<div class="radio">
    										   				<fieldset id="raw_group" >	
    										   				<label>
-   										   					<input type="radio" name="raw_group" id="raw_true" value="true" <?php if($gw_conf['raw']) echo "checked"?> >True
+   										   					<input type="radio" name="raw_group" id="raw_true" value="true" <?php if($gw_conf['raw']) echo "checked";?> >True
    										   				</label>
    										   				</br>
    										   				<label>
-   										   					<input type="radio" name="raw_group" id="raw_false" value="false" <?php if(!$gw_conf['raw']) echo "checked"?> >False
+   										   					<input type="radio" name="raw_group" id="raw_false" value="false" <?php if(!$gw_conf['raw']) echo "checked";?> >False
    										   				</label>
    										   				</fieldset>
    										   				</div>
@@ -482,32 +661,64 @@ require 'header.php';
    										   			<button id="btn_raw_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										   		</td>
    										   </tr>
+
    										   <tr>
-    									    <td>AES</td>
-    										<!-- <td id="aes_value"><?php echo $gw_conf['aes']; ?></td> -->
-    										<td id="aes_value">
-    											<?php
-    												if($gw_conf['aes'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-    											?>
+    									    <td><a href="#" class="my_tooltip" data-toggle="tooltip" title="aes_lorawan enables local data decryption. decryption keys must be stored in key_LoRaWAN.py. For LoRaWAN mode set to false to upload to network server.">aes_lorawan</a></td>
+    										<td id="aes_lorawan_value">
+    								    		<?php
+    								    			if ($gw_conf['aes_lorawan']==true) {
+    								    				if ($radio_conf['mode']==11)
+    								    					echo '<font color="orange">For LoRaWAN mode set to false to upload to network server</font>';	
+    								    			}
+    								    			else
+    								    				echo "for local decrypt";
+    								    		?>     										
     										</td>
-    										<td align="right"><button id="btn_edit_aes" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+											<td align="right">
+											<input type="checkbox" id="aes_lorawan_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($gw_conf['aes_lorawan']) echo "checked";?>>
+											</td>
+											<!-- <td align="right"><button id="btn_edit_aes_lorawan" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+												
+   										   	<td id="td_edit_aes_lorawan">
+   										    	<div id="div_edit_aes_lorawan" class="form-group">
+                                            		<label></label>
+                                           			<div class="radio">
+                                           			<fieldset id="aes_lorawan_group" >
+                                                		<label>
+                                                    		<input type="radio" name="aes_lorawan_group" id="aes_lorawan_true" value="true" <?php if($gw_conf['aes_lorawan']) echo "checked";?> >True
+                                                		</label>
+                                                		</br>
+                                                		<label>
+                                                    		<input type="radio" name="aes_lorawan_group" id="aes_lorawan_false" value="false" <?php if(!$gw_conf['aes_lorawan']) echo "checked";?> >False
+                                                		</label>
+                                                		</fieldset>
+                                            		</div>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_aes_lorawan_submit" align="right">
+   										    		<button id="btn_aes_lorawan_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>
+   										      										   
+   										   <tr>
+    									    <td>aes</td>
+    										<td id="aes_value">for local decrypt</td>
+											<td align="right">
+											<input type="checkbox" id="aes_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($gw_conf['aes']) echo "checked";?>>
+											</td>
+											<!-- <td align="right"><button id="btn_edit_aes" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+											
    										   	<td id="td_edit_aes">
    										    	<div id="div_edit_aes" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
                                            			<fieldset id="aes_group" >
                                                 		<label>
-                                                    		<input type="radio" name="aes_group" id="aes_true" value="true" <?php if($gw_conf['aes']) echo "checked"?> >True
+                                                    		<input type="radio" name="aes_group" id="aes_true" value="true" <?php if($gw_conf['aes']) echo "checked";?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="aes_group" id="aes_false" value="false" <?php if(!$gw_conf['aes']) echo "checked"?> >False
+                                                    		<input type="radio" name="aes_group" id="aes_false" value="false" <?php if(!$gw_conf['aes']) echo "checked";?> >False
                                                 		</label>
                                                 		</fieldset>
                                             		</div>
@@ -517,11 +728,46 @@ require 'header.php';
    										    		<button id="btn_aes_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
    										    </td>
    										   </tr>
-   										   
+
    										   <tr>
-    									    <td>downlink</td>
+    									    <td>lsc</td>
+    										<td id="lsc_value">for local decrypt</td>
+											<td align="right">
+											<input type="checkbox" id="lsc_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($gw_conf['lsc']) echo "checked";?>>
+											</td>
+											<!-- <td align="right"><button id="btn_edit_lsc" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+											
+   										   	<td id="td_edit_lsc">
+   										    	<div id="div_edit_lsc" class="form-group">
+                                            		<label></label>
+                                           			<div class="radio">
+                                           			<fieldset id="lsc_group" >
+                                                		<label>
+                                                    		<input type="radio" name="lsc_group" id="lsc_true" value="true" <?php if($gw_conf['lsc']) echo "checked";?> >True
+                                                		</label>
+                                                		</br>
+                                                		<label>
+                                                    		<input type="radio" name="aes_group" id="aes_false" value="false" <?php if(!$gw_conf['lsc']) echo "checked";?> >False
+                                                		</label>
+                                                		</fieldset>
+                                            		</div>
+                                        		</div>
+                                        	</td> 
+   										    <td id="td_lsc_submit" align="right">
+   										    		<button id="btn_lsc_submit" type="submit" class="btn btn-primary">Submit <span class="fa fa-arrow-right"></span></button>
+   										    </td>
+   										   </tr>
+   										      										   
+   										   <tr>
+    									    <td><a href="#" class="my_tooltip" data-toggle="tooltip" title="For non-LoRaWAN downlink, specifying a value greater than 0 triggers the downlink checking process at both post-processing and lora_gateway level. Should be set to 0 for LoRaWAN downlink. Use -1 to disable downlink at gateway.">downlink</a></td>
     										<td id="downlink_value">
-    											<?php echo $gw_conf['downlink'];?>
+    											<?php 
+    												echo $gw_conf['downlink'];
+    								    			if ($radio_conf['mode']==11) {
+    								    				if ($gw_conf['downlink']!=0)
+    								    					echo '<font color="red"> [For LoRaWAN mode, set to 0]</font>';	
+    								    			}										
+    											?>
     										</td>
     										<td align="right"><button id="btn_edit_downlink" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
    										   	<td id="td_edit_downlink">
@@ -536,16 +782,22 @@ require 'header.php';
    										    </td>
    										   </tr> 
 
-    									    <td>status</td>
+    									    <td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Specifying a value different from 0 will periodically trigger the post-processing_status script that handles periodic tasks.">status</a></td>
     										<td id="status_value">
-    											<?php echo $gw_conf['status'];?>
+    											<?php 
+    												echo $gw_conf['status'];
+    								    			if ($radio_conf['mode']==11) {
+    								    				if ($gw_conf['status']==0)
+    								    					echo '<font color="red"> [For LoRaWAN mode, set to 600 for instance]</font>';	
+    								    			}										
+    											?>
     										</td>
     										<td align="right"><button id="btn_edit_status" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
    										   	<td id="td_edit_status">
    										    	<div id="div_update_status" class="form-group">
                                             		<label>Status timer</label>
                                 					<input id="status_input" class="form-control" placeholder="status timer in seconds" name="status" type="number" value="" autofocus>
-                                        			<p><font color="red">Enter 00 for 0. Specifying a value different from 0 will periodically trigger the post-processing_status script. Note that gateway status report on TTN will need a status value different from 0.</font></p>
+                                        			<p><font color="red">Enter 00 for 0. Specifying a value different from 0 will periodically trigger the post-processing_status script. Note that gateway stats report on LoRaWAN Network Server (e.g. TTN) will need a status value different from 0, e.g. 30s.</font></p>
                                         		</div>
                                         	</td> 
    										    <td id="td_status_submit" align="right">
@@ -555,13 +807,174 @@ require 'header.php';
    										      										       										   							   										   
 										 </tbody>
     								    </table>
-    								    <p>For LoRaWAN, if the gateway ID is 0000B827EBEFC4A6, then use B827EB<b>FFFF</b>EFC4A6 for the gateway EUI on LoRaWAN network server platform such as TheThingsNetwork (TTN) for instance.</p>
-    								    <p>If LoRaWAN mode is enabled, set raw to true and AES to false to upload the encrypted LoRaWAN packet to the network server.</p>
+    								    <p>For LoRaWAN, if the gateway ID is 0000B827EBEFC4A6, then use B827EB<b>FFFF</b>EFC4A6 to register the gateway EUI on LoRaWAN network server platform such as TheThingsNetwork (TTN) for instance.</p>
+    								    <p>For LoRaWAN mode, set raw format to true and aes_lorawan to false to upload the encrypted LoRaWAN packet to the Network Server.</p>    								    
     							      </div>
     							    </div>
     							
                                 </div>
+                                
                                 <!-- tab-pane -->
+                                
+                                <div class="tab-pane fade" id="netserv-pills">
+                                    <div id="netserv_msg"></div>
+                                    
+                                    <?php
+                                    	echo '&nbsp;&nbsp;&nbsp;&nbsp;<a href="#" class="my_tooltip" data-toggle="tooltip" title="ChirpStack is an open-source LoRaWAN network server that can be installed locally on the gateway. It includes an application server so you can use it to handle all your LoRaWAN messages">ChirpStack</a>';
+                                    	if (is_file("/lib/systemd/system/chirpstack-network-server.service")) {
+                                    		echo " seems to be installed, OK.";
+                                    	}
+                                    	else {
+                                    		echo " is not installed. Install it before enabling ChirpStack Network Server.";
+                                    	}
+                                    ?>	
+                                    </br>
+                                    </br>
+                                 	<div class="col-md-10 col-md-offset-0">
+                                    
+                                    <div class="table-responsive">
+										<table class="table table-striped table-bordered table-hover">
+   										  <thead>
+    								       
+    									 </thead>
+										<tbody>
+   										   <tr>
+											<?php														
+												if (get_cloud_status($lorawan_encrypted_clouds, "python CloudChirpStack.py"))
+													$cloud_chirpstack_enabled=true;
+												else
+													$cloud_chirpstack_enabled=false;	
+											?>   										   	
+    									    <td>Enabled</td>
+    										<td id="chirpstack_status_value">
+    										<?php
+    											if ($chirpstack_not_active=='') {
+    												echo '[<a href="/#/" onclick="javascript:event.target.port=8080">go to ChirpStack web page</a>]';	
+    											}
+    										?>
+    										</td>
+											<td align="right">
+											<input type="checkbox" id="chirpstack_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if ($chirpstack_not_active=='') echo "checked";?>>											
+											</td>
+   										   </tr>
+   										   
+   										   <tr>
+    									    <td><a href="#" class="my_tooltip" data-toggle="tooltip" title="All uplink messages will use CloudChirpStack.py. All downlink messages will use the Semtech's lora_pkt_fwd if you have a multi-channel gateway.">CloudChirpStack.py</a></td>
+    										<td id="cloudchirpstack_status_value"></td>
+											<td align="right">
+											<input type="checkbox" id="cloudchirpstack_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if ($cloud_chirpstack_enabled) echo "checked";?>>										
+											</td>   										   
+   										   </tr>
+
+											<tr>
+												<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Use 127.0.0.1 for local ChirpStack server.">ChirpStack Server</a></td>
+												<td id="td_cloudchirpstack_lorawan_server_value">
+													<?php 
+														echo $key_clouds['chirpstack_lorawan_server'];
+													?>
+												</td> 
+												<td align="right">
+													<button id="btn_edit_cloudchirpstack_lorawan_server" type="button" class="btn btn-primary">
+														<span class="fa fa-edit" ></span>
+													</button>
+												</td>
+												<td id="td_edit_cloudchirpstack_lorawan_server">
+													<div id ="div_cloudchirpstack_lorawan_server" class="form-group">
+														<label>ChirpStack server</label>
+														<input id="cloudchirpstack_lorawan_server_input" class="form-control" placeholder="e.g. 127.0.0.1" type="text" value="" ></input>
+													</div>
+												</td>
+												<td id="td_cloudchirpstack_lorawan_server_submit" align="right">
+													<button id="btn_cloudchirpstack_lorawan_server_submit" type="submit" class="btn btn-primary">
+													Submit
+														<span class="fa fa-arrow-right"></span>
+													</button>
+												</td>
+											</tr>
+											
+											<tr>
+												<td><a href="#" class="my_tooltip" data-toggle="tooltip" title="Indicate a list of accepted device addresses, e.g. 6,7,0x01020304">source list</a></td>
+												<td id="td_cloudchirpstack_source_list_value">
+													<?php 
+														$array = $key_clouds['chirpstack_source_list'];
+														$size = count($key_clouds['chirpstack_source_list']);
+														$i = 0;
+														if($size == 0) echo "Empty";
+														foreach( $array as $cel){
+															if(($size-1) == $i){
+																echo $cel;
+															}else{
+																echo $cel . ",";
+															}
+															$i++;
+														}
+													?>
+												</td>
+												<td align="right">
+													<button id="btn_edit_cloudchirpstack_source_list" type="button" class="btn btn-primary">
+														<span class="fa fa-edit"></span>
+													</button>
+												</td>
+												<td id="td_edit_cloudchirpstack_source_list">
+													<div id="div_edit_cloudchirpstack_source_list" class="form-group">
+														<label>Add a sensor to your list</label>
+														<input id="cloudchirpstack_source_list_input" class="form-control" placeholder="e.g. 6,7,0x01020304" type="text"
+														value="<?php 
+															$array = $key_clouds['chirpstack_source_list'];
+															$size = count($key_clouds['chirpstack_source_list']);
+															$i = 0;
+															foreach( $array as $cel){
+																if(($size-1) == $i){
+																	echo $cel;
+																}else{
+																	echo $cel . ",";
+																}
+																$i++;
+															}
+														?>" autofocus>
+													</div>
+												</td>
+												<td id="td_cloudchirpstack_source_list_submit" align="right">
+													<button id="btn_cloudchirpstack_source_list_submit" type="submit" class="btn btn-primary">
+														Submit
+														<span class="fa fa-arrow-right"></span>
+													</button>
+												</td>
+											</tr>
+				
+										</tbody>
+    								 </table>
+    								 <?php
+    								 	if ($chirpstack_not_active=='') {
+    								 		if ($cloud_chirpstack_enabled) {
+    								 			if ($is_sx1301=='') {
+    								 				echo '<p><font color="green">You have a single-channel gateway. ChirpStack is active and CloudChirpStack.py is enabled.</font></p>';
+
+    								 				if ($radio_conf['mode']==11)
+    								 					echo '<p><font color="green">Radio mode is for LoRaWAN. You can have <a href="#" class="my_tooltip" data-toggle="tooltip" title="All uplink LoRaWAN messages will use CloudChirpStack.py. Join-request for OTAA must use LoRa uplink setting.">limited</a> LoRaWAN support.</font></p>';
+    								 				else
+    								 					echo '<p><font color="orange">Radio mode is not for LoRaWAN. You have <a href="#" class="my_tooltip" data-toggle="tooltip" title="All uplink LoRaWAN-like messages can be uploaded to a LoRaWAN network server. LoRaWAN downlink messages are not handled.">only uplink</a> LoRaWAN-like support.</font></p>';     								 				
+    								 			}
+    								 			else {
+    								 				echo '<p><font color="green">You have a multi-channel gateway. ChirpStack is active and CloudChirpStack.py is enabled.</font></p>';
+    								 				if ($radio_conf['mode']==11)
+    								 					echo '<p><font color="green">Radio mode is for LoRaWAN. You can have <a href="#" class="my_tooltip" data-toggle="tooltip" title="All uplink messages will use CloudChirpStack.py. All downlink messages will be handled by Semtech lora_pkt_fwd">full</a> LoRaWAN support.</font></p>';
+    								 				else
+    								 					echo '<p><font color="orange">Radio mode is not for LoRaWAN. You have <a href="#" class="my_tooltip" data-toggle="tooltip" title="All uplink LoRaWAN-like messages can be uploaded to a LoRaWAN network server. LoRaWAN downlink messages are not handled.">only uplink</a> LoRaWAN-like support.</font></p>'; 
+    								 			}
+    								 		}
+    								 		else {
+    								 			echo '<p><font color="orange">Warning: ChirpStack is active but CloudChirpStack.py is disabled.</font></p>'; 
+    								 		}
+    								 	}		
+    								 ?>
+    							  </div>
+                                
+                                
+                                </div>  
+                               </div>
+                               
+                                 <!-- tab-pane -->                                
                                 
                                 <div class="tab-pane fade" id="alert_mail-pills">
                                     </br>
@@ -576,30 +989,23 @@ require 'header.php';
 										<tbody>
 										   <tr>
     									    <td>Enabled</td>
-    										<!-- <td id="use_mail_value"><?php echo $alert_conf['use_mail']; ?></td> -->
-    										<td id="use_mail_value">
-    											<?php
-    												if($alert_conf['use_mail'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-    											?>
-    										</td>
-    										<td align="right"><button id="btn_edit_use_mail" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+    										<td id="use_mail_value"></td>									
+											<td align="right">
+											<input type="checkbox" id="use_mail_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($alert_conf['use_mail']) echo "checked";?>>											
+											</td>
+											<!-- <td align="right"><button id="btn_edit_use_mail" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
+											
    										   	<td id="td_edit_use_mail">
    										    	<div id="div_use_mail_options" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
                                            			<fieldset id="use_mail_group" >
                                                 		<label>
-                                                    		<input type="radio" name="use_mail_group" id="use_mail_true" value="true" <?php if($alert_conf['use_mail']) echo "checked"?> >True
+                                                    		<input type="radio" name="use_mail_group" id="use_mail_true" value="true" <?php if($alert_conf['use_mail']) echo "checked";?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="use_mail_group" id="use_mail_false" value="false" <?php if(!$alert_conf['use_mail']) echo "checked"?> >False
+                                                    		<input type="radio" name="use_mail_group" id="use_mail_false" value="false" <?php if(!$alert_conf['use_mail']) echo "checked";?> >False
                                                 		</label>
                                                 		</fieldset>
                                             		</div>
@@ -694,30 +1100,22 @@ require 'header.php';
 										<tbody>
    										   <tr>
     									    <td>Enabled</td>
-    										<!-- <td id="use_sms_value"><?php echo $alert_conf['use_sms']; ?></td> -->
-    										<td id="use_sms_value">
-    											<?php
-    												if($alert_conf['use_sms'])
-													{
-    													echo "true";    
-													}
-													else {
-   					 									echo "false";   
-													}
-    											?>
-    										</td>
-    										<td align="right"><button id="btn_edit_use_sms" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td>
+    										<td id="use_sms_value"></td>
+											<td align="right">
+											<input type="checkbox" id="use_sms_status_toggle" data-toggle="toggle" data-on="true" data-off="false" <?php if($alert_conf['use_sms']) echo "checked";?>>											
+											</td>
+											<!-- <td align="right"><button id="btn_edit_use_sms" type="button" class="btn btn-primary"><span class="fa fa-edit"></span></button></td> -->
    										   	<td id="td_edit_use_sms">
    										    	<div id="div_use_sms_options" class="form-group">
                                             		<label></label>
                                            			<div class="radio">
                                            			<fieldset id="use_sms_group" >
                                                 		<label>
-                                                    		<input type="radio" name="use_sms_group" id="use_sms_true" value="true" <?php if($alert_conf['use_sms']) echo "checked"?> >True
+                                                    		<input type="radio" name="use_sms_group" id="use_sms_true" value="true" <?php if($alert_conf['use_sms']) echo "checked";?> >True
                                                 		</label>
                                                 		</br>
                                                 		<label>
-                                                    		<input type="radio" name="use_sms_group" id="use_sms_false" value="false" <?php if(!$alert_conf['use_sms']) echo "checked"?> >False
+                                                    		<input type="radio" name="use_sms_group" id="use_sms_false" value="false" <?php if(!$alert_conf['use_sms']) echo "checked";?> >False
                                                 		</label>
                                                 		</fieldset>
                                             		</div>
