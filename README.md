@@ -22,7 +22,7 @@ Latest news
 
 Quick start
 -----------
-- **Beta version of RaspiOS (Debian Buster 64-bit) is ready for testing!** [zipped SD card image](https://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-raspios-buster-WAZIUP-demo-arm64_v1_oct21.iso). 
+- **Beta version of RaspiOS (Debian Buster 64-bit) is ready for testing!** [zipped SD card image](https://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-raspios-buster-WAZIUP-demo-arm64_v1_oct21.iso.zip). 
 - **The current SD card image (Debian Buster 32-bit) has everything you need!** [zipped SD card image](https://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip). See [installation section](https://github.com/CongducPham/LowCostLoRaGw#installing-the-latest-gateway-version)
 - Use the single-channel gateway for LoRaWAN-like communication (including downlink) with LoRa 2.4GHz. Upload to TTN or ChirpStack network servers. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-SX12XX.md)
 - Use the single-channel gateway for limited LoRaWAN (including downlink and OTAA feature) on the 433MHz band for devices with our [modified LMIC](https://github.com/CongducPham/LMIC_low_power#using-433mhz-band)
