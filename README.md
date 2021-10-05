@@ -174,7 +174,7 @@ Installing the latest gateway version
 
 The full, latest distribution of the low-cost gateway is available in the `gw_full_latest` folder of the github repository: https://github.com/CongducPham/LowCostLoRaGw. It contains all the gateway control and post-processing software. 
 
-However, the **simplest and recommended way** to install a new gateway is to use [our zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip) based on the Buster Raspbian OS and perform a new install of the gateway from this image. In this way you don't need to install the various additional packages that are required (as explained in an additional [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-manual-install.md) describing all manual installation steps if you want to install from scratch). Once you have burnt the SD image on a 8GB (minimum) SD card, insert it in your Raspberry and power it.
+However, the **simplest and recommended way** to install a new gateway is to use [zipped SD card image from UPPA server](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip) | [zipped SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Euuo4tPJrz6EHGFQ7IsCrWJbmJmHgLJR) based on the Buster Raspbian OS and perform a new install of the gateway from this image. In this way you don't need to install the various additional packages that are required (as explained in an additional [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-manual-install.md) describing all manual installation steps if you want to install from scratch). Once you have burnt the SD image on a 8GB (minimum) SD card, insert it in your Raspberry and power it.
 
 The distribution supports all RPI models including the last RPI4. There is out-of-the-box WiFi support for RPI4B/3B/3B+ and RPI0W. For RPI1 and RPI2 see [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README.md#wifi-instructions-on-rpi1b-and-rpi2) for modifications to support some WiFi dongles.
 
@@ -182,7 +182,7 @@ The distribution supports all RPI models including the last RPI4. There is out-o
 Get our SD card image
 ---------------------
 
-Download our [zipped SD card image](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip). The current image has everything you need including:
+Download our [zipped SD card image from UPPA server](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip) | [zipped SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Euuo4tPJrz6EHGFQ7IsCrWJbmJmHgLJR). The current image has everything you need including:
 
 - support for all RPI models including the last RPI4 as well. We however recommend the 3B version unless you need to run other applications on the RPI otherwise both 3B+/4 are much more power consuming and heat a lot more.
 - pre-installed open-source ChirpStack LoRaWAN Network Server
@@ -375,17 +375,13 @@ There is an important issue regarding the radio modules. The Semtech SX1272/76 h
 
 However even if the SX1272/76 chip has the PA_BOOST and the 20dBm features, not all radio modules (integrating these SX1272/76) do have the appropriate wiring and circuits to enable these features: it depends on the choice of the reference design that itself is guided by the main intended frequency band usage, and sometimes also by the target country's regulations (such as maximum transmitted power). So you have to check with the datasheet whether your radio module has PA_BOOST (usually check whether the PA_BOOST pin is wired) and 20dBm capability. Some other radio modules only wire the PA_BOOST and not the RFO resulting in very bad range when trying to use the RFO mode. In this case, you have to explicitly indicate that PA_BOOST is used.
 
-All the examples using the SX127X radio module start with:
+All the examples using the SX127X radio module has in `SX127X_RadioSettings.h` file:
 
-	// IMPORTANT
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//
-	// uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
+	// set to 1 if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
 	// or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-	//#define PABOOST
-	///////////////////////////////////////////////////////////////////////////////////////////////////////////  
+	const uint8_t PA_BOOST = 1;  
 
-Uncomment `PABOOST` if you have a HopeRF RFM92W or RFM95W or RFM96W, or a Modtronix inAir9B (if inAir9, leave commented) or a NiceRF1276. If you have another non listed radio module, try first by leaving `PABOOST` commented, then see whether the packet reception is correct with a reasonably high SNR (such as 6 to 10 dB) at some meters of the gateway. If not, then try with `PABOOST` uncommented.
+Set to 1 if you have a HopeRF RFM92W or RFM95W or RFM96W, or a Modtronix inAir9B (if inAir9, leave commented) or a NiceRF1276. If you have another non listed radio module, try first by leaving `PA_BOOST` commented, then see whether the packet reception is correct with a reasonably high SNR (such as 6 to 10 dB) at some meters of the gateway. If not, then try with `PA_BOOST` uncommented.
 
 First try: a simple Ping-Pong program example
 =============================================
@@ -396,7 +392,7 @@ Run the gateway with:
 
 	> sudo ./lora_gateway
 	
-With the Arduino IDE, open the `Arduino_LoRa_Ping_Pong` sketch (or the `Arduino_LoRa_SX12XX_Ping_Pong_LCD` if you move to the SX12XX library which is advised because `Arduino_LoRa_Ping_Pong` will not be maintained anymore)compile it and upload to an Arduino board. Check your radio module first, see `Connect a radio module to your end-device` above.
+With the Arduino IDE, open the `Arduino_LoRa_Ping_Pong` sketch (or the `Arduino_LoRa_SX12XX_Ping_Pong_LCD` if you move to the SX12XX library which is advised because `Arduino_LoRa_Ping_Pong` will not be maintained anymore), compile it and upload to an Arduino board. Check your radio module first, see `Connect a radio module to your end-device` above.
 
 The end-device runs in LoRa mode 1 and has address 8. Open the Serial Monitor (38400 bauds) to see the output of the Arduino. It will send "Ping" to the gateway by requesting an ACK every 10s. If the ACK is received then it will display "Pong received from gateway!" otherwise it displays "No Pong from gw!". There is a version using an OLED display, `Arduino_LoRa_Ping_Pong_LCD`, that can be compiled for the Heltec ESP32 WiFi LoRa OLED board or a regular Arduino Pro Mini board (we use a Pro Mini or a Nano) with a 0.96inch OLED I2C display. Such device can be used as a very convenient simple range tester.
 
