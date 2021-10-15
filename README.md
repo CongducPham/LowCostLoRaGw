@@ -189,10 +189,10 @@ Download our [zipped SD card image from UPPA server](http://cpham.perso.univ-pau
 - pre-installed Semtech's `lora_pkt_fwd` for multi-channel gteway
 - pre-installed `remot3.it` and `anydesk` tools for remote access
 - the simple gateway web admin interface for easy configuration and management
-- `mosquitto-clients` package installed to have `mosquitto_pub` and `mosquitto_sub` commands (v1.5.7)
-- Node-Red v1.0.3, Node.js v10.15.2 and `npm` 5.8.0 with `node-red-contrib-thingspeak42` installed
-- a ready-to-use Node-Red flow to show how received data can be uploaded to MQTT brokers and ThingSpeak
-- MongoDB v3.0.14
+- `mosquitto-clients` package installed to have `mosquitto_pub` and `mosquitto_sub` commands
+- `Node-RED`, `Node.js` and `npm` with `node-red-contrib-thingspeak42` installed
+- a ready-to-use Node-RED flow to show how received data can be uploaded to MQTT brokers and ThingSpeak
+- MongoDB 
 
 Simply unzip the file and burn the ISO file to an SD card. Use an SD card of a minimum of 8GB. Take also a class 10 (it is more than recommended!). If you have bigger SD card, e.g. 16GB, then after boot, use `raspi-config` (see [tutorial here](https://www.raspberrypi.org/documentation/configuration/raspi-config.md)) to resize the partition in order to use the extra space available (you will need to reboot but `raspi-config` will ask you for that). You can use `df -h` to verify that you have more space after reboot.  
 

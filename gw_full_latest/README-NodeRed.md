@@ -60,7 +60,12 @@ then, when device 2 sends "TC/22.5/HU/85" to the gateway, `CloudNodeRed.py` will
 	{"source":"waziup/UPPA/Sensor2","measure":"TC","value":22.5}
 	{"source":"waziup/UPPA/Sensor2","measure":"HU","value":85}	
 	
-The Node-Red flow is composed of a tail node that follows the `nodered/nodered.txt` file for new entries. Each entry will be converted into a json object with a json node. A function node will use the json entry to build a message as follows:
+The Node-Red flow is composed of a tail node that follows the `nodered/nodered.txt` file for new entries. You may need to install the tail node with:
+
+	> cd .node-red/node_modules
+	> npm install node-red-node-tail
+
+Each entry will be converted into a json object with a json node. A function node will use the json entry to build a message as follows:
 
 	if (msg.payload.measure==="")
 		msg.topic=msg.payload.source
