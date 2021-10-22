@@ -114,7 +114,7 @@ Also consult the following web page: http://cpham.perso.univ-pau.fr/LORA/RPIgate
 Main features of gateway
 ------------------------
 
-- **NEW** Support of 64-bit OS to better embed AI frameworks
+- **NEW** There is a 64-bit version to better embed AI frameworks.
 - **NEW** The low-level radio communication library has moved to the SX12XX LoRa library from Stuart Robinson in order to build devices and gateways with **SX126X, SX127X and SX128X LoRa chip**.
 - **NEW** The single-channel gateway now also provides LoRaWAN downlink and OTAA features
 	- see [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
@@ -182,12 +182,12 @@ The distribution supports all RPI models including the last RPI4. There is out-o
 Get our SD card image
 ---------------------
 
-Download our [zipped SD card image from UPPA server](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip) | [zipped SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Euuo4tPJrz6EHGFQ7IsCrWJbmJmHgLJR). The current image has everything you need including:
+Download our 32-bit ([zipped SD card image from UPPA server](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip) | [zipped SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Euuo4tPJrz6EHGFQ7IsCrWJbmJmHgLJR)) or 64-bit ([zipped SD card image from UPPA server](http://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-raspios-buster-WAZIUP-demo-arm64_v1_oct21.iso.zip) | [zipped SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1w44YgSDsKRw78gXAPaz-YkT8AdsVRheV)). It has everything you need including:
 
 - support for all RPI models including the last RPI4 as well. We however recommend the 3B version unless you need to run other applications on the RPI otherwise both 3B+/4 are much more power consuming and heat a lot more.
 - pre-installed open-source ChirpStack LoRaWAN Network Server
 - pre-installed Semtech's `lora_pkt_fwd` for multi-channel gteway
-- pre-installed `remot3.it` and `anydesk` tools for remote access
+- pre-installed `remot3.it` and `anydesk` tools for remote access (only 32-bit)
 - the simple gateway web admin interface for easy configuration and management
 - `mosquitto-clients` package installed to have `mosquitto_pub` and `mosquitto_sub` commands
 - `Node-RED`, `Node.js` and `npm` with `node-red-contrib-thingspeak42` installed

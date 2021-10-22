@@ -14,7 +14,7 @@ For downlink support, there are no changes in the way the gateway (`lora_gateway
 		* in which case `lora_gateway` then starts a new cycle of downlink checking attempts for this new message 
 - `downlink/downlink.txt` should contain ONLY one line in JSON format:
 	- non-LoRaWAN downlink: e.g. `{"status":"send_request","dst":3,"data":"hello"}`
-	- LoRaWAN downlink: e.g. `{"txpk":{""imme":false,"rfch":0,"powe":14,"ant":0,"brd":0,"tmst":1580280908,"freq":868.1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","ipol":true,"size":19,"data":"YCEXASYHKAAFANKthAgBt6sC6g=="}}`	
+	- LoRaWAN downlink: e.g. `{"txpk":{"imme":false,"rfch":0,"powe":14,"ant":0,"brd":0,"tmst":1580280908,"freq":868.1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","ipol":true,"size":19,"data":"YCEXASYHKAAFANKthAgBt6sC6g=="}}`	
 - after reading `downlink/downlink.txt`, the file will be deleted by `lora_gateway`
 - `downlink.txt` file can be renamed as `downlink-backup-2020-01-20T13:42:23.txt` (with the current date indicated) if `lora_gateway` is compiled with `#define KEEP_DOWNLINK_BACKUP_FILE`
 - there is no reliability mechanism implemented
