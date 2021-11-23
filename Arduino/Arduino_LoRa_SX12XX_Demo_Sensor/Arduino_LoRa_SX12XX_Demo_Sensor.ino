@@ -72,7 +72,7 @@
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
-#define OLED
+//#define OLED
 #define OLED_9GND876
 //uncomment to use a customized frequency.
 //#define MY_FREQUENCY 868100000
@@ -405,6 +405,11 @@ void setup()
 #ifdef OLED_PWR_PIN
   pinMode(OLED_PWR_PIN, OUTPUT);
   digitalWrite(OLED_PWR_PIN, HIGH);
+#ifdef OLED_9GND876
+  //use pin 9 as ground
+  pinMode(9, OUTPUT);
+  digitalWrite(9, LOW);
+#endif    
 #endif
   u8x8.begin();
   //u8x8.setFont(u8x8_font_chroma48medium8_r);

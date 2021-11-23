@@ -19,7 +19,7 @@
  *
  *****************************************************************************
  *
- * last update: November 12th, 2020 by C. Pham
+ * last update: November 23rd, 2021 by C. Pham
  * 
  * NEW: LoRa communicain library moved from Libelium's lib to StuartProject's lib
  * https://github.com/StuartsProjects/SX12XX-LoRa
@@ -273,14 +273,14 @@ void setup()
 #elif defined OLED_7GND654
   //use pin 7 as ground
   pinMode(7, OUTPUT);
-  digitalWrite(9, LOW);
+  digitalWrite(7, LOW);
 #endif
 #endif
   u8x8.begin();
   //u8x8.setFont(u8x8_font_chroma48medium8_r);
   u8x8.setFont(u8x8_font_pxplustandynewtv_r);
   u8x8.drawString(0, 0, "Simple PingPong");
-  sprintf(oled_msg,"SF%dBW%ld", SpreadingFactor, Bandwidth);
+  sprintf(oled_msg,"SF%dBW%ld", SpreadingFactor, LT.returnBandwidth()/1000);
   u8x8.drawString(0, 1, oled_msg); 
 #endif
 

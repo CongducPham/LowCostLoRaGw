@@ -195,8 +195,8 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 // please uncomment only 1 choice 
 //#define SX126X
-//#define SX127X
-#define SX128X
+#define SX127X
+//#define SX128X
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef SX126X
@@ -231,13 +231,13 @@
 //#define SHOW_FREEMEMORY
 ////////////////////////////
 //when uncommenting PERIODIC_SENDER, the device only does continous periodic sending
-#define PERIODIC_SENDER 8000
+//#define PERIODIC_SENDER 8000
 ////////////////////////////
 //start in continous Cad mode
 //#define CAD_TEST
 ////////////////////////////
 //this will enable AES & LoRaWAN packet format
-//#define WITH_AES
+#define WITH_AES
 ////////////////////////////
 //this will enable a receive window to act as a simple gateway
 //#define WITH_RCVW
@@ -780,7 +780,7 @@ void setup()
 #elif defined OLED_7GND654
   //use pin 7 as ground
   pinMode(7, OUTPUT);
-  digitalWrite(9, LOW);
+  digitalWrite(7, LOW);
 #endif
 #endif
 #endif

@@ -74,7 +74,7 @@
 ///////////////////////////////////////////////////////////////////
 // COMMENT OR UNCOMMENT TO CHANGE FEATURES. 
 // ONLY IF YOU KNOW WHAT YOU ARE DOING!!! OTHERWISE LEAVE AS IT IS
-#define WITH_EEPROM
+//#define WITH_EEPROM
 //if you are low on program memory, comment STRING_LIB to save about 2K
 //#define STRING_LIB
 #define LOW_POWER
@@ -278,6 +278,8 @@ void setup()
   Serial.begin(38400);  
 #endif
   
+  randomSeed(analogRead(0)+analogRead(0)+analogRead(0));
+      
   // Print a start message
   PRINT_CSTSTR("Simple LoRa temperature sensor\n");
 
@@ -576,6 +578,9 @@ void loop(void)
       r_size=sprintf((char*)message,"\\!%s/%s",nomenclature_str,String(temp).c_str());
 #else
       char float_str[10];
+      //ftoa: 12146 Bytes, dtostrf: 13442 Bytes, STRING_LIB: 14504 Bytes 
+      //dtostrf takes about 1300 byte of program space more than our ftoa() procedure
+      //dtostrf((float)temp, 4, 2, float_str);
       ftoa(float_str,temp,2);
       r_size=sprintf((char*)message,"\\!%s/%s",nomenclature_str,float_str);
 #endif
@@ -591,16 +596,16 @@ void loop(void)
       LT.printASCIIPacket(message, r_size);
       PRINTLN;
       
-      startSend=millis();
-      
       LT.CarrierSense();
-
+        
       uint8_t p_type=PKT_TYPE_DATA;
-      
+    
 #ifdef WITH_ACK
       p_type=PKT_TYPE_DATA | PKT_FLAG_ACK_REQ;
       PRINTLN_CSTSTR("%s","Will request an ACK");         
 #endif
+      startSend=millis();
+      
       //will return packet length sent if OK, otherwise 0 if transmit error      
       if (LT.transmitAddressed(message, r_size, p_type, DEFAULT_DEST_ADDR, LT.readDevAddr(), 10000, MAX_DBM, WAIT_TX))
       {
@@ -629,7 +634,7 @@ void loop(void)
         PRINT_HEX("%d", IRQStatus);
         LT.printIrqStatus(); 
       }
-    
+  
 #ifdef WITH_EEPROM
       // save packet number for next packet in case of reboot    
       my_sx1272config.seq=LT.readTXSeqNo();    
@@ -650,7 +655,7 @@ void loop(void)
       PRINT_CSTSTR("LoRa Sent in ");
       PRINT_VALUE("%ld", endSend-startSend);
       PRINTLN;
-      
+  
 #if defined LOW_POWER && not defined ARDUINO_SAM_DUE
       PRINT_CSTSTR("Switch to power saving mode\n");
 

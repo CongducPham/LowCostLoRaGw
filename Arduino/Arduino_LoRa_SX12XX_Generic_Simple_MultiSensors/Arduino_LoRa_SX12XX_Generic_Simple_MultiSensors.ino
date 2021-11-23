@@ -1113,7 +1113,18 @@ void loop(void)
 #else            
           Snooze.deepSleep(sleep_config);
 #endif
-
+#elif defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined ESP8266
+      //in microseconds
+      //it is reported that RST pin should be connected to pin 16 to actually reset the board when deepsleep
+      //timer is triggered
+      if (waiting_t < LOW_POWER_PERIOD*1000) {
+        ESP.deepSleep(waiting_t*1000*1000);
+        waiting_t = 0;
+      }
+      else {
+        ESP.deepSleep(LOW_POWER_PERIOD*1000*1000);
+        waiting_t = waiting_t - LOW_POWER_PERIOD*1000;          
+      }
 #else
           // use the delay function
           delay(waiting_t);

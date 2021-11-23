@@ -86,7 +86,7 @@
 ////////////////////////////
 ///////////////////////////////////////////////////////////////////
 //new small OLED screen, mostly based on SSD1306 
-#define OLED
+//#define OLED
 #define OLED_9GND876
 
 ///////////////////////////////////////////////////////////////////
@@ -321,6 +321,11 @@ void setup()
 #ifdef OLED_PWR_PIN
   pinMode(OLED_PWR_PIN, OUTPUT);
   digitalWrite(OLED_PWR_PIN, HIGH);
+#ifdef OLED_9GND876
+  //use pin 9 as ground
+  pinMode(9, OUTPUT);
+  digitalWrite(9, LOW);
+#endif    
 #endif
 
 #ifdef OLED
@@ -851,7 +856,18 @@ void loop(void)
 #else            
           Snooze.deepSleep(sleep_config);
 #endif
-
+#elif defined ARDUINO_ESP8266_ESP01 || defined ARDUINO_ESP8266_NODEMCU || defined ESP8266
+      //in microseconds
+      //it is reported that RST pin should be connected to pin 16 to actually reset the board when deepsleep
+      //timer is triggered
+      if (waiting_t < LOW_POWER_PERIOD*1000) {
+        ESP.deepSleep(waiting_t*1000*1000);
+        waiting_t = 0;
+      }
+      else {
+        ESP.deepSleep(LOW_POWER_PERIOD*1000*1000);
+        waiting_t = waiting_t - LOW_POWER_PERIOD*1000;          
+      }
 #else
           // use the delay function
           delay(waiting_t);
