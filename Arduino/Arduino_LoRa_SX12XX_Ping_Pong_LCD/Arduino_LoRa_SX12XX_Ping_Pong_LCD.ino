@@ -19,7 +19,7 @@
  *
  *****************************************************************************
  *
- * last update: November 23rd, 2021 by C. Pham
+ * last update: Dec 10th, 2021 by C. Pham
  * 
  * NEW: LoRa communicain library moved from Libelium's lib to StuartProject's lib
  * https://github.com/StuartsProjects/SX12XX-LoRa
@@ -74,7 +74,7 @@ unsigned int idlePeriodInSec = 8;
 uint32_t TXPacketCount=0;
 uint8_t TXPacketL;
 
-//#define OLED
+#define OLED
 //#define OLED_GND234
 //#define OLED_9GND876
 //#define OLED_7GND654
@@ -276,12 +276,6 @@ void setup()
   digitalWrite(7, LOW);
 #endif
 #endif
-  u8x8.begin();
-  //u8x8.setFont(u8x8_font_chroma48medium8_r);
-  u8x8.setFont(u8x8_font_pxplustandynewtv_r);
-  u8x8.drawString(0, 0, "Simple PingPong");
-  sprintf(oled_msg,"SF%dBW%ld", SpreadingFactor, LT.returnBandwidth()/1000);
-  u8x8.drawString(0, 1, oled_msg); 
 #endif
 
 #ifdef ARDUINO_AVR_PRO
@@ -411,6 +405,14 @@ void setup()
 
   PRINTLN_CSTSTR("ping-pong ready");
 
+#ifdef OLED
+  u8x8.begin();
+  //u8x8.setFont(u8x8_font_chroma48medium8_r);
+  u8x8.setFont(u8x8_font_pxplustandynewtv_r);
+  u8x8.drawString(0, 0, "Simple PingPong");
+  sprintf(oled_msg,"SF%dBW%d", LT.getLoRaSF(), LT.returnBandwidth()/1000);
+  u8x8.drawString(0, 1, oled_msg); 
+#endif  
   delay(500);
 }
 
@@ -436,7 +438,7 @@ void loop(void)
   PRINTLN_CSTSTR("Will request an ACK");    
       
   while (1) {
-    LT.CarrierSense();
+    //LT.CarrierSense();
       
     r_size=sprintf((char*)message, "Ping");
     PRINT_CSTSTR("Sending Ping");  
