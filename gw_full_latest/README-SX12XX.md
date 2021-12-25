@@ -1,3 +1,8 @@
+Notice
+======
+
+This `README-SX12XX.md` file has been written when the low-level SPI layer for Arduino compatibility was `arduPi`, mainly targeting 32-bit OS. In January 2021, we decided to provide support for next 64-bit OS, therefore we move to `wiringPi` with a light SPI wrapper `arduinoPi`. `wiringPi` is now the default low-level SPI layer in the GitHub source distribution. If you are using the latest distribution using `wiringPi`, please read the `README-WiringPi-64bit-OS.md` file.
+
 Supporting the SX12XX LoRa chip family
 ======================================
 
@@ -49,6 +54,8 @@ The objective is to seamlessly support the whole SX12XX family chip with the sam
 
 Mapping Arduino pin number to Raspberry pin number
 --------------------------------------------------
+
+For the latest distribution using `wiringPi` please read the notice at the beginning of this page.
 
 We use the `arduPi` layer to make Arduino-like program running on the Raspberry. The advantage is that the same code can be compiled for both platforms, at least for the main features. The `arduPi` layer translate pin number expressed in the Arduino system into Raspberry pin number. The mapping is as follows:
 
