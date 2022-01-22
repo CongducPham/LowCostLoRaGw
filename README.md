@@ -140,8 +140,10 @@ Main features of gateway
 	- [Tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf)
 	- `raspap-webgui` from https://github.com/billz/raspap-webgui has been integrated and can be accessed at http://`gw_ip_address`/raspap-webgui. When the gateway is configured as a WiFi client, `raspap-webgui` is especially useful to dynamically discover and configure additional WiFi networks. Read this [section](https://github.com/CongducPham/LowCostLoRaGw/tree/master/gw_full_latest#make-your-gateway-a-wifi-client) prior to use `raspap-webgui`.	
 - a NoSQL MongoDB database stores received data for local/edge processing. See [here](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-NewCloud.md#support-of-mongodb-as-a-cloud-declaration) for more information on the local MongoDB structure.
-- the gateway acts as the WiFi access-point. The SSID is WAZIUP_PI_GW_XXXXXXXXXX where XXXXXXXXXX is the last 6 hex bytes of gateway ID: WAZIUP_PI_GW_B827EB27F90F for instance. It has IP address 192.168.200.1 and will lease IP addresses in the range of 192.168.200.100 and 192.168.200.120. 
+- the gateway acts as the WiFi access-point. The SSID is `WAZIUP_PI_GW_XXXXXXXXXX` where `XXXXXXXXXX` is the last 6 hex bytes of gateway ID: `WAZIUP_PI_GW_B827EB27F90F` for instance. It has IP address 192.168.200.1 and will lease IP addresses in the range of 192.168.200.100 and 192.168.200.120.
 - there is an Apache web server with basic PHP forms to visualize graphically the received data of the MongoDB with any web browser. Just connect to http://192.168.200.1 with a web browser (could be from a smartphone) to get the graphic visualization of the data stored in the gateway's MongoDB database.
+- a captive WiFi portal can be installed to automatically land on http://192.168.200.1 (default setting)
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/splash/README.md)
 - by default, incoming data are uploaded to our [LoRa ThingSpeak test channel](https://thingspeak.com/channels/66794)
 - works out-of-the-box with the [Arduino_LoRa_Simple_temp sketch](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino/Arduino_LoRa_Simple_temp)
 

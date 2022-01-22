@@ -15,14 +15,25 @@ Then update the LowCostLoRa gateway distribution. That will install the `lora_ga
 
 	> cd
 	> cd lora_gateway/scripts
-	> ./update_gw.sh
+	> sudo ./update_gw.sh
 	
 Then, install the specific `nodogsplash` configuration:
 
-	> cd splash
+	> cd
+	> cd lora_gateway/splash
 	> ./install.sh
 	
 Once installed, use a smartphone or tablet to connect to the gateway's WiFi. You should see the captive portal allowing you to display the sensor data web page.		
+
+To change the logo pictures, edit `splash/splash.html`.
+
+To change the background image, edit `splash/splash.css`.
+
+To change the project name (e.g. LowCostLoRaGw), edit `nodogsplash.conf` and change `GatewayName` parameter. Then run `install.sh` again.
+
+To change the landing page, edit `nodogsplash.conf` and change `RedirectURL` parameter. Then run `install.sh` again.
+
+Refer to the [`nodogsplash`'s documentation](https://nodogsplashdocs.readthedocs.io/_/downloads/en/stable/pdf/) for more details.
 	
 Enjoy!
 C. Pham		
