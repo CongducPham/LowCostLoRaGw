@@ -268,14 +268,14 @@ If your gateway has Internet connectivity (DHCP with Internet sharing on your la
 	> cd /home/pi
 	> wget https://raw.githubusercontent.com/CongducPham/LowCostLoRaGw/master/gw_full_latest/scripts/update_gw.sh
 	> chmod +x update_gw.sh
-	> ./update_gw.sh
+	> sudo ./update_gw.sh
 	
 Note that if you have customized configuration files (i.e. `key_*`, `gateway_conf.json`, `clouds.json` and `radio.makefile`) in the existing `/home/pi/lora_gateway` folder, then `update_gw.sh` will preserve all these configuration files. As the repository does not have a `gateway_id.txt` file, it will also preserve your gateway id.
 
 Otherwise, if it is really the first time you install the gateway, then you can delete the `lora_gateway` folder before running the script:
 
 	> rm -rf lora_gateway
-	> ./update_gw.sh
+	> sudo ./update_gw.sh
 
 Option (iii)
 ------------
