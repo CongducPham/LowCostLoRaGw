@@ -1,6 +1,17 @@
 Change logs
 ===========
 
+Jan 24th, 2022
+--------------
+- `nodogsplash` captive WiFi portal software can be used to automatically display the gateway web page when connecting to the gateway's WiFi access point
+	* `splash` folder contains the captive portal files as well as quick documentation on the feature
+
+Oct 2021
+--------
+- a beta version of an embedded AI framework is available. Download the 64-bit RaspiOS SD image to be flashed on a 32GB class 10 SD card.
+- the `AI` folder contains some regression models and a notebook with a regression example application on agricultural data
+- the web admin interface has a link to the `Jupyter lab` notebook
+
 Jan 20th, 2021
 --------------
 - the low-level SPI library on the Raspberry has moved from Libelium's `arduPi` lib to Gordon's `wiringPi` lib
