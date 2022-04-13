@@ -7,7 +7,9 @@ Low-cost LoRa IoT framework developed in the EU H2020 WAZIUP/WAZIHUB projects
 News from EU commission
 -----------------------
 
-June 19th, 2020. The low-cost, low-power and long-distance cattle collar developed in the EU H2020 WAZIUP project has been identified by the European Commission's Innovation Radar! See more information at the end of this page.
+- April 12th, 2022. European Internet of Things technology supports innovation in Africa: [two EU-Africa innovation projects have succeeded in rolling out advanced digital technologies to support entrepreneurship in sub-Saharan Africa](https://digital-strategy.ec.europa.eu/en/news/european-internet-things-technology-supports-innovation-africa).
+
+- June 19th, 2020. The low-cost, low-power and long-distance cattle collar developed in the EU H2020 WAZIUP project has been identified by the European Commission's Innovation Radar! See more information at the end of this page.
 
 Latest news
 -----------
