@@ -267,7 +267,7 @@
     //
     // uncomment if your radio is an HopeRF RFM92W, HopeRF RFM95W, Modtronix inAir9B, NiceRF1276
     // or you known from the circuit diagram that output use the PABOOST line instead of the RFO line
-    //#define PABOOST
+    #define PABOOST
     /////////////////////////////////////////////////////////////////////////////////////////////////////////// 
     
     #ifdef LORA_LAS
@@ -332,7 +332,7 @@
 // criticality-based scheduling, for tests mainly because difficult to have large-scale test-beds
 //#define CRITICALITY_SCHEDULING
 // will insert the source addr in the image packet
-#define WITH_SRC_ADDR, DO NOT CHANGE
+#define WITH_SRC_ADDR // DO NOT CHANGE
 
 // FOR XBEE
 #ifdef XBEE_UCAM
@@ -3013,6 +3013,9 @@ void immediateSendPicture(int delay_before_send, int delay_after_send) {
         
         if (myCam.send_initial()) {
                 if (myCam.do_snapshot()) {
+                    // this delay seems to be needed for the uCamIII
+                    delay(1000);     
+                                   
                     if (myCam.get_picture(PICTURE_SNAPSHOT_TYPE)) {
                         digitalWrite(capture_led, HIGH);
                         myCam.get_data();
@@ -3205,6 +3208,9 @@ void immediateComparePicture(int delay_before_send, int delay_after_send) {
         
         if (myCam.send_initial()) {
                 if (myCam.do_snapshot()) {
+                    // this delay seems to be needed for the uCamIII
+                    delay(1000);
+                        
                     if (myCam.get_picture(PICTURE_SNAPSHOT_TYPE)) {
 #ifdef ENERGY_TEST                      
                         digitalWrite(capture_led, HIGH);
@@ -3717,6 +3723,9 @@ void setup() {
                 
                 if (myCam.send_initial()) {
                     if (myCam.do_snapshot()) {
+                        // this delay seems to be needed for the uCamIII
+                        delay(1000);
+                                            
                         if (myCam.get_picture(PICTURE_SNAPSHOT_TYPE)) {
 #ifndef ENERGY_TEST                          
                             digitalWrite(capture_led, HIGH);
@@ -3746,7 +3755,11 @@ void setup() {
                         delay(2000);
 #endif                                       
                     }
-        	}
+        	      }
+                else {
+                  Serial.println(F("Error in getting picture"));
+                  ok_to_encode_picture_data=false;
+                }
 
                 digitalWrite(ucamLedArray[currentCam], LOW);
 
@@ -4639,5 +4652,3 @@ void loop()
         }
 #endif
 }
-
-
