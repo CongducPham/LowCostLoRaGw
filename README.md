@@ -24,7 +24,7 @@ Latest news
 
 Quick start
 -----------
-- **Beta version of RaspiOS (Debian Buster 64-bit) with AI framework is ready for testing!** It has everything you need (all features of 32-bit version) + the embedded AI framework. [zipped 32GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1w44YgSDsKRw78gXAPaz-YkT8AdsVRheV) | [zipped 16GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1FQrzyuU_konBsxkRoyAhWjMm7yPlJUzj) | [zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Hhzk58VFMVw31mxc5Svo8JCb2C492cnJ). All .zip images are about 3GB for download. To be flashed on a 32GB (about 24GB free space) or a 16GB (about 9GB free space) or a 8GB (about 1.6GB free space) class 10 SD card. You can take the 8GB image for flashing on 16GB or 32GB SD card to reduce the flashing time and use `raspi-config` to expand the file system. 
+- **Beta version of RaspiOS (Debian Buster 64-bit) with AI framework is ready for testing!** It has everything you need (all features of 32-bit version) + the embedded AI framework. [zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Hhzk58VFMVw31mxc5Svo8JCb2C492cnJ). The image is about 3GB for download. You can take the 8GB image for flashing on 16GB or 32GB SD card and use `raspi-config` to expand the file system. 
 - **The current SD card image (Debian Buster 32-bit) has everything you need!** [zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Euuo4tPJrz6EHGFQ7IsCrWJbmJmHgLJR). To be flashed on a 8GB class 10 SD card. See [installation section](https://github.com/CongducPham/LowCostLoRaGw#installing-the-latest-gateway-version). 
 - Use the single-channel gateway for LoRaWAN-like communication (including downlink) with LoRa 2.4GHz. Upload to TTN or ChirpStack network servers. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-SX12XX.md)
 - Use the single-channel gateway for limited LoRaWAN (including downlink and OTAA feature) on the 433MHz band for devices with our [modified LMIC](https://github.com/CongducPham/LMIC_low_power#using-433mhz-band)
@@ -186,7 +186,7 @@ The distribution supports all RPI models including the last RPI4. There is out-o
 Get our SD card image
 ---------------------
 
-Download our 32-bit ([zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Euuo4tPJrz6EHGFQ7IsCrWJbmJmHgLJR)) or 64-bit ([zipped 32GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1w44YgSDsKRw78gXAPaz-YkT8AdsVRheV) | [zipped 16GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1FQrzyuU_konBsxkRoyAhWjMm7yPlJUzj) | [zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Hhzk58VFMVw31mxc5Svo8JCb2C492cnJ)). It has everything you need including:
+Download our 32-bit ([zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Euuo4tPJrz6EHGFQ7IsCrWJbmJmHgLJR)) or 64-bit ([zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Hhzk58VFMVw31mxc5Svo8JCb2C492cnJ)). It has everything you need including:
 
 - support for all RPI models including the last RPI4 as well. We recommend the RPI 3B model for a simple IoT gateway and a 3B+/4 for using embedded AI processing. However, the latter consume more power and are heating a lot more.
 - pre-installed open-source ChirpStack LoRaWAN Network Server

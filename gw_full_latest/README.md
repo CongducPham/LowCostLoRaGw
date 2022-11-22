@@ -4,7 +4,7 @@ Low-cost LoRa gateway features and configuration tools
 Quick start
 -----------
 
-- The current SD card image has everything you need! [zipped SD card image](https://cpham.perso.univ-pau.fr/LORA/WAZIUP/raspberrypi-buster-WAZIUP-demo.iso.zip). See [installation section](https://github.com/CongducPham/LowCostLoRaGw#installing-the-latest-gateway-version)
+- Download our 32-bit ([zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Euuo4tPJrz6EHGFQ7IsCrWJbmJmHgLJR)) or 64-bit ([zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Hhzk58VFMVw31mxc5Svo8JCb2C492cnJ)). See [installation section](https://github.com/CongducPham/LowCostLoRaGw#installing-the-latest-gateway-version)
 - Read the [Low-cost-LoRa-GW leaflet](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-leaflet.pdf)
 - Look at the [Low-cost-LoRa-GW web admin interface tutorial](https://github.com/CongducPham/tutorials/blob/master/Low-cost-LoRa-GW-web-admin.pdf). For most end-users, the web admin interface is sufficient to configure and manage the gateway. **For instance, to configure a new gateway, it is recommended to use the web admin interface to update the gateway software and to run the basic configuration procedure as described [here](https://github.com/CongducPham/LowCostLoRaGw#option-i)**.
 - **The rest of this README file contains additional information to better understand the gateway architecture and advanced mechanisms**.
