@@ -13,8 +13,8 @@ What have been modified
 - on 64-bit OS, the "UNOFICIAL WiringPi library for RPi 64bit OS" from https://github.com/TheNextLVL/wiringPi provided a solution but failed to run on an RPI4
 
 - finally, I merged the contributions from both https://github.com/WiringPi/WiringPi and https://github.com/TheNextLVL/wiringPi to get `wiringPi` supporting RPI4 and also running on 64-bit OS:
-	- take this updated version
-	- https://github.com/CongducPham/LowCostLoRaGw/blob/master/zip/wiringPi-64bit-RPI4.tgz, then
+	- take this updated version https://github.com/CongducPham/LowCostLoRaGw/raw/master/zip/wiringPi-64bit-RPI4.tgz
+		- wget https://github.com/CongducPham/LowCostLoRaGw/raw/master/zip/wiringPi-64bit-RPI4.tgz, then
 		- tar xvfz wiringPi-64bit-RPI4.tgz
 		- cd wiringPi-64bit-RPI4
 		- sudo ./build
