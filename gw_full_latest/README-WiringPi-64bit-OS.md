@@ -8,11 +8,15 @@ What have been modified
 
 - on 32-bit OS, the original `wiringPi` distribution, although not maintained anymore by the author, can be installed (http://wiringpi.com/)
 
-- on 64-bit OS, the "UNOFICIAL WiringPi library for RPi 64bit OS" (https://github.com/TheNextLVL/wiringPi) must be installed
-	- but take this updated version where RPI4 has been added as detected platform
-	- https://github.com/CongducPham/LowCostLoRaGw/blob/master/zip/wiringPi-64bit.tgz, then
-		- tar xvfz wiringPi-64bit.tgz
-		- cd wiringPi
+- on RPI4, even with 32-bit OS, it is necessary to get the unofficial Mirror/Fork from https://github.com/WiringPi/WiringPi to get `wiringPi` supporting the RPI4
+
+- on 64-bit OS, the "UNOFICIAL WiringPi library for RPi 64bit OS" from https://github.com/TheNextLVL/wiringPi provided a solution but failed to run on an RPI4
+
+- finally, I merged the contributions from both https://github.com/WiringPi/WiringPi and https://github.com/TheNextLVL/wiringPi to get `wiringPi` supporting RPI4 and also running on 64-bit OS:
+	- take this updated version
+	- https://github.com/CongducPham/LowCostLoRaGw/blob/master/zip/wiringPi-64bit-RPI4.tgz, then
+		- tar xvfz wiringPi-64bit-RPI4.tgz
+		- cd wiringPi-64bit-RPI4
 		- sudo ./build
 		
 - while `arduPi` uses Arduino-like pin numbering, `wiringPi` has its own pin numbering system. See section on pin numbering below

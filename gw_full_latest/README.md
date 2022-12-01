@@ -15,7 +15,7 @@ There are additional dedicated README files
 
 - Embedded AI framework on 64-bit RaspiOS (beta version)
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-AI.md)
-	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-WiringPi-64bit-OS.md) for wiringPI on 64-bit OS
+	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-WiringPi-64bit-OS.md) for wiringPI on RPI4 and/or 64-bit OS
 - better support of LoRaWAN and connection to TTN platform
 	- [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-TTN.md) for TTN support and configuration
 	- [section](https://github.com/CongducPham/LowCostLoRaGw/tree/master/Arduino#lorawan-example-and-support) for the device side

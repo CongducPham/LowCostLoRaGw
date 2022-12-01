@@ -50,6 +50,11 @@ elif [ "$board" = "17" ]
 		echo "You have a Raspberry 4B"
 		echo ">RPI4"
 		echo "RPI4" > /home/pi/lora_gateway/arch.txt
+elif [ "$board" = "20" ]
+	then
+		echo "You have a Raspberry Compute Module 4, using Raspberry 4 definition"
+		echo ">RPI4"
+		echo "RPI4" > /home/pi/lora_gateway/arch.txt
 else
 	echo "Don't know, sorry"
 	echo ">NA"
