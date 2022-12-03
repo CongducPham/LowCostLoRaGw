@@ -14,6 +14,8 @@ News from EU commission
 Latest news
 -----------
 
+- **NEW-Dec22** Both the 32-bit OS and the 64-bit OS have now been upgraded and tested for RPI4 (including CM4). See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-WiringPi-64bit-OS.md) for RPI4 and/or 64-bit OS.
+
 - **NEW-Oct21** We have now a beta version of the whole low-cost Raspberry-based gateway with embedded advanced AI frameworks. The embedded AI framework will be used in PRIMA [INTEL-IRRIS project](http://intel-irris.eu/) to build low-cost and smart irrigation systems for smallholders. Follow INTEL-IRRIS [Twitter channel](https://twitter.com/Intel_IrriS) for updates. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-AI.md) on AI framework. Download the 64-bit RaspiOS SD image to be flashed on a 32GB class 10 SD card, see below for download links.
 
 - **NEW-Jan21** To provide support for next 64-bit OS, the low-level SPI library on the Raspberry gateway has moved from Libelium's `arduPi` lib to Gordon's `wiringPi` lib because `arduPi` relies heavily on direct memory accesses that are difficult to port. The main reason for 64-bit OS is to prepare the whole low-cost Raspberry-based gateway to embed advanced AI frameworks that are mostly based on 64-bit OS. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-WiringPi-64bit-OS.md) for RPI4 and/or 64-bit OS. **`wiringPi` is now the default low-level SPI layer in the GitHub source distribution.**
@@ -24,8 +26,8 @@ Latest news
 
 Quick start
 -----------
-- **Beta version of RaspiOS (Debian Buster 64-bit) with AI framework is ready for testing!** It has everything you need (all features of 32-bit version) + the embedded AI framework. [zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Hhzk58VFMVw31mxc5Svo8JCb2C492cnJ). The image is about 3GB for download. You can take the 8GB image for flashing on 16GB or 32GB SD card and use `raspi-config` to expand the file system. 
-- **The current SD card image (Debian Buster 32-bit) has everything you need!** [zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Euuo4tPJrz6EHGFQ7IsCrWJbmJmHgLJR). To be flashed on a 8GB class 10 SD card. See [installation section](https://github.com/CongducPham/LowCostLoRaGw#installing-the-latest-gateway-version). 
+- **Beta version of RaspiOS (Debian Buster 64-bit) with AI framework is ready for testing!** It has everything you need (all features of 32-bit version) + the embedded AI framework. [zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1UzSULM2TjCKWjVWIvHqLy6Iu_FR_1Xmo). The image is about 3GB for download. You can take the 8GB image for flashing on 16GB or 32GB SD card and use `raspi-config` to expand the file system. 
+- **The current SD card image (Debian Buster 32-bit) has everything you need!** [zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1ZiIpA_PfARHPmQetJ25iZnfyjeD8Rm3j). To be flashed on a 8GB class 10 SD card. See [installation section](https://github.com/CongducPham/LowCostLoRaGw#installing-the-latest-gateway-version). 
 - Use the single-channel gateway for LoRaWAN-like communication (including downlink) with LoRa 2.4GHz. Upload to TTN or ChirpStack network servers. See [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-SX12XX.md)
 - Use the single-channel gateway for limited LoRaWAN (including downlink and OTAA feature) on the 433MHz band for devices with our [modified LMIC](https://github.com/CongducPham/LMIC_low_power#using-433mhz-band)
 - The single-channel gateway now also provides LoRaWAN downlink and OTAA features for devices with our [modified LMIC](https://github.com/CongducPham/LMIC_low_power#using-single-channel-gateway). See updated [README](https://github.com/CongducPham/LowCostLoRaGw/blob/master/gw_full_latest/README-downlink.md)
@@ -186,7 +188,7 @@ The distribution supports all RPI models including the last RPI4. There is out-o
 Get our SD card image
 ---------------------
 
-Download our 32-bit ([zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Euuo4tPJrz6EHGFQ7IsCrWJbmJmHgLJR)) or 64-bit ([zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1Hhzk58VFMVw31mxc5Svo8JCb2C492cnJ)). It has everything you need including:
+Download our 32-bit ([zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1ZiIpA_PfARHPmQetJ25iZnfyjeD8Rm3j)) or 64-bit ([zipped 8GB SD card image from GoogleDrive](https://drive.google.com/uc?export=download&id=1UzSULM2TjCKWjVWIvHqLy6Iu_FR_1Xmo)). It has everything you need including:
 
 - support for all RPI models including the last RPI4 as well. We recommend the RPI 3B model for a simple IoT gateway and a 3B+/4 for using embedded AI processing. However, the latter consume more power and are heating a lot more.
 - pre-installed open-source ChirpStack LoRaWAN Network Server
