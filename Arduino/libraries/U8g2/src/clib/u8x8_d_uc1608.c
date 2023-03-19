@@ -179,8 +179,8 @@ static const uint8_t u8x8_d_uc1608_erc24064_init_seq[] = {
   U8X8_C(0x0e2),            			/* soft reset */
   U8X8_DLY(200),
 
-  U8X8_C(0x023),            			/* Bit 0/1: Temp compenstation, Bit 2: Multiplex Rate 0=96, 1=128 */
-  //U8X8_C(0x027),            			/* Bit 0/1: Temp compenstation, Bit 2: Multiplex Rate 0=96, 1=128 */
+  U8X8_C(0x023),            			/* Bit 0/1: Temp compensation, Bit 2: Multiplex Rate 0=96, 1=128 */
+  //U8X8_C(0x027),            			/* Bit 0/1: Temp compensation, Bit 2: Multiplex Rate 0=96, 1=128 */
 
   U8X8_C(0x0c8),            			/* Map control, Bit 3: MY=1, Bit 2: MX=0, Bit 0: MSF =0 */
   U8X8_C(0x0e8),            			/* LCD bias Bits 0/1: 00=10.7 01=10.3, 10=12.0, 11=12.7 */
@@ -260,8 +260,8 @@ static const uint8_t u8x8_d_uc1608_240x128_init_seq[] = {
   U8X8_C(0x0e2),            			/* soft reset */
   U8X8_DLY(200),
 
-  //U8X8_C(0x023),            			/* Bit 0/1: Temp compenstation, Bit 2: Multiplex Rate 0=96, 1=128 */
-  U8X8_C(0x026),            			/* Bit 0/1: Temp compenstation, Bit 2: Multiplex Rate 0=96, 1=128 */
+  //U8X8_C(0x023),            			/* Bit 0/1: Temp compensation, Bit 2: Multiplex Rate 0=96, 1=128 */
+  U8X8_C(0x026),            			/* Bit 0/1: Temp compensation, Bit 2: Multiplex Rate 0=96, 1=128 */
 
   U8X8_C(0x0c8),            			/* Map control, Bit 3: MY=1, Bit 2: MX=0, Bit 0: MSF =0 */
   U8X8_C(0x0ea),            			/* LCD bias Bits 0/1: 00=10.7 01=10.3, 10=12.0, 11=12.7 */
@@ -342,8 +342,8 @@ static const uint8_t u8x8_d_uc1608_erc240120_init_seq[] = {
   U8X8_C(0x0e2),            			/* soft reset */
   U8X8_DLY(200),
 
-  //U8X8_C(0x023),            			/* Bit 0/1: Temp compenstation, Bit 2: Multiplex Rate 0=96, 1=128 */
-  U8X8_C(0x026),            			/* Bit 0/1: Temp compenstation, Bit 2: Multiplex Rate 0=96, 1=128 */
+  //U8X8_C(0x023),            			/* Bit 0/1: Temp compensation, Bit 2: Multiplex Rate 0=96, 1=128 */
+  U8X8_C(0x026),            			/* Bit 0/1: Temp compensation, Bit 2: Multiplex Rate 0=96, 1=128 */
 
   U8X8_C(0x0c8),            			/* Map control, Bit 3: MY=1, Bit 2: MX=0, Bit 0: MSF =0 */
   U8X8_C(0x0ea),            			/* LCD bias Bits 0/1: 00=10.7 01=10.3, 10=12.0, 11=12.7 */
