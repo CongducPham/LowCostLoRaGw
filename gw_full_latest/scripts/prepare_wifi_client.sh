@@ -1,5 +1,12 @@
 #!/bin/bash
 
+#from https://forums.raspberrypi.com/viewtopic.php?t=307221
+#/etc/dhcpcd.conf: comment out the static network settings on wlan0
+#/etc/dnsmasq.conf: comment out the interface and dhcp-range stuff
+#/etc/default/hostapd: change DAEMON_CONF="/etc/hostapd/hostapd.conf" to DAEMON_CONF=""
+#/etc/sysctl.conf: comment out net.ipv4.ip_forward=1
+#/etc/rc.local: comment out iptables-restore < /etc/iptables.ipv4.nat
+
 #get back original file
 sudo cp /etc/network/interfaces.orig /etc/network/interfaces
 

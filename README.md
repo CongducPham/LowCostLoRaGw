@@ -4,6 +4,11 @@ Low-cost LoRa IoT framework developed in the EU H2020 WAZIUP/WAZIHUB projects
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/WAZIUP.png" width="300"> <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/wazihub.png" width="300">
 <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/hubiquitous.png" width="300"> <img src="https://github.com/CongducPham/LowCostLoRaGw/blob/master/images/intel-irris-logo.png" width="300">
 
+We are not maintaining this repo anymore
+----------------------------------------
+
+First of all, thank you for all the stars you gave us! We started the work on low-cost LoRa gateway back in 2015. It has been a great challenge for us and we learned a lot. We also hope that this early work has been useful for you in your projects. As we collaborated with WAZIUP e.V. on the development of a more efficient gateway software, some of our code served as foundation for a new development line called WaziGate by WAZIUP e.V. team who is doing a great work! In 2021, we completely shifted to this WaziGate distribution to build the edge-enabled LoRa gateway for the [PRIMA INTEL-IRRIS project](https://intel-irris.eu). You can read more detail on the dedicated [INTEL-IRRIS GitHub repo](https://github.com/CongducPham/PRIMA-Intel-IrriS). Then, in 2025, as our works in INTEL-IRRIS are continuing in the [PEPR AgriFutur project](https://iotsensingsystem.live-website.com/pepr-agroeconum-agrifutur), at time of writing, the latest edge-enabled gateway we are building on top of the general WaziGate framework provided by WAZIUP e.V is available from the dedicated [PEPR AgriFutur GitHub](https://github.com/CongducPham/PEPR_AgriFutur). Check our latest development on this GitHub repo. 
+
 News from EU commission
 -----------------------
 

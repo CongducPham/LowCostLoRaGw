@@ -5175,7 +5175,7 @@ uint16_t SX126XLT::CollisionAvoidance0(uint8_t pl, uint8_t cad_number) {
     PRINTLN;    
   }
   else
-  	e==0;
+  	e=0;
   
   // we detected activity!
   // since there is low probability of false positive
