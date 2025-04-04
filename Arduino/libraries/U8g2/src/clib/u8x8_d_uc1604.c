@@ -195,8 +195,8 @@ static const uint8_t u8x8_d_uc1604_jlx19264_init_seq[] = {
   U8X8_C(0x0eb),            			/* LCD bias Bits 0/1: 00=6 01=7, 10=8, 11=9 */
 
   
-  //U8X8_C(0x023),            			/* Bit 0/1: Temp compenstation, Bit 2: Multiplex Rate 0=96, 1=128 */
-  //U8X8_C(0x027),            			/* Bit 0/1: Temp compenstation, Bit 2: Multiplex Rate 0=96, 1=128 */
+  //U8X8_C(0x023),            			/* Bit 0/1: Temp compensation, Bit 2: Multiplex Rate 0=96, 1=128 */
+  //U8X8_C(0x027),            			/* Bit 0/1: Temp compensation, Bit 2: Multiplex Rate 0=96, 1=128 */
 
   U8X8_C(0x0c4),            			/* Map control, Bit 2: MY=1, Bit 1: MX=0 */
   U8X8_C(0x0a0),            			/* 0xa0: 76Hz FPS, controller default: 0x0a1: 95Hz FPS */
