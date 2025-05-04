@@ -1,0 +1,100 @@
+*** Beacon Packet Forwarder for Lora Gateway ***
+Version: 4.0.1
+*** Lora concentrator HAL library version info ***
+Version: 5.0.1;
+***
+INFO: Little endian host
+INFO: found global configuration file global_conf.json, parsing it
+INFO: global_conf.json does contain a JSON object named SX1301_conf, parsing SX1301 parameters
+INFO: lorawan_public 1, clksrc 1
+INFO: no configuration for LBT
+INFO: antenna_gain 0 dBi
+INFO: Configuring TX LUT with 16 indexes
+INFO: radio 0 enabled (type SX1257), center frequency 867500000, RSSI offset -166.000000, tx enabled 1, tx_notch_freq 0
+INFO: radio 1 enabled (type SX1257), center frequency 868500000, RSSI offset -166.000000, tx enabled 0, tx_notch_freq 0
+INFO: Lora multi-SF channel 0>  radio 1, IF -400000 Hz, 125 kHz bw, SF 7 to 12
+INFO: Lora multi-SF channel 1>  radio 1, IF -200000 Hz, 125 kHz bw, SF 7 to 12
+INFO: Lora multi-SF channel 2>  radio 1, IF 0 Hz, 125 kHz bw, SF 7 to 12
+INFO: Lora multi-SF channel 3>  radio 0, IF -400000 Hz, 125 kHz bw, SF 7 to 12
+INFO: Lora multi-SF channel 4>  radio 0, IF -200000 Hz, 125 kHz bw, SF 7 to 12
+INFO: Lora multi-SF channel 5>  radio 0, IF 0 Hz, 125 kHz bw, SF 7 to 12
+INFO: Lora multi-SF channel 6>  radio 0, IF 200000 Hz, 125 kHz bw, SF 7 to 12
+INFO: Lora multi-SF channel 7>  radio 0, IF 400000 Hz, 125 kHz bw, SF 7 to 12
+INFO: Lora std channel> radio 1, IF -200000 Hz, 250000 Hz bw, SF 7
+INFO: FSK channel> radio 1, IF 300000 Hz, 125000 Hz bw, 50000 bps datarate
+INFO: global_conf.json does contain a JSON object named gateway_conf, parsing gateway parameters
+INFO: gateway MAC address is configured to 0000000000000000
+INFO: server hostname or IP address is configured to "router.eu.thethings.network"
+INFO: upstream port is configured to "1700"
+INFO: downstream port is configured to "1700"
+INFO: downstream keep-alive interval is configured to 10 seconds
+INFO: statistics display interval is configured to 30 seconds
+INFO: upstream PUSH_DATA time-out is configured to 100 ms
+INFO: packets received with a valid CRC will be forwarded
+INFO: packets received with a CRC error will NOT be forwarded
+INFO: packets received with no CRC will NOT be forwarded
+INFO: GPS serial port path is configured to "/dev/ttyAMA0"
+INFO: Reference latitude is configured to 10.000000 deg
+INFO: Reference longitude is configured to 20.000000 deg
+INFO: Reference altitude is configured to -1 meters
+INFO: fake GPS is disabled
+INFO: found local configuration file local_conf.json, parsing it
+INFO: redefined parameters will overwrite global parameters
+INFO: local_conf.json does not contain a JSON object named SX1301_conf
+INFO: local_conf.json does contain a JSON object named gateway_conf, parsing gateway parameters
+INFO: gateway MAC address is configured to B827EBFFFEDA09D7
+INFO: upstream port is configured to "1700"
+INFO: downstream port is configured to "1700"
+INFO: packets received with a valid CRC will be forwarded
+INFO: packets received with a CRC error will NOT be forwarded
+INFO: packets received with no CRC will NOT be forwarded
+INFO: Reference latitude is configured to 20.000000 deg
+INFO: Reference longitude is configured to 20.000000 deg
+INFO: Reference altitude is configured to 20 meters
+INFO: [main] TTY port /dev/ttyAMA0 open for GPS synchronization
+INFO: [main] concentrator started, packet can now be received
+
+INFO: Disabling GPS mode for concentrator's counter...
+INFO: host/sx1301 time offset=(1558960931s:476147µs) - drift=-527822157µs
+INFO: Enabling GPS mode for concentrator's counter.
+
+WARNING: [gps] GPS out of sync, keeping previous time reference
+WARNING: [gps] GPS out of sync, keeping previous time reference
+
+
+
+INFO: Received pkt from mote: 26041F24 (fcnt=0)
+
+JSON up: {"rxpk":[{"tmst":29641444,"time":"2019-05-27T12:42:40.117758Z","tmms":1242996179117,"chan":0,"rfch":1,"freq":868.100000,"stat":1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","lsnr":10.0,"rssi":-61,"size":23,"data":"QCQfBCaAAAABJD5j3dEiB1B9aI//04Y="},{"tmst":29641444,"time":"2019-05-27T12:42:40.117758Z","tmms":1242996179117,"chan":0,"rfch":2,"freq":868.300000,"stat":1,"modu":"LORA","datr":"SF12BW125","codr":"4/5","lsnr":10.0,"rssi":-61,"size":23,"data":"QCQfBCaAAAABJD5j3dEiB1B9aI//04Y="}]}
+
+##### 2019-05-27 12:42:44 GMT #####
+### [UPSTREAM] ###
+# RF packets received by concentrator: 1
+# CRC_OK: 100.00%, CRC_FAIL: 0.00%, NO_CRC: 0.00%
+# RF packets forwarded: 1 (23 bytes)
+# PUSH_DATA datagrams sent: 1 (264 bytes)
+# PUSH_DATA acknowledged: 0.00%
+### [DOWNSTREAM] ###
+# PULL_DATA sent: 3 (0.00% acknowledged)
+# PULL_RESP(onse) datagrams received: 0 (0 bytes)
+# RF packets sent to concentrator: 0 (0 bytes)
+# TX errors: 0
+# BEACON queued: 0
+# BEACON sent so far: 0
+# BEACON rejected: 0
+### [JIT] ###
+# SX1301 time (PPS): 32523682
+src/jitqueue.c:448:jit_print_queue(): INFO: [jit] queue is empty
+### [GPS] ###
+# Valid time reference (age: 0 sec)
+# GPS coordinates: latitude 43.31416, longitude -0.36415, altitude 191 m
+##### END #####
+
+INFO: [down] PULL_RESP received  - token[4:61] :)
+
+JSON down: {"txpk":{"imme":false,"tmst":974693787,"freq":868.5,"rfch":0,"powe":14,"modu":"LORA","datr":"SF7BW125","codr":"4/5","ipol":true,"size":33,"ncrc":true,"data":"IFH12F7jdVM2leyzvANjdosPo0GKrR9f7n8QhpsoBjyQ"}}
+INFO: tx_start_delay=1495 (1495.500000) - (1497, bw_delay=1.500000, notch_delay=0.000000)
+
+
+JSON up: {"stat":{"time":"2019-05-27 12:42:44 GMT","lati":43.31416,"long":-0.36415,"alti":191,"rxnb":1,"rxok":1,"rxfw":1,"ackr":0.0,"dwnb":0,"txnb":0}}
+
