@@ -1,0 +1,9 @@
+function Decoder(bytes, port) {
+  // The bytes parameter is already decoded from Base64 by TTN
+  // We just need to convert these bytes to a string
+  var text = String.fromCharCode.apply(null, bytes);
+  
+  return {
+    message: text
+  };
+}
