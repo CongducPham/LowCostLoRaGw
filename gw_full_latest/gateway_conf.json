@@ -1,0 +1,53 @@
+{
+  "radio_conf": {
+    "mode": 11,
+    "bw": 125,
+    "cr": 5,
+    "sf": 12,
+    "ch": -1,
+    "freq": -1
+  },
+  "gateway_conf": {
+    "gateway_ID": "0000B827EBDCE0CD",
+    "ref_latitude": "3.857130694554432",
+    "ref_longitude": "11.5007427282024",
+    "wappkey": false,
+    "raw": true,
+    "aes_lorawan": false,
+    "aes": false,
+    "lsc": false,
+    "log_post_processing": true,
+    "log_weekly": false,
+    "auto_update": false,
+    "downlink": 0,
+    "downlink_lorawan": true,
+    "downlink_network_server": "eu1.cloud.thethings.network",
+    "status": 600,
+    "aux_radio": 0
+  },
+  "status_conf": {
+    "dynamic_gps": false,
+    "gps_port": "/dev/ttyACM0",
+    "copy_post_processing_log": false,
+    "dht22": false,
+    "dht22_mongo": false,
+    "check_internet_pending": true,
+    "fast_stats": 15,
+    "ttn_status": true,
+    "cs_status": false
+  },
+  "alert_conf": {
+    "use_mail": false,
+    "contact_mail": "the_contact_mail_address,another_contact_mail_address_if_needed",
+    "mail_from": "a_gmail_address",
+    "mail_server": "smtp.gmail.com",
+    "mail_passwd": "your_passwd",
+    "use_sms": false,
+    "pin": "0000",
+    "contact_sms": [
+      "+33XXXXXXXXX",
+      "+33XXXXXXXXX"
+    ],
+    "gammurc_file": "/home/pi/.gammurc"
+  }
+}
