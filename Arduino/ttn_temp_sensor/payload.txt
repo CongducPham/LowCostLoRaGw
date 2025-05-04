@@ -1,0 +1,17 @@
+function Decoder(bytes, port) {
+  // Check if the payload is at least 2 bytes long
+  if (bytes.length < 2) {
+    return {};
+  }
+  
+  // Reconstruct 16-bit integer from first two bytes
+  var tempRaw = (bytes[0] << 8) | bytes[1];
+  
+  // Convert back to temperature by dividing by 100
+  var temperature = tempRaw / 100.0;
+  
+  return {
+    temperature: temperature,
+    temperature_unit: '°C'
+  };
+}
