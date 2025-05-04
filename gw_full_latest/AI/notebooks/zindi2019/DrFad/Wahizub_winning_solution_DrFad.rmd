@@ -1,0 +1,2532 @@
+---
+title: "Wazihub Soil Moisture Prediction"
+author: "Dr Fad"
+date: "August 2, 2019"
+output: html_document
+---
+##INTRDUCTION
+
+This documents details the solution to the winning solution for Olayinka Fadahunsi (DrFad on Zindi).
+
+It is broken down to 3 sections as listed below.
+
+#Section 1: Base extraction and manipulation of data i.e train and test
+
+#Section 2: Build 5 different/diverse models
+
+#Section 3: Ensemble these diverse models t create a single powerful model
+
+NB: The entire model runs in 3mins
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#SECTION 1:Base extraction and manipulation of data i.e train and test
+The ouput in this stage is the train and test split
+
+#Load libraries
+
+```{r}
+rm(list = ls()) #Clear R workspace
+library(stringr)
+library(sqldf)
+library(dplyr)
+library(lubridate) #For date manupilation
+library(Boruta) #for feature selection
+library(caret)
+library(ggplot2)
+library(MLmetrics)
+library(Matrix)
+library(beepr)
+library(data.table)
+library(xgboost)
+library(RANN) #For knnimputation
+```
+
+# Load Data
+
+```{r}
+Wazi <- read.csv("C:/Users/A199702/Documents/Zindi/Wazihub soil moisture/Train.csv", stringsAsFactors = F)
+Wazi_submit <- read.csv("C:/Users/A199702/Documents/Zindi/Wazihub soil moisture/SampleSubmission (1).csv", stringsAsFactors = F)
+Wazi_context_maize <- read.csv("C:/Users/A199702/Documents/Zindi/Wazihub soil moisture/Context_Data_Maize.csv", stringsAsFactors = F)
+Wazi_context_peanut <- read.csv("C:/Users/A199702/Documents/Zindi/Wazihub soil moisture/Context_Data_Peanuts.csv", stringsAsFactors = F)
+
+head(Wazi , n=2)
+head(Wazi_submit , n=2)
+Wazi
+# summary(Wazi)
+```
+#Fill in missing values for Airtemp, Air humidity, Press etc.
+
+```{r}
+#################################
+#Treat Missing Values
+#################################
+Wazi_Iot <- Wazi[,c(1,10:15)]
+
+#Extract time from string
+Wazi_Iot$timestamp <- str_sub(Wazi_Iot$timestamp, 12,19)
+colnames(Wazi_Iot)[1] <- "time"
+
+#Remove NA
+Wazi_Iot <- na.omit(Wazi_Iot)
+# BatchId features
+Wazi_Iot <- Wazi_Iot %>%
+                  group_by(time) %>%
+                       summarize(Air_temperature = median(Air.temperature..C.),
+                                 Air_humidity = median(Air.humidity....),
+                                 Pressure_KPa = median(Pressure..KPa.),
+                                 Wind_speed_Kmh = median(Wind.speed..Km.h.),
+                                 Wind_gust_Kmh = median(Wind.gust..Km.h.),
+                                 Wind_direction_Deg = median(Wind.direction..Deg.))
+Wazi_Iot
+```
+#Merge back to Wazi and replace missing IOT fields with the medians
+
+```{r}
+#First create time in Wazi
+Wazi
+Wazi$time <- str_sub(Wazi$timestamp, 12,19)
+
+#Merge Wazi_IOT to WAZI
+Wazi <- merge(Wazi_Iot, Wazi, by = "time", all.y=T)
+
+colnames(Wazi)[17:22] <-  c("Air_temperature_m","Air_humidity_m" , "Pressure_KPa_m" ,"Wind_speed_Kmh_m" ,"Wind_gust_Kmh_m" , "Wind_direction_Deg_m")
+
+Wazi$Air_temperature_m <- ifelse(is.na(Wazi$Air_temperature_m),Wazi$Air_temperature,Wazi$Air_temperature_m)
+Wazi$Air_humidity_m <- ifelse(is.na(Wazi$Air_humidity_m),Wazi$Air_humidity,Wazi$Air_humidity_m)
+Wazi$Pressure_KPa_m <- ifelse(is.na(Wazi$Pressure_KPa_m),Wazi$Pressure_KPa,Wazi$Pressure_KPa_m)
+Wazi$Wind_speed_Kmh_m <- ifelse(is.na(Wazi$Wind_speed_Kmh_m),Wazi$Wind_speed_Kmh,Wazi$Wind_speed_Kmh_m)
+Wazi$Wind_gust_Kmh_m <- ifelse(is.na(Wazi$Wind_gust_Kmh_m),Wazi$Wind_gust_Kmh,Wazi$Wind_gust_Kmh_m)
+Wazi$Wind_direction_Deg_m <- ifelse(is.na(Wazi$Wind_direction_Deg_m),Wazi$Wind_direction_Deg,Wazi$Wind_direction_Deg_m)
+
+#Remove merged data
+Wazi[,c("Air_temperature","Air_humidity" , "Pressure_KPa" ,"Wind_speed_Kmh" ,"Wind_gust_Kmh" , "Wind_direction_Deg")] <- NULL
+
+#Convert timestamp to date and time
+Wazi <- cbind(Wazi,timestamp2 = as.numeric(strptime(Wazi$timestamp	, format = "%Y-%m-%d %H:%M:%S", tz = "GMT")))
+Wazi <- cbind(Wazi,timestamp3 = strptime(Wazi$timestamp	, format = "%Y-%m-%d %H:%M:%S", tz = "GMT"))
+
+#Sort by timestamp3
+Wazi <- Wazi[with(Wazi, order(timestamp3)), ]
+Wazi
+```
+#Extract Date and create date features
+```{r}
+Wazi$Date <- str_sub(Wazi$timestamp, 1,10) #Extract date
+
+Wazi$hour <- hour(Wazi$timestamp3)
+Wazi$month <- month(Wazi$timestamp3)
+Wazi$wday <- wday(Wazi$timestamp3)
+Wazi$min_4rm_midnight <-   period_to_seconds(hms(Wazi$time))/60
+Wazi
+```
+
+#Break the request down to various fileds
+```{r}
+#Obtain Field 1 Train
+Field1 <- Wazi[,c(1:4,11:23)]
+Field2 <- Wazi[,c(1,2,5,6,11:23)]
+Field3 <- Wazi[,c(1,2,7,8,11:23)]
+Field4 <- Wazi[,c(1,2,9,10,11:23)]
+
+#Merge context data
+Field1 <- merge(Wazi_context_maize,Field1,by = "Date", all.y = T)
+Field2 <- merge(Wazi_context_peanut,Field2,by = "Date", all.y = T)
+Field3 <- merge(Wazi_context_peanut,Field3,by = "Date", all.y = T)
+Field4 <- merge(Wazi_context_peanut,Field4,by = "Date", all.y = T)
+
+Field1$Field <- 1
+Field2$Field <- 2
+Field3$Field <- 3
+Field4$Field <- 4
+
+#Change colnames
+colnames(Field1)[c(17,18)] <- c("Soil_humidity","Irrigation_field")
+colnames(Field2)[c(17,18)] <- c("Soil_humidity","Irrigation_field")
+colnames(Field3)[c(17,18)] <- c("Soil_humidity","Irrigation_field")
+colnames(Field4)[c(17,18)] <- c("Soil_humidity","Irrigation_field")
+
+####################################################
+#Get train and test for each field
+####################################################
+
+#Field1
+Field1 <- Field1[with(Field1, order(timestamp3)), ]
+Field1_train <- Field1[Field1$timestamp3 >= "2019-02-23 00:00:00" & Field1$timestamp3 <= "2019-03-25 23:45:00",]
+Field1_test <- Field1[Field1$timestamp3 > "2019-03-25 23:45:00" & Field1$timestamp3 <= "2019-03-29 23:50:00",]
+
+#Field2
+Field2 <- Field2[with(Field2, order(timestamp3)), ]
+Field2_train <- Field2[Field2$timestamp3 >= "2019-02-23 00:00:00" & Field2$timestamp3 <= "2019-05-25 08:40:00",]
+Field2_test <- Field2[Field2$timestamp3 > "2019-05-25 08:40:00" & Field2$timestamp3 <= "2019-05-31 10:15:00",]
+
+#Field3
+Field3 <- Field3[with(Field3, order(timestamp3)), ]
+Field3_train <- Field3[Field3$timestamp3 >= "2019-02-23 00:00:00" & Field3$timestamp3 <= "2019-04-19 21:10:00",]
+Field3_test <- Field3[Field3$timestamp3 > "2019-04-19 21:10:00" & Field3$timestamp3 <= "2019-04-23 21:15:00",]
+
+#Field4
+Field4 <- Field4[with(Field4, order(timestamp3)), ]
+Field4_train <- Field4[Field4$timestamp3 >= "2019-02-23 00:00:00" & Field4$timestamp3 <= "2019-05-25 08:40:00",]
+Field4_test <- Field4[Field4$timestamp3 > "2019-05-25 08:40:00" & Field4$timestamp3 <= "2019-05-31 08:45:00",]
+
+Field4_train[Field4_train$timestamp3 > "2019-05-08 08:40:00",]
+```
+# Assemble train and test
+```{r}
+#Assemble test
+Wazi_test <- rbind(Field1_test,Field2_test,Field3_test,Field4_test)
+Wazi_test$ID <- paste(Wazi_test$timestamp3,"x","Soil humidity",Wazi_test$Field) #Create ID
+
+#Assemble train
+Wazi_train <- rbind(Field1_train,Field2_train,Field3_train,Field4_train)
+write.csv(Wazi_train,file = "C:/Users/A199702/Documents/Zindi/Wazihub soil moisture/Wazi_All_Train.csv", row.names = F)
+write.csv(Wazi_test,file = "C:/Users/A199702/Documents/Zindi/Wazihub soil moisture/Wazi_All_Test.csv", row.names = F)
+
+#Save train and test in rda format
+save(Wazi_train,Wazi_test, file = "Wazi_train_test.rda" )
+```
+
+#Visualise
+
+```{r}
+#################################################
+#Viusualise patern for 4 fields
+#################################################
+ggplot(Field1_train, aes(timestamp3, Soil_humidity)) + geom_line()  + xlab("") + ylab("Field1")
+ggplot(Field2_train, aes(timestamp3, Soil_humidity)) + geom_line()  + xlab("") + ylab("Field2")
+ggplot(Field3_train, aes(timestamp3, Soil_humidity)) + geom_line()  + xlab("") + ylab("Field3")
+ggplot(Field4_train, aes(timestamp3, Soil_humidity)) + geom_line()  + xlab("") + ylab("Field4")
+
+
+```
+
+#VISUALIZATION and test forecast using Dynamic regression model
+```{r}
+########################################
+#Field1 
+#######################################
+library(forecast)
+Field1_DR <- auto.arima(Field1_train$Soil_humidity, xreg =  Field1_train$Irrigation_field)
+#Check residuals
+checkresiduals(Field1_DR)
+
+#Forecast
+Field1_fcast <- forecast(Field1_DR, xreg = Field1_test$Irrigation_field)
+autoplot(Field1_fcast) + xlab("hours") + ylab("humidity")
+
+
+########################################
+#Field2 
+#######################################
+library(forecast)
+Field2_DR <- auto.arima(Field2_train$Soil_humidity, xreg =  Field2_train$Irrigation_field)
+#Check residuals
+checkresiduals(Field2_DR)
+
+#Forecast
+Field2_fcast <- forecast(Field2_DR, xreg = Field2_test$Irrigation_field)
+autoplot(Field2_fcast) + xlab("hours") + ylab("humidity")
+
+########################################
+#Field3 
+#######################################
+library(forecast)
+Field3_DR <- auto.arima(Field3_train$Soil_humidity, xreg =  Field3_train$Irrigation_field)
+#Check residuals
+checkresiduals(Field3_DR)
+
+#Forecast
+Field3_fcast <- forecast(Field3_DR, xreg = Field3_test$Irrigation_field)
+autoplot(Field3_fcast) + xlab("hours") + ylab("humidity")
+
+########################################
+#Field4 
+#######################################
+library(forecast)
+Field4_DR <- auto.arima(Field4_train$Soil_humidity, xreg =  Field4_train$Irrigation_field)
+#Check residuals
+checkresiduals(Field4_DR)
+
+#Forecast
+Field4_fcast <- forecast(Field4_DR, xreg = Field4_test$Irrigation_field)
+autoplot(Field4_fcast) + xlab("hours") + ylab("humidity")
+```
+
+##SECTION 2: Build 5 different/diverse models
+##2
+##2
+##2
+
+
+#MODEL 1
+```{r}
+######################################################################################
+#MODEL 1 SETUP. Output is Model1.rda
+######################################################################################
+#Load train test for Wazi
+rm(list = ls()) #Clear workspace
+load("Wazi_train_test.rda")
+
+##########################
+#Break test
+##########################
+Wazi_test_ext <- Wazi_test[,c("ID","Field","Irrigation_field","Soil_humidity")]
+
+Wazi_train_ext <- Wazi_train
+Wazi_train_ext$ID <- paste(Wazi_train_ext$timestamp3,"x","Soil humidity",Wazi_train_ext$Field) #Create ID
+Wazi_train_ext <- Wazi_train_ext[,c("ID","Field","Irrigation_field","Soil_humidity")]
+
+###########################
+#Create counter
+###########################
+Wazi_test_ext <- Wazi_test_ext %>%
+  group_by(Field,Irrigation_field) %>%
+  mutate(count = 1:(n()))
+
+Wazi_test_ext$count_diff <- append(diff(Wazi_test_ext$count),1)
+Wazi_test_ext$field_diff <- append(diff(Wazi_test_ext$Field),0)
+
+#Cretae flag for when Irrigation is 1 and diff is not 0
+Wazi_test_ext$flag <- ifelse((Wazi_test_ext$Irrigation_field ==1 & Wazi_test_ext$count_diff != 1) |(Wazi_test_ext$field_diff == 1 & Wazi_test_ext$count_diff != 1),1,0)
+
+#Create dummy to aid extraction of serial number
+Wazi_test_ext$dummy <- "A"
+#Create count2
+Wazi_test_ext <- Wazi_test_ext %>%
+  group_by(dummy) %>%
+    mutate(count_2 = 1:(n()))
+
+# table(Wazi_test_ext$flag)  
+#Create Wazi_test partitions
+Wazi_test_partitions <- Wazi_test_ext[Wazi_test_ext$flag==1 ,]
+
+###################################
+#Create Wazi_test partitions
+##################################
+Wazi_test_1 <- Wazi_test_ext[1:Wazi_test_partitions$count_2[1],]
+Wazi_test_1$Irrigation_field[1] <- 0
+Wazi_test_1$Soil_humidity[1] <- 39.68
+Wazi_test_2 <- Wazi_test_ext[Wazi_test_partitions$count_2[1]:Wazi_test_partitions$count_2[2],]
+Wazi_test_2$Irrigation_field[1] <- 0
+Wazi_test_3 <- Wazi_test_ext[Wazi_test_partitions$count_2[2]:Wazi_test_partitions$count_2[3],]
+Wazi_test_3$Irrigation_field[1] <- 0
+Wazi_test_4 <- Wazi_test_ext[Wazi_test_partitions$count_2[3]:Wazi_test_partitions$count_2[4],]
+Wazi_test_4$Irrigation_field[1] <- 0
+Wazi_test_5 <- Wazi_test_ext[Wazi_test_partitions$count_2[4]:Wazi_test_partitions$count_2[5],]
+Wazi_test_5$Irrigation_field[1] <- 0
+Wazi_test_5$Soil_humidity[1] <- -4
+Wazi_test_5$Field[1] <- 2
+Wazi_test_6 <- Wazi_test_ext[Wazi_test_partitions$count_2[5]:Wazi_test_partitions$count_2[6],]
+Wazi_test_6$Irrigation_field[1] <- 0
+Wazi_test_7 <- Wazi_test_ext[Wazi_test_partitions$count_2[6]:Wazi_test_partitions$count_2[7],]
+Wazi_test_7$Irrigation_field[1] <- 0
+Wazi_test_8 <- Wazi_test_ext[Wazi_test_partitions$count_2[7]:Wazi_test_partitions$count_2[8],]
+Wazi_test_8$Irrigation_field[1] <- 0
+Wazi_test_9 <- Wazi_test_ext[Wazi_test_partitions$count_2[8]:Wazi_test_partitions$count_2[9],]
+Wazi_test_9$Irrigation_field[1] <- 0
+Wazi_test_9$Soil_humidity[1] <- -12.14
+Wazi_test_9$Field[1] <- 3
+Wazi_test_10 <- Wazi_test_ext[Wazi_test_partitions$count_2[9]:Wazi_test_partitions$count_2[10],]
+Wazi_test_10$Irrigation_field[1] <- 0
+Wazi_test_11 <- Wazi_test_ext[Wazi_test_partitions$count_2[10]:Wazi_test_partitions$count_2[11],]
+Wazi_test_11$Irrigation_field[1] <- 0
+Wazi_test_12 <- Wazi_test_ext[Wazi_test_partitions$count_2[11]:Wazi_test_partitions$count_2[12],]
+Wazi_test_12$Irrigation_field[1] <- 0
+Wazi_test_12$Soil_humidity[1] <- 6.33
+Wazi_test_13 <- Wazi_test_ext[Wazi_test_partitions$count_2[12]:Wazi_test_partitions$count_2[13],]
+Wazi_test_13$Irrigation_field[1] <- 0
+Wazi_test_14 <- Wazi_test_ext[Wazi_test_partitions$count_2[13]:Wazi_test_partitions$count_2[14],]
+Wazi_test_14$Irrigation_field[1] <- 0
+Wazi_test_15 <- Wazi_test_ext[Wazi_test_partitions$count_2[14]:Wazi_test_partitions$count_2[15],]
+Wazi_test_15$Irrigation_field[1] <- 0
+Wazi_test_16 <- Wazi_test_ext[Wazi_test_partitions$count_2[15]:Wazi_test_partitions$count_2[16],]
+Wazi_test_16$Irrigation_field[1] <- 0
+Wazi_test_17 <- Wazi_test_ext[Wazi_test_partitions$count_2[16]:nrow(Wazi_test_ext),]
+Wazi_test_17$Irrigation_field[1] <- 0
+
+##########################################
+#Apply flow rate estimator
+#########################################
+#Leverage the power of Data tables
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_1)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.0025 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_2)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.04 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_3,Wazi_test_6,Wazi_test_10,Wazi_test_16,Wazi_test_17)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_4)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.0275 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_5,Wazi_test_8)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.06 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_7)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.07 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_9,Wazi_test_11)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.03 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_12,Wazi_test_13,Wazi_test_15)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.07 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_14)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.02 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+####################################
+#Merge test back together
+###################################
+Wazi_test_All <- rbind(Wazi_test_1,Wazi_test_2,Wazi_test_3,Wazi_test_4,Wazi_test_5,Wazi_test_6,Wazi_test_7,Wazi_test_8,Wazi_test_9,
+                       Wazi_test_10,Wazi_test_11,Wazi_test_12,Wazi_test_13,Wazi_test_14,Wazi_test_15,Wazi_test_16,Wazi_test_17)
+
+Wazi_test_All <- Wazi_test_All[,c("ID","Soil_humidity")]
+
+#Remove duplicate by ID
+Wazi_test_All <- Wazi_test_All[!duplicated(Wazi_test_All$ID),]
+# write.csv(Wazi_test_All,file = "C:/Users/A199702/Documents/Zindi/Wazihub soil moisture/Wazi_test_All.csv", row.names = F)
+
+####################################
+#Add created feature -Flow rate, back to test
+####################################
+colnames(Wazi_test_All)[2] <- "Flow_rate"
+#Megre back tho Wazi_test
+Wazi_test <- merge(Wazi_test_All, Wazi_test, by = "ID", all.y = T)
+
+###################################
+#Create ID in train and estimate flowrate
+###################################
+Wazi_train$ID <- paste(Wazi_train$timestamp3,"x","Soil humidity",Wazi_train$Field) #Create ID
+#Create Flow_rate 
+Wazi_train$Flow_rate <- Wazi_train$Soil_humidity - 0.02
+
+#####################################
+# Prepare train and test for Model 1
+#####################################
+#Create Matrix
+# dtrain <- sparse.model.matrix(Time_target ~ . -1, data = train)
+feature_names <- names(Wazi_train[,-c(1,15,16,17,26,32)])
+target <- as.numeric(Wazi_train[,"Soil_humidity"])
+dtrain <- xgb.DMatrix( data = as.matrix(Wazi_train[,-c(1,15,16,17,26,32)]), label = target, missing= NA)
+
+
+###################
+#XG Boost setup 
+###################
+ test_new <- Wazi_test[,-c(1,3,17,18,19,28)]
+test_new <- test_new[,c(2:27,1)]
+
+###################
+#Cross Validation
+###################
+# Set up cross-validation scheme (3-fold)
+foldsCV <- createFolds(target, k=10, list=TRUE, returnTrain=FALSE)
+
+
+# Set xgboost parameters. These are not necessarily the optimal parameters.
+# Further grid tuning is needed. 
+  param <- list(booster = "gblinear"
+              , objective = "reg:linear"
+              , subsample = 0.8
+              , max_depth = 4
+              , colsample_bytree = 0.6
+              , eta = 0.8
+              #, lambda = 0.08
+              , eval_metric = 'rmse'
+              #, num_class = 9
+              , gamma = 0
+              #, base_score = 0.012 #average
+              , min_child_weight = 1
+                )
+  
+
+  
+################
+# Run Model 1
+################
+  
+  xgb <- xgboost::xgboost(params = param
+                   , data = dtrain
+                  # , watchlist = list(train = dtrain)
+                   , nrounds = 500
+                   , verbose = 1
+                   , print_every_n = 2
+                   #, feval = amm_mae
+                  )
+  ###############
+  # Results
+  ###############
+  #Feature imprtance
+  imp <- xgb.importance(feature_names, model =xgb)
+  imp
+  xgb.plot.importance(imp)
+  imp$Feature
+  
+  
+  #Submission
+  test_new <- as.matrix(test_new)
+
+  #Prep for submit
+
+  
+base_prediction <- predict(xgb, newdata = test_new)
+base_submission <- data_frame(ID = Wazi_test$ID, Values = base_prediction)
+
+#Round off
+base_submission$Values <- round(base_submission$Values,1)
+Model_1 <- base_submission
+
+save(Model_1, file= "Model1.rda")
+
+# write.csv(base_submission,file = "C:/Users/A199702/Documents/Zindi/Wazihub soil moisture/Wazi_submit.csv", row.names = F)
+base_submission
+```
+
+#RUN MODEL 2
+```{r}
+######################################################################################
+#MODEL 2 SETUP. Output is Model2.rda. 15_003
+######################################################################################
+#Load train test for Wazi
+rm(list = ls())
+load("Wazi_train_test.rda")
+
+#########################
+#Break test
+#########################
+Wazi_test_ext <- Wazi_test[,c("ID","Field","Irrigation_field","Soil_humidity")]
+
+Wazi_train_ext <- Wazi_train
+Wazi_train_ext$ID <- paste(Wazi_train_ext$timestamp3,"x","Soil humidity",Wazi_train_ext$Field) #Create ID
+Wazi_train_ext <- Wazi_train_ext[,c("ID","Field","Irrigation_field","Soil_humidity")]
+
+##################################
+#Divide train to different fields
+##################################
+Wazi_train_ext_1 <- Wazi_train_ext[Wazi_train_ext$Field ==1,]
+Wazi_train_ext_2 <- Wazi_train_ext[Wazi_train_ext$Field ==2,]
+Wazi_train_ext_3 <- Wazi_train_ext[Wazi_train_ext$Field ==3,]
+Wazi_train_ext_4 <- Wazi_train_ext[Wazi_train_ext$Field ==4,]
+tail(Wazi_train_ext_1)
+
+###################################
+#Create Irrigation difference for all train fields
+###################################
+
+##################################
+#Field 1
+##################################
+Wazi_train_ext_1$Irr_diff <- append(diff(Wazi_train_ext_1$Irrigation_field),0)
+Wazi_train_ext_1$counter <- seq(1,nrow(Wazi_train_ext_1),1) #used to create s/n
+#used to get end of a sequence i.e 0's and 1's
+Wazi_train_ext_1_part <- Wazi_train_ext_1[Wazi_train_ext_1$Irr_diff ==-1,]
+#Used to aggregate flowrate
+Wazi_train_ext_1$Type <- 300
+n <- nrow(Wazi_train_ext_1)
+
+# Create Type, a unitque identifier for each sequence i.e 0's and 1's
+for(i in seq(1,nrow(Wazi_train_ext_1_part) + 1,1)){
+  if(i == 1){
+     Wazi_train_ext_1[i:Wazi_train_ext_1_part$counter[i],7] <- i
+  }
+  if(i > 1 & i <= nrow(Wazi_train_ext_1_part) ){
+     Wazi_train_ext_1[Wazi_train_ext_1_part$counter[i-1]+1:Wazi_train_ext_1_part$counter[i],7] <- i
+  }
+  if( i > nrow(Wazi_train_ext_1_part) ){
+     Wazi_train_ext_1[Wazi_train_ext_1_part$counter[i-1]+1:n,7] <- i
+  }
+  print(i)
+}
+
+#Remove NA's cretaed
+Wazi_train_ext_1 <- na.omit(Wazi_train_ext_1)
+
+#Create flowrate
+Wazi_train_ext_1$Flow_rate <- Wazi_train_ext_1$Soil_humidity #base
+#Convert first irrigation field to 0
+Wazi_train_ext_1$Irrigation_field[1] <- 0
+library(data.table)
+setDT(Wazi_train_ext_1)
+
+# calculate tank levels when dropping with Flag of 0
+Wazi_train_ext_1[Irrigation_field == 0, Flow_rate := first(Flow_rate) - 0.030657 * (.I - first(.I)), by = .(Irrigation_field, Type)]
+
+# use sequence to determine tank levels when filling from previous minimum to new max
+Wazi_train_ext_1[Irrigation_field == 1, Flow_rate := seq(Wazi_train_ext_1[Irrigation_field == 0, last(Flow_rate), by = .(Irrigation_field, Type)][,V1][.GRP], last(Flow_rate), length.out = .N + 1)[-1], by = .(Irrigation_field, Type)]
+
+Wazi_train_ext_1 <- as.data.frame(Wazi_train_ext_1)
+Wazi_train_ext_1
+
+
+#######################################
+#Field 2
+#######################################
+Wazi_train_ext_2$Irr_diff <- append(diff(Wazi_train_ext_2$Irrigation_field),0)
+Wazi_train_ext_2$counter <- seq(1,nrow(Wazi_train_ext_2),1) #used to create s/n
+#used to get end of a sequence i.e 0's and 1's
+Wazi_train_ext_2_part <- Wazi_train_ext_2[Wazi_train_ext_2$Irr_diff ==-1,]
+#Used to aggregate flowrate
+Wazi_train_ext_2$Type <- 300
+n <- nrow(Wazi_train_ext_2)
+
+# Create Type, a unitque identifier for each sequence i.e 0's and 1's
+for(i in seq(1,nrow(Wazi_train_ext_2_part) + 1,1)){
+  if(i == 1){
+     Wazi_train_ext_2[i:Wazi_train_ext_2_part$counter[i],7] <- i
+  }
+  if(i > 1 & i <= nrow(Wazi_train_ext_2_part) ){
+     Wazi_train_ext_2[Wazi_train_ext_2_part$counter[i-1]+1:Wazi_train_ext_2_part$counter[i],7] <- i
+  }
+  if( i > nrow(Wazi_train_ext_2_part) ){
+     Wazi_train_ext_2[Wazi_train_ext_2_part$counter[i-1]+1:n,7] <- i
+  }
+  print(i)
+}
+
+#Remove NA's cretaed
+Wazi_train_ext_2 <- na.omit(Wazi_train_ext_2)
+
+#Create flowrate
+Wazi_train_ext_2$Flow_rate <- Wazi_train_ext_2$Soil_humidity #base
+#Convert first irrigation field to 0
+Wazi_train_ext_2$Irrigation_field[1] <- 0
+library(data.table)
+setDT(Wazi_train_ext_2)
+
+# calculate tank levels when dropping with Flag of 0
+Wazi_train_ext_2[Irrigation_field == 0, Flow_rate := first(Flow_rate) - 0.05937 * (.I - first(.I)), by = .(Irrigation_field, Type)]
+
+# use sequence to determine tank levels when filling from previous minimum to new max
+Wazi_train_ext_2[Irrigation_field == 1, Flow_rate := seq(Wazi_train_ext_2[Irrigation_field == 0, last(Flow_rate), by = .(Irrigation_field, Type)][,V1][.GRP], last(Flow_rate), length.out = .N + 1)[-1], by = .(Irrigation_field, Type)]
+
+Wazi_train_ext_2 <- as.data.frame(Wazi_train_ext_2)
+tail(Wazi_train_ext_2)
+
+###########################################
+#Field 3
+###########################################
+Wazi_train_ext_3$Irr_diff <- append(diff(Wazi_train_ext_3$Irrigation_field),0)
+Wazi_train_ext_3$counter <- seq(1,nrow(Wazi_train_ext_3),1) #used to create s/n
+#used to get end of a sequence i.e 0's and 1's
+Wazi_train_ext_3_part <- Wazi_train_ext_3[Wazi_train_ext_3$Irr_diff ==-1,]
+#Used to aggregate flowrate
+Wazi_train_ext_3$Type <- 300
+n <- nrow(Wazi_train_ext_3)
+
+# Create Type, a unitque identifier for each sequence i.e 0's and 1's
+for(i in seq(1,nrow(Wazi_train_ext_3_part) + 1,1)){
+  if(i == 1){
+     Wazi_train_ext_3[i:Wazi_train_ext_3_part$counter[i],7] <- i
+  }
+  if(i > 1 & i <= nrow(Wazi_train_ext_3_part) ){
+     Wazi_train_ext_3[Wazi_train_ext_3_part$counter[i-1]+1:Wazi_train_ext_3_part$counter[i],7] <- i
+  }
+  if( i > nrow(Wazi_train_ext_3_part) ){
+     Wazi_train_ext_3[Wazi_train_ext_3_part$counter[i-1]+1:n,7] <- i
+  }
+  print(i)
+}
+
+#Remove NA's cretaed
+Wazi_train_ext_3 <- na.omit(Wazi_train_ext_3)
+
+#Create flowrate
+Wazi_train_ext_3$Flow_rate <- Wazi_train_ext_3$Soil_humidity #base
+#Convert first irrigation field to 0
+Wazi_train_ext_3$Irrigation_field[1] <- 0
+library(data.table)
+setDT(Wazi_train_ext_3)
+
+# calculate tank levels when dropping with Flag of 0
+Wazi_train_ext_3[Irrigation_field == 0, Flow_rate := first(Flow_rate) - 0.05772 * (.I - first(.I)), by = .(Irrigation_field, Type)]
+
+# use sequence to determine tank levels when filling from previous minimum to new max
+Wazi_train_ext_3[Irrigation_field == 1, Flow_rate := seq(Wazi_train_ext_3[Irrigation_field == 0, last(Flow_rate), by = .(Irrigation_field, Type)][,V1][.GRP], last(Flow_rate), length.out = .N + 1)[-1], by = .(Irrigation_field, Type)]
+
+Wazi_train_ext_3 <- as.data.frame(Wazi_train_ext_3)
+tail(Wazi_train_ext_3)
+
+#########################################
+#Field 4
+#########################################
+Wazi_train_ext_4$Irr_diff <- append(diff(Wazi_train_ext_4$Irrigation_field),0)
+Wazi_train_ext_4$counter <- seq(1,nrow(Wazi_train_ext_4),1) #used to create s/n
+#used to get end of a sequence i.e 0's and 1's
+Wazi_train_ext_4_part <- Wazi_train_ext_4[Wazi_train_ext_4$Irr_diff ==-1,]
+#Used to aggregate flowrate
+Wazi_train_ext_4$Type <- 300
+n <- nrow(Wazi_train_ext_4)
+
+# Create Type, a unitque identifier for each sequence i.e 0's and 1's
+for(i in seq(1,nrow(Wazi_train_ext_4_part) + 1,1)){
+  if(i == 1){
+     Wazi_train_ext_4[i:Wazi_train_ext_4_part$counter[i],7] <- i
+  }
+  if(i > 1 & i <= nrow(Wazi_train_ext_4_part) ){
+     Wazi_train_ext_4[Wazi_train_ext_4_part$counter[i-1]+1:Wazi_train_ext_4_part$counter[i],7] <- i
+  }
+  if( i > nrow(Wazi_train_ext_4_part) ){
+     Wazi_train_ext_4[Wazi_train_ext_4_part$counter[i-1]+1:n,7] <- i
+  }
+  print(i)
+}
+
+#Remove NA's cretaed
+Wazi_train_ext_4 <- na.omit(Wazi_train_ext_4)
+
+#Create flowrate
+Wazi_train_ext_4$Flow_rate <- Wazi_train_ext_4$Soil_humidity #base
+#Convert first irrigation field to 0
+Wazi_train_ext_4$Irrigation_field[1] <- 0
+library(data.table)
+setDT(Wazi_train_ext_4)
+
+# calculate tank levels when dropping with Flag of 0
+Wazi_train_ext_4[Irrigation_field == 0, Flow_rate := first(Flow_rate) - 0.070468 * (.I - first(.I)), by = .(Irrigation_field, Type)]
+
+# use sequence to determine tank levels when filling from previous minimum to new max
+Wazi_train_ext_4[Irrigation_field == 1, Flow_rate := seq(Wazi_train_ext_4[Irrigation_field == 0, last(Flow_rate), by = .(Irrigation_field, Type)][,V1][.GRP], last(Flow_rate), length.out = .N + 1)[-1], by = .(Irrigation_field, Type)]
+
+Wazi_train_ext_4 <- as.data.frame(Wazi_train_ext_4)
+tail(Wazi_train_ext_4)
+
+#########################################################################
+#Consolidate all train flow rates of the 4 fields and merge to Wazi_train
+#########################################################################
+
+Wazi_train_flow <- rbind(Wazi_train_ext_1[,c("ID","Flow_rate")],
+                         Wazi_train_ext_2[,c("ID","Flow_rate")],
+                         Wazi_train_ext_3[,c("ID","Flow_rate")],
+                         Wazi_train_ext_4[,c("ID","Flow_rate")])
+
+#Merge to Wazi_train
+Wazi_train$ID <- paste(Wazi_train$timestamp3,"x","Soil humidity",Wazi_train$Field) #Create ID
+Wazi_train <- merge(Wazi_train_flow, Wazi_train, by = "ID", all.y = T)
+
+#####################################################
+#Create counter Test
+#####################################################
+
+Wazi_test_ext <- Wazi_test_ext %>%
+  group_by(Field,Irrigation_field) %>%
+  mutate(count = 1:(n()))
+
+Wazi_test_ext$count_diff <- append(diff(Wazi_test_ext$count),1)
+Wazi_test_ext$field_diff <- append(diff(Wazi_test_ext$Field),0)
+
+#Cretae flag for when Irrigation is 1 and diff is not 0
+Wazi_test_ext$flag <- ifelse((Wazi_test_ext$Irrigation_field ==1 & Wazi_test_ext$count_diff != 1) |(Wazi_test_ext$field_diff == 1 & Wazi_test_ext$count_diff != 1),1,0)
+
+#Create dummy to aid extraction of serial number
+Wazi_test_ext$dummy <- "A"
+#Create count2
+Wazi_test_ext <- Wazi_test_ext %>%
+  group_by(dummy) %>%
+    mutate(count_2 = 1:(n()))
+
+# table(Wazi_test_ext$flag)  
+#Create Wazi_test partitions
+Wazi_test_partitions <- Wazi_test_ext[Wazi_test_ext$flag==1 ,]
+
+###################################
+#Create Wazi_test partitions
+###################################
+
+Wazi_test_1 <- Wazi_test_ext[1:Wazi_test_partitions$count_2[1],]
+Wazi_test_1$Irrigation_field[1] <- 0
+Wazi_test_1$Soil_humidity[1] <- 39.68
+Wazi_test_2 <- Wazi_test_ext[Wazi_test_partitions$count_2[1]:Wazi_test_partitions$count_2[2],]
+Wazi_test_2$Irrigation_field[1] <- 0
+Wazi_test_3 <- Wazi_test_ext[Wazi_test_partitions$count_2[2]:Wazi_test_partitions$count_2[3],]
+Wazi_test_3$Irrigation_field[1] <- 0
+Wazi_test_4 <- Wazi_test_ext[Wazi_test_partitions$count_2[3]:Wazi_test_partitions$count_2[4],]
+Wazi_test_4$Irrigation_field[1] <- 0
+Wazi_test_5 <- Wazi_test_ext[Wazi_test_partitions$count_2[4]:Wazi_test_partitions$count_2[5],]
+Wazi_test_5$Irrigation_field[1] <- 0
+Wazi_test_5$Soil_humidity[1] <- -4
+Wazi_test_5$Field[1] <- 2
+Wazi_test_6 <- Wazi_test_ext[Wazi_test_partitions$count_2[5]:Wazi_test_partitions$count_2[6],]
+Wazi_test_6$Irrigation_field[1] <- 0
+Wazi_test_7 <- Wazi_test_ext[Wazi_test_partitions$count_2[6]:Wazi_test_partitions$count_2[7],]
+Wazi_test_7$Irrigation_field[1] <- 0
+Wazi_test_8 <- Wazi_test_ext[Wazi_test_partitions$count_2[7]:Wazi_test_partitions$count_2[8],]
+Wazi_test_8$Irrigation_field[1] <- 0
+Wazi_test_9 <- Wazi_test_ext[Wazi_test_partitions$count_2[8]:Wazi_test_partitions$count_2[9],]
+Wazi_test_9$Irrigation_field[1] <- 0
+Wazi_test_9$Soil_humidity[1] <- -12.14
+Wazi_test_9$Field[1] <- 3
+Wazi_test_10 <- Wazi_test_ext[Wazi_test_partitions$count_2[9]:Wazi_test_partitions$count_2[10],]
+Wazi_test_10$Irrigation_field[1] <- 0
+Wazi_test_11 <- Wazi_test_ext[Wazi_test_partitions$count_2[10]:Wazi_test_partitions$count_2[11],]
+Wazi_test_11$Irrigation_field[1] <- 0
+Wazi_test_12 <- Wazi_test_ext[Wazi_test_partitions$count_2[11]:Wazi_test_partitions$count_2[12],]
+Wazi_test_12$Irrigation_field[1] <- 0
+Wazi_test_12$Soil_humidity[1] <- 6.33
+Wazi_test_13 <- Wazi_test_ext[Wazi_test_partitions$count_2[12]:Wazi_test_partitions$count_2[13],]
+Wazi_test_13$Irrigation_field[1] <- 0
+Wazi_test_14 <- Wazi_test_ext[Wazi_test_partitions$count_2[13]:Wazi_test_partitions$count_2[14],]
+Wazi_test_14$Irrigation_field[1] <- 0
+Wazi_test_15 <- Wazi_test_ext[Wazi_test_partitions$count_2[14]:Wazi_test_partitions$count_2[15],]
+Wazi_test_15$Irrigation_field[1] <- 0
+Wazi_test_16 <- Wazi_test_ext[Wazi_test_partitions$count_2[15]:Wazi_test_partitions$count_2[16],]
+Wazi_test_16$Irrigation_field[1] <- 0
+Wazi_test_17 <- Wazi_test_ext[Wazi_test_partitions$count_2[16]:nrow(Wazi_test_ext),]
+Wazi_test_17$Irrigation_field[1] <- 0
+
+###############################################
+#Replicate for train
+###############################################
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_1,Wazi_test_2,Wazi_test_3,Wazi_test_4)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.030657 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_5,Wazi_test_6,Wazi_test_7,Wazi_test_8)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05937 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_9,Wazi_test_10,Wazi_test_11)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05772 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_12,Wazi_test_13,Wazi_test_14,Wazi_test_15,Wazi_test_16,Wazi_test_17)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.070468 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+######################
+#Merge test
+######################
+Wazi_test_All <- rbind(Wazi_test_1,Wazi_test_2,Wazi_test_3,Wazi_test_4,Wazi_test_5,Wazi_test_6,Wazi_test_7,Wazi_test_8,Wazi_test_9,
+                       Wazi_test_10,Wazi_test_11,Wazi_test_12,Wazi_test_13,Wazi_test_14,Wazi_test_15,Wazi_test_16,Wazi_test_17)
+
+Wazi_test_All <- Wazi_test_All[,c("ID","Soil_humidity")]
+
+#Remove duplicate by ID
+Wazi_test_All <- Wazi_test_All[!duplicated(Wazi_test_All$ID),]
+
+##############################
+#Flow rate
+#############################
+colnames(Wazi_test_All)[2] <- "Flow_rate"
+#Megre back tho Wazi_test
+Wazi_test <- merge(Wazi_test_All, Wazi_test, by = "ID", all.y = T)
+
+#############################
+# Prep Model 2 train
+#############################
+
+#Create Matrix
+feature_names <- names(Wazi_train[,-c(1,3,17,18,19,28)])
+target <- as.numeric(Wazi_train[,"Soil_humidity"])
+dtrain <- xgb.DMatrix( data = as.matrix(Wazi_train[,-c(1,3,17,18,19,28)]), label = target, missing= NA)
+
+
+###################
+#XG Boost setup 
+###################
+ test_new <- Wazi_test[,-c(1,3,17,18,19,28)]
+
+
+
+###################
+#Cross Validation
+###################
+# Set up cross-validation scheme (3-fold)
+foldsCV <- createFolds(target, k=10, list=TRUE, returnTrain=FALSE)
+
+# Set xgboost parameters. These are not necessarily the optimal parameters.
+# Further grid tuning is needed. 
+
+
+
+  param <- list(booster = "gblinear"
+              , objective = "reg:linear"
+              , subsample = 0.8
+              , max_depth = 4
+              , colsample_bytree = 0.6
+              , eta = 0.8
+              #, lambda = 0.08
+              , eval_metric = 'rmse'
+              #, num_class = 9
+              , gamma = 0
+              #, base_score = 0.012 #average
+              , min_child_weight = 1
+                )
+  
+  
+  ################
+  # Final model
+  ################
+  
+  xgb <- xgboost::xgboost(params = param
+                   , data = dtrain
+                  # , watchlist = list(train = dtrain)
+                   , nrounds = 500
+                   , verbose = 1
+                   , print_every_n = 2
+                   #, feval = amm_mae
+                  )
+  ###############
+  # Results
+  ###############
+  #Feature imprtance
+  imp <- xgb.importance(feature_names, model =xgb)
+  imp
+  xgb.plot.importance(imp)
+  imp$Feature
+  
+  
+  #Submission
+  test_new <- as.matrix(test_new)
+
+  
+  #Prep for submit
+
+  
+base_prediction <- predict(xgb, newdata = test_new)
+base_submission <- data_frame(ID = Wazi_test$ID, Values = base_prediction)
+
+#Round off
+base_submission$Values <- round(base_submission$Values,1)
+Model_2 <- base_submission
+
+save(Model_2, file= "Model2.rda")
+base_submission
+```
+
+#RUN MODEL 3
+```{r}
+######################################################################################
+#MODEL 3 SETUP. Output is Model3.rda. 14_008
+######################################################################################
+rm(list = ls())
+load("Wazi_train_test.rda")
+
+##########################
+#Break test
+##########################
+
+Wazi_test_ext <- Wazi_test[,c("ID","Field","Irrigation_field","Soil_humidity")]
+
+Wazi_train_ext <- Wazi_train
+Wazi_train_ext$ID <- paste(Wazi_train_ext$timestamp3,"x","Soil humidity",Wazi_train_ext$Field) #Create ID
+Wazi_train_ext <- Wazi_train_ext[,c("ID","Field","Irrigation_field","Soil_humidity")]
+
+###################################
+#Divide train to different fields
+###################################
+
+Wazi_train_ext_1 <- Wazi_train_ext[Wazi_train_ext$Field ==1,]
+Wazi_train_ext_2 <- Wazi_train_ext[Wazi_train_ext$Field ==2,]
+Wazi_train_ext_3 <- Wazi_train_ext[Wazi_train_ext$Field ==3,]
+Wazi_train_ext_4 <- Wazi_train_ext[Wazi_train_ext$Field ==4,]
+tail(Wazi_train_ext_1)
+
+######################################################
+#Create Irrigation difference for all train fields
+######################################################
+
+###############################
+#Field 1
+###############################
+Wazi_train_ext_1$Irr_diff <- append(diff(Wazi_train_ext_1$Irrigation_field),0)
+Wazi_train_ext_1$counter <- seq(1,nrow(Wazi_train_ext_1),1) #used to create s/n
+#used to get end of a sequence i.e 0's and 1's
+Wazi_train_ext_1_part <- Wazi_train_ext_1[Wazi_train_ext_1$Irr_diff ==-1,]
+#Used to aggregate flowrate
+Wazi_train_ext_1$Type <- 300
+n <- nrow(Wazi_train_ext_1)
+
+# Create Type, a unitque identifier for each sequence i.e 0's and 1's
+for(i in seq(1,nrow(Wazi_train_ext_1_part) + 1,1)){
+  if(i == 1){
+     Wazi_train_ext_1[i:Wazi_train_ext_1_part$counter[i],7] <- i
+  }
+  if(i > 1 & i <= nrow(Wazi_train_ext_1_part) ){
+     Wazi_train_ext_1[Wazi_train_ext_1_part$counter[i-1]+1:Wazi_train_ext_1_part$counter[i],7] <- i
+  }
+  if( i > nrow(Wazi_train_ext_1_part) ){
+     Wazi_train_ext_1[Wazi_train_ext_1_part$counter[i-1]+1:n,7] <- i
+  }
+  print(i)
+}
+
+#Remove NA's cretaed
+Wazi_train_ext_1 <- na.omit(Wazi_train_ext_1)
+
+#Create flowrate
+Wazi_train_ext_1$Flow_rate <- Wazi_train_ext_1$Soil_humidity #base
+#Convert first irrigation field to 0
+Wazi_train_ext_1$Irrigation_field[1] <- 0
+library(data.table)
+setDT(Wazi_train_ext_1)
+
+# calculate tank levels when dropping with Flag of 0
+Wazi_train_ext_1[Irrigation_field == 0, Flow_rate := first(Flow_rate) - 0.0025 * (.I - first(.I)), by = .(Irrigation_field, Type)]
+
+# use sequence to determine tank levels when filling from previous minimum to new max
+Wazi_train_ext_1[Irrigation_field == 1, Flow_rate := seq(Wazi_train_ext_1[Irrigation_field == 0, last(Flow_rate), by = .(Irrigation_field, Type)][,V1][.GRP], last(Flow_rate), length.out = .N + 1)[-1], by = .(Irrigation_field, Type)]
+
+Wazi_train_ext_1 <- as.data.frame(Wazi_train_ext_1)
+Wazi_train_ext_1
+# write.csv(Wazi_train_ext_1,file = "C:/Users/A199702/Documents/Zindi/Wazihub soil moisture/Wazi_train_ext_1.csv", row.names = F)
+
+
+####################################
+#Field 2
+####################################
+Wazi_train_ext_2$Irr_diff <- append(diff(Wazi_train_ext_2$Irrigation_field),0)
+Wazi_train_ext_2$counter <- seq(1,nrow(Wazi_train_ext_2),1) #used to create s/n
+#used to get end of a sequence i.e 0's and 1's
+Wazi_train_ext_2_part <- Wazi_train_ext_2[Wazi_train_ext_2$Irr_diff ==-1,]
+#Used to aggregate flowrate
+Wazi_train_ext_2$Type <- 300
+n <- nrow(Wazi_train_ext_2)
+
+# Create Type, a unitque identifier for each sequence i.e 0's and 1's
+for(i in seq(1,nrow(Wazi_train_ext_2_part) + 1,1)){
+  if(i == 1){
+     Wazi_train_ext_2[i:Wazi_train_ext_2_part$counter[i],7] <- i
+  }
+  if(i > 1 & i <= nrow(Wazi_train_ext_2_part) ){
+     Wazi_train_ext_2[Wazi_train_ext_2_part$counter[i-1]+1:Wazi_train_ext_2_part$counter[i],7] <- i
+  }
+  if( i > nrow(Wazi_train_ext_2_part) ){
+     Wazi_train_ext_2[Wazi_train_ext_2_part$counter[i-1]+1:n,7] <- i
+  }
+  print(i)
+}
+
+#Remove NA's cretaed
+Wazi_train_ext_2 <- na.omit(Wazi_train_ext_2)
+
+#Create flowrate
+Wazi_train_ext_2$Flow_rate <- Wazi_train_ext_2$Soil_humidity #base
+#Convert first irrigation field to 0
+Wazi_train_ext_2$Irrigation_field[1] <- 0
+library(data.table)
+setDT(Wazi_train_ext_2)
+
+# calculate tank levels when dropping with Flag of 0
+Wazi_train_ext_2[Irrigation_field == 0, Flow_rate := first(Flow_rate) - 0.07 * (.I - first(.I)), by = .(Irrigation_field, Type)]
+
+# use sequence to determine tank levels when filling from previous minimum to new max
+Wazi_train_ext_2[Irrigation_field == 1, Flow_rate := seq(Wazi_train_ext_2[Irrigation_field == 0, last(Flow_rate), by = .(Irrigation_field, Type)][,V1][.GRP], last(Flow_rate), length.out = .N + 1)[-1], by = .(Irrigation_field, Type)]
+
+Wazi_train_ext_2 <- as.data.frame(Wazi_train_ext_2)
+tail(Wazi_train_ext_2)
+# write.csv(Wazi_train_ext_2,file = "C:/Users/A199702/Documents/Zindi/Wazihub soil moisture/Wazi_train_ext_2.csv", row.names = F)
+
+#####################################
+#Field 3
+#####################################
+Wazi_train_ext_3$Irr_diff <- append(diff(Wazi_train_ext_3$Irrigation_field),0)
+Wazi_train_ext_3$counter <- seq(1,nrow(Wazi_train_ext_3),1) #used to create s/n
+#used to get end of a sequence i.e 0's and 1's
+Wazi_train_ext_3_part <- Wazi_train_ext_3[Wazi_train_ext_3$Irr_diff ==-1,]
+#Used to aggregate flowrate
+Wazi_train_ext_3$Type <- 300
+n <- nrow(Wazi_train_ext_3)
+
+# Create Type, a unitque identifier for each sequence i.e 0's and 1's
+for(i in seq(1,nrow(Wazi_train_ext_3_part) + 1,1)){
+  if(i == 1){
+     Wazi_train_ext_3[i:Wazi_train_ext_3_part$counter[i],7] <- i
+  }
+  if(i > 1 & i <= nrow(Wazi_train_ext_3_part) ){
+     Wazi_train_ext_3[Wazi_train_ext_3_part$counter[i-1]+1:Wazi_train_ext_3_part$counter[i],7] <- i
+  }
+  if( i > nrow(Wazi_train_ext_3_part) ){
+     Wazi_train_ext_3[Wazi_train_ext_3_part$counter[i-1]+1:n,7] <- i
+  }
+  print(i)
+}
+
+#Remove NA's cretaed
+Wazi_train_ext_3 <- na.omit(Wazi_train_ext_3)
+
+#Create flowrate
+Wazi_train_ext_3$Flow_rate <- Wazi_train_ext_3$Soil_humidity #base
+#Convert first irrigation field to 0
+Wazi_train_ext_3$Irrigation_field[1] <- 0
+library(data.table)
+setDT(Wazi_train_ext_3)
+
+# calculate tank levels when dropping with Flag of 0
+Wazi_train_ext_3[Irrigation_field == 0, Flow_rate := first(Flow_rate) - 0.06 * (.I - first(.I)), by = .(Irrigation_field, Type)]
+
+# use sequence to determine tank levels when filling from previous minimum to new max
+Wazi_train_ext_3[Irrigation_field == 1, Flow_rate := seq(Wazi_train_ext_3[Irrigation_field == 0, last(Flow_rate), by = .(Irrigation_field, Type)][,V1][.GRP], last(Flow_rate), length.out = .N + 1)[-1], by = .(Irrigation_field, Type)]
+
+Wazi_train_ext_3 <- as.data.frame(Wazi_train_ext_3)
+tail(Wazi_train_ext_3)
+
+#####################################
+#Field 4
+#####################################
+Wazi_train_ext_4$Irr_diff <- append(diff(Wazi_train_ext_4$Irrigation_field),0)
+Wazi_train_ext_4$counter <- seq(1,nrow(Wazi_train_ext_4),1) #used to create s/n
+#used to get end of a sequence i.e 0's and 1's
+Wazi_train_ext_4_part <- Wazi_train_ext_4[Wazi_train_ext_4$Irr_diff ==-1,]
+#Used to aggregate flowrate
+Wazi_train_ext_4$Type <- 300
+n <- nrow(Wazi_train_ext_4)
+
+# Create Type, a unitque identifier for each sequence i.e 0's and 1's
+for(i in seq(1,nrow(Wazi_train_ext_4_part) + 1,1)){
+  if(i == 1){
+     Wazi_train_ext_4[i:Wazi_train_ext_4_part$counter[i],7] <- i
+  }
+  if(i > 1 & i <= nrow(Wazi_train_ext_4_part) ){
+     Wazi_train_ext_4[Wazi_train_ext_4_part$counter[i-1]+1:Wazi_train_ext_4_part$counter[i],7] <- i
+  }
+  if( i > nrow(Wazi_train_ext_4_part) ){
+     Wazi_train_ext_4[Wazi_train_ext_4_part$counter[i-1]+1:n,7] <- i
+  }
+  print(i)
+}
+
+#Remove NA's cretaed
+Wazi_train_ext_4 <- na.omit(Wazi_train_ext_4)
+
+#Create flowrate
+Wazi_train_ext_4$Flow_rate <- Wazi_train_ext_4$Soil_humidity #base
+#Convert first irrigation field to 0
+Wazi_train_ext_4$Irrigation_field[1] <- 0
+library(data.table)
+setDT(Wazi_train_ext_4)
+
+# calculate tank levels when dropping with Flag of 0
+Wazi_train_ext_4[Irrigation_field == 0, Flow_rate := first(Flow_rate) - 0.05 * (.I - first(.I)), by = .(Irrigation_field, Type)]
+
+# use sequence to determine tank levels when filling from previous minimum to new max
+Wazi_train_ext_4[Irrigation_field == 1, Flow_rate := seq(Wazi_train_ext_4[Irrigation_field == 0, last(Flow_rate), by = .(Irrigation_field, Type)][,V1][.GRP], last(Flow_rate), length.out = .N + 1)[-1], by = .(Irrigation_field, Type)]
+
+Wazi_train_ext_4 <- as.data.frame(Wazi_train_ext_4)
+tail(Wazi_train_ext_4)
+
+########################################################################
+#Consolidate all train flow rates of the 4 fields and merge to Wazi_train
+########################################################################
+
+Wazi_train_flow <- rbind(Wazi_train_ext_1[,c("ID","Flow_rate")],
+                         Wazi_train_ext_2[,c("ID","Flow_rate")],
+                         Wazi_train_ext_3[,c("ID","Flow_rate")],
+                         Wazi_train_ext_4[,c("ID","Flow_rate")])
+
+#Merge to Wazi_train
+Wazi_train$ID <- paste(Wazi_train$timestamp3,"x","Soil humidity",Wazi_train$Field) #Create ID
+Wazi_train <- merge(Wazi_train_flow, Wazi_train, by = "ID", all.y = T)
+
+################################
+#Create counter Test
+################################
+
+Wazi_test_ext <- Wazi_test_ext %>%
+  group_by(Field,Irrigation_field) %>%
+  mutate(count = 1:(n()))
+
+Wazi_test_ext$count_diff <- append(diff(Wazi_test_ext$count),1)
+Wazi_test_ext$field_diff <- append(diff(Wazi_test_ext$Field),0)
+
+#Cretae flag for when Irrigation is 1 and diff is not 0
+Wazi_test_ext$flag <- ifelse((Wazi_test_ext$Irrigation_field ==1 & Wazi_test_ext$count_diff != 1) |(Wazi_test_ext$field_diff == 1 & Wazi_test_ext$count_diff != 1),1,0)
+
+#Create dummy to aid extraction of serial number
+Wazi_test_ext$dummy <- "A"
+#Create count2
+Wazi_test_ext <- Wazi_test_ext %>%
+  group_by(dummy) %>%
+    mutate(count_2 = 1:(n()))
+
+# table(Wazi_test_ext$flag)  
+#Create Wazi_test partitions
+Wazi_test_partitions <- Wazi_test_ext[Wazi_test_ext$flag==1 ,]
+
+#############################
+#Create Wazi_test partitions
+#############################
+
+Wazi_test_1 <- Wazi_test_ext[1:Wazi_test_partitions$count_2[1],]
+Wazi_test_1$Irrigation_field[1] <- 0
+Wazi_test_1$Soil_humidity[1] <- 39.68
+Wazi_test_2 <- Wazi_test_ext[Wazi_test_partitions$count_2[1]:Wazi_test_partitions$count_2[2],]
+Wazi_test_2$Irrigation_field[1] <- 0
+Wazi_test_3 <- Wazi_test_ext[Wazi_test_partitions$count_2[2]:Wazi_test_partitions$count_2[3],]
+Wazi_test_3$Irrigation_field[1] <- 0
+Wazi_test_4 <- Wazi_test_ext[Wazi_test_partitions$count_2[3]:Wazi_test_partitions$count_2[4],]
+Wazi_test_4$Irrigation_field[1] <- 0
+Wazi_test_5 <- Wazi_test_ext[Wazi_test_partitions$count_2[4]:Wazi_test_partitions$count_2[5],]
+Wazi_test_5$Irrigation_field[1] <- 0
+Wazi_test_5$Soil_humidity[1] <- -4
+Wazi_test_5$Field[1] <- 2
+Wazi_test_6 <- Wazi_test_ext[Wazi_test_partitions$count_2[5]:Wazi_test_partitions$count_2[6],]
+Wazi_test_6$Irrigation_field[1] <- 0
+Wazi_test_7 <- Wazi_test_ext[Wazi_test_partitions$count_2[6]:Wazi_test_partitions$count_2[7],]
+Wazi_test_7$Irrigation_field[1] <- 0
+Wazi_test_8 <- Wazi_test_ext[Wazi_test_partitions$count_2[7]:Wazi_test_partitions$count_2[8],]
+Wazi_test_8$Irrigation_field[1] <- 0
+Wazi_test_9 <- Wazi_test_ext[Wazi_test_partitions$count_2[8]:Wazi_test_partitions$count_2[9],]
+Wazi_test_9$Irrigation_field[1] <- 0
+Wazi_test_9$Soil_humidity[1] <- -12.14
+Wazi_test_9$Field[1] <- 3
+Wazi_test_10 <- Wazi_test_ext[Wazi_test_partitions$count_2[9]:Wazi_test_partitions$count_2[10],]
+Wazi_test_10$Irrigation_field[1] <- 0
+Wazi_test_11 <- Wazi_test_ext[Wazi_test_partitions$count_2[10]:Wazi_test_partitions$count_2[11],]
+Wazi_test_11$Irrigation_field[1] <- 0
+Wazi_test_12 <- Wazi_test_ext[Wazi_test_partitions$count_2[11]:Wazi_test_partitions$count_2[12],]
+Wazi_test_12$Irrigation_field[1] <- 0
+Wazi_test_12$Soil_humidity[1] <- 6.33
+Wazi_test_13 <- Wazi_test_ext[Wazi_test_partitions$count_2[12]:Wazi_test_partitions$count_2[13],]
+Wazi_test_13$Irrigation_field[1] <- 0
+Wazi_test_14 <- Wazi_test_ext[Wazi_test_partitions$count_2[13]:Wazi_test_partitions$count_2[14],]
+Wazi_test_14$Irrigation_field[1] <- 0
+Wazi_test_15 <- Wazi_test_ext[Wazi_test_partitions$count_2[14]:Wazi_test_partitions$count_2[15],]
+Wazi_test_15$Irrigation_field[1] <- 0
+Wazi_test_16 <- Wazi_test_ext[Wazi_test_partitions$count_2[15]:Wazi_test_partitions$count_2[16],]
+Wazi_test_16$Irrigation_field[1] <- 0
+Wazi_test_17 <- Wazi_test_ext[Wazi_test_partitions$count_2[16]:nrow(Wazi_test_ext),]
+Wazi_test_17$Irrigation_field[1] <- 0
+
+
+################################
+#Apply flow rate estimator
+################################
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_1)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.002 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_2)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.04 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_3)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_4)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.0275 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_5)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.06 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_6)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_7)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.075 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_8)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.06 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_9)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.03 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_10)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_11)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.03 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_12)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.07 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_13)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.065 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_14)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.02 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_15)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.065 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_16)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_17)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+##########################
+#Merge test
+##########################
+
+Wazi_test_All <- rbind(Wazi_test_1,Wazi_test_2,Wazi_test_3,Wazi_test_4,Wazi_test_5,Wazi_test_6,Wazi_test_7,Wazi_test_8,Wazi_test_9,
+                       Wazi_test_10,Wazi_test_11,Wazi_test_12,Wazi_test_13,Wazi_test_14,Wazi_test_15,Wazi_test_16,Wazi_test_17)
+
+Wazi_test_All <- Wazi_test_All[,c("ID","Soil_humidity")]
+
+#Remove duplicate by ID
+Wazi_test_All <- Wazi_test_All[!duplicated(Wazi_test_All$ID),]
+
+################################
+#Flow rate
+################################
+
+colnames(Wazi_test_All)[2] <- "Flow_rate"
+#Megre back tho Wazi_test
+Wazi_test <- merge(Wazi_test_All, Wazi_test, by = "ID", all.y = T)
+
+
+############################
+# Model Wazihub
+############################
+
+#Create Matrix
+feature_names <- names(Wazi_train[,-c(1,3,17,18,19,28)])
+target <- as.numeric(Wazi_train[,"Soil_humidity"])
+dtrain <- xgb.DMatrix( data = as.matrix(Wazi_train[,-c(1,3,17,18,19,28)]), label = target, missing= NA)
+
+
+###################
+#XG Boost setup 
+###################
+ test_new <- Wazi_test[,-c(1,3,17,18,19,28)]
+
+
+###################
+#Cross Validation
+###################
+# Set up cross-validation scheme (3-fold)
+foldsCV <- createFolds(target, k=10, list=TRUE, returnTrain=FALSE)
+
+
+# Set xgboost parameters. These are not necessarily the optimal parameters.
+# Further grid tuning is needed. 
+
+
+
+  param <- list(booster = "gblinear"
+              , objective = "reg:linear"
+              , subsample = 0.8
+              , max_depth = 4
+              , colsample_bytree = 0.6
+              , eta = 0.8
+              #, lambda = 0.08
+              , eval_metric = 'rmse'
+              #, num_class = 9
+              , gamma = 0
+              #, base_score = 0.012 #average
+              , min_child_weight = 1
+                )
+  
+
+  
+  ################
+  # Final model
+  ################
+  
+  xgb <- xgboost::xgboost(params = param
+                   , data = dtrain
+                  # , watchlist = list(train = dtrain)
+                   , nrounds = 1500
+                   , verbose = 1
+                   , print_every_n = 2
+                   #, feval = amm_mae
+                  )
+  ###############
+  # Results
+  ###############
+  #Feature imprtance
+  imp <- xgb.importance(feature_names, model =xgb)
+  imp
+  xgb.plot.importance(imp)
+  imp$Feature
+  
+  
+  #Submission
+  test_new <- as.matrix(test_new)
+
+  
+  #Prep for submit
+
+  
+base_prediction <- predict(xgb, newdata = test_new)
+base_submission <- data_frame(ID = Wazi_test$ID, Values = base_prediction)
+
+#Round off
+base_submission$Values <- round(base_submission$Values,1)
+Model_3 <- base_submission
+
+save(Model_3, file= "Model3.rda")
+base_submission
+```
+
+#RUN MODEL 4
+```{r}
+######################################################################################
+#MODEL 4 SETUP. Output is Model4.rda. 19_010
+######################################################################################
+rm(list = ls())
+load("Wazi_train_test.rda")
+
+#######################
+#Break test
+#######################
+
+Wazi_test_ext <- Wazi_test[,c("ID","Field","Irrigation_field","Soil_humidity")]
+
+Wazi_train_ext <- Wazi_train
+Wazi_train_ext$ID <- paste(Wazi_train_ext$timestamp3,"x","Soil humidity",Wazi_train_ext$Field) #Create ID
+Wazi_train_ext <- Wazi_train_ext[,c("ID","Field","Irrigation_field","Soil_humidity")]
+
+###########################
+#Create counter
+###########################
+
+Wazi_test_ext <- Wazi_test_ext %>%
+  group_by(Field,Irrigation_field) %>%
+  mutate(count = 1:(n()))
+
+Wazi_test_ext$count_diff <- append(diff(Wazi_test_ext$count),1)
+Wazi_test_ext$field_diff <- append(diff(Wazi_test_ext$Field),0)
+
+#Cretae flag for when Irrigation is 1 and diff is not 0
+Wazi_test_ext$flag <- ifelse((Wazi_test_ext$Irrigation_field ==1 & Wazi_test_ext$count_diff != 1) |(Wazi_test_ext$field_diff == 1 & Wazi_test_ext$count_diff != 1),1,0)
+
+#Create dummy to aid extraction of serial number
+Wazi_test_ext$dummy <- "A"
+#Create count2
+Wazi_test_ext <- Wazi_test_ext %>%
+  group_by(dummy) %>%
+    mutate(count_2 = 1:(n()))
+
+# table(Wazi_test_ext$flag)  
+#Create Wazi_test partitions
+Wazi_test_partitions <- Wazi_test_ext[Wazi_test_ext$flag==1 ,]
+
+##############################
+#Create Wazi_test partitions
+#############################
+
+Wazi_test_1 <- Wazi_test_ext[1:Wazi_test_partitions$count_2[1],]
+Wazi_test_1$Irrigation_field[1] <- 0
+Wazi_test_1$Soil_humidity[1] <- 39.68
+Wazi_test_2 <- Wazi_test_ext[Wazi_test_partitions$count_2[1]:Wazi_test_partitions$count_2[2],]
+Wazi_test_2$Irrigation_field[1] <- 0
+Wazi_test_3 <- Wazi_test_ext[Wazi_test_partitions$count_2[2]:Wazi_test_partitions$count_2[3],]
+Wazi_test_3$Irrigation_field[1] <- 0
+Wazi_test_4 <- Wazi_test_ext[Wazi_test_partitions$count_2[3]:Wazi_test_partitions$count_2[4],]
+Wazi_test_4$Irrigation_field[1] <- 0
+Wazi_test_5 <- Wazi_test_ext[Wazi_test_partitions$count_2[4]:Wazi_test_partitions$count_2[5],]
+Wazi_test_5$Irrigation_field[1] <- 0
+Wazi_test_5$Soil_humidity[1] <- -4
+Wazi_test_5$Field[1] <- 2
+Wazi_test_6 <- Wazi_test_ext[Wazi_test_partitions$count_2[5]:Wazi_test_partitions$count_2[6],]
+Wazi_test_6$Irrigation_field[1] <- 0
+Wazi_test_7 <- Wazi_test_ext[Wazi_test_partitions$count_2[6]:Wazi_test_partitions$count_2[7],]
+Wazi_test_7$Irrigation_field[1] <- 0
+Wazi_test_8 <- Wazi_test_ext[Wazi_test_partitions$count_2[7]:Wazi_test_partitions$count_2[8],]
+Wazi_test_8$Irrigation_field[1] <- 0
+Wazi_test_9 <- Wazi_test_ext[Wazi_test_partitions$count_2[8]:Wazi_test_partitions$count_2[9],]
+Wazi_test_9$Irrigation_field[1] <- 0
+Wazi_test_9$Soil_humidity[1] <- -12.14
+Wazi_test_9$Field[1] <- 3
+Wazi_test_10 <- Wazi_test_ext[Wazi_test_partitions$count_2[9]:Wazi_test_partitions$count_2[10],]
+Wazi_test_10$Irrigation_field[1] <- 0
+Wazi_test_11 <- Wazi_test_ext[Wazi_test_partitions$count_2[10]:Wazi_test_partitions$count_2[11],]
+Wazi_test_11$Irrigation_field[1] <- 0
+Wazi_test_12 <- Wazi_test_ext[Wazi_test_partitions$count_2[11]:Wazi_test_partitions$count_2[12],]
+Wazi_test_12$Irrigation_field[1] <- 0
+Wazi_test_12$Soil_humidity[1] <- 6.33
+Wazi_test_13 <- Wazi_test_ext[Wazi_test_partitions$count_2[12]:Wazi_test_partitions$count_2[13],]
+Wazi_test_13$Irrigation_field[1] <- 0
+Wazi_test_14 <- Wazi_test_ext[Wazi_test_partitions$count_2[13]:Wazi_test_partitions$count_2[14],]
+Wazi_test_14$Irrigation_field[1] <- 0
+Wazi_test_15 <- Wazi_test_ext[Wazi_test_partitions$count_2[14]:Wazi_test_partitions$count_2[15],]
+Wazi_test_15$Irrigation_field[1] <- 0
+Wazi_test_16 <- Wazi_test_ext[Wazi_test_partitions$count_2[15]:Wazi_test_partitions$count_2[16],]
+Wazi_test_16$Irrigation_field[1] <- 0
+Wazi_test_17 <- Wazi_test_ext[Wazi_test_partitions$count_2[16]:nrow(Wazi_test_ext),]
+Wazi_test_17$Irrigation_field[1] <- 0
+
+
+###############################
+#Apply flow rate estimator
+###############################
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_1)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.002 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_2)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.045 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_3)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.045 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_4)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.002 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_5)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.06 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_6)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.055 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_7)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.075 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_8)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.06 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_9)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.03 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_10)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.055 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_11)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.03 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_12)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.02 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_13)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.065 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_14)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.02 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_15)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.065 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_16)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.055 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_17)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.055 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+#############################
+#Merge test
+#############################
+
+Wazi_test_All <- rbind(Wazi_test_1,Wazi_test_2,Wazi_test_3,Wazi_test_4,Wazi_test_5,Wazi_test_6,Wazi_test_7,Wazi_test_8,Wazi_test_9,
+                       Wazi_test_10,Wazi_test_11,Wazi_test_12,Wazi_test_13,Wazi_test_14,Wazi_test_15,Wazi_test_16,Wazi_test_17)
+
+Wazi_test_All <- Wazi_test_All[,c("ID","Soil_humidity")]
+
+#Remove duplicate by ID
+Wazi_test_All <- Wazi_test_All[!duplicated(Wazi_test_All$ID),]
+
+####################
+#Flow rate
+####################
+
+colnames(Wazi_test_All)[2] <- "Flow_rate"
+#Megre back tho Wazi_test
+Wazi_test <- merge(Wazi_test_All, Wazi_test, by = "ID", all.y = T)
+#Create ID
+Wazi_train$ID <- paste(Wazi_train$timestamp3,"x","Soil humidity",Wazi_train$Field) #Create ID
+#Create Flow_rate 
+Wazi_train$Flow_rate <- Wazi_train$Soil_humidity - 0.02
+
+##########################
+# Model Wazihub
+##########################
+
+#Create Matrix
+# dtrain <- sparse.model.matrix(Time_target ~ . -1, data = train)
+feature_names <- names(Wazi_train[,-c(1,15,16,17,26,32)])
+target <- as.numeric(Wazi_train[,"Soil_humidity"])
+dtrain <- xgb.DMatrix( data = as.matrix(Wazi_train[,-c(1,15,16,17,26,32)]), label = target, missing= NA)
+
+
+###################
+#XG Boost setup 
+###################
+ test_new <- Wazi_test[,-c(1,3,17,18,19,28)]
+test_new <- test_new[,c(2:27,1)]
+
+
+###################
+#Cross Validation
+###################
+# Set up cross-validation scheme (3-fold)
+foldsCV <- createFolds(target, k=10, list=TRUE, returnTrain=FALSE)
+
+
+# Set xgboost parameters. These are not necessarily the optimal parameters.
+# Further grid tuning is needed. 
+
+
+
+  param <- list(booster = "gblinear"
+              , objective = "reg:linear"
+              , subsample = 0.8
+              , max_depth = 4
+              , colsample_bytree = 0.6
+              , eta = 0.8
+              #, lambda = 0.08
+              , eval_metric = 'rmse'
+              #, num_class = 9
+              , gamma = 0
+              #, base_score = 0.012 #average
+              , min_child_weight = 1
+                )
+  
+
+  ################
+  # Final model
+  ################
+  
+  xgb <- xgboost::xgboost(params = param
+                   , data = dtrain
+                  # , watchlist = list(train = dtrain)
+                   , nrounds = 500
+                   , verbose = 1
+                   , print_every_n = 2
+                   #, feval = amm_mae
+                  )
+  ###############
+  # Results
+  ###############
+  #Feature imprtance
+  imp <- xgb.importance(feature_names, model =xgb)
+  imp
+  xgb.plot.importance(imp)
+  imp$Feature
+  
+  
+  #Submission
+  test_new <- as.matrix(test_new)
+
+  
+  #Prep for submit
+
+  
+base_prediction <- predict(xgb, newdata = test_new)
+base_submission <- data_frame(ID = Wazi_test$ID, Values = base_prediction)
+
+#Round off
+base_submission$Values <- round(base_submission$Values,1)
+Model_4 <- base_submission
+
+save(Model_4, file= "Model4.rda")
+base_submission
+
+```
+
+
+#RUN MODEL 5
+```{r}
+######################################################################################
+#MODEL 5 SETUP. Output is Model5.rda. 15_004
+######################################################################################
+rm(list = ls())
+load("Wazi_train_test.rda")
+
+##################
+#Break test
+##################
+
+Wazi_test_ext <- Wazi_test[,c("ID","Field","Irrigation_field","Soil_humidity")]
+
+Wazi_train_ext <- Wazi_train
+Wazi_train_ext$ID <- paste(Wazi_train_ext$timestamp3,"x","Soil humidity",Wazi_train_ext$Field) #Create ID
+Wazi_train_ext <- Wazi_train_ext[,c("ID","Field","Irrigation_field","Soil_humidity")]
+
+######################
+#Create counter
+######################
+
+Wazi_test_ext <- Wazi_test_ext %>%
+  group_by(Field,Irrigation_field) %>%
+  mutate(count = 1:(n()))
+
+Wazi_test_ext$count_diff <- append(diff(Wazi_test_ext$count),1)
+Wazi_test_ext$field_diff <- append(diff(Wazi_test_ext$Field),0)
+
+#Cretae flag for when Irrigation is 1 and diff is not 0
+Wazi_test_ext$flag <- ifelse((Wazi_test_ext$Irrigation_field ==1 & Wazi_test_ext$count_diff != 1) |(Wazi_test_ext$field_diff == 1 & Wazi_test_ext$count_diff != 1),1,0)
+
+#Create dummy to aid extraction of serial number
+Wazi_test_ext$dummy <- "A"
+#Create count2
+Wazi_test_ext <- Wazi_test_ext %>%
+  group_by(dummy) %>%
+    mutate(count_2 = 1:(n()))
+
+# table(Wazi_test_ext$flag)  
+#Create Wazi_test partitions
+Wazi_test_partitions <- Wazi_test_ext[Wazi_test_ext$flag==1 ,]
+
+##############################
+#Create Wazi_test partitions
+##############################
+
+Wazi_test_1 <- Wazi_test_ext[1:Wazi_test_partitions$count_2[1],]
+Wazi_test_1$Irrigation_field[1] <- 0
+Wazi_test_1$Soil_humidity[1] <- 39.68
+Wazi_test_2 <- Wazi_test_ext[Wazi_test_partitions$count_2[1]:Wazi_test_partitions$count_2[2],]
+Wazi_test_2$Irrigation_field[1] <- 0
+Wazi_test_3 <- Wazi_test_ext[Wazi_test_partitions$count_2[2]:Wazi_test_partitions$count_2[3],]
+Wazi_test_3$Irrigation_field[1] <- 0
+Wazi_test_4 <- Wazi_test_ext[Wazi_test_partitions$count_2[3]:Wazi_test_partitions$count_2[4],]
+Wazi_test_4$Irrigation_field[1] <- 0
+Wazi_test_5 <- Wazi_test_ext[Wazi_test_partitions$count_2[4]:Wazi_test_partitions$count_2[5],]
+Wazi_test_5$Irrigation_field[1] <- 0
+Wazi_test_5$Soil_humidity[1] <- -4
+Wazi_test_5$Field[1] <- 2
+Wazi_test_6 <- Wazi_test_ext[Wazi_test_partitions$count_2[5]:Wazi_test_partitions$count_2[6],]
+Wazi_test_6$Irrigation_field[1] <- 0
+Wazi_test_7 <- Wazi_test_ext[Wazi_test_partitions$count_2[6]:Wazi_test_partitions$count_2[7],]
+Wazi_test_7$Irrigation_field[1] <- 0
+Wazi_test_8 <- Wazi_test_ext[Wazi_test_partitions$count_2[7]:Wazi_test_partitions$count_2[8],]
+Wazi_test_8$Irrigation_field[1] <- 0
+Wazi_test_9 <- Wazi_test_ext[Wazi_test_partitions$count_2[8]:Wazi_test_partitions$count_2[9],]
+Wazi_test_9$Irrigation_field[1] <- 0
+Wazi_test_9$Soil_humidity[1] <- -12.14
+Wazi_test_9$Field[1] <- 3
+Wazi_test_10 <- Wazi_test_ext[Wazi_test_partitions$count_2[9]:Wazi_test_partitions$count_2[10],]
+Wazi_test_10$Irrigation_field[1] <- 0
+Wazi_test_11 <- Wazi_test_ext[Wazi_test_partitions$count_2[10]:Wazi_test_partitions$count_2[11],]
+Wazi_test_11$Irrigation_field[1] <- 0
+Wazi_test_12 <- Wazi_test_ext[Wazi_test_partitions$count_2[11]:Wazi_test_partitions$count_2[12],]
+Wazi_test_12$Irrigation_field[1] <- 0
+Wazi_test_12$Soil_humidity[1] <- 6.33
+Wazi_test_13 <- Wazi_test_ext[Wazi_test_partitions$count_2[12]:Wazi_test_partitions$count_2[13],]
+Wazi_test_13$Irrigation_field[1] <- 0
+Wazi_test_14 <- Wazi_test_ext[Wazi_test_partitions$count_2[13]:Wazi_test_partitions$count_2[14],]
+Wazi_test_14$Irrigation_field[1] <- 0
+Wazi_test_15 <- Wazi_test_ext[Wazi_test_partitions$count_2[14]:Wazi_test_partitions$count_2[15],]
+Wazi_test_15$Irrigation_field[1] <- 0
+Wazi_test_16 <- Wazi_test_ext[Wazi_test_partitions$count_2[15]:Wazi_test_partitions$count_2[16],]
+Wazi_test_16$Irrigation_field[1] <- 0
+Wazi_test_17 <- Wazi_test_ext[Wazi_test_partitions$count_2[16]:nrow(Wazi_test_ext),]
+Wazi_test_17$Irrigation_field[1] <- 0
+
+
+#################################
+#Apply flow rate estimator
+#################################
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_1)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.002 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_2)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.04 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_3)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_4)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.0275 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_5)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.06 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_6)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_7)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.075 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_8)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.06 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_9)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.03 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_10)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_11)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.03 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_12)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.07 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_13)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.065 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_14)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.02 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list3 <- list(Wazi_test_15)
+
+res3 <- lapply(Wazi_test_par_list3, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.065 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list <- list(Wazi_test_16)
+
+res <- lapply(Wazi_test_par_list, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+library(data.table)
+Wazi_test_par_list2 <- list(Wazi_test_17)
+
+res2 <- lapply(Wazi_test_par_list2, function(x) {setDT(x)
+
+x[Irrigation_field == 0, Soil_humidity := first(Soil_humidity) - 0.05 * (.I - first(.I)), by = .(Irrigation_field, Field)]
+
+x[Irrigation_field == 1, Soil_humidity := seq(x[Irrigation_field == 0, last(Soil_humidity), by = .(Irrigation_field, Field)][,V1][.GRP], last(Soil_humidity), length.out = .N + 1)[-1], by = .(Irrigation_field, Field)]
+
+x <- as.data.frame(x)
+
+})
+
+###########################
+#Merge test
+###########################
+
+Wazi_test_All <- rbind(Wazi_test_1,Wazi_test_2,Wazi_test_3,Wazi_test_4,Wazi_test_5,Wazi_test_6,Wazi_test_7,Wazi_test_8,Wazi_test_9,
+                       Wazi_test_10,Wazi_test_11,Wazi_test_12,Wazi_test_13,Wazi_test_14,Wazi_test_15,Wazi_test_16,Wazi_test_17)
+
+Wazi_test_All <- Wazi_test_All[,c("ID","Soil_humidity")]
+
+#Remove duplicate by ID
+Wazi_test_All <- Wazi_test_All[!duplicated(Wazi_test_All$ID),]
+
+###########################
+#Flow rate
+###########################
+
+colnames(Wazi_test_All)[2] <- "Flow_rate"
+#Megre back tho Wazi_test
+Wazi_test <- merge(Wazi_test_All, Wazi_test, by = "ID", all.y = T)
+#Create ID
+Wazi_train$ID <- paste(Wazi_train$timestamp3,"x","Soil humidity",Wazi_train$Field) #Create ID
+#Create Flow_rate 
+Wazi_train$Flow_rate <- Wazi_train$Soil_humidity - 0.02
+
+############################
+# Model Wazihub
+############################
+
+#Create Matrix
+feature_names <- names(Wazi_train[,-c(1,15,16,17,26,32)])
+target <- as.numeric(Wazi_train[,"Soil_humidity"])
+dtrain <- xgb.DMatrix( data = as.matrix(Wazi_train[,-c(1,15,16,17,26,32)]), label = target, missing= NA)
+
+
+###################
+#XG Boost setup 
+###################
+ test_new <- Wazi_test[,-c(1,3,17,18,19,28)]
+test_new <- test_new[,c(2:27,1)]
+
+###################
+#Cross Validation
+###################
+# Set up cross-validation scheme (3-fold)
+foldsCV <- createFolds(target, k=10, list=TRUE, returnTrain=FALSE)
+
+
+# Set xgboost parameters. These are not necessarily the optimal parameters.
+# Further grid tuning is needed. 
+
+
+
+  param <- list(booster = "gblinear"
+              , objective = "reg:linear"
+              , subsample = 0.8
+              , max_depth = 4
+              , colsample_bytree = 0.6
+              , eta = 0.8
+              #, lambda = 0.08
+              , eval_metric = 'rmse'
+              #, num_class = 9
+              , gamma = 0
+              #, base_score = 0.012 #average
+              , min_child_weight = 1
+                )
+  
+
+
+  ################
+  # Final model
+  ################
+  
+  xgb <- xgboost::xgboost(params = param
+                   , data = dtrain
+                  # , watchlist = list(train = dtrain)
+                   , nrounds = 500
+                   , verbose = 1
+                   , print_every_n = 2
+                   #, feval = amm_mae
+                  )
+  ###############
+  # Results
+  ###############
+  #Feature imprtance
+  imp <- xgb.importance(feature_names, model =xgb)
+  imp
+  xgb.plot.importance(imp)
+  imp$Feature
+  
+  
+  #Submission
+  test_new <- as.matrix(test_new)
+
+  
+  #Prep for submit
+
+  
+base_prediction <- predict(xgb, newdata = test_new)
+base_submission <- data_frame(ID = Wazi_test$ID, Values = base_prediction)
+
+#Round off
+base_submission$Values <- round(base_submission$Values,1)
+Model_5 <- base_submission
+
+save(Model_5, file= "Model5.rda")
+base_submission
+```
+
+
+
+#Section 3: ENSEMBLE THESE DIVERSE MODELS TO CREATE A SINGLE POWERFUL MODEL
+
+```{r}
+rm(list = ls())
+load("Model1.rda")
+load("Model2.rda")
+load("Model3.rda")
+load("Model4.rda")
+load("Model5.rda")
+
+#Merge all 5 results
+Wazi_ensemble <- rbind(Model_1,Model_2,
+                       Model_3,Model_4,
+                       Model_5) #  
+
+
+#Get average
+library(sqldf)
+Wazi_ensemble <- sqldf('SELECT ID, avg("Values") FROM Wazi_ensemble 
+                       GROUP BY ID')
+colnames(Wazi_ensemble)[2] <- c("Values")
+
+
+#Round off
+Wazi_ensemble$Values <- round(Wazi_ensemble$Values,1)
+# summary(Farm_ensemble)
+write.csv(Wazi_ensemble, file = "C:/Users/A199702/Documents/Zindi/Wazihub soil moisture/Wazi_ensemble.csv", row.names = F)
+Wazi_ensemble
+beep(6)
+# beep(6)
+
+```
+

@@ -1,0 +1,24 @@
+loranga
+-------
+
+https://github.com/edu986/test_ppp
+
+sudo ./ppp-creator.sh mmsbouygtel.com ttyS0
+
+Read https://spellfoundry.com/2016/05/29/configuring-gpio-serial-port-raspbian-jessie-including-pi-3/
+
+Read https://ernstagn.home.xs4all.nl/GPRS-HOWTO/GPRS-HOWTO-6.html
+
+
+Raspberry PI general GSM/GPRS/3G info
+-------------------------------------
+
+https://brandonb.io/raspberry-pi-zero-w-headless-setup-on-macos
+
+http://www.0xf8.org/2016/02/using-your-raspberry-pi-zeros-usb-wifi-adapter-as-both-wifi-client-and-access-point/
+
+https://www.raspberrypi.org/documentation/configuration/uart.md
+
+https://blog.jokielowie.com/en/2016/10/raspberry-pi-oraz-siec-gsm-wysylamy-sms-laczymy-sie-z-internetem-iot/
+
+
