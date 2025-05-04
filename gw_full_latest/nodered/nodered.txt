@@ -1,7 +1,0 @@
-{"source":"waziup/UPPA/Sensor36","measure":"TC","value":"22.5"}
-{"source":"waziup/UPPA/Sensor36","measure":"TC","value":"22.5"}
-{"source":"waziup/UPPA/Sensor36","measure":"HUM","value":"56"}
-{"source":"waziup/UPPA/Sensor36","measure":"LUM","value":"67"}
-{"source":"waziup/UPPA/Sensor36","measure":"DEF","value":"22.5"}
-{"source":"waziup/UPPA/Sensor36","measure":"TC","value":"22.5"}
-{"source":"waziup/UPPA/Sensor36","measure":"HUM","value":"67"}
