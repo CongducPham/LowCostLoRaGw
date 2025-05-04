@@ -1,0 +1,18 @@
+{
+    "devices": [
+        {
+            "gw": "00000027EBBEDA21", 
+            "src": "waziup_UPPA_Sensor6", 
+            "seq": 0, 
+            "bc": 9, 
+            "fxt": 4180, 
+            "lat": 43.31402, 
+            "snr": 8, 
+            "time": "2018-01-27T17:42:00", 
+            "active": "yes", 
+            "rssi": -45, 
+            "lgt": -0.3637, 
+            "distance": -1.0
+        }
+    ]
+}
